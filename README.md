@@ -7,7 +7,8 @@ Elle fonctionne hors ligne et s’installe sur le téléphone. Aucune donnée ne
 ## Principes
 
 - **Minimum / Complet.** Chaque habitude a une version de 2 minutes. La journée est validée dès que tous les minimums sont faits. Un mauvais jour se sauve avec les minimums.
-- **Jamais deux fois de suite.** Un jour raté isolé ne casse pas la chaîne. Le lendemain, l’appli passe en *mode reprise* : seulement les minimums, de préférence avant midi.
+- **Jamais deux fois de suite.** Un jour raté isolé ne casse pas la chaîne, avec une seule reprise par fenêtre de 7 jours. Le lendemain d’un raté, l’appli passe en *mode reprise* : seulement les minimums, de préférence avant midi.
+- **L’historique ne bouge pas.** Chaque jour garde la liste d’habitudes en vigueur ce jour-là.
 - **Sprints de 7 jours.** 12 sprints, soit 12 semaines. Un sprint est réussi à 5 jours validés sur 7. Chaque objectif a une fin proche.
 - **La journée se termine à 4 h.** Un coucher à 1 h compte pour la veille.
 - **Bilan du dimanche.** 3 questions et une seule chose à changer.
@@ -16,10 +17,10 @@ Elle fonctionne hors ligne et s’installe sur le téléphone. Aucune donnée ne
 
 | Onglet | Contenu |
 |---|---|
-| Jour | Chaîne, sprint, habitudes, séance du jour, nuit dernière, règles « Si… alors… » |
+| Jour | Chaîne, sprint, habitudes, grignotages (avec déclencheur), séance du jour, nuit dernière, règles « Si… alors… » |
 | Focus | Minuteur 25/5, minuteur « Envie de scroller ? » de 10 min |
-| Sport | Séances A (tronc), B (haut du corps et posture), M (mobilité 8 min), 3 niveaux, lecteur guidé |
-| Suivi | Saisie, moyennes sur 7 jours, graphiques |
+| Corps | Séances A (tronc), B (haut du corps et posture), M (mobilité 8 min), 3 niveaux, lecteur guidé, démos vidéo, règles alimentaires, 6 recettes de débutant |
+| Suivi | Saisie, moyennes sur 7 jours, graphiques, déclencheurs de grignotage, tests de niveau (pompes, planches, hollow) |
 | Bilan | 12 sprints, revue hebdomadaire, habitudes, règles, réglages, export/import |
 
 ## Installer sur le téléphone

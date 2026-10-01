@@ -73,3 +73,61 @@ export const WORKOUTS = [
 
 // Semaine type : A lundi/jeudi, B mardi/vendredi, mobilité les autres jours.
 export const WEEK_PLAN = { 1: 'A', 2: 'B', 3: 'M', 4: 'A', 5: 'B', 6: 'M', 0: 'M' };
+
+// Déclencheurs de grignotage : les repérer compte plus que de les compter.
+export const SNACK_TRIGGERS = ['Faim', 'Ennui', 'Devant un écran', 'Fatigue', 'Stress', 'C’était là'];
+
+export const FOOD_RULES = [
+  'Une source de protéines à chaque repas (œufs, viande, poisson, skyr, lentilles, tofu) : ça cale et ça protège les muscles.',
+  'La moitié de l’assiette en légumes (les surgelés comptent, c’est pareil).',
+  'Petit-déjeuner avec des protéines : c’est lui qui évite le grignotage de 11 h et de 16 h.',
+  'Une collation prévue (fruit + skyr, ou une poignée d’amandes) vaut mieux que 5 grignotages imprévus.',
+  'Ne pas manger devant TikTok ou Netflix : on mange sans s’en rendre compte.',
+  'Les grignotages sucrés ou salés ne sont pas dans ta chambre. Ce qui n’est pas à portée de main ne se mange pas.',
+];
+
+// Recettes de débutant : peu d’ustensiles, ingrédients de supermarché, riches en protéines.
+export const RECIPES = [
+  {
+    name: 'Omelette complète',
+    time: '10 min',
+    items: '3 œufs, 1 tranche de jambon, 1 poignée d’épinards ou de champignons, 1 tranche de pain complet',
+    steps: 'Bats les œufs avec sel et poivre. Fais revenir les légumes 2 min dans une poêle huilée, verse les œufs, ajoute le jambon, plie quand le dessus est presque pris.',
+  },
+  {
+    name: 'Pâtes thon-tomate',
+    time: '15 min',
+    items: '80 g de pâtes (poids cru), 1 boîte de thon au naturel, 150 g de sauce tomate, 1 poignée de haricots verts surgelés',
+    steps: 'Cuis les pâtes et les haricots dans la même eau. Égoutte, ajoute sauce tomate et thon, chauffe 1 min.',
+  },
+  {
+    name: 'Riz poulet-légumes',
+    time: '20 min',
+    items: '1 filet de poulet, 70 g de riz cru (ou un sachet micro-ondes), 200 g de poêlée de légumes surgelée, sauce soja',
+    steps: 'Coupe le poulet en dés, saisis-le 6-7 min à feu vif. Ajoute les légumes surgelés 5 min, un trait de sauce soja. Sers avec le riz.',
+  },
+  {
+    name: 'Bol skyr du matin',
+    time: '2 min',
+    items: '150-200 g de skyr ou fromage blanc, 1 banane ou des fruits rouges surgelés, 30 g de flocons d’avoine',
+    steps: 'Tout dans un bol. C’est le petit-déjeuner anti-grignotage le plus simple qui existe.',
+  },
+  {
+    name: 'Wraps au poulet',
+    time: '10 min',
+    items: '2 galettes de blé, 1 filet de poulet ou du poulet cuit, salade, tomate, 1 cuillère de fromage frais',
+    steps: 'Poêle le poulet en lamelles. Tartine les galettes de fromage frais, ajoute poulet, salade et tomate, roule.',
+  },
+  {
+    name: 'Lentilles-saucisse (version légère)',
+    time: '15 min',
+    items: '1 boîte de lentilles cuites, 1 saucisse de volaille, 1 oignon, carottes',
+    steps: 'Fais revenir l’oignon et la saucisse en rondelles, ajoute les carottes en rondelles et les lentilles égouttées, laisse chauffer 8 min.',
+  },
+];
+
+// Démonstration vidéo : recherche YouTube (un lien de recherche ne casse pas, une vidéo précise si).
+export function demoUrl(name) {
+  const q = name.replace(/\s*\((droite|gauche)\)/, '').replace(/^Superman /, 'prone ');
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${q} exercice technique`)}`;
+}

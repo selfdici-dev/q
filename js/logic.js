@@ -34,28 +34,42 @@ export function diffDays(a, b) {
 }
 
 // Niveau d'une habitude : 0 = rien, 1 = minimum, 2 = complet.
+// Chaque jour garde la liste des habitudes actives ce jour-là (day.ids) : modifier
+// la liste plus tard ne réécrit pas l'historique.
 export function dayStatus(state, key) {
   const day = state.days[key];
-  const habits = state.habits;
-  if (!habits.length) return { valid: false, full: false, done: 0, total: 0 };
+  const ids = day?.ids ?? state.habits.map((h) => h.id);
+  if (!ids.length) return { valid: false, full: false, done: 0, total: 0 };
   let done = 0;
   let full = 0;
-  for (const h of habits) {
-    const lvl = day?.habits?.[h.id] ?? 0;
+  for (const id of ids) {
+    const lvl = day?.habits?.[id] ?? 0;
     if (lvl >= 1) done++;
     if (lvl >= 2) full++;
   }
   return {
-    valid: done === habits.length,
-    full: full === habits.length,
+    valid: done === ids.length,
+    full: full === ids.length,
     done,
-    total: habits.length,
+    total: ids.length,
   };
 }
 
 // Règle « jamais deux fois de suite » : un jour raté isolé ne casse pas la
-// chaîne, deux jours ratés consécutifs la cassent. Aujourd'hui, tant qu'il
-// n'est pas validé, est « en cours » et ne compte ni pour ni contre.
+// chaîne (une « reprise »), deux jours ratés consécutifs la cassent, et une
+// seule reprise est permise par fenêtre de 7 jours (sinon un jour sur deux
+// suffirait). Aujourd'hui, tant qu'il n'est pas validé, est « en cours ».
+export const JOKER_WINDOW = 7;
+
+function missedSince(state, from, to) {
+  // y a-t-il un jour raté (après le départ) dans [from, to] ?
+  const start = state.settings.startDate;
+  for (let k = from; diffDays(k, to) >= 0; k = addDays(k, 1)) {
+    if (diffDays(start, k) >= 0 && !dayStatus(state, k).valid) return true;
+  }
+  return false;
+}
+
 export function chain(state, today) {
   const start = state.settings.startDate;
   const isValid = (k) => dayStatus(state, k).valid;
@@ -69,7 +83,9 @@ export function chain(state, today) {
       continue;
     }
     const older = addDays(d, -1);
-    if (diffDays(start, older) >= 0 && isValid(older)) {
+    const isolated = diffDays(start, older) >= 0 && isValid(older);
+    const recentMiss = missedSince(state, addDays(d, -(JOKER_WINDOW - 1)), older);
+    if (isolated && !recentMiss) {
       jokers++;
       d = older;
       continue;
@@ -79,15 +95,20 @@ export function chain(state, today) {
   return { count, jokers };
 }
 
-// Mode reprise : hier raté (et pas le jour de démarrage) et aujourd'hui pas encore validé.
+// Mode reprise : hier raté et aujourd'hui pas encore validé.
+// twoMissed : avant-hier aussi raté. jokerUsed : une autre reprise a déjà servi
+// dans les 7 derniers jours, donc la chaîne repart de zéro aujourd'hui.
 export function recoveryMode(state, today) {
   const start = state.settings.startDate;
   const y = addDays(today, -1);
   if (!start || diffDays(start, y) < 0) return { active: false };
-  const yMissed = !dayStatus(state, y).valid;
-  const twoMissed = yMissed && diffDays(start, addDays(y, -1)) >= 0 && !dayStatus(state, addDays(y, -1)).valid;
   const todayValid = dayStatus(state, today).valid;
-  return { active: yMissed && !todayValid, twoMissed: twoMissed && !todayValid };
+  const yMissed = !dayStatus(state, y).valid;
+  if (!yMissed || todayValid) return { active: false };
+  const before = addDays(y, -1);
+  const twoMissed = diffDays(start, before) >= 0 && !dayStatus(state, before).valid;
+  const jokerUsed = !twoMissed && missedSince(state, addDays(y, -(JOKER_WINDOW - 1)), before);
+  return { active: true, twoMissed, jokerUsed };
 }
 
 export function lastNDays(state, today, n) {

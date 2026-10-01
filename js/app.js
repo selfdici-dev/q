@@ -3,7 +3,9 @@ import {
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH,
 } from './logic.js';
-import { DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN } from './data.js';
+import {
+  DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
+} from './data.js';
 import { lineChart, barChart, wireTooltips } from './charts.js';
 
 const STORE = 'cap-v1';
@@ -28,6 +30,7 @@ function freshState() {
     rules: [...DEFAULT_RULES],
     days: {},
     reviews: {},
+    tests: [],
     timers: { pomo: { mode: 'work', endAt: null, remaining: POMO_WORK, label: '' }, urge: { endAt: null } },
   };
 }
@@ -38,7 +41,11 @@ function load() {
     if (!raw) return freshState();
     const s = JSON.parse(raw);
     const base = freshState();
-    return { ...base, ...s, settings: { ...base.settings, ...s.settings }, timers: { ...base.timers, ...s.timers } };
+    const st = { ...base, ...s, settings: { ...base.settings, ...s.settings }, timers: { ...base.timers, ...s.timers } };
+    // Données d'avant la v2 : on fige la liste d'habitudes des jours passés.
+    const ids = st.habits.map((h) => h.id);
+    for (const d of Object.values(st.days)) d.ids ??= ids;
+    return st;
   } catch {
     return freshState();
   }
@@ -55,8 +62,11 @@ const save = () => {
 
 function day(key) {
   if (!state.days[key]) state.days[key] = { habits: {} };
-  if (!state.days[key].habits) state.days[key].habits = {};
-  return state.days[key];
+  const d = state.days[key];
+  if (!d.habits) d.habits = {};
+  // La liste d'habitudes du jour est figée ; celle d'aujourd'hui suit les réglages.
+  if (!d.ids || key === todayKey()) d.ids = state.habits.map((h) => h.id);
+  return d;
 }
 
 // Ne fait que monter le niveau d'une habitude (jamais descendre automatiquement).
@@ -117,7 +127,7 @@ async function keepAwake(on) {
 const TABS = [
   { id: 'jour', label: 'Jour', icon: '◉' },
   { id: 'focus', label: 'Focus', icon: '◷' },
-  { id: 'sport', label: 'Sport', icon: '✚' },
+  { id: 'sport', label: 'Corps', icon: '✚' },
   { id: 'suivi', label: 'Suivi', icon: '▤' },
   { id: 'bilan', label: 'Bilan', icon: '✓' },
 ];
@@ -157,7 +167,9 @@ function viewToday() {
   const allDone = st.valid;
 
   let banner = '';
-  if (rec.twoMissed) {
+  if (rec.jokerUsed) {
+    banner = `<div class="banner warn"><strong>Deuxième raté de la semaine.</strong> Une seule reprise par semaine : la chaîne repart de zéro aujourd’hui. Ce n’est pas grave, c’est une info. Fais les minimums et note dans le bilan ce qui t’a fait rater.</div>`;
+  } else if (rec.twoMissed) {
     banner = `<div class="banner warn"><strong>Deux jours ratés.</strong> Pas de culpabilité, pas de rattrapage : fais seulement les minimums aujourd’hui. Une journée minimum vaut infiniment plus qu’une journée parfaite qui n’existe pas.</div>`;
   } else if (rec.active) {
     banner = `<div class="banner"><strong>Jour de reprise.</strong> Hier est raté, c’est normal. Règle : jamais deux fois de suite. Fais les minimums, idéalement avant midi, et la chaîne continue.</div>`;
@@ -192,6 +204,7 @@ function viewToday() {
       }).join('')}
     </ul>
   </section>
+  ${snackCard(today)}
   <section class="card">
     <div class="card-head"><h2>Séance du jour</h2></div>
     <p><strong>${esc(wo.name)}</strong><br><span class="muted">${esc(wo.desc)}</span></p>
@@ -209,6 +222,22 @@ function viewToday() {
   <section class="card">
     <div class="card-head"><h2>Mes règles « Si… alors… »</h2></div>
     <ul class="rules">${state.rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
+  </section>`;
+}
+
+function snackCard(key) {
+  const d = state.days[key] ?? {};
+  const snacks = d.snacks ?? [];
+  const resisted = d.snackResisted ?? 0;
+  const pending = snackCard.pending;
+  return `<section class="card">
+    <div class="card-head"><h2>Grignotage</h2><span class="pill">${snacks.length} grignotage${snacks.length > 1 ? 's' : ''} · ${resisted} envie${resisted > 1 ? 's' : ''} résistée${resisted > 1 ? 's' : ''}</span></div>
+    ${pending
+      ? `<p class="hint">Qu’est-ce qui t’a donné envie ?</p><div class="chips">${SNACK_TRIGGERS.map((t) => `<button class="chip" data-act="snack-log" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>
+         <div class="row"><button class="btn ghost small" data-act="snack-cancel">Annuler</button></div>`
+      : `<div class="row"><button class="btn" data-act="snack-resist">Envie résistée</button><button class="btn" data-act="snack-ask">J’ai grignoté</button></div>
+         <p class="hint">Pas de culpabilité : note-le, c’est tout. Au bout d’une semaine tu verras tes heures et tes déclencheurs, et on attaque ceux-là.</p>`}
+    ${snacks.length ? `<p class="hint">${snacks.map((x) => `${esc(x.time)} · ${esc(x.trigger)}`).join(' — ')}</p>` : ''}
   </section>`;
 }
 
@@ -274,7 +303,7 @@ function viewSport() {
     return `<section class="card ${w.id === planned ? 'planned' : ''}">
       <div class="card-head"><h2>${esc(w.name)}</h2><span class="pill">${w.id === planned ? 'Prévue aujourd’hui · ' : ''}${mins} min</span></div>
       <p class="muted">${esc(w.desc)}</p>
-      <details><summary>Voir les exercices</summary><ol class="ex">${w.exercises.map((e) => `<li><strong>${esc(e.name)}</strong><br><span class="muted">${esc(e.cue)}</span></li>`).join('')}</ol></details>
+      <details><summary>Voir les exercices</summary><ol class="ex">${w.exercises.map((e) => `<li><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="muted">${esc(e.cue)}</span></li>`).join('')}</ol></details>
       <div class="row"><button class="btn primary" data-act="start-workout" data-id="${w.id}">Lancer${done.includes(w.id) ? ' (déjà faite aujourd’hui)' : ''}</button></div>
     </section>`;
   }).join('')}
@@ -284,7 +313,19 @@ function viewSport() {
       <li>Douleur vive ou articulaire : arrête l’exercice. Une brûlure musculaire, c’est normal.</li>
       <li>Si la technique se dégrade, mets-toi en version genoux ou arrête la série. La qualité passe avant la durée.</li>
       <li>Rien ici ne vise les fessiers. Les abdos visibles viendront surtout de l’alimentation et des pas, pas de plus de gainage.</li>
+      <li>Chaque exercice a un lien « démo vidéo ». Regarde-le avant ta première séance, pas pendant.</li>
     </ul>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>Manger</h2></div>
+    <p class="muted">Pour des abdos visibles, l’alimentation pèse plus lourd que les séances. Six règles, pas de régime :</p>
+    <ol class="tight">${FOOD_RULES.map((r) => `<li>${esc(r)}</li>`).join('')}</ol>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>Apprendre à cuisiner</h2><span class="pill">${RECIPES.length} recettes</span></div>
+    <p class="hint">Objectif : maîtriser une recette par semaine. Propose à tes parents de cuisiner un repas par semaine : tu apprends, et tu choisis ce qui est dans l’assiette.</p>
+    ${RECIPES.map((r) => `<details><summary><strong>${esc(r.name)}</strong> · ${esc(r.time)}</summary>
+      <p><em>Ingrédients :</em> ${esc(r.items)}</p><p>${esc(r.steps)}</p></details>`).join('')}
   </section>`;
 }
 
@@ -306,6 +347,7 @@ function renderPlayer() {
       <h2>${esc(s.name)}</h2>
       <div class="clock" id="player-clock">${fmtClock(player.remaining)}</div>
       <p class="cue">${esc(s.cue)}</p>
+      ${s.kind === 'work' ? `<p><a href="${demoUrl(s.name)}" target="_blank" rel="noopener">Voir une démo</a></p>` : ''}
       ${next ? `<p class="muted">Ensuite : ${esc(next.name)}</p>` : ''}
     </div>
     <div class="progress"><span style="width:${(player.i / player.steps.length) * 100}%"></span></div>
@@ -369,6 +411,17 @@ function viewTrack() {
   const bedAvg = avg(last7(beds));
   const scrAvg = avg(last7(screens));
   const slpAvg = avg(sleeps);
+  const snackPts = [];
+  for (let i = 20; i >= 0; i--) {
+    const k = addDays(today, -i);
+    const x = state.days[k];
+    if (x && (x.snacks || x.snackResisted !== undefined)) snackPts.push({ key: k, value: (x.snacks ?? []).length });
+  }
+  const triggers = {};
+  for (let i = 0; i < 14; i++) {
+    for (const sn of state.days[addDays(today, -i)]?.snacks ?? []) triggers[sn.trigger] = (triggers[sn.trigger] ?? 0) + 1;
+  }
+  const topTriggers = Object.entries(triggers).sort((a, b) => b[1] - a[1]);
   const trend = rollingAverage(weights);
   const lastTrend = trend.at(-1)?.value;
 
@@ -396,7 +449,39 @@ function viewTrack() {
   ${barChart({ title: 'Temps d’écran (21 jours)', points: screens, target: Number(s.screenTarget), targetLabel: `cible ${fmtDuration(s.screenTarget)}`, today, days: 21, fmt: (v) => fmtDuration(v), unit: '', empty: 'Aucun temps d’écran saisi.', overIsBad: true })}
   ${lineChart({ title: 'Heure de coucher (21 jours)', points: beds, target: bedtimeMinutes(s.bedtimeTarget), targetLabel: `cible ${s.bedtimeTarget}`, today, days: 21, fmt: (v) => minutesToHHMM(v), unit: '', empty: 'Aucune heure de coucher saisie.' })}
   ${barChart({ title: 'Pas (21 jours)', points: steps, target: 8000, targetLabel: 'cible 8 000', today, days: 21, fmt: (v) => Math.round(v).toLocaleString('fr-FR'), unit: ' pas', empty: 'Aucun nombre de pas saisi.' })}
+  ${barChart({ title: 'Grignotages par jour (21 jours)', points: snackPts, today, days: 21, fmt: (v) => Math.round(v), unit: '', empty: 'Rien de noté. Utilise la carte « Grignotage » de l’onglet Jour.' })}
+  ${topTriggers.length ? `<section class="card"><div class="card-head"><h2>Tes déclencheurs (14 jours)</h2></div>
+    <ul class="tight">${topTriggers.map(([t, n]) => `<li><strong>${esc(t)}</strong> : ${n} fois</li>`).join('')}</ul>
+    <p class="hint">Attaque le premier de la liste : écris une règle « Si… alors… » pour lui dans l’onglet Bilan.</p></section>` : ''}
+  ${testsCard()}
   ${lineChart({ title: 'Tour de taille (12 semaines)', points: waists, today, days: 84, fmt: (v) => Number(v).toFixed(1), unit: ' cm', empty: 'Aucune mesure. Prends-la au nombril, détendu, sans rentrer le ventre.' })}`;
+}
+
+const TEST_FIELDS = [
+  ['pushups', 'Pompes', '', 'max, propres, sans pause'],
+  ['plank', 'Planche', ' s', 'avant-bras, jusqu’à ce que le bassin tombe'],
+  ['side', 'Latérale', ' s', 'côté le plus faible'],
+  ['hollow', 'Hollow', ' s', 'genoux pliés, dos plaqué'],
+];
+
+function testsCard() {
+  const t = state.tests;
+  const first = t[0];
+  const last = t.at(-1);
+  return `<section class="card">
+    <div class="card-head"><h2>Tests de niveau</h2><span class="pill">${t.length} test${t.length > 1 ? 's' : ''}</span></div>
+    <p class="hint">Fais-le maintenant, puis aux sprints 4, 8 et 12. Toujours après la séance M (échauffement), en arrêtant dès que la technique casse.</p>
+    <div class="grid2">${TEST_FIELDS.map(([f, label, unit, hint]) => `<label>${label}${unit ? ` (${unit.trim()})` : ''}<small class="field-hint">${esc(hint)}</small><input type="number" inputmode="numeric" id="test-${f}"></label>`).join('')}</div>
+    <div class="row"><button class="btn primary" data-act="test-save">Enregistrer le test du jour</button></div>
+    ${t.length ? `<div class="table-wrap"><table class="tests">
+      <thead><tr><th>Date</th>${TEST_FIELDS.map(([, l]) => `<th>${l}</th>`).join('')}</tr></thead>
+      <tbody>${t.map((r) => `<tr><td>${fromKey(r.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</td>${TEST_FIELDS.map(([f, , u]) => `<td>${r[f] ?? '—'}${r[f] !== undefined ? u : ''}</td>`).join('')}</tr>`).join('')}
+      ${t.length > 1 ? `<tr class="delta"><td>Progrès</td>${TEST_FIELDS.map(([f, , u]) => {
+        const a = first[f];
+        const b = last[f];
+        return `<td>${a !== undefined && b !== undefined ? `${b - a >= 0 ? '+' : ''}${b - a}${u}` : '—'}</td>`;
+      }).join('')}</tr>` : ''}</tbody></table></div>` : ''}
+  </section>`;
 }
 
 function viewReview() {
@@ -427,7 +512,7 @@ function viewReview() {
   </section>
   <section class="card">
     <div class="card-head"><h2>Habitudes</h2></div>
-    <p class="hint">5 au maximum. Un minimum doit être faisable en 2 minutes, même un mauvais jour. Les jours passés sont recalculés si tu modifies la liste.</p>
+    <p class="hint">5 au maximum. Un minimum doit être faisable en 2 minutes, même un mauvais jour. Les changements s’appliquent à partir d’aujourd’hui, les jours passés ne bougent pas.</p>
     ${state.habits.map((h, i) => `
       <fieldset class="habit-edit">
         <input data-habit="${i}" data-k="name" value="${esc(h.name)}" aria-label="Nom">
@@ -595,6 +680,42 @@ const actions = {
     save();
     render();
   },
+  'snack-ask'() {
+    snackCard.pending = true;
+    render();
+  },
+  'snack-cancel'() {
+    snackCard.pending = false;
+    render();
+  },
+  'snack-log'(el) {
+    const d = day(todayKey());
+    const now = new Date();
+    d.snacks = [...(d.snacks ?? []), { time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, trigger: el.dataset.t }];
+    snackCard.pending = false;
+    save();
+    render();
+  },
+  'snack-resist'() {
+    const d = day(todayKey());
+    d.snackResisted = (d.snackResisted ?? 0) + 1;
+    save();
+    render();
+    toast('Noté. Une envie résistée, c’est une vraie victoire.');
+  },
+  'test-save'() {
+    const vals = {};
+    for (const f of ['pushups', 'plank', 'side', 'hollow']) {
+      const v = $(`#test-${f}`).value;
+      if (v !== '') vals[f] = Number(v);
+    }
+    if (!Object.keys(vals).length) return toast('Remplis au moins un résultat.');
+    const date = todayKey();
+    state.tests = [...state.tests.filter((t) => t.date !== date), { date, ...vals }].sort((a, b) => a.date.localeCompare(b.date));
+    save();
+    render();
+    toast('Test enregistré.');
+  },
   'urge-start'() {
     const d = day(todayKey());
     d.urges = (d.urges ?? 0) + 1;
@@ -610,6 +731,7 @@ const actions = {
   },
   'habit-add'() {
     state.habits.push({ id: `h${Date.now().toString(36)}`, name: 'Nouvelle habitude', min: 'Version 2 minutes', full: 'Version complète' });
+    day(todayKey());
     save();
     render();
   },
@@ -617,6 +739,7 @@ const actions = {
     const h = state.habits[Number(el.dataset.i)];
     if (!confirm(`Supprimer « ${h.name} » ?`)) return;
     state.habits.splice(Number(el.dataset.i), 1);
+    day(todayKey());
     save();
     render();
   },
@@ -731,5 +854,5 @@ setInterval(() => {
 
 navigator.storage?.persist?.();
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  navigator.serviceWorker.register('./sw.js');
+  navigator.serviceWorker.register('./sw.js').catch(() => { /* hébergeur sans service worker */ });
 }

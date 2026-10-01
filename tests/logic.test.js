@@ -73,3 +73,22 @@ test('moyenne glissante 7 jours', () => {
   assert.equal(r[1].value, 74.5);
   assert.equal(r[2].value, 73);
 });
+
+test('une seule reprise par fenêtre de 7 jours', () => {
+  const s = '2026-10-01';
+  // ratés aux jours 2 et 4 : la 2e reprise est refusée
+  assert.equal(chain(mk(s, '1101011'), addDays(s, 6)).count, 2);
+  // ratés aux jours 1 et 8 : deux reprises espacées de 7 jours, acceptées
+  assert.deepEqual(chain(mk(s, '1011111101'), addDays(s, 9)), { count: 8, jokers: 2 });
+  const r = recoveryMode(mk(s, '110100'), addDays(s, 5));
+  assert.equal(r.active, true);
+  assert.equal(r.jokerUsed, true);
+});
+
+test("modifier les habitudes ne réécrit pas l'historique", () => {
+  const s = '2026-10-01';
+  const st = { settings: { startDate: s }, habits: [{ id: 'a' }], days: {} };
+  st.days[s] = { ids: ['a'], habits: { a: 1 } };
+  st.habits.push({ id: 'b' });
+  assert.equal(chain(st, addDays(s, 1)).count, 1);
+});

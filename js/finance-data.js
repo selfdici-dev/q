@@ -145,6 +145,49 @@ export const UNITS = [
     ],
   },
   {
+    id: 'um',
+    title: 'La méthode (ce que disent les études)',
+    emoji: '🧪',
+    lessons: [
+      {
+        id: 'etudes',
+        title: 'Ce que disent les études sur les traders particuliers',
+        idea: 'Par défaut, le trader particulier perd face au marché. Barber et Odean (2000) ont suivi 66 465 foyers de 1991 à 1996 : les 20 % qui tradaient le plus ont gagné 11,4 % par an quand le marché faisait 17,9 %. L’AMF mesure plus de 89 % de perdants sur les CFD et le Forex. Une étude brésilienne trouve 97 % de perdants chez les day traders qui persistent. Les causes : la surconfiance, les frais et le mauvais timing. Le but n’est donc pas de « trader plus », mais d’avoir un avantage mesuré et des coûts minimes.',
+        example: 'Chez Trade Republic, un ordre coûte 1 €, donc un aller-retour (achat + vente) coûte 2 €. 100 allers-retours par an, c’est 200 €, soit 7,4 % de 2 700 € : il faut déjà gagner 7,4 % juste pour revenir à zéro. Avec des positions de 500 €, un aller-retour coûte 0,4 % ; avec 50 €, il coûte 4 %.',
+        exercise: 'Calcule tes frais annuels prévus : nombre de trades par semaine × 2 € × 52 ÷ ton capital de trading. Si le résultat dépasse 3 %, trade moins souvent ou avec des positions plus grosses (en gardant le même risque grâce au stop).',
+        quiz: [
+          { q: 'Dans l’étude de Barber et Odean, les foyers qui tradaient le plus…', a: ['battaient le marché', 'faisaient nettement moins bien que le marché'], c: 1, why: '11,4 % par an contre 17,9 % pour le marché, surtout à cause des frais et de la surconfiance.' },
+          { q: '100 allers-retours à 2 € sur 2 700 € de capital coûtent…', a: ['environ 0,7 %', 'environ 7,4 %', 'rien'], c: 1, why: '200 € ÷ 2 700 € ≈ 7,4 % : une marche énorme à franchir avant le moindre gain.' },
+          { q: 'Le premier objectif d’un trader débutant devrait être…', a: ['trader le plus souvent possible', 'mesurer s’il a un avantage, avec des coûts minimes'], c: 1, why: 'Sans avantage mesuré, trader plus veut seulement dire perdre plus vite.' },
+        ],
+      },
+      {
+        id: 'effets',
+        title: 'Les rares effets qui ont tenu dans le temps',
+        idea: 'La plupart des « recettes » disparaissent : McLean et Pontiff ont étudié 97 anomalies publiées par des chercheurs et trouvé que leurs rendements baissent d’environ un tiers après publication. Deux effets ont mieux résisté. 1) La tendance (momentum) : Moskowitz, Ooi et Pedersen (2012) montrent, sur 58 marchés et plus de 25 ans, que ce qui a monté sur 12 mois a tendance à continuer à court terme ; l’effet dure environ un an puis s’inverse en partie. 2) La dérive après les résultats (PEAD), documentée depuis la fin des années 1960 : après une surprise de résultats, le cours tend à continuer dans le sens de la surprise pendant plusieurs semaines.',
+        example: 'Traduit en règles de swing trading : n’acheter que des titres en tendance haussière (au-dessus de leur moyenne mobile 200 jours et en hausse sur 12 mois), et privilégier ceux qui viennent de battre nettement les attentes ET dont le cours a bien réagi. Contre-exemple : Micron a battu les attentes le 30 septembre 2026, mais le cours n’a presque pas bougé, donc pas de signal. Attention : ce sont des moyennes sur des centaines de titres, jamais une garantie sur un trade.',
+        exercise: 'Prends 5 entreprises qui publient leurs résultats ce mois-ci (calendrier d’Investing.com). Pour chacune, note la surprise (bénéfice publié contre attendu), la réaction du jour J, puis le cours 20 jours plus tard. Après 20 cas, tu as ta propre statistique sur la dérive après résultats.',
+        quiz: [
+          { q: 'Que deviennent en moyenne les « anomalies » une fois publiées ?', a: ['Elles deviennent plus fortes', 'Elles s’affaiblissent (environ un tiers de moins)'], c: 1, why: 'Quand tout le monde connaît un effet, les traders l’exploitent et il s’amenuise.' },
+          { q: 'La dérive après résultats (PEAD), c’est…', a: ['le cours qui continue dans le sens de la surprise pendant des semaines', 'le cours qui revient toujours à son niveau d’avant'], c: 0, why: 'C’est l’un des effets les plus anciens et les plus robustes, même s’il est plus faible qu’avant.' },
+          { q: 'Ces effets garantissent-ils un trade gagnant ?', a: ['Oui', 'Non, ce sont des moyennes sur de nombreux titres'], c: 1, why: 'Ils donnent un léger avantage statistique sur beaucoup de trades, jamais une certitude sur un seul.' },
+        ],
+      },
+      {
+        id: 'pratique',
+        title: 'S’entraîner comme un pro : la pratique délibérée',
+        idea: 'On progresse avec des boucles de retour : une seule stratégie à la fois, des règles écrites, des mesures (résultat moyen en R, pire série de pertes, plus forte baisse), une revue chaque semaine, et une seule correction à la fois. Trois pièges des tests sur l’historique : le surajustement (trop de règles collées au passé), le biais du survivant (ne tester que des entreprises qui existent encore) et le biais d’anticipation (utiliser une information qu’on n’aurait pas eue à l’époque).',
+        example: 'Ta progression : 20 cas testés sur l’historique, puis 30 trades simulés, puis 30 trades réels avec 10 % du capital, puis une revue, puis 20 %. Chaque étape a un critère chiffré. S’il n’est pas atteint, tu restes à l’étape. C’est lent, mais c’est la seule façon de savoir si tu as un avantage avant de risquer gros.',
+        exercise: 'Ouvre Argent > Trading > Feuille de route et fais l’étape en cours. Chaque dimanche, copie ton journal pour Claude et fais la revue : ce qui a marché, la règle non respectée, la seule chose à corriger.',
+        quiz: [
+          { q: 'Le surajustement, c’est…', a: ['une stratégie avec tellement de règles qu’elle ne colle qu’au passé', 'une position trop grosse'], c: 0, why: 'Elle semble parfaite sur l’historique et échoue dès qu’on l’utilise.' },
+          { q: 'Combien de corrections apporter après une revue ?', a: ['Une seule', 'Le plus possible'], c: 0, why: 'Si tu changes tout en même temps, tu ne sais plus ce qui a marché.' },
+          { q: 'Pourquoi passer par la simulation avant le réel ?', a: ['Pour mesurer son avantage sans risquer d’argent', 'Ça ne sert à rien'], c: 0, why: 'Les 30 trades simulés donnent un premier chiffre avant de payer tes erreurs.' },
+        ],
+      },
+    ],
+  },
+  {
     id: 'u4',
     title: 'Trader',
     emoji: '⚔️',
@@ -259,6 +302,8 @@ export const RESOURCES = [
   { name: 'Micron – Relations investisseurs', url: 'https://investors.micron.com', why: 'Résultats trimestriels, présentations, conférences téléphoniques.' },
   { name: 'SEC EDGAR', url: 'https://www.sec.gov/edgar/search/', why: 'Rapports officiels américains (10-K, 10-Q), la source primaire.' },
   { name: 'Zonebourse', url: 'https://www.zonebourse.com', why: 'Consensus des analystes, PER, historique des résultats.' },
+  { name: 'Barber & Odean (2000) – Trading Is Hazardous to Your Wealth', url: 'https://faculty.haas.berkeley.edu/odean/papers%20current%20versions/individual_investor_performance_final.pdf', why: 'L’étude de référence sur la performance des particuliers qui tradent beaucoup.' },
+  { name: 'AQR – Time Series Momentum (données de l’étude)', url: 'https://www.aqr.com/Insights/Datasets/Time-Series-Momentum-Original-Paper-Data', why: 'Les données de l’étude sur la tendance (Moskowitz, Ooi, Pedersen).' },
   { name: 'Investopedia', url: 'https://www.investopedia.com', why: 'Le dictionnaire de la finance (en anglais) : n’importe quel terme expliqué.' },
   { name: 'Coursera – Financial Markets (Yale, Robert Shiller)', url: 'https://www.coursera.org/learn/financial-markets-global', why: 'Cours universitaire gratuit en audit, par un prix Nobel.' },
   { name: 'Investing.com – calendrier économique', url: 'https://fr.investing.com/economic-calendar/', why: 'Fed, BCE, inflation, dates de résultats.' },

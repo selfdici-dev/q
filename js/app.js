@@ -2,11 +2,13 @@ import {
   todayKey, addDays, diffDays, fromKey, dayStatus, chain, recoveryMode, lastNDays,
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, isPlannedMinimumDay,
+  dueCards, reviewCard, sportWeeks,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
-  WARMUP, PROTEIN_TARGET, PROTEIN_EXAMPLES, PHASES, MILESTONES, BOOKS, APPS,
+  WARMUP, PROTEIN_TARGET, PROTEIN_EXAMPLES, PHASES, MILESTONES, BOOKS, APPS, PERMIS_SKILLS, PERMIS_TIPS,
 } from './data.js';
+import { ALL_LESSONS } from './finance-data.js';
 import { lineChart, barChart, wireTooltips } from './charts.js';
 import { createMoney, DEFAULT_CALC, DEFAULT_WEALTH } from './money.js';
 import { quoteOfDay } from './quotes.js';
@@ -42,6 +44,9 @@ function freshState() {
     books: {},
     setup: {},
     feels: [],
+    srs: {},
+    myCards: [],
+    permis: { target: '2026-12-31', examDate: '', dateAsked: false, code: false, lessons: [], skills: {} },
     ui: { moneyTab: 'parcours', meTab: 'programme', lesson: null, lastLevel: 1 },
     timers: { pomo: { mode: 'work', endAt: null, remaining: POMO_WORK, label: '' }, urge: { endAt: null } },
   };
@@ -59,6 +64,7 @@ function load() {
       timers: { ...base.timers, ...s.timers },
       calc: { ...base.calc, ...s.calc },
       wealth: { ...base.wealth, ...s.wealth },
+      permis: { ...base.permis, ...s.permis },
       ui: { ...base.ui, ...s.ui, lesson: null },
     };
     // Données d'avant la v2 : on fige la liste d'habitudes des jours passés.
@@ -212,12 +218,12 @@ const TABS = [
 
 function currentTab() {
   const h = location.hash.slice(1) === 'bilan' ? 'moi' : location.hash.slice(1);
-  return TABS.some((t) => t.id === h) ? h : 'jour';
+  return TABS.some((t) => t.id === h) || h === 'revision' ? h : 'jour';
 }
 
 function render() {
   const tab = currentTab();
-  const views = { jour: viewToday, focus: viewFocus, sport: viewSport, argent: money.view, suivi: viewTrack, moi: viewMe };
+  const views = { jour: viewToday, focus: viewFocus, sport: viewSport, argent: money.view, suivi: viewTrack, moi: viewMe, revision: viewRevision };
   $('#view').innerHTML = views[tab]();
   $('#view').dataset.tab = tab;
   const lv = levelInfo(totalXP(state));
@@ -302,6 +308,8 @@ function viewToday() {
       }).join('')}
     </ul>
   </section>
+  ${revisionCard(today)}
+  ${permisCard(today)}
   ${snackCard(today)}
   <section class="card">
     <div class="card-head"><h2>Séance du jour</h2></div>
@@ -320,6 +328,137 @@ function viewToday() {
   <section class="card">
     <div class="card-head"><h2>Mes règles « Si… alors… »</h2></div>
     <ul class="rules">${state.rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
+  </section>`;
+}
+
+// ---------- Révisions (révision espacée) ----------
+const CARD_CATS = ['Permis', 'Trading', 'Culture', 'Livres', 'Autre'];
+
+function deck() {
+  const lessonCards = ALL_LESSONS.filter((l) => state.lessons[l.id]).flatMap((l) => l.quiz.map((q, i) => ({
+    id: `L:${l.id}:${i}`, cat: 'Finance', front: q.q, back: `${q.a[q.c]}. ${q.why}`,
+  })));
+  return [...lessonCards, ...state.myCards].map((c) => ({ ...c, ...state.srs[c.id] }));
+}
+
+const rev = { queue: null, flipped: false };
+
+function revisionCard(today) {
+  const due = dueCards(deck(), today).length;
+  const total = deck().length;
+  return `<section class="card">
+    <div class="card-head"><h2>🧠 Révisions</h2><span class="pill">${due} à revoir</span></div>
+    ${total
+      ? `<p class="hint">${due ? `≈ ${Math.max(1, Math.round(due / 6))} min. Chaque carte revient juste avant que tu l’oublies.` : 'Rien à revoir aujourd’hui. Ajoute des cartes (permis, culture, livres) quand tu apprends quelque chose.'}</p>
+         <div class="row"><a class="btn ${due ? 'primary' : ''}" href="#revision">${due ? 'Réviser maintenant' : 'Voir mes cartes'}</a></div>`
+      : '<p class="hint">Chaque leçon de finance validée ajoute ses cartes ici. Tu peux aussi créer les tiennes.</p><div class="row"><a class="btn" href="#revision">Créer une carte</a></div>'}
+  </section>`;
+}
+
+function viewRevision() {
+  const today = todayKey();
+  const all = deck();
+  if (!rev.queue) rev.queue = dueCards(all, today).map((c) => c.id);
+  const byId = Object.fromEntries(all.map((c) => [c.id, c]));
+  rev.queue = rev.queue.filter((id) => byId[id]);
+  const c = byId[rev.queue[0]];
+  const counts = CARD_CATS.map((cat) => [cat, state.myCards.filter((x) => x.cat === cat).length]).filter(([, n]) => n);
+  return `
+  <div class="row"><a class="btn ghost small" href="#jour">← Retour</a><span class="pill">${rev.queue.length} restante${rev.queue.length > 1 ? 's' : ''}</span></div>
+  ${c ? `<section class="card flash ${rev.flipped ? 'flipped' : ''}">
+      <span class="tag">${esc(c.cat)}</span>
+      <p class="flash-front">${esc(c.front)}</p>
+      ${rev.flipped
+        ? `<p class="flash-back">${esc(c.back)}</p>
+           <div class="feel"><button class="btn" data-act="card-answer" data-ok="0">↺ À revoir</button><span></span><button class="btn primary" data-act="card-answer" data-ok="1">✓ Je savais</button></div>`
+        : '<div class="row"><button class="btn primary wide" data-act="card-flip">Voir la réponse</button></div>'}
+      <p class="hint">Réponds dans ta tête avant de retourner la carte. Sois honnête : « à revoir » n’est pas un échec, c’est ce qui fait marcher la méthode.</p>
+    </section>`
+    : `<section class="card center"><div class="big-emoji">🧠</div><h2>C’est fait pour aujourd’hui</h2><p class="muted">${all.length} carte${all.length > 1 ? 's' : ''} au total. Reviens demain.</p></section>`}
+  <section class="card">
+    <div class="card-head"><h2>Nouvelle carte</h2></div>
+    <label>Catégorie<select id="card-cat">${CARD_CATS.map((x) => `<option>${x}</option>`).join('')}</select></label>
+    <label>Question<input id="card-front" placeholder="Ex. : Distance de sécurité sur autoroute ?"></label>
+    <label>Réponse<input id="card-back" placeholder="Ex. : 2 secondes, soit 2 traits de la ligne de rive"></label>
+    <div class="row"><button class="btn primary" data-act="card-add">Ajouter</button></div>
+    <p class="hint">Une carte = une seule idée, une réponse courte. Crée-en après chaque leçon de conduite, chaque chapitre de livre, chaque trade qui t’apprend quelque chose.</p>
+    ${counts.length ? `<p class="hint">Tes cartes : ${counts.map(([k, n]) => `${k} ${n}`).join(' · ')}</p>` : ''}
+    ${state.myCards.length ? `<details><summary>Gérer mes cartes</summary><ul class="cardlist">${state.myCards.map((x, i) => `<li><span><strong>${esc(x.front)}</strong><br><span class="muted">${esc(x.back)}</span></span><button class="btn ghost small" data-act="card-del" data-i="${i}">Suppr.</button></li>`).join('')}</ul></details>` : ''}
+  </section>`;
+}
+
+// ---------- Permis ----------
+function permisStats() {
+  const p = state.permis;
+  const mins = p.lessons.reduce((s, l) => s + (Number(l.mins) || 0), 0);
+  const items = PERMIS_SKILLS.flatMap((c) => c.items.map((_, i) => p.skills[`${c.id}-${i}`] ?? 0));
+  const skillPct = items.length ? (items.reduce((a, b) => a + b, 0) / (items.length * 2)) * 100 : 0;
+  const recent = p.lessons.filter((l) => diffDays(l.date, todayKey()) < 14).length;
+  const daysLeft = diffDays(todayKey(), p.examDate || p.target);
+  return { mins, skillPct, recent, daysLeft };
+}
+
+function permisCard(today) {
+  const p = state.permis;
+  const st = permisStats();
+  const next = !p.dateAsked && !p.examDate
+    ? '⚠️ Demande une date d’examen à ton auto-école cette semaine : les délais vont de 2 à 6 mois.'
+    : st.recent < 4 ? 'Vise 2 leçons par semaine : moins, tu oublies entre deux.' : 'Bon rythme. Note ce qui a coincé après chaque leçon.';
+  return `<section class="card">
+    <div class="card-head"><h2>🚗 Permis</h2><span class="pill">${p.examDate ? `Examen J-${st.daysLeft}` : `Objectif J-${st.daysLeft}`}</span></div>
+    <div class="kpis three">
+      <div><span class="lbl">Heures</span><span class="kpi">${num1(st.mins / 60)}</span></div>
+      <div><span class="lbl">Leçons (14 j)</span><span class="kpi">${st.recent}</span></div>
+      <div><span class="lbl">Compétences</span><span class="kpi">${Math.round(st.skillPct)} %</span></div>
+    </div>
+    <p class="hint">${esc(next)}</p>
+    <div class="row"><button class="btn" data-act="me-tab" data-id="permis" data-go="moi">Ouvrir le suivi</button></div>
+  </section>`;
+}
+
+const num1 = (v) => Number(v).toLocaleString('fr-FR', { maximumFractionDigits: 1 });
+
+function viewPermis() {
+  const p = state.permis;
+  const st = permisStats();
+  return `
+  <section class="card program-hero">
+    <div class="card-head"><h2>🚗 Objectif permis</h2><span class="pill">${p.examDate ? `Examen J-${st.daysLeft}` : `J-${st.daysLeft}`}</span></div>
+    <div class="grid2">
+      <label>Objectif<input type="date" data-permis="target" value="${esc(p.target)}"></label>
+      <label>Date d’examen obtenue<input type="date" data-permis="examDate" value="${esc(p.examDate)}"></label>
+    </div>
+    <label class="check"><input type="checkbox" data-permis-flag="code" ${p.code ? 'checked' : ''}> Code obtenu</label>
+    <label class="check"><input type="checkbox" data-permis-flag="dateAsked" ${p.dateAsked ? 'checked' : ''}> Date d’examen demandée à l’auto-école</label>
+    <div class="kpis three">
+      <div><span class="lbl">Heures</span><span class="kpi">${num1(st.mins / 60)}</span></div>
+      <div><span class="lbl">Leçons (14 j)</span><span class="kpi">${st.recent}</span></div>
+      <div><span class="lbl">Compétences</span><span class="kpi">${Math.round(st.skillPct)} %</span></div>
+    </div>
+    <div class="bar"><span style="width:${st.skillPct}%"></span></div>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>Noter une leçon</h2></div>
+    <div class="grid2">
+      <label>Date<input type="date" id="pl-date" value="${todayKey()}" max="${todayKey()}"></label>
+      <label>Durée (min)<input type="number" id="pl-mins" value="60" step="15" inputmode="numeric"></label>
+    </div>
+    <label>Ce qui a coincé (une phrase)<input id="pl-note" placeholder="Ex. : priorités à droite en zone résidentielle"></label>
+    <div class="row"><button class="btn primary" data-act="permis-lesson">Ajouter la leçon</button></div>
+    ${p.lessons.length ? `<ul class="cardlist">${p.lessons.slice().reverse().slice(0, 8).map((l) => `<li><span><strong>${fromKey(l.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</strong> · ${l.mins} min<br><span class="muted">${esc(l.note || '—')}</span></span></li>`).join('')}</ul>` : ''}
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>Les 4 compétences du livret</h2></div>
+    <p class="hint">Touche pour passer de « pas vu » à « en cours » puis « acquis ». Fais le point avec ton moniteur : c’est lui qui valide sur ton livret.</p>
+    ${PERMIS_SKILLS.map((c) => `<h3 class="skill-title">${esc(c.name)}</h3>
+      <ul class="skills">${c.items.map((it, i) => {
+        const v = p.skills[`${c.id}-${i}`] ?? 0;
+        return `<li><button class="skill s${v}" data-act="permis-skill" data-id="${c.id}-${i}">${['○', '◐', '●'][v]}</button><span>${esc(it)}</span></li>`;
+      }).join('')}</ul>`).join('')}
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>Conseils</h2></div>
+    <ul class="tight">${PERMIS_TIPS.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
   </section>`;
 }
 
@@ -420,7 +559,13 @@ function viewSport() {
   const suggestDown = lvl > 1 && recent.length === 2 && recent.every((f) => f.v === 'dur');
   const dayNames = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
   const todayDow = (fromKey(today).getDay() + 6) % 7;
+  const sw = sportWeeks(state, today);
   return `
+  <section class="card program-hero">
+    <div class="card-head"><h2>🔥 Régularité</h2><span class="pill">${sw.streak} semaine${sw.streak > 1 ? 's' : ''} tenue${sw.streak > 1 ? 's' : ''}</span></div>
+    <div class="pips big">${Array.from({ length: sw.goal }, (_, i) => `<i class="${i < sw.thisWeek ? 'on' : ''}"></i>`).join('')}</div>
+    <p class="hint">${sw.thisWeek}/${sw.goal} séances A, B ou C cette semaine (lundi → dimanche). Une semaine est tenue à ${sw.goal}. La régularité bat l’intensité : 4 séances moyennes valent mieux qu’une séance héroïque.</p>
+  </section>
   ${suggestUp ? `<div class="banner ok"><strong>2 séances « faciles » de suite.</strong> Il est temps de monter. <button class="btn small primary" data-act="level" data-lvl="${lvl + 1}">Passer au niveau ${lvl + 1}</button></div>` : ''}
   ${suggestDown ? `<div class="banner warn"><strong>2 séances « dures » de suite.</strong> Redescendre d’un niveau n’est pas un échec. <button class="btn small" data-act="level" data-lvl="${lvl - 1}">Revenir au niveau ${lvl - 1}</button></div>` : ''}
   <section class="card">
@@ -636,12 +781,12 @@ function testsCard() {
   </section>`;
 }
 
-const ME_TABS = [['programme', 'Programme'], ['bilan', 'Bilan'], ['livres', 'Livres'], ['apps', 'Apps'], ['reglages', 'Réglages']];
+const ME_TABS = [['programme', 'Programme'], ['permis', 'Permis'], ['bilan', 'Bilan'], ['livres', 'Livres'], ['apps', 'Apps'], ['reglages', 'Réglages']];
 
 function viewMe() {
   const sub = ME_TABS.some(([id]) => id === state.ui.meTab) ? state.ui.meTab : 'programme';
-  const body = { programme: viewProgram, bilan: viewReview, livres: viewBooks, apps: viewApps, reglages: viewSettings }[sub]();
-  return `<nav class="subtabs five">${ME_TABS.map(([id, label]) => `<button class="${sub === id ? 'on' : ''}" data-act="me-tab" data-id="${id}">${label}</button>`).join('')}</nav>${body}`;
+  const body = { programme: viewProgram, permis: viewPermis, bilan: viewReview, livres: viewBooks, apps: viewApps, reglages: viewSettings }[sub]();
+  return `<nav class="subtabs six">${ME_TABS.map(([id, label]) => `<button class="${sub === id ? 'on' : ''}" data-act="me-tab" data-id="${id}">${label}</button>`).join('')}</nav>${body}`;
 }
 
 function avgLast7(field, today, map = (v) => v) {
@@ -933,6 +1078,67 @@ const actions = {
   'me-tab'(el) {
     state.ui.meTab = el.dataset.id;
     save();
+    if (el.dataset.go && currentTab() !== el.dataset.go) location.hash = el.dataset.go;
+    else render();
+    window.scrollTo(0, 0);
+  },
+  'card-flip'() {
+    rev.flipped = true;
+    render();
+  },
+  'card-answer'(el) {
+    const today = todayKey();
+    const id = rev.queue.shift();
+    const card = deck().find((c) => c.id === id);
+    const ok = el.dataset.ok === '1';
+    const { box, due, seen } = reviewCard(card, ok, today);
+    state.srs[id] = { box, due, seen };
+    if (ok) {
+      const d = day(today);
+      d.cardsOk = (d.cardsOk ?? 0) + 1;
+    } else {
+      rev.queue.push(id);
+    }
+    rev.flipped = false;
+    if (!rev.queue.length) {
+      raiseHabit(today, 'apprendre', 1);
+      celebrate('Révisions terminées 🧠');
+    }
+    save();
+    render();
+  },
+  'card-add'() {
+    const front = $('#card-front').value.trim();
+    const back = $('#card-back').value.trim();
+    if (!front || !back) return toast('Question et réponse obligatoires.');
+    const id = `U:${Date.now().toString(36)}`;
+    state.myCards.push({ id, cat: $('#card-cat').value, front, back });
+    rev.queue?.push(id);
+    save();
+    render();
+    toast('Carte ajoutée. Elle revient aujourd’hui, puis de plus en plus espacée.');
+  },
+  'card-del'(el) {
+    const c = state.myCards[Number(el.dataset.i)];
+    if (!confirm(`Supprimer « ${c.front} » ?`)) return;
+    state.myCards.splice(Number(el.dataset.i), 1);
+    delete state.srs[c.id];
+    save();
+    render();
+  },
+  'permis-lesson'() {
+    const date = $('#pl-date').value || todayKey();
+    const mins = Number($('#pl-mins').value) || 60;
+    state.permis.lessons.push({ date, mins, note: $('#pl-note').value.trim() });
+    state.permis.lessons.sort((a, b) => a.date.localeCompare(b.date));
+    save();
+    render();
+    celebrate(`Leçon notée : ${num1(permisStats().mins / 60)} h au total`);
+  },
+  'permis-skill'(el) {
+    const k = el.dataset.id;
+    state.permis.skills[k] = ((state.permis.skills[k] ?? 0) + 1) % 3;
+    save();
     render();
   },
   'book-status'(el) {
@@ -1085,6 +1291,18 @@ document.addEventListener('click', (e) => {
 document.addEventListener('change', (e) => {
   const el = e.target;
   if (money.onChange(el)) return;
+  if (el.dataset.permis) {
+    state.permis[el.dataset.permis] = el.value;
+    save();
+    render();
+    return;
+  }
+  if (el.dataset.permisFlag) {
+    state.permis[el.dataset.permisFlag] = el.checked;
+    save();
+    render();
+    return;
+  }
   if (el.dataset.field) {
     const d = day(el.dataset.key);
     const num = ['weight', 'waist', 'screen', 'steps'].includes(el.dataset.field);
@@ -1149,6 +1367,10 @@ document.addEventListener('visibilitychange', () => {
 
 window.addEventListener('hashchange', () => {
   viewTrack.key = null;
+  if (currentTab() === 'revision') {
+    rev.queue = null;
+    rev.flipped = false;
+  }
   if (currentTab() !== 'argent') state.ui.lesson = null;
   render();
   window.scrollTo(0, 0);

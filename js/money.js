@@ -159,7 +159,7 @@ export function createMoney(ctx) {
     const rr = rewardRisk(t);
     return [
       `Titre : ${t.ticker}`,
-      `Mode : ${t.real ? 'réel' : 'simulé'}`,
+      `Mode : ${modeLabel(t).toLowerCase()}`,
       `Sens : ${t.side === 'short' ? 'vente (short)' : 'achat'}`,
       `Setup : ${t.setup || '—'}`,
       `Thèse : ${t.thesis}`,
@@ -183,6 +183,30 @@ export function createMoney(ctx) {
     }
   }
 
+  const modeLabel = (t) => (t.real ? 'Réel' : t.bt ? 'Backtest' : 'Simulé');
+
+  function roadmap() {
+    const trades = ctx.state.trades;
+    const unitDone = (id) => UNITS.find((u) => u.id === id).lessons.every((l) => ctx.state.lessons[l.id]);
+    const bt = tradeStats(trades.filter((t) => t.bt));
+    const sim = tradeStats(trades.filter((t) => !t.bt && !t.real));
+    const real = tradeStats(trades.filter((t) => t.real));
+    const steps = [
+      { label: 'Finir les unités « La méthode » et « Trader » du cours', done: unitDone('um') && unitDone('u4') },
+      { label: 'Écrire UNE stratégie (le champ Setup de tes trades)', done: trades.some((t) => t.setup) },
+      { label: `20 cas testés sur l’historique, espérance positive (${bt.count}/20)`, done: bt.count >= 20 && bt.expectancy > 0 },
+      { label: `30 trades simulés, espérance positive (${sim.count}/30)`, done: sim.count >= 30 && sim.expectancy > 0 },
+      { label: `30 trades réels avec 10 % du capital, plan respecté à 90 % (${real.count}/30)`, done: real.count >= 30 && real.expectancy > 0 && real.followed >= 0.9 },
+      { label: 'Passer la poche trading à 20 %', done: false },
+    ];
+    const cur = steps.findIndex((x) => !x.done);
+    return `<section class="card program-hero">
+      <div class="card-head"><h2>🗺️ Feuille de route</h2><span class="pill">Étape ${cur + 1}/${steps.length}</span></div>
+      <ol class="roadmap">${steps.map((x, i) => `<li class="${x.done ? 'done' : i === cur ? 'current' : ''}">${x.done ? '✓' : i === cur ? '➜' : '·'} ${esc(x.label)}</li>`).join('')}</ol>
+      <p class="hint">Chaque étape a un critère chiffré. Tant qu’il n’est pas atteint, on reste à l’étape : c’est ce qui sépare l’entraînement du pari.</p>
+    </section>`;
+  }
+
   function tradingView() {
     const w = W();
     const trades = ctx.state.trades;
@@ -192,13 +216,16 @@ export function createMoney(ctx) {
     const pnlReal = real.filter((t) => !isOpen(t)).reduce((s, t) => s + (Number(t.pnlEur) || 0), 0);
     const pocket = w.tradingCapital + pnlReal;
     const drawdown = w.tradingCapital ? (pocket - w.tradingCapital) / w.tradingCapital : 0;
-    const losses = lossesToday(trades, new Date().toISOString().slice(0, 10));
+    const live = trades.filter((t) => !t.bt);
+    const losses = lossesToday(live, new Date().toISOString().slice(0, 10));
+    const openLive = open.filter(({ t }) => !t.bt).length;
     const blocked = losses >= 2 ? 'Deux pertes d’affilée aujourd’hui : stop pour la journée.'
-      : open.length >= MAX_OPEN ? `Déjà ${MAX_OPEN} positions ouvertes.`
+      : openLive >= MAX_OPEN ? `Déjà ${MAX_OPEN} positions ouvertes.`
       : drawdown <= -0.25 ? 'Poche à −25 % : pause d’un mois et retour en simulation.' : '';
     const setups = [...new Set(trades.map((t) => t.setup).filter(Boolean))];
     const copyBox = ctx.state.ui.copyText;
     return `
+    ${roadmap()}
     ${copyBox ? `<section class="card"><div class="card-head"><h2>Texte à copier</h2><button class="btn ghost small" data-act="copy-close">Fermer</button></div><textarea rows="10" readonly onfocus="this.select()">${esc(copyBox)}</textarea></section>` : ''}
     <section class="card">
       <div class="card-head"><h2>⚔️ Poche trading</h2><span class="pill">${eur(pocket)}</span></div>
@@ -208,7 +235,7 @@ export function createMoney(ctx) {
       </div>
       <p class="hint">Risque maximum par trade : <strong>${eur((pocket * w.riskPct) / 100)}</strong>. Résultat réel cumulé : ${pnlReal >= 0 ? '+' : ''}${eur(pnlReal)} (${num(drawdown * 100, 1)} %).</p>
       ${statsBlock(real, 'réelle')}
-      ${sparkline(equityCurve(real.length ? real : trades))}
+      ${sparkline(equityCurve(real.length ? real : trades.filter((t) => !t.bt)))}
       <div class="bar"><span style="width:${Math.min(100, (tradeStats(real).count / TRADES_TO_SCALE) * 100)}%"></span></div>
       <p class="hint">${tradeStats(real).count}/${TRADES_TO_SCALE} trades réels avant de pouvoir passer la poche à 20 % (si espérance positive et plan respecté à 90 %).</p>
       <div class="row"><button class="btn" data-act="journal-copy">Copier mon journal pour Claude</button></div>
@@ -217,9 +244,11 @@ export function createMoney(ctx) {
       <div class="card-head"><h2>Nouveau trade</h2>${blocked ? '<span class="pill warn-pill">Bloqué</span>' : ''}</div>
       ${blocked ? `<div class="alerts"><p>⛔ ${esc(blocked)}</p></div>` : ''}
       <div class="seg-row">
+        <label class="radio"><input type="radio" name="tr-mode" value="bt"> Backtest</label>
         <label class="radio"><input type="radio" name="tr-mode" value="sim" checked> Simulé</label>
         <label class="radio"><input type="radio" name="tr-mode" value="real"> Réel</label>
       </div>
+      <p class="hint">Backtest = un cas passé rejoué sur le graphique (entre directement l’entrée et la sortie). Simulé = prix réels, argent fictif. Réel = ton argent.</p>
       <div class="grid2">
         <label>Titre<input id="tr-ticker" placeholder="MU" autocapitalize="characters"></label>
         <label>Sens<select id="tr-side"><option value="long">Achat (long)</option><option value="short">Vente (short)</option></select></label>
@@ -240,9 +269,9 @@ export function createMoney(ctx) {
         <button class="btn" data-act="trade-copy-draft">Copier pour relecture par Claude</button>
       </div>
     </section>
-    ${open.length ? `<section class="card"><div class="card-head"><h2>En cours</h2><span class="pill">${open.length}/${MAX_OPEN}</span></div>
+    ${open.length ? `<section class="card"><div class="card-head"><h2>En cours</h2><span class="pill">${openLive}/${MAX_OPEN}</span></div>
       ${open.map(({ t, i }) => `<div class="trade">
-        <div><span class="tag ${t.real ? 'real' : ''}">${t.real ? 'Réel' : 'Simulé'}</span> <strong>${esc(t.ticker)}</strong> · ${t.side === 'short' ? 'short' : 'long'} ${num(t.qty, 3)} à ${num(t.entry)} · stop ${num(t.stop)}${t.target ? ` · objectif ${num(t.target)}` : ''}${t.setup ? ` · ${esc(t.setup)}` : ''}
+        <div><span class="tag ${t.real ? 'real' : ''}">${modeLabel(t)}</span> <strong>${esc(t.ticker)}</strong> · ${t.side === 'short' ? 'short' : 'long'} ${num(t.qty, 3)} à ${num(t.entry)} · stop ${num(t.stop)}${t.target ? ` · objectif ${num(t.target)}` : ''}${t.setup ? ` · ${esc(t.setup)}` : ''}
           <br><span class="muted">${esc(t.thesis)}</span></div>
         <div class="grid2"><label>Prix de sortie<input type="number" step="0.01" inputmode="decimal" id="exit-${i}"></label>
           ${t.real ? `<label>Résultat en € (frais compris)<input type="number" step="0.01" inputmode="decimal" id="pnl-${i}"></label>` : ''}
@@ -254,13 +283,14 @@ export function createMoney(ctx) {
       <div class="table-wrap"><table class="tests"><thead><tr><th>Titre</th><th>Mode</th><th>Setup</th><th>R</th><th>Plan</th></tr></thead><tbody>
       ${closed.map(({ t }) => {
         const r = tradeR(t);
-        return `<tr><td>${esc(t.ticker)}</td><td>${t.real ? 'Réel' : 'Simu'}</td><td>${esc(t.setup || '—')}</td><td class="${r > 0 ? 'pos' : 'neg'}">${r > 0 ? '+' : ''}${num(r)}R</td><td>${t.followed ? '✓' : '✗'}</td></tr>`;
+        return `<tr><td>${esc(t.ticker)}</td><td>${modeLabel(t)}</td><td>${esc(t.setup || '—')}</td><td class="${r > 0 ? 'pos' : 'neg'}">${r > 0 ? '+' : ''}${num(r)}R</td><td>${t.followed ? '✓' : '✗'}</td></tr>`;
       }).join('')}</tbody></table></div>
       ${setups.length > 1 ? `<p class="hint">Par setup : ${setups.map((x) => {
         const s = tradeStats(trades.filter((t) => t.setup === x));
         return `${esc(x)} ${s.count ? `${s.expectancy >= 0 ? '+' : ''}${num(s.expectancy)}R (${s.count})` : '—'}`;
       }).join(' · ')}</p>` : ''}
-      ${trades.some((t) => !t.real && !isOpen(t)) ? statsBlock(trades.filter((t) => !t.real), 'simulée') : ''}</section>` : ''}
+      ${trades.some((t) => t.bt && !isOpen(t)) ? statsBlock(trades.filter((t) => t.bt), 'backtest') : ''}
+      ${trades.some((t) => !t.real && !t.bt && !isOpen(t)) ? statsBlock(trades.filter((t) => !t.real && !t.bt), 'simulée') : ''}</section>` : ''}
     <section class="card">
       <div class="card-head"><h2>📜 Mes règles</h2></div>
       <ol class="tight">${TRADING_RULES.map((r) => `<li>${esc(r)}</li>`).join('')}</ol>
@@ -280,6 +310,7 @@ export function createMoney(ctx) {
       earnings: v('earnings'),
       thesis: v('thesis'),
       real: document.querySelector('input[name="tr-mode"]:checked')?.value === 'real',
+      bt: document.querySelector('input[name="tr-mode"]:checked')?.value === 'bt',
     };
   }
 
@@ -441,11 +472,11 @@ export function createMoney(ctx) {
       if (!t.ticker || !t.entry || !t.stop || !t.qty) return ctx.toast('Titre, entrée, stop et quantité sont obligatoires.');
       if (!t.thesis) return ctx.toast('Écris ta thèse : pas de trade sans raison.');
       if ((t.side === 'long' && t.stop >= t.entry) || (t.side === 'short' && t.stop <= t.entry)) return ctx.toast('Le stop doit être du côté de la perte.');
-      if (!PRE_TRADE_CHECKS.every((c) => $(`#chk-${c.id}`)?.checked)) return ctx.toast('Coche les 3 vérifications avant d’entrer.');
+      if (!t.bt && !PRE_TRADE_CHECKS.every((c) => $(`#chk-${c.id}`)?.checked)) return ctx.toast('Coche les 3 vérifications avant d’entrer.');
       ctx.state.trades.push(t);
       ctx.save();
       ctx.render();
-      ctx.toast(t.real ? 'Trade réel ouvert. Pose ton stop chez le courtier MAINTENANT.' : 'Trade simulé ouvert. Note le prix réel pour le clôturer.');
+      ctx.toast(t.real ? 'Trade réel ouvert. Pose ton stop chez le courtier MAINTENANT.' : t.bt ? 'Cas de backtest ajouté : indique la sortie qu’aurait donnée ta règle.' : 'Trade simulé ouvert. Note le prix réel pour le clôturer.');
     },
     'trade-copy-draft'() {
       const t = readForm();

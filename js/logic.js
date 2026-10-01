@@ -203,7 +203,7 @@ export function series(state, field, today, n) {
 // ---------- Points (XP) et niveaux ----------
 // L'XP est recalculée à partir des données, jamais stockée : impossible de la
 // compter deux fois, et elle suit automatiquement les corrections.
-export const XP = { min: 10, full: 20, dayValid: 20, workout: 30, focus: 15, urge: 5, snackResisted: 5, lesson: 40, perfect: 20, trade: 15 };
+export const XP = { min: 10, full: 20, dayValid: 20, workout: 30, focus: 15, urge: 5, snackResisted: 5, lesson: 40, perfect: 20, trade: 15, book: 50 };
 
 export const RANKS = ['Recrue', 'Apprenti', 'Régulier', 'Solide', 'Discipliné', 'Méthodique', 'Inarrêtable', 'Maître de soi'];
 
@@ -219,6 +219,7 @@ export function totalXP(state) {
   }
   for (const l of Object.values(state.lessons ?? {})) xp += XP.lesson + (l.perfect ? XP.perfect : 0);
   xp += (state.trades ?? []).filter((t) => t.exit !== undefined && t.exit !== null).length * XP.trade;
+  xp += Object.values(state.books ?? {}).filter((b) => b.status === 'done').length * XP.book;
   return xp;
 }
 
@@ -278,5 +279,56 @@ export function tradeStats(trades) {
     expectancy: avg(rs),
     pnl,
     followed: closed.length ? closed.filter((t) => t.followed).length / closed.length : 0,
+  };
+}
+
+// ---------- Programme de 12 semaines ----------
+// Coucher cible de la semaine : 1 h 15 en semaine 1, puis 15 min plus tôt
+// chaque semaine, jusqu'à la cible finale (23 h 30 par défaut).
+export function weekNumber(state, today) {
+  return Math.floor(Math.max(0, diffDays(state.settings.startDate, today)) / 7) + 1;
+}
+
+export function weeklyBedtime(week, finalTarget = '23:30', start = '01:15') {
+  const s = bedtimeMinutes(start);
+  const f = bedtimeMinutes(finalTarget);
+  return minutesToHHMM(Math.max(f, s - (week - 1) * 15));
+}
+
+// Le 3e jour de chaque sprint est un « jour minimum » prévu.
+export function isPlannedMinimumDay(state, today) {
+  return diffDays(state.settings.startDate, today) % 7 === 2;
+}
+
+// ---------- Trading : ratio, courbe, poches ----------
+export function rewardRisk(t) {
+  const risk = Math.abs(t.entry - t.stop);
+  if (!risk || !t.target) return null;
+  return Math.abs(t.target - t.entry) / risk;
+}
+
+export function equityCurve(trades) {
+  let sum = 0;
+  return trades
+    .filter((t) => tradeR(t) !== null)
+    .sort((a, b) => String(a.closed).localeCompare(String(b.closed)))
+    .map((t) => (sum += tradeR(t)));
+}
+
+// Pertes consécutives sur les derniers trades clôturés le même jour.
+export function lossesToday(trades, todayIso) {
+  const closedToday = trades
+    .filter((t) => tradeR(t) !== null && String(t.closed).slice(0, 10) === todayIso)
+    .sort((a, b) => String(a.closed).localeCompare(String(b.closed)));
+  let n = 0;
+  for (let i = closedToday.length - 1; i >= 0 && tradeR(closedToday[i]) <= 0; i--) n++;
+  return n;
+}
+
+export function allocation(pockets) {
+  const total = pockets.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+  return {
+    total,
+    parts: pockets.map((p) => ({ ...p, pct: total ? ((Number(p.amount) || 0) / total) * 100 : 0 })),
   };
 }

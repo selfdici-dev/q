@@ -18,10 +18,10 @@ Elle fonctionne hors ligne et s’installe sur le téléphone. Aucune donnée ne
 
 | Onglet | Contenu |
 |---|---|
-| Jour | Chaîne, sprint, habitudes, grignotages (avec déclencheur), séance du jour, nuit dernière, règles « Si… alors… » |
+| Jour | Chaîne, sprint, habitudes, protéines et grignotages (avec déclencheur), séance du jour, nuit dernière, règles « Si… alors… » |
 | Focus | Minuteur 25/5 avec une plante qui pousse, jardin du jour, minuteur « Envie de scroller ? » de 10 min |
-| Argent | Parcours de 15 leçons (des bases au trading, fiscalité 2026) avec quiz, calculatrices (intérêts composés, taille de position), journal de trades simulés (espérance en R, respect du plan, seuil de 30 trades avant le réel), sources fiables |
-| Corps | Séances A (tronc), B (haut du corps et posture), M (mobilité 8 min), 3 niveaux, lecteur guidé, démos vidéo, règles alimentaires, 6 recettes de débutant |
+| Argent | Parcours de 18 leçons (dont volatilité/ATR, construire une stratégie, utiliser l’actu) (des bases au trading, fiscalité 2026) avec quiz ; patrimoine par poches avec alertes de concentration ; trading réel/simulé avec checklist obligatoire, règles bloquantes (3 positions, 2 pertes, −25 %), aperçu du risque, courbe en R, statistiques par setup, copie pour relecture par Claude ; calculatrices (taille de position, stop ATR, intérêts composés) ; routine d’actualité et sources |
+| Corps | Semaine type, séances A (tronc), B (haut du corps et posture), C (cardio sans saut), M (mobilité 8 min), échauffement intégré, ressenti en fin de séance et suggestion de niveau, 3 niveaux, lecteur guidé, démos vidéo, règles alimentaires, 6 recettes de débutant |
 | Suivi | Saisie, moyennes sur 7 jours, graphiques, déclencheurs de grignotage, tests de niveau (pompes, planches, hollow) |
 | Bilan | 12 sprints, revue hebdomadaire, habitudes, règles, réglages, export/import |
 

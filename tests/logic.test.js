@@ -92,3 +92,40 @@ test("modifier les habitudes ne réécrit pas l'historique", () => {
   st.habits.push({ id: 'b' });
   assert.equal(chain(st, addDays(s, 1)).count, 1);
 });
+
+test('niveaux : 0, 100, 300, 600 XP', async () => {
+  const { levelInfo } = await import('../js/logic.js');
+  assert.equal(levelInfo(0).level, 1);
+  assert.equal(levelInfo(99).level, 1);
+  assert.equal(levelInfo(100).level, 2);
+  assert.equal(levelInfo(300).level, 3);
+  assert.deepEqual([levelInfo(350).into, levelInfo(350).span], [50, 300]);
+});
+
+test('XP recalculée depuis les données', async () => {
+  const { totalXP } = await import('../js/logic.js');
+  const s = '2026-10-01';
+  const st = mk(s, '1');
+  st.days[s].workouts = ['A'];
+  st.lessons = { precaution: { perfect: true } };
+  st.trades = [{ entry: 10, stop: 9, exit: 12, qty: 1 }, { entry: 10, stop: 9, qty: 1 }];
+  // habitudes 10 + 20, jour validé 20, séance 30, leçon 40 + 20, trade clôturé 15
+  assert.equal(totalXP(st), 155);
+});
+
+test('intérêts composés, taille de position, statistiques de trades', async () => {
+  const { compound, positionSize, tradeStats } = await import('../js/logic.js');
+  assert.equal(Math.round(compound(100, 7, 10).value), 17308);
+  assert.equal(compound(100, 0, 1).value, 1200);
+  assert.equal(positionSize(1000, 1, 50, 45).shares, 2);
+  const st = tradeStats([
+    { side: 'long', entry: 100, stop: 90, exit: 120, qty: 1, followed: true },
+    { side: 'long', entry: 100, stop: 90, exit: 90, qty: 1, followed: true },
+    { side: 'short', entry: 50, stop: 55, exit: 45, qty: 2, followed: false },
+    { side: 'long', entry: 10, stop: 9, qty: 1 },
+  ]);
+  assert.equal(st.count, 3);
+  assert.equal(st.open, 1);
+  assert.equal(st.expectancy, (2 - 1 + 1) / 3);
+  assert.equal(st.pnl, 20 - 10 + 10);
+});

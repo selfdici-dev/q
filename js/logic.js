@@ -199,3 +199,84 @@ export function series(state, field, today, n) {
   }
   return out;
 }
+
+// ---------- Points (XP) et niveaux ----------
+// L'XP est recalculée à partir des données, jamais stockée : impossible de la
+// compter deux fois, et elle suit automatiquement les corrections.
+export const XP = { min: 10, full: 20, dayValid: 20, workout: 30, focus: 15, urge: 5, snackResisted: 5, lesson: 40, perfect: 20, trade: 15 };
+
+export const RANKS = ['Recrue', 'Apprenti', 'Régulier', 'Solide', 'Discipliné', 'Méthodique', 'Inarrêtable', 'Maître de soi'];
+
+export function totalXP(state) {
+  let xp = 0;
+  for (const [key, d] of Object.entries(state.days)) {
+    for (const lvl of Object.values(d.habits ?? {})) xp += lvl === 2 ? XP.full : lvl === 1 ? XP.min : 0;
+    if (dayStatus(state, key).valid) xp += XP.dayValid;
+    xp += (d.workouts?.length ?? 0) * XP.workout;
+    xp += (d.focus ?? 0) * XP.focus;
+    xp += (d.urges ?? 0) * XP.urge;
+    xp += (d.snackResisted ?? 0) * XP.snackResisted;
+  }
+  for (const l of Object.values(state.lessons ?? {})) xp += XP.lesson + (l.perfect ? XP.perfect : 0);
+  xp += (state.trades ?? []).filter((t) => t.exit !== undefined && t.exit !== null).length * XP.trade;
+  return xp;
+}
+
+// Niveau n atteint à 100 × n × (n − 1) / 2 XP : 0, 100, 300, 600, 1000…
+export function levelInfo(xp) {
+  let level = 1;
+  while (100 * ((level + 1) * level) / 2 <= xp) level++;
+  const floor = (100 * level * (level - 1)) / 2;
+  const next = (100 * (level + 1) * level) / 2;
+  return {
+    level,
+    rank: RANKS[Math.min(Math.floor((level - 1) / 2), RANKS.length - 1)],
+    into: xp - floor,
+    span: next - floor,
+  };
+}
+
+// ---------- Finance ----------
+export function compound(monthly, annualRate, years, initial = 0) {
+  const r = annualRate / 100 / 12;
+  const n = Math.round(years * 12);
+  const growth = (1 + r) ** n;
+  const value = r === 0 ? initial + monthly * n : initial * growth + monthly * ((growth - 1) / r);
+  const invested = initial + monthly * n;
+  return { value, invested, gains: value - invested };
+}
+
+export function positionSize(capital, riskPct, entry, stop) {
+  const perShare = Math.abs(entry - stop);
+  if (!capital || !riskPct || !perShare) return null;
+  const risk = (capital * riskPct) / 100;
+  const shares = risk / perShare;
+  return { risk, perShare, shares, exposure: shares * entry, exposurePct: ((shares * entry) / capital) * 100 };
+}
+
+// R d'un trade clôturé : gain ou perte divisé par le risque initial.
+export function tradeR(t) {
+  const risk = Math.abs(t.entry - t.stop);
+  if (!risk || t.exit === undefined || t.exit === null) return null;
+  const dir = t.side === 'short' ? -1 : 1;
+  return ((t.exit - t.entry) * dir) / risk;
+}
+
+export function tradeStats(trades) {
+  const closed = trades.filter((t) => tradeR(t) !== null);
+  const rs = closed.map(tradeR);
+  const wins = rs.filter((r) => r > 0);
+  const losses = rs.filter((r) => r <= 0);
+  const pnl = closed.reduce((s, t) => s + (t.exit - t.entry) * (t.side === 'short' ? -1 : 1) * t.qty, 0);
+  const avg = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
+  return {
+    count: closed.length,
+    open: trades.length - closed.length,
+    winRate: closed.length ? wins.length / closed.length : 0,
+    avgWin: avg(wins),
+    avgLoss: avg(losses),
+    expectancy: avg(rs),
+    pnl,
+    followed: closed.length ? closed.filter((t) => t.followed).length / closed.length : 0,
+  };
+}

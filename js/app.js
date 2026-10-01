@@ -1,12 +1,14 @@
 import {
   todayKey, addDays, diffDays, fromKey, dayStatus, chain, recoveryMode, lastNDays,
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
-  SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH,
+  SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
 } from './data.js';
 import { lineChart, barChart, wireTooltips } from './charts.js';
+import { createMoney, DEFAULT_CALC } from './money.js';
+import { quoteOfDay } from './quotes.js';
 
 const STORE = 'cap-v1';
 const POMO_WORK = 25 * 60;
@@ -31,6 +33,10 @@ function freshState() {
     days: {},
     reviews: {},
     tests: [],
+    lessons: {},
+    trades: [],
+    calc: { ...DEFAULT_CALC },
+    ui: { moneyTab: 'parcours', lesson: null, lastLevel: 1 },
     timers: { pomo: { mode: 'work', endAt: null, remaining: POMO_WORK, label: '' }, urge: { endAt: null } },
   };
 }
@@ -41,7 +47,13 @@ function load() {
     if (!raw) return freshState();
     const s = JSON.parse(raw);
     const base = freshState();
-    const st = { ...base, ...s, settings: { ...base.settings, ...s.settings }, timers: { ...base.timers, ...s.timers } };
+    const st = {
+      ...base, ...s,
+      settings: { ...base.settings, ...s.settings },
+      timers: { ...base.timers, ...s.timers },
+      calc: { ...base.calc, ...s.calc },
+      ui: { ...base.ui, ...s.ui, lesson: null },
+    };
     // Données d'avant la v2 : on fige la liste d'habitudes des jours passés.
     const ids = st.habits.map((h) => h.id);
     for (const d of Object.values(st.days)) d.ids ??= ids;
@@ -92,6 +104,26 @@ function toast(msg) {
   toast.h = setTimeout(() => (t.hidden = true), 3200);
 }
 
+function celebrate(msg) {
+  toast(msg);
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const box = document.createElement('div');
+  box.className = 'confetti';
+  const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6'];
+  for (let i = 0; i < 40; i++) {
+    const c = document.createElement('i');
+    c.style.left = `${Math.random() * 100}%`;
+    c.style.background = colors[i % colors.length];
+    c.style.animationDelay = `${Math.random() * 0.3}s`;
+    c.style.setProperty('--dx', `${(Math.random() - 0.5) * 160}px`);
+    c.style.setProperty('--rot', `${Math.random() * 720}deg`);
+    box.appendChild(c);
+  }
+  document.body.appendChild(box);
+  navigator.vibrate?.([30, 40, 30]);
+  setTimeout(() => box.remove(), 2200);
+}
+
 let audioCtx;
 function beep(times = 1) {
   try {
@@ -124,12 +156,42 @@ async function keepAwake(on) {
 
 // ---------- vues ----------
 
+const money = createMoney({
+  get state() { return state; },
+  save: () => save(),
+  render: () => render(),
+  toast: (m) => toast(m),
+  celebrate: (m) => celebrate(m),
+  raiseHabit: (k, id, l) => raiseHabit(k, id, l),
+  todayKey,
+  esc,
+});
+
+function ring(done, total) {
+  const r = 30;
+  const c = 2 * Math.PI * r;
+  const f = total ? done / total : 0;
+  return `<svg class="ring" viewBox="0 0 72 72" aria-hidden="true">
+    <circle cx="36" cy="36" r="${r}" class="ring-bg"/>
+    <circle cx="36" cy="36" r="${r}" class="ring-fg" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - f)}"/>
+  </svg><span class="ring-txt">${done}/${total}</span>`;
+}
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 4 || h >= 22) return 'Il est tard. Téléphone hors de la chambre ?';
+  if (h < 12) return 'Bonjour. Les minimums d’abord.';
+  if (h < 18) return 'Bon après-midi. Où en es-tu ?';
+  return 'Bonsoir. Dernière ligne droite.';
+}
+
 const TABS = [
-  { id: 'jour', label: 'Jour', icon: '◉' },
-  { id: 'focus', label: 'Focus', icon: '◷' },
-  { id: 'sport', label: 'Corps', icon: '✚' },
-  { id: 'suivi', label: 'Suivi', icon: '▤' },
-  { id: 'bilan', label: 'Bilan', icon: '✓' },
+  { id: 'jour', label: 'Jour', icon: '☀️' },
+  { id: 'focus', label: 'Focus', icon: '🎯' },
+  { id: 'sport', label: 'Corps', icon: '💪' },
+  { id: 'argent', label: 'Argent', icon: '💶' },
+  { id: 'suivi', label: 'Suivi', icon: '📊' },
+  { id: 'bilan', label: 'Bilan', icon: '🧭' },
 ];
 
 function currentTab() {
@@ -139,8 +201,15 @@ function currentTab() {
 
 function render() {
   const tab = currentTab();
-  const views = { jour: viewToday, focus: viewFocus, sport: viewSport, suivi: viewTrack, bilan: viewReview };
+  const views = { jour: viewToday, focus: viewFocus, sport: viewSport, argent: money.view, suivi: viewTrack, bilan: viewReview };
   $('#view').innerHTML = views[tab]();
+  $('#view').dataset.tab = tab;
+  const lv = levelInfo(totalXP(state));
+  if (lv.level > (state.ui.lastLevel ?? 1)) {
+    state.ui.lastLevel = lv.level;
+    save();
+    celebrate(`Niveau ${lv.level} atteint : ${lv.rank}`);
+  }
   document.querySelectorAll('#tabs a').forEach((a) => a.setAttribute('aria-current', a.dataset.tab === tab ? 'page' : 'false'));
   if (tab === 'suivi') wireTooltips($('#view'));
   tick();
@@ -177,16 +246,26 @@ function viewToday() {
     banner = `<div class="banner ok"><strong>Journée validée.</strong> ${st.full ? 'Tout en complet. Bravo, maintenant repose-toi.' : 'Les minimums sont faits. Le complet est un bonus, pas une obligation.'}</div>`;
   }
 
+  const lv = levelInfo(totalXP(state));
+  const q = quoteOfDay(today);
   return `
   <header class="hero">
-    <p class="eyebrow">${esc(longDate(today))}</p>
+    <div class="hero-top">
+      <div><p class="eyebrow">${esc(longDate(today))}</p><p class="greet">${greeting()}</p></div>
+      <div class="ring-wrap ${allDone ? 'done' : ''}">${ring(st.done, st.total)}</div>
+    </div>
     <div class="hero-stats">
-      <div><span class="big">${ch.count}</span><span class="lbl">jours dans la chaîne${ch.jokers ? ` · ${ch.jokers} reprise${ch.jokers > 1 ? 's' : ''}` : ''}</span></div>
-      <div><span class="big">${sp.current.number}<small>/${SPRINT_COUNT}</small></span><span class="lbl">sprint · jour ${sprintDay}/7 · ${sp.current.valid} validé${sp.current.valid > 1 ? 's' : ''}</span></div>
+      <div><span class="big">🔥 ${ch.count}</span><span class="lbl">jour${ch.count > 1 ? 's' : ''} de chaîne${ch.jokers ? ` · ${ch.jokers} reprise${ch.jokers > 1 ? 's' : ''}` : ''}</span></div>
+      <div><span class="big">🏁 ${sp.current.number}<small>/${SPRINT_COUNT}</small></span><span class="lbl">sprint · jour ${sprintDay}/7 · ${sp.current.valid} validé${sp.current.valid > 1 ? 's' : ''}</span></div>
+    </div>
+    <div class="level">
+      <span class="badge">Niv. ${lv.level}</span><span class="rank">${lv.rank}</span><span class="xp">${lv.into}/${lv.span} XP</span>
+      <div class="xpbar"><span style="width:${(lv.into / lv.span) * 100}%"></span></div>
     </div>
     ${dots(last7)}
   </header>
   ${banner}
+  <blockquote class="quote"><p>« ${esc(q.text)} »</p><cite>${esc(q.author)}</cite></blockquote>
   <section class="card">
     <div class="card-head"><h2>Aujourd’hui</h2><span class="pill">${st.done}/${st.total}</span></div>
     <p class="hint">Touche « Min » quand le minimum est fait, « Complet » si tu as fait la version complète. La journée est validée dès que tous les minimums sont faits.</p>
@@ -194,6 +273,7 @@ function viewToday() {
       ${state.habits.map((h) => {
         const lvl = d.habits?.[h.id] ?? 0;
         return `<li class="habit lvl-${lvl}">
+          <span class="habit-ico" aria-hidden="true">${lvl ? '✓' : esc(h.emoji ?? '•')}</span>
           <div class="habit-text"><strong>${esc(h.name)}</strong>
             <span><em>Min :</em> ${esc(h.min)}</span>
             <span><em>Complet :</em> ${esc(h.full)}</span></div>
@@ -241,6 +321,19 @@ function snackCard(key) {
   </section>`;
 }
 
+// La plante pousse pendant la session (idée reprise de Forest).
+function plantSVG(f) {
+  const g = Math.max(0, Math.min(1, f));
+  const stem = 10 + g * 50;
+  const leaf = (y, side, size) => (g * 60 > 75 - y ? `<ellipse cx="${60 + side * (6 + size)}" cy="${y}" rx="${size}" ry="${size / 2.2}" transform="rotate(${side * -30} ${60 + side * (6 + size)} ${y})" class="leaf"/>` : '');
+  return `<svg viewBox="0 0 120 100" aria-hidden="true">
+    <ellipse cx="60" cy="88" rx="34" ry="6" class="soil"/>
+    <rect x="58" y="${86 - stem}" width="4" height="${stem}" rx="2" class="stem"/>
+    ${leaf(70, -1, 9)}${leaf(62, 1, 10)}${leaf(52, -1, 11)}${leaf(42, 1, 12)}${leaf(34, -1, 12)}
+    ${g >= 0.98 ? '<circle cx="60" cy="24" r="16" class="crown"/>' : ''}
+  </svg>`;
+}
+
 function viewFocus() {
   const today = todayKey();
   const d = state.days[today] ?? {};
@@ -250,6 +343,7 @@ function viewFocus() {
   <section class="card center">
     <div class="card-head"><h2>${p.mode === 'work' ? 'Focus 25 min' : 'Pause 5 min'}</h2><span class="pill">${d.focus ?? 0} aujourd’hui</span></div>
     <input class="task" id="pomo-label" placeholder="Sur quoi tu travailles ? (une seule chose)" value="${esc(p.label)}">
+    ${p.mode === 'work' ? `<div class="plant" id="plant">${plantSVG(1 - pomoRemaining() / POMO_WORK)}</div>` : '<div class="plant">☕</div>'}
     <div class="clock" id="pomo-clock">${fmtClock(p.remaining)}</div>
     <div class="row center">
       <button class="btn primary" data-act="pomo-toggle" id="pomo-toggle">${p.endAt ? 'Pause' : 'Démarrer'}</button>
@@ -257,6 +351,7 @@ function viewFocus() {
       <button class="btn" data-act="pomo-skip">${p.mode === 'work' ? 'Passer en pause' : 'Passer la pause'}</button>
     </div>
     <p class="hint">Avant de démarrer : téléphone dans une autre pièce, ou face cachée en mode avion. 1 session valide le minimum « Focus », 4 valident le complet.</p>
+    <div class="garden" aria-label="Sessions terminées aujourd’hui">${'🌳'.repeat(d.focus ?? 0) || '<span class="muted">Ton jardin du jour est vide. Chaque session fait pousser un arbre.</span>'}</div>
   </section>
   <section class="card center urge">
     <div class="card-head"><h2>Envie de scroller ?</h2><span class="pill">${d.urges ?? 0} envie${(d.urges ?? 0) > 1 ? 's' : ''} retardée${(d.urges ?? 0) > 1 ? 's' : ''}</span></div>
@@ -515,7 +610,8 @@ function viewReview() {
     <p class="hint">5 au maximum. Un minimum doit être faisable en 2 minutes, même un mauvais jour. Les changements s’appliquent à partir d’aujourd’hui, les jours passés ne bougent pas.</p>
     ${state.habits.map((h, i) => `
       <fieldset class="habit-edit">
-        <input data-habit="${i}" data-k="name" value="${esc(h.name)}" aria-label="Nom">
+        <div class="habit-edit-top"><input class="emoji-in" data-habit="${i}" data-k="emoji" value="${esc(h.emoji ?? '')}" aria-label="Emoji" maxlength="4">
+        <input data-habit="${i}" data-k="name" value="${esc(h.name)}" aria-label="Nom"></div>
         <input data-habit="${i}" data-k="min" value="${esc(h.min)}" aria-label="Minimum">
         <input data-habit="${i}" data-k="full" value="${esc(h.full)}" aria-label="Complet">
         <button class="btn ghost small" data-act="habit-del" data-i="${i}">Supprimer</button>
@@ -559,6 +655,14 @@ function tick() {
   if (p.endAt && Date.now() >= p.endAt) pomoDone();
   const pc = $('#pomo-clock');
   if (pc) pc.textContent = fmtClock(Math.ceil(pomoRemaining()));
+  const pl = $('#plant');
+  if (pl && p.endAt) {
+    const stage = Math.floor((1 - pomoRemaining() / POMO_WORK) * 50);
+    if (pl.dataset.stage !== String(stage)) {
+      pl.dataset.stage = stage;
+      pl.innerHTML = plantSVG(stage / 50);
+    }
+  }
 
   const u = state.timers.urge;
   if (u.endAt && Date.now() >= u.endAt) {
@@ -596,7 +700,7 @@ function pomoDone() {
     raiseHabit(today, 'focus', d.focus >= 4 ? 2 : 1);
     p.mode = 'break';
     p.remaining = POMO_BREAK;
-    toast('Session terminée. 5 minutes de pause, loin de l’écran.');
+    celebrate('Session terminée 🌳 5 minutes de pause, loin de l’écran.');
   } else {
     p.mode = 'work';
     p.remaining = POMO_WORK;
@@ -620,7 +724,7 @@ const actions = {
     d.habits[el.dataset.id] = (d.habits[el.dataset.id] ?? 0) === lvl ? 0 : lvl;
     save();
     render();
-    if (dayStatus(state, today).valid && chain(state, today).count > before) toast('Journée validée. Chaîne +1.');
+    if (dayStatus(state, today).valid && chain(state, today).count > before) celebrate('Journée validée 🔥 Chaîne +1');
   },
   'start-workout'(el, e) {
     e.preventDefault();
@@ -730,7 +834,7 @@ const actions = {
     render();
   },
   'habit-add'() {
-    state.habits.push({ id: `h${Date.now().toString(36)}`, name: 'Nouvelle habitude', min: 'Version 2 minutes', full: 'Version complète' });
+    state.habits.push({ id: `h${Date.now().toString(36)}`, emoji: '⭐', name: 'Nouvelle habitude', min: 'Version 2 minutes', full: 'Version complète' });
     day(todayKey());
     save();
     render();
@@ -765,11 +869,14 @@ const actions = {
 
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-act]');
-  if (el && actions[el.dataset.act]) actions[el.dataset.act](el, e);
+  if (!el) return;
+  const fn = actions[el.dataset.act] ?? money.actions[el.dataset.act];
+  if (fn) fn(el, e);
 });
 
 document.addEventListener('change', (e) => {
   const el = e.target;
+  if (money.onChange(el)) return;
   if (el.dataset.field) {
     const d = day(el.dataset.key);
     const num = ['weight', 'waist', 'screen', 'steps'].includes(el.dataset.field);
@@ -833,13 +940,15 @@ document.addEventListener('visibilitychange', () => {
 
 window.addEventListener('hashchange', () => {
   viewTrack.key = null;
+  if (currentTab() !== 'argent') state.ui.lesson = null;
   render();
   window.scrollTo(0, 0);
 });
 
 // ---------- démarrage ----------
 
-$('#tabs').innerHTML = TABS.map((t) => `<a href="#${t.id}" data-tab="${t.id}"><span aria-hidden="true">${t.icon}</span>${t.label}</a>`).join('');
+$('#tabs').innerHTML = TABS.map((t) => `<a href="#${t.id}" data-tab="${t.id}"><span class="tab-ico" aria-hidden="true">${t.icon}</span>${t.label}</a>`).join('');
+state.ui.lastLevel = Math.max(state.ui.lastLevel ?? 1, levelInfo(totalXP(state)).level);
 save();
 render();
 setInterval(tick, 250);

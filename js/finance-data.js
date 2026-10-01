@@ -290,6 +290,37 @@ export const UNITS = [
       },
     ],
   },
+  {
+    id: 'uc',
+    title: 'Crypto',
+    emoji: '🪙',
+    lessons: [
+      {
+        id: 'crypto-bases',
+        title: 'Crypto : ce qui change par rapport aux actions',
+        idea: 'Le marché crypto est ouvert 24 h/24, 7 j/7, beaucoup plus volatil, et ne publie pas de résultats : pas de bénéfices à analyser, le prix dépend de l’attention, de la liquidité et du sentiment. Trois règles d’hygiène : une plateforme agréée MiCA ou enregistrée PSAN auprès de l’AMF (vérifie sur le registre de l’AMF), des frais connus, et une fiscalité maîtrisée. Côté frais, Trade Republic prend 1 € par ordre plus un écart de prix d’environ 1 à 2 % sur la crypto, quand certaines plateformes spécialisées sont autour de 0,1 à 0,5 %. Un aller-retour peut donc coûter 2 à 4 % avant le moindre gain.',
+        example: 'Fiscalité 2026 : les plus-values sont taxées à 31,4 % au moment où tu repasses en euros (ou si tu paies un achat en crypto). Un échange crypto contre crypto n’est pas imposable. Si le total de tes ventes de l’année ne dépasse pas 305 €, c’est exonéré. Déclaration : formulaire 2086, et 3916-bis pour chaque compte sur une plateforme étrangère.',
+        exercise: 'Vérifie sur le site de l’AMF que la plateforme que tu utilises (ou veux utiliser) est autorisée. Compare l’écart de prix affiché à l’achat et à la vente sur Bitcoin à un instant donné : c’est ton coût caché.',
+        quiz: [
+          { q: 'Passer d’une crypto à une autre crypto est-il imposable en France ?', a: ['Oui, à chaque échange', 'Non, l’impôt tombe quand on repasse en euros'], c: 1, why: 'L’imposition se fait à la conversion en monnaie classique ou à l’achat d’un bien.' },
+          { q: 'Pourquoi l’écart de prix (spread) compte autant en crypto ?', a: ['Il peut atteindre 1 à 2 % par opération sur certaines plateformes', 'Il n’existe pas en crypto'], c: 0, why: 'Sur un aller-retour, ça peut faire 2 à 4 % de coût caché.' },
+          { q: 'Une plateforme sûre en France est…', a: ['n’importe quelle appli populaire', 'agréée MiCA ou enregistrée auprès de l’AMF'], c: 1, why: 'Le registre de l’AMF permet de vérifier, et protège des plateformes frauduleuses.' },
+        ],
+      },
+      {
+        id: 'petites-cryptos',
+        title: 'Petites cryptos : le casino, et comment limiter la casse',
+        idea: 'Les petites cryptos peuvent faire ×10 comme −95 %. Les faits : selon Chainalysis, environ 74 000 jetons lancés en 2024 (3,6 % des lancements) étaient suspectés d’être liés à des schémas de pump and dump, où des initiés font monter le prix puis vendent sur les nouveaux venus. Les « rug pulls » (créateurs qui retirent la liquidité et disparaissent) sont fréquents. Côté effet exploitable, Liu et Tsyvinski ont mesuré une forte tendance (momentum) à 1 à 4 semaines sur les cryptos, surtout les plus grosses et les plus liquides.',
+        example: 'Règles pour une petite crypto : au maximum 2 % de ta poche trading par ligne (5 € sur 270 €, ou 50 € sur 2 700 €), et au maximum 20 % de la poche sur l’ensemble des petites cryptos. Avant d’acheter, vérifie : le volume quotidien (faible = impossible de revendre sans faire chuter le prix), la part détenue par les plus gros portefeuilles, les déblocages de jetons prévus (ventes massives à venir), l’ancienneté du projet. Signal d’alarme absolu : une crypto poussée par un influenceur ou un groupe Telegram.',
+        exercise: 'Prends 3 petites cryptos dont on parle en ce moment. Sur CoinGecko ou CoinMarketCap, note pour chacune : capitalisation, volume sur 24 h, date de création, prochains déblocages de jetons. Laquelle passerait tes règles ? Garde ta réponse dans le journal, en mode Backtest ou Simulé, avant de mettre 1 €.',
+        quiz: [
+          { q: 'Combien mettre au maximum sur une seule petite crypto ?', a: ['Tout, si on y croit', 'Environ 2 % de la poche trading'], c: 1, why: 'À −95 %, tu perds 1,9 % de ta poche, pas tout.' },
+          { q: 'Un groupe Telegram annonce un « pump » à 20 h. C’est…', a: ['une opportunité', 'un piège : les organisateurs vendent sur les derniers arrivés'], c: 1, why: 'C’est la mécanique même du pump and dump.' },
+          { q: 'Un volume quotidien très faible signifie…', a: ['que tu pourras revendre facilement', 'que revendre peut faire chuter le prix'], c: 1, why: 'Sans acheteurs en face, ton propre ordre de vente fait baisser le cours.' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const ALL_LESSONS = UNITS.flatMap((u) => u.lessons);
@@ -307,6 +338,8 @@ export const RESOURCES = [
   { name: 'Investopedia', url: 'https://www.investopedia.com', why: 'Le dictionnaire de la finance (en anglais) : n’importe quel terme expliqué.' },
   { name: 'Coursera – Financial Markets (Yale, Robert Shiller)', url: 'https://www.coursera.org/learn/financial-markets-global', why: 'Cours universitaire gratuit en audit, par un prix Nobel.' },
   { name: 'Investing.com – calendrier économique', url: 'https://fr.investing.com/economic-calendar/', why: 'Fed, BCE, inflation, dates de résultats.' },
+  { name: 'AMF – plateformes crypto autorisées', url: 'https://www.amf-france.org', why: 'Cherche « liste des PSAN » ou « prestataires agréés MiCA » sur le site pour vérifier une plateforme.' },
+  { name: 'CoinGecko', url: 'https://www.coingecko.com/fr', why: 'Capitalisation, volume, ancienneté et déblocages de jetons d’une crypto.' },
   { name: 'impots.gouv.fr', url: 'https://www.impots.gouv.fr', why: 'Simulateur d’impôt et formulaires (2074, 3916).' },
 ];
 
@@ -319,12 +352,13 @@ export const TRADING_RULES = [
   'Après 2 pertes d’affilée : stop pour la journée.',
   'Poche à −25 % : pause d’un mois, retour en simulation.',
   'Jamais d’argent ajouté pour se refaire.',
+  'Petites cryptos : 2 % maximum de la poche par ligne, 20 % au total, jamais sur un conseil d’influenceur ou de Telegram.',
 ];
 
 // Vérifications obligatoires avant d’ouvrir un trade.
 export const PRE_TRADE_CHECKS = [
   { id: 'thesis', label: 'Ma thèse tient en une phrase et vient de ma stratégie, pas d’une vidéo ou d’un tweet' },
-  { id: 'earnings', label: 'Pas de résultats de l’entreprise dans les 2 prochains jours' },
+  { id: 'earnings', label: 'Pas de résultats, de réunion de la Fed ni de déblocage de jetons (crypto) dans les 2 prochains jours' },
   { id: 'calm', label: 'Je suis calme : pas pour me refaire, pas par peur de rater le mouvement' },
 ];
 

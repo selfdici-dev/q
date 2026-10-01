@@ -21,7 +21,7 @@ export const WORKOUTS = [
   {
     id: 'A',
     name: 'A · Tronc et abdos',
-    desc: 'Gainage profond, sans tirer sur la nuque. 3 tours.',
+    desc: 'Gainage profond et roue abdos, sans tirer sur la nuque. 3 tours.',
     rounds: 3,
     rest: 15,
     roundRest: 60,
@@ -32,6 +32,7 @@ export const WORKOUTS = [
       { name: 'Planche latérale (gauche)', work: 25, cue: 'Même chose de l’autre côté.' },
       { name: 'Hollow hold genoux pliés', work: 25, cue: 'Bas du dos plaqué. Si le dos décolle : genoux plus près, bras plus bas.' },
       { name: 'Bird dog', work: 40, cue: 'À quatre pattes, bras et jambe opposés tendus, pause 2 s, alterne. Dos plat comme une table.' },
+      { name: 'Roue abdominale à genoux', work: 30, cue: 'À genoux sur le tapis, dos légèrement arrondi, fesses serrées. Roule devant toi seulement tant que le bas du dos ne creuse pas, puis reviens en contractant les abdos. Niveau 1 : amplitude courte (30 cm). Arrête si tu sens le bas du dos.' },
     ],
   },
   {
@@ -200,7 +201,7 @@ export const PHASES = [
 export const MILESTONES = [
   { week: 4, screen: 300, weight: 74, pushups: 26, plank: 100, lessons: 8 },
   { week: 8, screen: 210, weight: 72.5, pushups: 30, plank: 120, lessons: 16 },
-  { week: 12, screen: 180, weight: 71, pushups: 35, plank: 150, lessons: 21 },
+  { week: 12, screen: 180, weight: 71, pushups: 35, plank: 150, lessons: 23 },
 ];
 
 // ---------- Livres (partie 4) ----------
@@ -241,37 +242,4 @@ export const APPS = [
   { cat: 'Argent', name: 'justETF', how: 'Avant tout achat d’ETF : frais annuels (TER) et éligibilité au PEA.' },
   { cat: 'Argent', name: 'Finimize', how: 'Newsletter gratuite en anglais : 5 min d’actu finance chaque matin.' },
   { cat: 'Culture', name: 'Bibliothèque municipale', how: 'Carte souvent gratuite pour les jeunes. Emprunte avant d’acheter.' },
-];
-
-// ---------- Permis B : les 4 compétences du livret d’apprentissage (REMC) ----------
-export const PERMIS_SKILLS = [
-  {
-    id: 'c1',
-    name: '1. Maîtriser le véhicule (trafic faible ou nul)',
-    items: ['Installation et réglages (siège, rétros, ceinture)', 'Démarrer, s’arrêter, passer les vitesses', 'Diriger en avant et en ligne droite', 'Regarder autour de soi et avertir', 'Marche arrière et manœuvres'],
-  },
-  {
-    id: 'c2',
-    name: '2. Circuler dans des conditions normales',
-    items: ['Lire la signalisation et la route', 'Se placer sur la chaussée', 'Adapter sa vitesse', 'Intersections et priorités', 'Tourner à droite et à gauche', 'Ronds-points'],
-  },
-  {
-    id: 'c3',
-    name: '3. Conditions difficiles et partage de la route',
-    items: ['Distances de sécurité', 'Croiser, dépasser, être dépassé', 'Voies rapides : insertion et sortie', 'Nuit, pluie, visibilité réduite', 'Piétons, cyclistes, deux-roues'],
-  },
-  {
-    id: 'c4',
-    name: '4. Conduite autonome, sûre et économique',
-    items: ['Suivre un itinéraire seul (GPS, panneaux)', 'Éco-conduite', 'Anticiper et garder de la marge', 'Savoir réagir en cas d’accident'],
-  },
-];
-
-export const PERMIS_TIPS = [
-  'Les délais pour obtenir une place d’examen vont souvent de 2 à 6 mois en région (plus en Île-de-France). Pour viser fin 2026, demande une date à ton auto-école dès maintenant.',
-  'Au moins 2 leçons par semaine : espacer les leçons fait oublier entre deux et coûte plus d’heures au total.',
-  'Après chaque leçon, note en une phrase ce qui a coincé, et relis-le avant la suivante.',
-  'Regarde des vidéos de « parcours d’examen » de ta ville : connaître les pièges locaux (ronds-points, priorités) rassure le jour J.',
-  'Ajoute des cartes « Permis » dans tes révisions : priorités, distances de sécurité, vitesses.',
-  'La veille de l’examen : pas d’écran tard. Le sommeil compte autant que les heures de conduite.',
 ];

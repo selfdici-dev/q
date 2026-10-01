@@ -6,7 +6,7 @@ import {
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
-  WARMUP, PROTEIN_TARGET, PROTEIN_EXAMPLES, PHASES, MILESTONES, BOOKS, APPS, PERMIS_SKILLS, PERMIS_TIPS,
+  WARMUP, PROTEIN_TARGET, PROTEIN_EXAMPLES, PHASES, MILESTONES, BOOKS, APPS,
 } from './data.js';
 import { ALL_LESSONS } from './finance-data.js';
 import { lineChart, barChart, wireTooltips } from './charts.js';
@@ -46,7 +46,6 @@ function freshState() {
     feels: [],
     srs: {},
     myCards: [],
-    permis: { target: '2026-12-31', examDate: '', dateAsked: false, code: false, lessons: [], skills: {} },
     ui: { moneyTab: 'parcours', meTab: 'programme', lesson: null, lastLevel: 1 },
     timers: { pomo: { mode: 'work', endAt: null, remaining: POMO_WORK, label: '' }, urge: { endAt: null } },
   };
@@ -64,7 +63,6 @@ function load() {
       timers: { ...base.timers, ...s.timers },
       calc: { ...base.calc, ...s.calc },
       wealth: { ...base.wealth, ...s.wealth },
-      permis: { ...base.permis, ...s.permis },
       ui: { ...base.ui, ...s.ui, lesson: null },
     };
     // Données d'avant la v2 : on fige la liste d'habitudes des jours passés.
@@ -309,7 +307,6 @@ function viewToday() {
     </ul>
   </section>
   ${revisionCard(today)}
-  ${permisCard(today)}
   ${snackCard(today)}
   <section class="card">
     <div class="card-head"><h2>Séance du jour</h2></div>
@@ -332,7 +329,7 @@ function viewToday() {
 }
 
 // ---------- Révisions (révision espacée) ----------
-const CARD_CATS = ['Permis', 'Trading', 'Culture', 'Livres', 'Autre'];
+const CARD_CATS = ['Trading', 'Crypto', 'Culture', 'Livres', 'Autre'];
 
 function deck() {
   const lessonCards = ALL_LESSONS.filter((l) => state.lessons[l.id]).flatMap((l) => l.quiz.map((q, i) => ({
@@ -349,7 +346,7 @@ function revisionCard(today) {
   return `<section class="card">
     <div class="card-head"><h2>🧠 Révisions</h2><span class="pill">${due} à revoir</span></div>
     ${total
-      ? `<p class="hint">${due ? `≈ ${Math.max(1, Math.round(due / 6))} min. Chaque carte revient juste avant que tu l’oublies.` : 'Rien à revoir aujourd’hui. Ajoute des cartes (permis, culture, livres) quand tu apprends quelque chose.'}</p>
+      ? `<p class="hint">${due ? `≈ ${Math.max(1, Math.round(due / 6))} min. Chaque carte revient juste avant que tu l’oublies.` : 'Rien à revoir aujourd’hui. Ajoute des cartes (trading, culture, livres) quand tu apprends quelque chose.'}</p>
          <div class="row"><a class="btn ${due ? 'primary' : ''}" href="#revision">${due ? 'Réviser maintenant' : 'Voir mes cartes'}</a></div>`
       : '<p class="hint">Chaque leçon de finance validée ajoute ses cartes ici. Tu peux aussi créer les tiennes.</p><div class="row"><a class="btn" href="#revision">Créer une carte</a></div>'}
   </section>`;
@@ -378,87 +375,12 @@ function viewRevision() {
   <section class="card">
     <div class="card-head"><h2>Nouvelle carte</h2></div>
     <label>Catégorie<select id="card-cat">${CARD_CATS.map((x) => `<option>${x}</option>`).join('')}</select></label>
-    <label>Question<input id="card-front" placeholder="Ex. : Distance de sécurité sur autoroute ?"></label>
-    <label>Réponse<input id="card-back" placeholder="Ex. : 2 secondes, soit 2 traits de la ligne de rive"></label>
+    <label>Question<input id="card-front" placeholder="Ex. : Que mesure l’ATR ?"></label>
+    <label>Réponse<input id="card-back" placeholder="Ex. : L’amplitude moyenne des mouvements sur 14 jours"></label>
     <div class="row"><button class="btn primary" data-act="card-add">Ajouter</button></div>
-    <p class="hint">Une carte = une seule idée, une réponse courte. Crée-en après chaque leçon de conduite, chaque chapitre de livre, chaque trade qui t’apprend quelque chose.</p>
+    <p class="hint">Une carte = une seule idée, une réponse courte. Crée-en après chaque chapitre de livre, chaque idée de culture, chaque trade qui t’apprend quelque chose.</p>
     ${counts.length ? `<p class="hint">Tes cartes : ${counts.map(([k, n]) => `${k} ${n}`).join(' · ')}</p>` : ''}
     ${state.myCards.length ? `<details><summary>Gérer mes cartes</summary><ul class="cardlist">${state.myCards.map((x, i) => `<li><span><strong>${esc(x.front)}</strong><br><span class="muted">${esc(x.back)}</span></span><button class="btn ghost small" data-act="card-del" data-i="${i}">Suppr.</button></li>`).join('')}</ul></details>` : ''}
-  </section>`;
-}
-
-// ---------- Permis ----------
-function permisStats() {
-  const p = state.permis;
-  const mins = p.lessons.reduce((s, l) => s + (Number(l.mins) || 0), 0);
-  const items = PERMIS_SKILLS.flatMap((c) => c.items.map((_, i) => p.skills[`${c.id}-${i}`] ?? 0));
-  const skillPct = items.length ? (items.reduce((a, b) => a + b, 0) / (items.length * 2)) * 100 : 0;
-  const recent = p.lessons.filter((l) => diffDays(l.date, todayKey()) < 14).length;
-  const daysLeft = diffDays(todayKey(), p.examDate || p.target);
-  return { mins, skillPct, recent, daysLeft };
-}
-
-function permisCard(today) {
-  const p = state.permis;
-  const st = permisStats();
-  const next = !p.dateAsked && !p.examDate
-    ? '⚠️ Demande une date d’examen à ton auto-école cette semaine : les délais vont de 2 à 6 mois.'
-    : st.recent < 4 ? 'Vise 2 leçons par semaine : moins, tu oublies entre deux.' : 'Bon rythme. Note ce qui a coincé après chaque leçon.';
-  return `<section class="card">
-    <div class="card-head"><h2>🚗 Permis</h2><span class="pill">${p.examDate ? `Examen J-${st.daysLeft}` : `Objectif J-${st.daysLeft}`}</span></div>
-    <div class="kpis three">
-      <div><span class="lbl">Heures</span><span class="kpi">${num1(st.mins / 60)}</span></div>
-      <div><span class="lbl">Leçons (14 j)</span><span class="kpi">${st.recent}</span></div>
-      <div><span class="lbl">Compétences</span><span class="kpi">${Math.round(st.skillPct)} %</span></div>
-    </div>
-    <p class="hint">${esc(next)}</p>
-    <div class="row"><button class="btn" data-act="me-tab" data-id="permis" data-go="moi">Ouvrir le suivi</button></div>
-  </section>`;
-}
-
-const num1 = (v) => Number(v).toLocaleString('fr-FR', { maximumFractionDigits: 1 });
-
-function viewPermis() {
-  const p = state.permis;
-  const st = permisStats();
-  return `
-  <section class="card program-hero">
-    <div class="card-head"><h2>🚗 Objectif permis</h2><span class="pill">${p.examDate ? `Examen J-${st.daysLeft}` : `J-${st.daysLeft}`}</span></div>
-    <div class="grid2">
-      <label>Objectif<input type="date" data-permis="target" value="${esc(p.target)}"></label>
-      <label>Date d’examen obtenue<input type="date" data-permis="examDate" value="${esc(p.examDate)}"></label>
-    </div>
-    <label class="check"><input type="checkbox" data-permis-flag="code" ${p.code ? 'checked' : ''}> Code obtenu</label>
-    <label class="check"><input type="checkbox" data-permis-flag="dateAsked" ${p.dateAsked ? 'checked' : ''}> Date d’examen demandée à l’auto-école</label>
-    <div class="kpis three">
-      <div><span class="lbl">Heures</span><span class="kpi">${num1(st.mins / 60)}</span></div>
-      <div><span class="lbl">Leçons (14 j)</span><span class="kpi">${st.recent}</span></div>
-      <div><span class="lbl">Compétences</span><span class="kpi">${Math.round(st.skillPct)} %</span></div>
-    </div>
-    <div class="bar"><span style="width:${st.skillPct}%"></span></div>
-  </section>
-  <section class="card">
-    <div class="card-head"><h2>Noter une leçon</h2></div>
-    <div class="grid2">
-      <label>Date<input type="date" id="pl-date" value="${todayKey()}" max="${todayKey()}"></label>
-      <label>Durée (min)<input type="number" id="pl-mins" value="60" step="15" inputmode="numeric"></label>
-    </div>
-    <label>Ce qui a coincé (une phrase)<input id="pl-note" placeholder="Ex. : priorités à droite en zone résidentielle"></label>
-    <div class="row"><button class="btn primary" data-act="permis-lesson">Ajouter la leçon</button></div>
-    ${p.lessons.length ? `<ul class="cardlist">${p.lessons.slice().reverse().slice(0, 8).map((l) => `<li><span><strong>${fromKey(l.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</strong> · ${l.mins} min<br><span class="muted">${esc(l.note || '—')}</span></span></li>`).join('')}</ul>` : ''}
-  </section>
-  <section class="card">
-    <div class="card-head"><h2>Les 4 compétences du livret</h2></div>
-    <p class="hint">Touche pour passer de « pas vu » à « en cours » puis « acquis ». Fais le point avec ton moniteur : c’est lui qui valide sur ton livret.</p>
-    ${PERMIS_SKILLS.map((c) => `<h3 class="skill-title">${esc(c.name)}</h3>
-      <ul class="skills">${c.items.map((it, i) => {
-        const v = p.skills[`${c.id}-${i}`] ?? 0;
-        return `<li><button class="skill s${v}" data-act="permis-skill" data-id="${c.id}-${i}">${['○', '◐', '●'][v]}</button><span>${esc(it)}</span></li>`;
-      }).join('')}</ul>`).join('')}
-  </section>
-  <section class="card">
-    <div class="card-head"><h2>Conseils</h2></div>
-    <ul class="tight">${PERMIS_TIPS.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
   </section>`;
 }
 
@@ -781,12 +703,12 @@ function testsCard() {
   </section>`;
 }
 
-const ME_TABS = [['programme', 'Programme'], ['permis', 'Permis'], ['bilan', 'Bilan'], ['livres', 'Livres'], ['apps', 'Apps'], ['reglages', 'Réglages']];
+const ME_TABS = [['programme', 'Programme'], ['bilan', 'Bilan'], ['livres', 'Livres'], ['apps', 'Apps'], ['reglages', 'Réglages']];
 
 function viewMe() {
   const sub = ME_TABS.some(([id]) => id === state.ui.meTab) ? state.ui.meTab : 'programme';
-  const body = { programme: viewProgram, permis: viewPermis, bilan: viewReview, livres: viewBooks, apps: viewApps, reglages: viewSettings }[sub]();
-  return `<nav class="subtabs six">${ME_TABS.map(([id, label]) => `<button class="${sub === id ? 'on' : ''}" data-act="me-tab" data-id="${id}">${label}</button>`).join('')}</nav>${body}`;
+  const body = { programme: viewProgram, bilan: viewReview, livres: viewBooks, apps: viewApps, reglages: viewSettings }[sub]();
+  return `<nav class="subtabs five">${ME_TABS.map(([id, label]) => `<button class="${sub === id ? 'on' : ''}" data-act="me-tab" data-id="${id}">${label}</button>`).join('')}</nav>${body}`;
 }
 
 function avgLast7(field, today, map = (v) => v) {
@@ -1126,21 +1048,6 @@ const actions = {
     save();
     render();
   },
-  'permis-lesson'() {
-    const date = $('#pl-date').value || todayKey();
-    const mins = Number($('#pl-mins').value) || 60;
-    state.permis.lessons.push({ date, mins, note: $('#pl-note').value.trim() });
-    state.permis.lessons.sort((a, b) => a.date.localeCompare(b.date));
-    save();
-    render();
-    celebrate(`Leçon notée : ${num1(permisStats().mins / 60)} h au total`);
-  },
-  'permis-skill'(el) {
-    const k = el.dataset.id;
-    state.permis.skills[k] = ((state.permis.skills[k] ?? 0) + 1) % 3;
-    save();
-    render();
-  },
   'book-status'(el) {
     const id = el.dataset.id;
     const cur = state.books[id]?.status;
@@ -1291,18 +1198,6 @@ document.addEventListener('click', (e) => {
 document.addEventListener('change', (e) => {
   const el = e.target;
   if (money.onChange(el)) return;
-  if (el.dataset.permis) {
-    state.permis[el.dataset.permis] = el.value;
-    save();
-    render();
-    return;
-  }
-  if (el.dataset.permisFlag) {
-    state.permis[el.dataset.permisFlag] = el.checked;
-    save();
-    render();
-    return;
-  }
   if (el.dataset.field) {
     const d = day(el.dataset.key);
     const num = ['weight', 'waist', 'screen', 'steps'].includes(el.dataset.field);

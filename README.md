@@ -16,15 +16,15 @@ Elle fonctionne hors ligne et s’installe sur le téléphone. Aucune donnée ne
 
 ## Révisions
 
-Révision espacée (boîtes de Leitner) : chaque leçon de finance validée ajoute ses questions comme cartes, et tu crées les tiennes (permis, culture, livres, trading). Une carte réussie revient après 1, 3, 7, 14, 30, 60 puis 120 jours ; une carte ratée revient le jour même. Accès depuis la carte « Révisions » de l’onglet Jour (`#revision`).
+Révision espacée (boîtes de Leitner) : chaque leçon de finance validée ajoute ses questions comme cartes, et tu crées les tiennes (trading, crypto, culture, livres). Une carte réussie revient après 1, 3, 7, 14, 30, 60 puis 120 jours ; une carte ratée revient le jour même. Accès depuis la carte « Révisions » de l’onglet Jour (`#revision`).
 
 ## Onglets
 
 | Onglet | Contenu |
 |---|---|
-| Jour | Chaîne, sprint, habitudes, révisions du jour, permis (compte à rebours, prochaine action), protéines et grignotages (avec déclencheur), séance du jour, nuit dernière, règles « Si… alors… » |
+| Jour | Chaîne, sprint, habitudes, révisions du jour, protéines et grignotages (avec déclencheur), séance du jour, nuit dernière, règles « Si… alors… » |
 | Focus | Minuteur 25/5 avec une plante qui pousse, jardin du jour, minuteur « Envie de scroller ? » de 10 min |
-| Argent | Parcours de 21 leçons (dont une unité « La méthode » fondée sur les études : Barber & Odean, McLean & Pontiff, tendance, dérive après résultats, pratique délibérée ; volatilité/ATR, stratégie, actu), feuille de route trading en 6 étapes chiffrées, modes backtest/simulé/réel (des bases au trading, fiscalité 2026) avec quiz ; patrimoine par poches avec alertes de concentration ; trading réel/simulé avec checklist obligatoire, règles bloquantes (3 positions, 2 pertes, −25 %), aperçu du risque, courbe en R, statistiques par setup, copie pour relecture par Claude ; calculatrices (taille de position, stop ATR, intérêts composés) ; routine d’actualité et sources |
+| Argent | Parcours de 23 leçons (dont une unité Crypto : frais, fiscalité, petites cryptos) (dont une unité « La méthode » fondée sur les études : Barber & Odean, McLean & Pontiff, tendance, dérive après résultats, pratique délibérée ; volatilité/ATR, stratégie, actu), feuille de route trading en 6 étapes chiffrées, modes backtest/simulé/réel (des bases au trading, fiscalité 2026) avec quiz ; patrimoine par poches avec alertes de concentration ; trading réel/simulé avec checklist obligatoire, règles bloquantes (3 positions, 2 pertes, −25 %), aperçu du risque, courbe en R, statistiques par setup, copie pour relecture par Claude ; calculatrices (taille de position, stop ATR, intérêts composés) ; routine d’actualité et sources |
 | Corps | Régularité (séances de la semaine, semaines tenues), semaine type, séances A (tronc), B (haut du corps et posture), C (cardio sans saut), M (mobilité 8 min), échauffement intégré, ressenti en fin de séance et suggestion de niveau, 3 niveaux, lecteur guidé, démos vidéo, règles alimentaires, 6 recettes de débutant |
 | Suivi | Saisie, moyennes sur 7 jours, graphiques, déclencheurs de grignotage, tests de niveau (pompes, planches, hollow) |
 | Bilan | 12 sprints, revue hebdomadaire, habitudes, règles, réglages, export/import |

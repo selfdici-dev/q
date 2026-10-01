@@ -1,6 +1,6 @@
 # Cap
 
-Appli personnelle pour **tenir** : habitudes à deux niveaux (minimum / complet), règle « jamais deux fois de suite », sprints de 7 jours, focus 25 min, minuteur anti-scroll, séances guidées sur tapis, suivi du poids, du sommeil, de l’écran et des pas.
+Appli personnelle pour **tenir** et **apprendre** : habitudes à deux niveaux (minimum / complet), règle « jamais deux fois de suite », sprints de 7 jours, focus 25 min, minuteur anti-scroll, séances guidées sur tapis, suivi du poids, du sommeil, de l’écran et des pas.
 
 Elle fonctionne hors ligne et s’installe sur le téléphone. Aucune donnée ne quitte l’appareil.
 
@@ -12,13 +12,15 @@ Elle fonctionne hors ligne et s’installe sur le téléphone. Aucune donnée ne
 - **Sprints de 7 jours.** 12 sprints, soit 12 semaines. Un sprint est réussi à 5 jours validés sur 7. Chaque objectif a une fin proche.
 - **La journée se termine à 4 h.** Un coucher à 1 h compte pour la veille.
 - **Bilan du dimanche.** 3 questions et une seule chose à changer.
+- **XP et niveaux.** Calculés à partir de tes données (habitudes, séances, sessions, leçons, trades), jamais stockés : impossible de tricher par erreur.
 
 ## Onglets
 
 | Onglet | Contenu |
 |---|---|
 | Jour | Chaîne, sprint, habitudes, grignotages (avec déclencheur), séance du jour, nuit dernière, règles « Si… alors… » |
-| Focus | Minuteur 25/5, minuteur « Envie de scroller ? » de 10 min |
+| Focus | Minuteur 25/5 avec une plante qui pousse, jardin du jour, minuteur « Envie de scroller ? » de 10 min |
+| Argent | Parcours de 15 leçons (des bases au trading, fiscalité 2026) avec quiz, calculatrices (intérêts composés, taille de position), journal de trades simulés (espérance en R, respect du plan, seuil de 30 trades avant le réel), sources fiables |
 | Corps | Séances A (tronc), B (haut du corps et posture), M (mobilité 8 min), 3 niveaux, lecteur guidé, démos vidéo, règles alimentaires, 6 recettes de débutant |
 | Suivi | Saisie, moyennes sur 7 jours, graphiques, déclencheurs de grignotage, tests de niveau (pompes, planches, hollow) |
 | Bilan | 12 sprints, revue hebdomadaire, habitudes, règles, réglages, export/import |

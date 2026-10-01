@@ -198,6 +198,42 @@ export const UNITS = [
         ],
       },
       {
+        id: 'volatilite',
+        title: 'Trader la volatilité sans exploser',
+        idea: 'Les titres volatils bougent beaucoup, dans les deux sens. On mesure la volatilité avec l’ATR (Average True Range) : l’amplitude moyenne d’une journée, souvent calculée sur 14 jours. Plus un titre est volatil, plus ton stop doit être large pour ne pas sauter sur un simple bruit, donc plus ta position doit être PETITE pour garder le même risque.',
+        example: 'Action à 100 $, ATR 14 jours = 4 $. Stop à 2 ATR, soit 92 $ : 8 $ de risque par action. Avec 5 € de risque maximum, tu prends environ 0,6 action. Sur un titre calme (ATR 1 $), le même risque te permettrait une position 4 fois plus grosse. La volatilité ne change pas ton risque en euros : elle change ta taille.',
+        exercise: 'Sur TradingView, ajoute l’indicateur ATR (14) sur Micron et sur l’ETF MSCI World. Compare les deux valeurs en % du prix. Calcule ensuite dans Cap la taille de position pour chacun avec un stop à 2 ATR.',
+        quiz: [
+          { q: 'Titre plus volatil, même risque en euros : la position doit être…', a: ['plus grosse', 'plus petite', 'identique'], c: 1, why: 'Stop plus large → moins d’actions pour le même risque.' },
+          { q: 'L’ATR mesure…', a: ['la tendance', 'l’amplitude moyenne des mouvements', 'le bénéfice'], c: 1, why: 'C’est une mesure de volatilité, pas de direction.' },
+          { q: 'Un stop trop serré sur un titre volatil…', a: ['saute souvent sur du bruit', 'protège mieux'], c: 0, why: 'Tu perds sur des mouvements normaux avant que ta thèse ait pu jouer.' },
+        ],
+      },
+      {
+        id: 'strategie',
+        title: 'Construire et tester une stratégie',
+        idea: 'Une stratégie, ce sont des règles assez précises pour qu’un autre puisse les appliquer : quel marché, quel signal d’entrée, où le stop, où la sortie, quelle taille. Deux familles classiques en swing trading (quelques jours à quelques semaines) : le repli dans une tendance haussière (acheter un creux au-dessus de la moyenne mobile 50 jours) et la cassure avec volume (acheter la sortie d’une zone de résistance). Avant d’y mettre de l’argent, on la teste sur l’historique.',
+        example: 'Règle écrite : « Titre au-dessus de sa moyenne mobile 200 jours, repli de 3 séances vers la moyenne 50 jours, entrée au-dessus du plus haut de la veille, stop 2 ATR sous l’entrée, objectif 2R. » Tu rejoues 50 cas passés sur le graphique (TradingView propose un mode « replay »), tu notes le R de chacun : si la moyenne est positive, tu as une stratégie à tester en simulation.',
+        exercise: 'Écris UNE stratégie en 5 lignes (marché, entrée, stop, sortie, taille). Teste-la sur 20 cas passés en notant chaque résultat en R. Mets le nom de la stratégie dans le champ « Setup » de tes trades.',
+        quiz: [
+          { q: 'Une bonne règle de stratégie est…', a: ['« acheter quand ça a l’air bien »', 'assez précise pour qu’un autre l’applique pareil'], c: 1, why: 'Sinon, impossible de mesurer si elle marche.' },
+          { q: 'Tester sur l’historique sert à…', a: ['garantir les gains futurs', 'éliminer les stratégies perdantes avant d’y mettre de l’argent'], c: 1, why: 'Le passé ne garantit rien, mais une stratégie perdante sur le passé ne mérite pas ton argent.' },
+          { q: 'Pourquoi le swing trading convient mieux que le day trading quand on travaille ?', a: ['Il demande moins d’écran en continu', 'Il rapporte toujours plus'], c: 0, why: 'Tu analyses le soir et tu poses des ordres à l’avance.' },
+        ],
+      },
+      {
+        id: 'actu',
+        title: 'Utiliser l’actualité sans se faire piéger',
+        idea: 'L’actualité sert à connaître le contexte et le calendrier, pas à trouver des trades. Ce qui compte vraiment : les dates de résultats de tes titres, les réunions des banques centrales (Fed, BCE), les chiffres d’inflation et d’emploi américains. Le jour de ces annonces, la volatilité explose : réduis ta taille ou reste à l’écart.',
+        example: 'Micron a battu les attentes le 30 septembre 2026 et relevé ses prévisions, mais l’action a à peine bougé après la publication : les bonnes nouvelles étaient déjà dans le prix. Quand une info arrive jusqu’à toi par une vidéo ou un tweet, elle est en général déjà intégrée au cours.',
+        exercise: 'Chaque dimanche, ouvre le calendrier économique d’Investing.com et note dans ton bilan les 3 événements de la semaine qui touchent tes positions. Chaque matin, 5 minutes de Finimize ou de Zonebourse, pas plus.',
+        quiz: [
+          { q: 'Une très bonne nouvelle annoncée, et l’action ne monte pas. Pourquoi, souvent ?', a: ['Le marché se trompe', 'C’était déjà attendu et intégré au prix'], c: 1, why: 'Le cours réagit à l’écart avec les attentes, pas à la nouvelle elle-même.' },
+          { q: 'Le jour d’une réunion de la Fed :', a: ['augmenter la taille', 'réduire la taille ou rester à l’écart'], c: 1, why: 'Volatilité imprévisible : ton stop peut sauter loin.' },
+          { q: 'À quoi sert l’actualité pour un débutant ?', a: ['Trouver des trades rapides', 'Connaître le contexte et le calendrier'], c: 1, why: 'Les trades viennent de ta stratégie, pas des titres de presse.' },
+        ],
+      },
+      {
         id: 'plan',
         title: 'Plan de trading et passage au réel',
         idea: 'Tu passes au réel seulement quand ces 3 conditions sont réunies : 30 trades simulés notés dans le journal, une espérance positive, et des règles respectées sur au moins 90 % des trades. Le capital de trading reste limité (par exemple 10 % de tes placements). Le reste est investi à long terme (ETF sur le PEA) et on n’y touche pas.',
@@ -223,5 +259,33 @@ export const RESOURCES = [
   { name: 'Micron – Relations investisseurs', url: 'https://investors.micron.com', why: 'Résultats trimestriels, présentations, conférences téléphoniques.' },
   { name: 'SEC EDGAR', url: 'https://www.sec.gov/edgar/search/', why: 'Rapports officiels américains (10-K, 10-Q), la source primaire.' },
   { name: 'Zonebourse', url: 'https://www.zonebourse.com', why: 'Consensus des analystes, PER, historique des résultats.' },
+  { name: 'Investopedia', url: 'https://www.investopedia.com', why: 'Le dictionnaire de la finance (en anglais) : n’importe quel terme expliqué.' },
+  { name: 'Coursera – Financial Markets (Yale, Robert Shiller)', url: 'https://www.coursera.org/learn/financial-markets-global', why: 'Cours universitaire gratuit en audit, par un prix Nobel.' },
+  { name: 'Investing.com – calendrier économique', url: 'https://fr.investing.com/economic-calendar/', why: 'Fed, BCE, inflation, dates de résultats.' },
   { name: 'impots.gouv.fr', url: 'https://www.impots.gouv.fr', why: 'Simulateur d’impôt et formulaires (2074, 3916).' },
+];
+
+export const TRADING_RULES = [
+  'Le stop se décide avant d’entrer, et ne se déplace jamais pour perdre plus.',
+  'Risque maximum : 1 à 2 % de la poche par trade.',
+  'Viser un gain au moins 2 fois plus grand que le risque (2R).',
+  'Au maximum 3 positions ouvertes.',
+  'Pas de trade dans les 2 jours avant les résultats de l’entreprise.',
+  'Après 2 pertes d’affilée : stop pour la journée.',
+  'Poche à −25 % : pause d’un mois, retour en simulation.',
+  'Jamais d’argent ajouté pour se refaire.',
+];
+
+// Vérifications obligatoires avant d’ouvrir un trade.
+export const PRE_TRADE_CHECKS = [
+  { id: 'thesis', label: 'Ma thèse tient en une phrase et vient de ma stratégie, pas d’une vidéo ou d’un tweet' },
+  { id: 'earnings', label: 'Pas de résultats de l’entreprise dans les 2 prochains jours' },
+  { id: 'calm', label: 'Je suis calme : pas pour me refaire, pas par peur de rater le mouvement' },
+];
+
+export const NEWS_ROUTINE = [
+  { when: 'Chaque matin, 5 min', what: 'Finimize (anglais) ou les titres de Zonebourse / Les Échos.' },
+  { when: 'Chaque dimanche, 10 min', what: 'Calendrier économique Investing.com : Fed, BCE, inflation, résultats de tes titres.' },
+  { when: 'Chaque mois', what: 'Lire un communiqué de résultats en entier, en anglais, à la source.' },
+  { when: 'Dans les transports', what: 'Podcasts Odd Lots (Bloomberg) et Planet Money (NPR).' },
 ];

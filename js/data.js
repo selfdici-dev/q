@@ -51,6 +51,21 @@ export const WORKOUTS = [
     ],
   },
   {
+    id: 'C',
+    name: 'C · Cardio sans saut',
+    desc: 'Brûler des calories dans 2 m², sans bruit pour les voisins. 3 tours, ça monte vite en intensité.',
+    rounds: 3,
+    rest: 15,
+    roundRest: 60,
+    exercises: [
+      { name: 'Shadow boxing', work: 40, cue: 'Garde haute, enchaîne direct-direct-crochet, pivote sur les pieds. Expire à chaque coup.' },
+      { name: 'Montées de genoux sur place', work: 30, cue: 'Sans sauter : un genou puis l’autre à hauteur de hanche, bras qui suivent.' },
+      { name: 'Mountain climbers lents', work: 30, cue: 'En planche haute, ramène un genou vers la poitrine puis l’autre, bassin stable.' },
+      { name: 'Burpee sans saut', work: 30, cue: 'Accroupi, pose les mains, recule un pied puis l’autre, reviens, relève-toi. Pas de saut.' },
+      { name: 'Shadow boxing rapide', work: 30, cue: 'Coups courts et rapides, reste léger sur les appuis.' },
+    ],
+  },
+  {
     id: 'M',
     name: 'M · Mobilité et posture (8 min)',
     desc: 'Tous les jours, même les jours de repos. C’est aussi ton minimum de reprise.',
@@ -71,8 +86,21 @@ export const WORKOUTS = [
   },
 ];
 
-// Semaine type : A lundi/jeudi, B mardi/vendredi, mobilité les autres jours.
-export const WEEK_PLAN = { 1: 'A', 2: 'B', 3: 'M', 4: 'A', 5: 'B', 6: 'M', 0: 'M' };
+// Semaine type : A lundi/jeudi, B mardi/vendredi, C mercredi/samedi, mobilité le dimanche.
+// La mobilité M reste le minimum de reprise n'importe quel jour.
+export const WEEK_PLAN = { 1: 'A', 2: 'B', 3: 'C', 4: 'A', 5: 'B', 6: 'C', 0: 'M' };
+
+// Échauffement ajouté avant A, B et C.
+export const WARMUP = [
+  { name: 'Rotations des épaules et des bras', work: 30, cue: 'Grands cercles vers l’avant puis vers l’arrière.' },
+  { name: 'Chat-vache', work: 30, cue: 'À quatre pattes, enroule puis creuse le dos lentement.' },
+  { name: 'Montées de genoux lentes', work: 30, cue: 'Sur place, sans sauter, pour monter le cardio doucement.' },
+  { name: 'Pompes sur les genoux', work: 20, cue: 'Amplitude complète, tranquille : on prépare les épaules.' },
+];
+
+// Repères nutrition (pour un homme de ~75 kg qui veut perdre du gras en gardant son muscle).
+export const PROTEIN_TARGET = 4; // portions par jour, ≈ 25-30 g de protéines chacune
+export const PROTEIN_EXAMPLES = '1 portion ≈ 3 œufs, 1 filet de poulet, 1 boîte de thon, 200 g de skyr ou 1 boîte de lentilles + 1 yaourt.';
 
 // Déclencheurs de grignotage : les repérer compte plus que de les compter.
 export const SNACK_TRIGGERS = ['Faim', 'Ennui', 'Devant un écran', 'Fatigue', 'Stress', 'C’était là'];
@@ -131,3 +159,86 @@ export function demoUrl(name) {
   const q = name.replace(/\s*\((droite|gauche)\)/, '').replace(/^Superman /, 'prone ');
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${q} exercice technique`)}`;
 }
+
+
+// ---------- Programme de 12 semaines (partie 3) ----------
+export const PHASES = [
+  {
+    weeks: [1, 4],
+    name: 'Fondations',
+    focus: [
+      'Lever fixe à 8 h 30, 7 jours sur 7 : c’est le levier n° 1 du sommeil.',
+      'Semaine 1 : mesurer écran et grignotages sans rien changer.',
+      'Temps d’écran + ScreenZen configurés, objectif < 5 h d’écran en semaine 4.',
+      'Mobilité tous les jours, A/B/C selon le planning, 6 000 pas.',
+      '2 leçons de finance par semaine.',
+    ],
+  },
+  {
+    weeks: [5, 8],
+    name: 'Montée',
+    focus: [
+      'Lever à 8 h puis 7 h 30 pour être calé avant l’emploi.',
+      'Séances au niveau 2, 8 000 pas, une recette par semaine.',
+      'Finir le parcours finance, premiers trades notés dans le journal.',
+      'Écran < 3 h 30.',
+    ],
+  },
+  {
+    weeks: [9, 12],
+    name: 'Nouveau rythme',
+    focus: [
+      'Adapter les minimums aux horaires de travail dès le 1er jour.',
+      'Virement automatique vers le PEA le jour de la paie.',
+      '2-3 trades par semaine, revue du journal chaque dimanche.',
+      'Écran < 3 h, coucher 23 h 30 tenu.',
+    ],
+  },
+];
+
+// Cibles de fin de semaines 4, 8 et 12.
+export const MILESTONES = [
+  { week: 4, screen: 300, weight: 74, pushups: 26, plank: 100, lessons: 8 },
+  { week: 8, screen: 210, weight: 72.5, pushups: 30, plank: 120, lessons: 15 },
+  { week: 12, screen: 180, weight: 71, pushups: 35, plank: 150, lessons: 18 },
+];
+
+// ---------- Livres (partie 4) ----------
+export const BOOKS = [
+  { id: 'aurele', cat: 'Philosophie', title: 'Pensées pour moi-même', author: 'Marc Aurèle', why: 'Le journal d’un empereur qui se répète chaque jour comment rester maître de lui.' },
+  { id: 'epictete', cat: 'Philosophie', title: 'Manuel', author: 'Épictète', why: '50 pages pour distinguer ce qui dépend de toi de ce qui n’en dépend pas.', start: true },
+  { id: 'seneque', cat: 'Philosophie', title: 'De la brièveté de la vie', author: 'Sénèque', why: 'Un texte court sur le temps qu’on gaspille.' },
+  { id: 'platon', cat: 'Philosophie', title: 'Apologie de Socrate', author: 'Platon', why: 'Un homme qui préfère mourir que renoncer à penser par lui-même.' },
+  { id: 'frankl', cat: 'Philosophie', title: 'Découvrir un sens à sa vie', author: 'Viktor Frankl', why: 'Pourquoi le sens compte plus que le confort.' },
+  { id: 'camus', cat: 'Philosophie', title: 'Le Mythe de Sisyphe', author: 'Albert Camus', why: 'Comment vivre pleinement quand rien n’est garanti.' },
+  { id: 'housel', cat: 'Finance', title: 'La psychologie de l’argent', author: 'Morgan Housel', why: 'Ton comportement compte plus que tes connaissances. À lire en premier.', start: true },
+  { id: 'lynch', cat: 'Finance', title: 'One Up on Wall Street', author: 'Peter Lynch', why: 'Analyser une entreprise, avec un chapitre sur les cycliques.' },
+  { id: 'malkiel', cat: 'Finance', title: 'A Random Walk Down Wall Street', author: 'Burton Malkiel', why: 'Pourquoi la plupart des gens ne battent pas le marché.' },
+  { id: 'taleb', cat: 'Finance', title: 'Le Hasard sauvage', author: 'Nassim Taleb', why: 'Chance ou talent ? Le vaccin contre les histoires de « ×16 ».' },
+  { id: 'graham', cat: 'Finance', title: 'L’investisseur intelligent', author: 'Benjamin Graham', why: 'La référence de Warren Buffett, dense, à lire après les autres.' },
+  { id: 'schwager', cat: 'Trading', title: 'Market Wizards', author: 'Jack Schwager', why: 'Des traders qui ont réussi : tous parlent d’abord de gestion du risque.' },
+  { id: 'douglas', cat: 'Trading', title: 'Trading in the Zone', author: 'Mark Douglas', why: 'La psychologie : pourquoi on perd même avec une bonne méthode.' },
+  { id: 'lefevre', cat: 'Trading', title: 'Reminiscences of a Stock Operator', author: 'Edwin Lefèvre', why: 'Les fortunes et les ruines d’un spéculateur des années 1920.' },
+  { id: 'clear', cat: 'Discipline', title: 'Un rien peut tout changer', author: 'James Clear', why: 'La science des petites habitudes. Ton appli en applique la moitié.' },
+  { id: 'newport-dm', cat: 'Discipline', title: 'Digital Minimalism', author: 'Cal Newport', why: 'Reprendre le contrôle de ton téléphone, ton problème n° 1.', start: true },
+  { id: 'newport-dw', cat: 'Discipline', title: 'Deep Work', author: 'Cal Newport', why: 'La concentration comme compétence rare.' },
+  { id: 'lembke', cat: 'Discipline', title: 'Dopamine Nation', author: 'Anna Lembke', why: 'Pourquoi le scroll est si dur à lâcher, et comment s’en sortir.' },
+  { id: 'walker', cat: 'Discipline', title: 'Why We Sleep', author: 'Matthew Walker', why: 'Ce que le sommeil fait au corps. Certains chiffres sont discutés, le message tient.' },
+];
+
+// ---------- Apps et réglages (avec mode d’emploi) ----------
+export const APPS = [
+  { cat: 'Discipline', name: 'Temps d’écran (iPhone)', how: 'Réglages > Temps d’écran : limite TikTok 30 min, Snap 45 min, Temps d’arrêt 23 h – 8 h, code choisi par un parent.' },
+  { cat: 'Discipline', name: 'ScreenZen', how: 'Gratuit. Pause de 10 s et 5 ouvertures max par jour pour TikTok et Snap.' },
+  { cat: 'Discipline', name: 'Écran en gris', how: 'Réglages > Accessibilité > Raccourci > Filtres de couleur. Triple clic le soir.' },
+  { cat: 'Discipline', name: 'Réveil à piles', how: '≈ 10 €. Il permet de laisser le téléphone hors de la chambre.' },
+  { cat: 'Corps', name: 'Santé (iPhone)', how: 'Compte tes pas automatiquement. Recopie le chiffre le soir dans Suivi.' },
+  { cat: 'Corps', name: 'Jow', how: 'Gratuit. Une recette par semaine, la liste de courses se fait toute seule.' },
+  { cat: 'Argent', name: 'Fortuneo (PEA)', how: 'Programme un versement mensuel. Ne regarde le portefeuille qu’une fois par mois.' },
+  { cat: 'Argent', name: 'Trade Republic', how: 'Vérifie ton IBAN (FR ou DE). Poche trading + espèces rémunérées pour la précaution.' },
+  { cat: 'Argent', name: 'TradingView', how: 'Graphiques gratuits. Trace supports, résistances, moyenne mobile 200 jours, ATR.' },
+  { cat: 'Argent', name: 'Investing.com', how: 'Liste de suivi + alertes sur les dates de résultats et le calendrier économique.' },
+  { cat: 'Argent', name: 'justETF', how: 'Avant tout achat d’ETF : frais annuels (TER) et éligibilité au PEA.' },
+  { cat: 'Argent', name: 'Finimize', how: 'Newsletter gratuite en anglais : 5 min d’actu finance chaque matin.' },
+  { cat: 'Culture', name: 'Bibliothèque municipale', how: 'Carte souvent gratuite pour les jeunes. Emprunte avant d’acheter.' },
+];

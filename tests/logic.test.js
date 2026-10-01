@@ -129,3 +129,26 @@ test('intérêts composés, taille de position, statistiques de trades', async (
   assert.equal(st.expectancy, (2 - 1 + 1) / 3);
   assert.equal(st.pnl, 20 - 10 + 10);
 });
+
+test('coucher cible par semaine', async () => {
+  const { weeklyBedtime } = await import('../js/logic.js');
+  assert.equal(weeklyBedtime(1), '01:15');
+  assert.equal(weeklyBedtime(4), '00:30');
+  assert.equal(weeklyBedtime(8), '23:30');
+  assert.equal(weeklyBedtime(12), '23:30');
+});
+
+test('ratio gain/risque, courbe en R, pertes du jour, répartition', async () => {
+  const { rewardRisk, equityCurve, lossesToday, allocation } = await import('../js/logic.js');
+  assert.equal(rewardRisk({ entry: 100, stop: 95, target: 110 }), 2);
+  const trades = [
+    { entry: 10, stop: 9, exit: 12, closed: '2026-10-01T10:00' },
+    { entry: 10, stop: 9, exit: 9, closed: '2026-10-02T10:00' },
+    { entry: 10, stop: 9, exit: 8.5, closed: '2026-10-02T11:00' },
+  ];
+  assert.deepEqual(equityCurve(trades), [2, 1, -0.5]);
+  assert.equal(lossesToday(trades, '2026-10-02'), 2);
+  const a = allocation([{ amount: 750 }, { amount: 250 }]);
+  assert.equal(a.total, 1000);
+  assert.equal(a.parts[0].pct, 75);
+});

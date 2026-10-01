@@ -203,7 +203,7 @@ export function series(state, field, today, n) {
 // ---------- Points (XP) et niveaux ----------
 // L'XP est recalculée à partir des données, jamais stockée : impossible de la
 // compter deux fois, et elle suit automatiquement les corrections.
-export const XP = { min: 10, full: 20, dayValid: 20, workout: 30, focus: 15, urge: 5, snackResisted: 5, lesson: 40, perfect: 20, trade: 15, book: 50 };
+export const XP = { min: 10, full: 20, dayValid: 20, workout: 30, focus: 15, urge: 5, snackResisted: 5, lesson: 40, perfect: 20, trade: 15, book: 50, card: 2 };
 
 export const RANKS = ['Recrue', 'Apprenti', 'Régulier', 'Solide', 'Discipliné', 'Méthodique', 'Inarrêtable', 'Maître de soi'];
 
@@ -216,6 +216,7 @@ export function totalXP(state) {
     xp += (d.focus ?? 0) * XP.focus;
     xp += (d.urges ?? 0) * XP.urge;
     xp += (d.snackResisted ?? 0) * XP.snackResisted;
+    xp += (d.cardsOk ?? 0) * XP.card;
   }
   for (const l of Object.values(state.lessons ?? {})) xp += XP.lesson + (l.perfect ? XP.perfect : 0);
   xp += (state.trades ?? []).filter((t) => t.exit !== undefined && t.exit !== null).length * XP.trade;
@@ -331,4 +332,41 @@ export function allocation(pockets) {
     total,
     parts: pockets.map((p) => ({ ...p, pct: total ? ((Number(p.amount) || 0) / total) * 100 : 0 })),
   };
+}
+
+// ---------- Révision espacée (boîtes de Leitner) ----------
+// Une carte réussie passe dans la boîte suivante et revient de plus en plus
+// tard ; une carte ratée retourne en boîte 0 et revient le jour même.
+export const SRS_INTERVALS = [0, 1, 3, 7, 14, 30, 60, 120];
+
+export function dueCards(cards, today) {
+  return cards.filter((c) => !c.due || diffDays(c.due, today) >= 0);
+}
+
+export function reviewCard(card, ok, today) {
+  const box = ok ? Math.min((card.box ?? 0) + 1, SRS_INTERVALS.length - 1) : 0;
+  return { ...card, box, due: addDays(today, SRS_INTERVALS[box]), seen: (card.seen ?? 0) + 1 };
+}
+
+// ---------- Régularité sportive ----------
+// Semaine du lundi au dimanche ; une semaine est « tenue » si elle compte
+// au moins `goal` séances hors mobilité.
+export function mondayOf(key) {
+  return addDays(key, -((fromKey(key).getDay() + 6) % 7));
+}
+
+export function sportWeeks(state, today, goal = 4) {
+  const count = (monday) => {
+    let n = 0;
+    for (let i = 0; i < 7; i++) n += (state.days[addDays(monday, i)]?.workouts ?? []).filter((w) => w !== 'M').length;
+    return n;
+  };
+  const thisMonday = mondayOf(today);
+  const thisWeek = count(thisMonday);
+  let streak = thisWeek >= goal ? 1 : 0;
+  for (let m = addDays(thisMonday, -7); diffDays(state.settings.startDate, addDays(m, 6)) >= 0; m = addDays(m, -7)) {
+    if (count(m) >= goal) streak++;
+    else break;
+  }
+  return { thisWeek, goal, streak };
 }

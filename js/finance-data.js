@@ -145,6 +145,49 @@ export const UNITS = [
     ],
   },
   {
+    id: 'um',
+    title: 'La méthode (ce que disent les études)',
+    emoji: '🧪',
+    lessons: [
+      {
+        id: 'etudes',
+        title: 'Ce que disent les études sur les traders particuliers',
+        idea: 'Par défaut, le trader particulier perd face au marché. Barber et Odean (2000) ont suivi 66 465 foyers de 1991 à 1996 : les 20 % qui tradaient le plus ont gagné 11,4 % par an quand le marché faisait 17,9 %. L’AMF mesure plus de 89 % de perdants sur les CFD et le Forex. Une étude brésilienne trouve 97 % de perdants chez les day traders qui persistent. Les causes : la surconfiance, les frais et le mauvais timing. Le but n’est donc pas de « trader plus », mais d’avoir un avantage mesuré et des coûts minimes.',
+        example: 'Chez Trade Republic, un ordre coûte 1 €, donc un aller-retour (achat + vente) coûte 2 €. 100 allers-retours par an, c’est 200 €, soit 7,4 % de 2 700 € : il faut déjà gagner 7,4 % juste pour revenir à zéro. Avec des positions de 500 €, un aller-retour coûte 0,4 % ; avec 50 €, il coûte 4 %.',
+        exercise: 'Calcule tes frais annuels prévus : nombre de trades par semaine × 2 € × 52 ÷ ton capital de trading. Si le résultat dépasse 3 %, trade moins souvent ou avec des positions plus grosses (en gardant le même risque grâce au stop).',
+        quiz: [
+          { q: 'Dans l’étude de Barber et Odean, les foyers qui tradaient le plus…', a: ['battaient le marché', 'faisaient nettement moins bien que le marché'], c: 1, why: '11,4 % par an contre 17,9 % pour le marché, surtout à cause des frais et de la surconfiance.' },
+          { q: '100 allers-retours à 2 € sur 2 700 € de capital coûtent…', a: ['environ 0,7 %', 'environ 7,4 %', 'rien'], c: 1, why: '200 € ÷ 2 700 € ≈ 7,4 % : une marche énorme à franchir avant le moindre gain.' },
+          { q: 'Le premier objectif d’un trader débutant devrait être…', a: ['trader le plus souvent possible', 'mesurer s’il a un avantage, avec des coûts minimes'], c: 1, why: 'Sans avantage mesuré, trader plus veut seulement dire perdre plus vite.' },
+        ],
+      },
+      {
+        id: 'effets',
+        title: 'Les rares effets qui ont tenu dans le temps',
+        idea: 'La plupart des « recettes » disparaissent : McLean et Pontiff ont étudié 97 anomalies publiées par des chercheurs et trouvé que leurs rendements baissent d’environ un tiers après publication. Deux effets ont mieux résisté. 1) La tendance (momentum) : Moskowitz, Ooi et Pedersen (2012) montrent, sur 58 marchés et plus de 25 ans, que ce qui a monté sur 12 mois a tendance à continuer à court terme ; l’effet dure environ un an puis s’inverse en partie. 2) La dérive après les résultats (PEAD), documentée depuis la fin des années 1960 : après une surprise de résultats, le cours tend à continuer dans le sens de la surprise pendant plusieurs semaines.',
+        example: 'Traduit en règles de swing trading : n’acheter que des titres en tendance haussière (au-dessus de leur moyenne mobile 200 jours et en hausse sur 12 mois), et privilégier ceux qui viennent de battre nettement les attentes ET dont le cours a bien réagi. Contre-exemple : Micron a battu les attentes le 30 septembre 2026, mais le cours n’a presque pas bougé, donc pas de signal. Attention : ce sont des moyennes sur des centaines de titres, jamais une garantie sur un trade.',
+        exercise: 'Prends 5 entreprises qui publient leurs résultats ce mois-ci (calendrier d’Investing.com). Pour chacune, note la surprise (bénéfice publié contre attendu), la réaction du jour J, puis le cours 20 jours plus tard. Après 20 cas, tu as ta propre statistique sur la dérive après résultats.',
+        quiz: [
+          { q: 'Que deviennent en moyenne les « anomalies » une fois publiées ?', a: ['Elles deviennent plus fortes', 'Elles s’affaiblissent (environ un tiers de moins)'], c: 1, why: 'Quand tout le monde connaît un effet, les traders l’exploitent et il s’amenuise.' },
+          { q: 'La dérive après résultats (PEAD), c’est…', a: ['le cours qui continue dans le sens de la surprise pendant des semaines', 'le cours qui revient toujours à son niveau d’avant'], c: 0, why: 'C’est l’un des effets les plus anciens et les plus robustes, même s’il est plus faible qu’avant.' },
+          { q: 'Ces effets garantissent-ils un trade gagnant ?', a: ['Oui', 'Non, ce sont des moyennes sur de nombreux titres'], c: 1, why: 'Ils donnent un léger avantage statistique sur beaucoup de trades, jamais une certitude sur un seul.' },
+        ],
+      },
+      {
+        id: 'pratique',
+        title: 'S’entraîner comme un pro : la pratique délibérée',
+        idea: 'On progresse avec des boucles de retour : une seule stratégie à la fois, des règles écrites, des mesures (résultat moyen en R, pire série de pertes, plus forte baisse), une revue chaque semaine, et une seule correction à la fois. Trois pièges des tests sur l’historique : le surajustement (trop de règles collées au passé), le biais du survivant (ne tester que des entreprises qui existent encore) et le biais d’anticipation (utiliser une information qu’on n’aurait pas eue à l’époque).',
+        example: 'Ta progression : 20 cas testés sur l’historique, puis 30 trades simulés, puis 30 trades réels avec 10 % du capital, puis une revue, puis 20 %. Chaque étape a un critère chiffré. S’il n’est pas atteint, tu restes à l’étape. C’est lent, mais c’est la seule façon de savoir si tu as un avantage avant de risquer gros.',
+        exercise: 'Ouvre Argent > Trading > Feuille de route et fais l’étape en cours. Chaque dimanche, copie ton journal pour Claude et fais la revue : ce qui a marché, la règle non respectée, la seule chose à corriger.',
+        quiz: [
+          { q: 'Le surajustement, c’est…', a: ['une stratégie avec tellement de règles qu’elle ne colle qu’au passé', 'une position trop grosse'], c: 0, why: 'Elle semble parfaite sur l’historique et échoue dès qu’on l’utilise.' },
+          { q: 'Combien de corrections apporter après une revue ?', a: ['Une seule', 'Le plus possible'], c: 0, why: 'Si tu changes tout en même temps, tu ne sais plus ce qui a marché.' },
+          { q: 'Pourquoi passer par la simulation avant le réel ?', a: ['Pour mesurer son avantage sans risquer d’argent', 'Ça ne sert à rien'], c: 0, why: 'Les 30 trades simulés donnent un premier chiffre avant de payer tes erreurs.' },
+        ],
+      },
+    ],
+  },
+  {
     id: 'u4',
     title: 'Trader',
     emoji: '⚔️',
@@ -247,6 +290,37 @@ export const UNITS = [
       },
     ],
   },
+  {
+    id: 'uc',
+    title: 'Crypto',
+    emoji: '🪙',
+    lessons: [
+      {
+        id: 'crypto-bases',
+        title: 'Crypto : ce qui change par rapport aux actions',
+        idea: 'Le marché crypto est ouvert 24 h/24, 7 j/7, beaucoup plus volatil, et ne publie pas de résultats : pas de bénéfices à analyser, le prix dépend de l’attention, de la liquidité et du sentiment. Trois règles d’hygiène : une plateforme agréée MiCA ou enregistrée PSAN auprès de l’AMF (vérifie sur le registre de l’AMF), des frais connus, et une fiscalité maîtrisée. Côté frais, Trade Republic prend 1 € par ordre plus un écart de prix d’environ 1 à 2 % sur la crypto, quand certaines plateformes spécialisées sont autour de 0,1 à 0,5 %. Un aller-retour peut donc coûter 2 à 4 % avant le moindre gain.',
+        example: 'Fiscalité 2026 : les plus-values sont taxées à 31,4 % au moment où tu repasses en euros (ou si tu paies un achat en crypto). Un échange crypto contre crypto n’est pas imposable. Si le total de tes ventes de l’année ne dépasse pas 305 €, c’est exonéré. Déclaration : formulaire 2086, et 3916-bis pour chaque compte sur une plateforme étrangère.',
+        exercise: 'Vérifie sur le site de l’AMF que la plateforme que tu utilises (ou veux utiliser) est autorisée. Compare l’écart de prix affiché à l’achat et à la vente sur Bitcoin à un instant donné : c’est ton coût caché.',
+        quiz: [
+          { q: 'Passer d’une crypto à une autre crypto est-il imposable en France ?', a: ['Oui, à chaque échange', 'Non, l’impôt tombe quand on repasse en euros'], c: 1, why: 'L’imposition se fait à la conversion en monnaie classique ou à l’achat d’un bien.' },
+          { q: 'Pourquoi l’écart de prix (spread) compte autant en crypto ?', a: ['Il peut atteindre 1 à 2 % par opération sur certaines plateformes', 'Il n’existe pas en crypto'], c: 0, why: 'Sur un aller-retour, ça peut faire 2 à 4 % de coût caché.' },
+          { q: 'Une plateforme sûre en France est…', a: ['n’importe quelle appli populaire', 'agréée MiCA ou enregistrée auprès de l’AMF'], c: 1, why: 'Le registre de l’AMF permet de vérifier, et protège des plateformes frauduleuses.' },
+        ],
+      },
+      {
+        id: 'petites-cryptos',
+        title: 'Petites cryptos : le casino, et comment limiter la casse',
+        idea: 'Les petites cryptos peuvent faire ×10 comme −95 %. Les faits : selon Chainalysis, environ 74 000 jetons lancés en 2024 (3,6 % des lancements) étaient suspectés d’être liés à des schémas de pump and dump, où des initiés font monter le prix puis vendent sur les nouveaux venus. Les « rug pulls » (créateurs qui retirent la liquidité et disparaissent) sont fréquents. Côté effet exploitable, Liu et Tsyvinski ont mesuré une forte tendance (momentum) à 1 à 4 semaines sur les cryptos, surtout les plus grosses et les plus liquides.',
+        example: 'Règles pour une petite crypto : au maximum 2 % de ta poche trading par ligne (5 € sur 270 €, ou 50 € sur 2 700 €), et au maximum 20 % de la poche sur l’ensemble des petites cryptos. Avant d’acheter, vérifie : le volume quotidien (faible = impossible de revendre sans faire chuter le prix), la part détenue par les plus gros portefeuilles, les déblocages de jetons prévus (ventes massives à venir), l’ancienneté du projet. Signal d’alarme absolu : une crypto poussée par un influenceur ou un groupe Telegram.',
+        exercise: 'Prends 3 petites cryptos dont on parle en ce moment. Sur CoinGecko ou CoinMarketCap, note pour chacune : capitalisation, volume sur 24 h, date de création, prochains déblocages de jetons. Laquelle passerait tes règles ? Garde ta réponse dans le journal, en mode Backtest ou Simulé, avant de mettre 1 €.',
+        quiz: [
+          { q: 'Combien mettre au maximum sur une seule petite crypto ?', a: ['Tout, si on y croit', 'Environ 2 % de la poche trading'], c: 1, why: 'À −95 %, tu perds 1,9 % de ta poche, pas tout.' },
+          { q: 'Un groupe Telegram annonce un « pump » à 20 h. C’est…', a: ['une opportunité', 'un piège : les organisateurs vendent sur les derniers arrivés'], c: 1, why: 'C’est la mécanique même du pump and dump.' },
+          { q: 'Un volume quotidien très faible signifie…', a: ['que tu pourras revendre facilement', 'que revendre peut faire chuter le prix'], c: 1, why: 'Sans acheteurs en face, ton propre ordre de vente fait baisser le cours.' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const ALL_LESSONS = UNITS.flatMap((u) => u.lessons);
@@ -259,9 +333,13 @@ export const RESOURCES = [
   { name: 'Micron – Relations investisseurs', url: 'https://investors.micron.com', why: 'Résultats trimestriels, présentations, conférences téléphoniques.' },
   { name: 'SEC EDGAR', url: 'https://www.sec.gov/edgar/search/', why: 'Rapports officiels américains (10-K, 10-Q), la source primaire.' },
   { name: 'Zonebourse', url: 'https://www.zonebourse.com', why: 'Consensus des analystes, PER, historique des résultats.' },
+  { name: 'Barber & Odean (2000) – Trading Is Hazardous to Your Wealth', url: 'https://faculty.haas.berkeley.edu/odean/papers%20current%20versions/individual_investor_performance_final.pdf', why: 'L’étude de référence sur la performance des particuliers qui tradent beaucoup.' },
+  { name: 'AQR – Time Series Momentum (données de l’étude)', url: 'https://www.aqr.com/Insights/Datasets/Time-Series-Momentum-Original-Paper-Data', why: 'Les données de l’étude sur la tendance (Moskowitz, Ooi, Pedersen).' },
   { name: 'Investopedia', url: 'https://www.investopedia.com', why: 'Le dictionnaire de la finance (en anglais) : n’importe quel terme expliqué.' },
   { name: 'Coursera – Financial Markets (Yale, Robert Shiller)', url: 'https://www.coursera.org/learn/financial-markets-global', why: 'Cours universitaire gratuit en audit, par un prix Nobel.' },
   { name: 'Investing.com – calendrier économique', url: 'https://fr.investing.com/economic-calendar/', why: 'Fed, BCE, inflation, dates de résultats.' },
+  { name: 'AMF – plateformes crypto autorisées', url: 'https://www.amf-france.org', why: 'Cherche « liste des PSAN » ou « prestataires agréés MiCA » sur le site pour vérifier une plateforme.' },
+  { name: 'CoinGecko', url: 'https://www.coingecko.com/fr', why: 'Capitalisation, volume, ancienneté et déblocages de jetons d’une crypto.' },
   { name: 'impots.gouv.fr', url: 'https://www.impots.gouv.fr', why: 'Simulateur d’impôt et formulaires (2074, 3916).' },
 ];
 
@@ -274,12 +352,13 @@ export const TRADING_RULES = [
   'Après 2 pertes d’affilée : stop pour la journée.',
   'Poche à −25 % : pause d’un mois, retour en simulation.',
   'Jamais d’argent ajouté pour se refaire.',
+  'Petites cryptos : 2 % maximum de la poche par ligne, 20 % au total, jamais sur un conseil d’influenceur ou de Telegram.',
 ];
 
 // Vérifications obligatoires avant d’ouvrir un trade.
 export const PRE_TRADE_CHECKS = [
   { id: 'thesis', label: 'Ma thèse tient en une phrase et vient de ma stratégie, pas d’une vidéo ou d’un tweet' },
-  { id: 'earnings', label: 'Pas de résultats de l’entreprise dans les 2 prochains jours' },
+  { id: 'earnings', label: 'Pas de résultats, de réunion de la Fed ni de déblocage de jetons (crypto) dans les 2 prochains jours' },
   { id: 'calm', label: 'Je suis calme : pas pour me refaire, pas par peur de rater le mouvement' },
 ];
 

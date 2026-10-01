@@ -2,11 +2,13 @@ import {
   todayKey, addDays, diffDays, fromKey, dayStatus, chain, recoveryMode, lastNDays,
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, isPlannedMinimumDay,
+  dueCards, reviewCard, sportWeeks,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
   WARMUP, PROTEIN_TARGET, PROTEIN_EXAMPLES, PHASES, MILESTONES, BOOKS, APPS,
 } from './data.js';
+import { ALL_LESSONS } from './finance-data.js';
 import { lineChart, barChart, wireTooltips } from './charts.js';
 import { createMoney, DEFAULT_CALC, DEFAULT_WEALTH } from './money.js';
 import { quoteOfDay } from './quotes.js';
@@ -42,6 +44,8 @@ function freshState() {
     books: {},
     setup: {},
     feels: [],
+    srs: {},
+    myCards: [],
     ui: { moneyTab: 'parcours', meTab: 'programme', lesson: null, lastLevel: 1 },
     timers: { pomo: { mode: 'work', endAt: null, remaining: POMO_WORK, label: '' }, urge: { endAt: null } },
   };
@@ -212,12 +216,12 @@ const TABS = [
 
 function currentTab() {
   const h = location.hash.slice(1) === 'bilan' ? 'moi' : location.hash.slice(1);
-  return TABS.some((t) => t.id === h) ? h : 'jour';
+  return TABS.some((t) => t.id === h) || h === 'revision' ? h : 'jour';
 }
 
 function render() {
   const tab = currentTab();
-  const views = { jour: viewToday, focus: viewFocus, sport: viewSport, argent: money.view, suivi: viewTrack, moi: viewMe };
+  const views = { jour: viewToday, focus: viewFocus, sport: viewSport, argent: money.view, suivi: viewTrack, moi: viewMe, revision: viewRevision };
   $('#view').innerHTML = views[tab]();
   $('#view').dataset.tab = tab;
   const lv = levelInfo(totalXP(state));
@@ -302,6 +306,7 @@ function viewToday() {
       }).join('')}
     </ul>
   </section>
+  ${revisionCard(today)}
   ${snackCard(today)}
   <section class="card">
     <div class="card-head"><h2>Séance du jour</h2></div>
@@ -320,6 +325,62 @@ function viewToday() {
   <section class="card">
     <div class="card-head"><h2>Mes règles « Si… alors… »</h2></div>
     <ul class="rules">${state.rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
+  </section>`;
+}
+
+// ---------- Révisions (révision espacée) ----------
+const CARD_CATS = ['Trading', 'Crypto', 'Culture', 'Livres', 'Autre'];
+
+function deck() {
+  const lessonCards = ALL_LESSONS.filter((l) => state.lessons[l.id]).flatMap((l) => l.quiz.map((q, i) => ({
+    id: `L:${l.id}:${i}`, cat: 'Finance', front: q.q, back: `${q.a[q.c]}. ${q.why}`,
+  })));
+  return [...lessonCards, ...state.myCards].map((c) => ({ ...c, ...state.srs[c.id] }));
+}
+
+const rev = { queue: null, flipped: false };
+
+function revisionCard(today) {
+  const due = dueCards(deck(), today).length;
+  const total = deck().length;
+  return `<section class="card">
+    <div class="card-head"><h2>🧠 Révisions</h2><span class="pill">${due} à revoir</span></div>
+    ${total
+      ? `<p class="hint">${due ? `≈ ${Math.max(1, Math.round(due / 6))} min. Chaque carte revient juste avant que tu l’oublies.` : 'Rien à revoir aujourd’hui. Ajoute des cartes (trading, culture, livres) quand tu apprends quelque chose.'}</p>
+         <div class="row"><a class="btn ${due ? 'primary' : ''}" href="#revision">${due ? 'Réviser maintenant' : 'Voir mes cartes'}</a></div>`
+      : '<p class="hint">Chaque leçon de finance validée ajoute ses cartes ici. Tu peux aussi créer les tiennes.</p><div class="row"><a class="btn" href="#revision">Créer une carte</a></div>'}
+  </section>`;
+}
+
+function viewRevision() {
+  const today = todayKey();
+  const all = deck();
+  if (!rev.queue) rev.queue = dueCards(all, today).map((c) => c.id);
+  const byId = Object.fromEntries(all.map((c) => [c.id, c]));
+  rev.queue = rev.queue.filter((id) => byId[id]);
+  const c = byId[rev.queue[0]];
+  const counts = CARD_CATS.map((cat) => [cat, state.myCards.filter((x) => x.cat === cat).length]).filter(([, n]) => n);
+  return `
+  <div class="row"><a class="btn ghost small" href="#jour">← Retour</a><span class="pill">${rev.queue.length} restante${rev.queue.length > 1 ? 's' : ''}</span></div>
+  ${c ? `<section class="card flash ${rev.flipped ? 'flipped' : ''}">
+      <span class="tag">${esc(c.cat)}</span>
+      <p class="flash-front">${esc(c.front)}</p>
+      ${rev.flipped
+        ? `<p class="flash-back">${esc(c.back)}</p>
+           <div class="feel"><button class="btn" data-act="card-answer" data-ok="0">↺ À revoir</button><span></span><button class="btn primary" data-act="card-answer" data-ok="1">✓ Je savais</button></div>`
+        : '<div class="row"><button class="btn primary wide" data-act="card-flip">Voir la réponse</button></div>'}
+      <p class="hint">Réponds dans ta tête avant de retourner la carte. Sois honnête : « à revoir » n’est pas un échec, c’est ce qui fait marcher la méthode.</p>
+    </section>`
+    : `<section class="card center"><div class="big-emoji">🧠</div><h2>C’est fait pour aujourd’hui</h2><p class="muted">${all.length} carte${all.length > 1 ? 's' : ''} au total. Reviens demain.</p></section>`}
+  <section class="card">
+    <div class="card-head"><h2>Nouvelle carte</h2></div>
+    <label>Catégorie<select id="card-cat">${CARD_CATS.map((x) => `<option>${x}</option>`).join('')}</select></label>
+    <label>Question<input id="card-front" placeholder="Ex. : Que mesure l’ATR ?"></label>
+    <label>Réponse<input id="card-back" placeholder="Ex. : L’amplitude moyenne des mouvements sur 14 jours"></label>
+    <div class="row"><button class="btn primary" data-act="card-add">Ajouter</button></div>
+    <p class="hint">Une carte = une seule idée, une réponse courte. Crée-en après chaque chapitre de livre, chaque idée de culture, chaque trade qui t’apprend quelque chose.</p>
+    ${counts.length ? `<p class="hint">Tes cartes : ${counts.map(([k, n]) => `${k} ${n}`).join(' · ')}</p>` : ''}
+    ${state.myCards.length ? `<details><summary>Gérer mes cartes</summary><ul class="cardlist">${state.myCards.map((x, i) => `<li><span><strong>${esc(x.front)}</strong><br><span class="muted">${esc(x.back)}</span></span><button class="btn ghost small" data-act="card-del" data-i="${i}">Suppr.</button></li>`).join('')}</ul></details>` : ''}
   </section>`;
 }
 
@@ -420,7 +481,13 @@ function viewSport() {
   const suggestDown = lvl > 1 && recent.length === 2 && recent.every((f) => f.v === 'dur');
   const dayNames = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
   const todayDow = (fromKey(today).getDay() + 6) % 7;
+  const sw = sportWeeks(state, today);
   return `
+  <section class="card program-hero">
+    <div class="card-head"><h2>🔥 Régularité</h2><span class="pill">${sw.streak} semaine${sw.streak > 1 ? 's' : ''} tenue${sw.streak > 1 ? 's' : ''}</span></div>
+    <div class="pips big">${Array.from({ length: sw.goal }, (_, i) => `<i class="${i < sw.thisWeek ? 'on' : ''}"></i>`).join('')}</div>
+    <p class="hint">${sw.thisWeek}/${sw.goal} séances A, B ou C cette semaine (lundi → dimanche). Une semaine est tenue à ${sw.goal}. La régularité bat l’intensité : 4 séances moyennes valent mieux qu’une séance héroïque.</p>
+  </section>
   ${suggestUp ? `<div class="banner ok"><strong>2 séances « faciles » de suite.</strong> Il est temps de monter. <button class="btn small primary" data-act="level" data-lvl="${lvl + 1}">Passer au niveau ${lvl + 1}</button></div>` : ''}
   ${suggestDown ? `<div class="banner warn"><strong>2 séances « dures » de suite.</strong> Redescendre d’un niveau n’est pas un échec. <button class="btn small" data-act="level" data-lvl="${lvl - 1}">Revenir au niveau ${lvl - 1}</button></div>` : ''}
   <section class="card">
@@ -933,6 +1000,52 @@ const actions = {
   'me-tab'(el) {
     state.ui.meTab = el.dataset.id;
     save();
+    if (el.dataset.go && currentTab() !== el.dataset.go) location.hash = el.dataset.go;
+    else render();
+    window.scrollTo(0, 0);
+  },
+  'card-flip'() {
+    rev.flipped = true;
+    render();
+  },
+  'card-answer'(el) {
+    const today = todayKey();
+    const id = rev.queue.shift();
+    const card = deck().find((c) => c.id === id);
+    const ok = el.dataset.ok === '1';
+    const { box, due, seen } = reviewCard(card, ok, today);
+    state.srs[id] = { box, due, seen };
+    if (ok) {
+      const d = day(today);
+      d.cardsOk = (d.cardsOk ?? 0) + 1;
+    } else {
+      rev.queue.push(id);
+    }
+    rev.flipped = false;
+    if (!rev.queue.length) {
+      raiseHabit(today, 'apprendre', 1);
+      celebrate('Révisions terminées 🧠');
+    }
+    save();
+    render();
+  },
+  'card-add'() {
+    const front = $('#card-front').value.trim();
+    const back = $('#card-back').value.trim();
+    if (!front || !back) return toast('Question et réponse obligatoires.');
+    const id = `U:${Date.now().toString(36)}`;
+    state.myCards.push({ id, cat: $('#card-cat').value, front, back });
+    rev.queue?.push(id);
+    save();
+    render();
+    toast('Carte ajoutée. Elle revient aujourd’hui, puis de plus en plus espacée.');
+  },
+  'card-del'(el) {
+    const c = state.myCards[Number(el.dataset.i)];
+    if (!confirm(`Supprimer « ${c.front} » ?`)) return;
+    state.myCards.splice(Number(el.dataset.i), 1);
+    delete state.srs[c.id];
+    save();
     render();
   },
   'book-status'(el) {
@@ -1149,6 +1262,10 @@ document.addEventListener('visibilitychange', () => {
 
 window.addEventListener('hashchange', () => {
   viewTrack.key = null;
+  if (currentTab() === 'revision') {
+    rev.queue = null;
+    rev.flipped = false;
+  }
   if (currentTab() !== 'argent') state.ui.lesson = null;
   render();
   window.scrollTo(0, 0);

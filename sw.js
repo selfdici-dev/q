@@ -1,5 +1,5 @@
 // Cache hors ligne. Incrémente VERSION à chaque modification des fichiers.
-const VERSION = 'cap-v4';
+const VERSION = 'cap-v6';
 const FILES = [
   './', './index.html', './css/styles.css', './manifest.webmanifest',
   './js/app.js', './js/logic.js', './js/data.js', './js/charts.js',

@@ -21,7 +21,7 @@ export const WORKOUTS = [
   {
     id: 'A',
     name: 'A · Tronc et abdos',
-    desc: 'Gainage profond, sans tirer sur la nuque. 3 tours.',
+    desc: 'Gainage profond et roue abdos, sans tirer sur la nuque. 3 tours.',
     rounds: 3,
     rest: 15,
     roundRest: 60,
@@ -32,6 +32,7 @@ export const WORKOUTS = [
       { name: 'Planche latérale (gauche)', work: 25, cue: 'Même chose de l’autre côté.' },
       { name: 'Hollow hold genoux pliés', work: 25, cue: 'Bas du dos plaqué. Si le dos décolle : genoux plus près, bras plus bas.' },
       { name: 'Bird dog', work: 40, cue: 'À quatre pattes, bras et jambe opposés tendus, pause 2 s, alterne. Dos plat comme une table.' },
+      { name: 'Roue abdominale à genoux', work: 30, cue: 'À genoux sur le tapis, dos légèrement arrondi, fesses serrées. Roule devant toi seulement tant que le bas du dos ne creuse pas, puis reviens en contractant les abdos. Niveau 1 : amplitude courte (30 cm). Arrête si tu sens le bas du dos.' },
     ],
   },
   {
@@ -199,8 +200,8 @@ export const PHASES = [
 // Cibles de fin de semaines 4, 8 et 12.
 export const MILESTONES = [
   { week: 4, screen: 300, weight: 74, pushups: 26, plank: 100, lessons: 8 },
-  { week: 8, screen: 210, weight: 72.5, pushups: 30, plank: 120, lessons: 15 },
-  { week: 12, screen: 180, weight: 71, pushups: 35, plank: 150, lessons: 18 },
+  { week: 8, screen: 210, weight: 72.5, pushups: 30, plank: 120, lessons: 16 },
+  { week: 12, screen: 180, weight: 71, pushups: 35, plank: 150, lessons: 23 },
 ];
 
 // ---------- Livres (partie 4) ----------

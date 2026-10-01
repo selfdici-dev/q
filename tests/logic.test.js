@@ -152,3 +152,26 @@ test('ratio gain/risque, courbe en R, pertes du jour, répartition', async () =>
   assert.equal(a.total, 1000);
   assert.equal(a.parts[0].pct, 75);
 });
+
+test('révision espacée', async () => {
+  const { reviewCard, dueCards } = await import('../js/logic.js');
+  let c = { id: 'x' };
+  c = reviewCard(c, true, '2026-10-01');
+  assert.deepEqual([c.box, c.due], [1, '2026-10-02']);
+  c = reviewCard(c, true, '2026-10-02');
+  assert.deepEqual([c.box, c.due], [2, '2026-10-05']);
+  c = reviewCard(c, false, '2026-10-05');
+  assert.deepEqual([c.box, c.due], [0, '2026-10-05']);
+  assert.equal(dueCards([c, { id: 'y', due: '2026-10-09' }, { id: 'z' }], '2026-10-05').length, 2);
+});
+
+test('semaines de sport tenues', async () => {
+  const { sportWeeks } = await import('../js/logic.js');
+  // 2026-09-21 et 2026-09-28 sont des lundis
+  const st = { settings: { startDate: '2026-09-21' }, days: {} };
+  for (const k of ['2026-09-21', '2026-09-22', '2026-09-24', '2026-09-26']) st.days[k] = { workouts: ['A'] };
+  st.days['2026-09-27'] = { workouts: ['M'] };
+  for (const k of ['2026-09-28', '2026-09-29']) st.days[k] = { workouts: ['B', 'M'] };
+  const r = sportWeeks(st, '2026-09-30');
+  assert.deepEqual(r, { thisWeek: 2, goal: 4, streak: 1 });
+});

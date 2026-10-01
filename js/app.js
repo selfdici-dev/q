@@ -222,7 +222,17 @@ function currentTab() {
 function render() {
   const tab = currentTab();
   const views = { jour: viewToday, focus: viewFocus, sport: viewSport, argent: money.view, suivi: viewTrack, moi: viewMe, revision: viewRevision };
-  $('#view').innerHTML = views[tab]();
+  const heads = {
+    focus: ['Focus', 'Une seule chose à la fois'],
+    sport: ['Corps', 'Séance du jour, régularité, alimentation'],
+    argent: ['Argent', 'Apprendre, protéger, puis trader'],
+    suivi: ['Suivi', 'Ce qui se mesure progresse'],
+    moi: ['Moi', 'Programme, bilan, livres, réglages'],
+    revision: ['Révisions', 'Chaque carte revient juste avant l’oubli'],
+  };
+  const h = heads[tab];
+  const head = h && !(tab === 'argent' && state.ui.lesson) ? `<header class="page-head"><h1>${h[0]}</h1><p>${h[1]}</p></header>` : '';
+  $('#view').innerHTML = head + views[tab]();
   $('#view').dataset.tab = tab;
   const lv = levelInfo(totalXP(state));
   if (lv.level > (state.ui.lastLevel ?? 1)) {
@@ -287,33 +297,27 @@ function viewToday() {
     ${dots(last7)}
   </header>
   ${banner}
-  <blockquote class="quote"><p>« ${esc(q.text)} »</p><cite>${esc(q.author)}</cite></blockquote>
+  ${planCard(today)}
   <section class="card">
-    <div class="card-head"><h2>Aujourd’hui</h2><span class="pill">${st.done}/${st.total}</span></div>
-    <p class="hint">Touche « Min » quand le minimum est fait, « Complet » si tu as fait la version complète. La journée est validée dès que tous les minimums sont faits.</p>
+    <div class="card-head"><h2>Habitudes</h2><span class="pill">${st.done}/${st.total}</span></div>
     <ul class="habits">
       ${state.habits.map((h) => {
         const lvl = d.habits?.[h.id] ?? 0;
         return `<li class="habit lvl-${lvl}">
           <span class="habit-ico" aria-hidden="true">${lvl ? '✓' : esc(h.emoji ?? '•')}</span>
           <div class="habit-text"><strong>${esc(h.name)}</strong>
-            <span><em>Min :</em> ${esc(h.min)}</span>
-            <span><em>Complet :</em> ${esc(h.full)}</span></div>
+            <span>${esc(lvl === 2 ? h.full : h.min)}</span></div>
           <div class="habit-btns">
             <button class="seg ${lvl === 1 ? 'on' : ''}" data-act="habit" data-id="${h.id}" data-lvl="1" aria-pressed="${lvl === 1}">Min</button>
             <button class="seg ${lvl === 2 ? 'on' : ''}" data-act="habit" data-id="${h.id}" data-lvl="2" aria-pressed="${lvl === 2}">Complet</button>
           </div></li>`;
       }).join('')}
     </ul>
+    <details class="more"><summary>Ce que valent « Min » et « Complet »</summary>
+      <ul class="tight">${state.habits.map((h) => `<li><strong>${esc(h.name)}</strong> · min : ${esc(h.min)} · complet : ${esc(h.full)}</li>`).join('')}</ul>
+      <p class="hint">La journée est validée dès que tous les minimums sont faits.</p></details>
   </section>
-  ${revisionCard(today)}
   ${snackCard(today)}
-  <section class="card">
-    <div class="card-head"><h2>Séance du jour</h2></div>
-    <p><strong>${esc(wo.name)}</strong><br><span class="muted">${esc(wo.desc)}</span></p>
-    <div class="row"><a class="btn primary" href="#sport" data-act="start-workout" data-id="${wo.id}">Lancer</a>
-    ${wo.id !== 'M' ? '<a class="btn" href="#sport" data-act="start-workout" data-id="M">Juste la mobilité (min)</a>' : ''}</div>
-  </section>
   <section class="card">
     <div class="card-head"><h2>Nuit dernière</h2>${d.bed && d.wake ? `<span class="pill">${fmtDuration(sleepDuration(d.bed, d.wake))}</span>` : ''}</div>
     <div class="grid2">
@@ -322,9 +326,61 @@ function viewToday() {
     </div>
     <p class="hint">Cible de la semaine ${weekNumber(state, today)} : couché à <strong>${weeklyBedtime(weekNumber(state, today), state.settings.bedtimeTarget)}</strong>, levé à heure fixe. On avance de 15 min par semaine jusqu’à ${esc(state.settings.bedtimeTarget)}.</p>
   </section>
-  <section class="card">
-    <div class="card-head"><h2>Mes règles « Si… alors… »</h2></div>
+  <blockquote class="quote"><p>« ${esc(q.text)} »</p><cite>${esc(q.author)}</cite></blockquote>
+  <details class="card more"><summary><strong>Mes règles « Si… alors… »</strong></summary>
     <ul class="rules">${state.rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
+  </details>`;
+}
+
+// ---------- Plan du jour : ce qu'il faut faire, dans l'ordre ----------
+function workoutMinutes(w) {
+  return Math.round(buildSteps(w, state.settings.level).reduce((a, x) => a + x.secs, 0) / 60);
+}
+
+function planItems(today) {
+  const d = state.days[today] ?? {};
+  const wo = WORKOUTS.find((w) => w.id === WEEK_PLAN[fromKey(today).getDay()]);
+  const done = d.workouts ?? [];
+  const items = [];
+  items.push({
+    ico: '💪', title: `Séance ${wo.name.split(' · ')[1] ?? wo.name}`, sub: `≈ ${workoutMinutes(wo)} min · niveau ${state.settings.level}`,
+    done: wo.id === 'M' ? done.length > 0 : done.some((x) => x !== 'M'),
+    go: `<button class="todo-go" data-act="start-workout" data-id="${wo.id}">Lancer</button>`,
+  });
+  const nextLesson = ALL_LESSONS.find((l, i) => (i === 0 || state.lessons[ALL_LESSONS[i - 1].id]) && !state.lessons[l.id]);
+  const lessonToday = Object.values(state.lessons).some((l) => l.date && todayKey(new Date(l.date)) === today);
+  if (nextLesson || lessonToday) {
+    items.push({
+      ico: '📘', title: lessonToday ? 'Leçon de finance faite' : `Leçon ${ALL_LESSONS.indexOf(nextLesson) + 1} : ${nextLesson.title}`, sub: '≈ 10-15 min · idée, exemple, exercice, quiz',
+      done: lessonToday,
+      go: nextLesson ? `<button class="todo-go" data-act="lesson-open" data-id="${nextLesson.id}">${lessonToday ? 'Suivante' : 'Ouvrir'}</button>` : '',
+    });
+  }
+  const all = deck();
+  if (all.length) {
+    const due = dueCards(all, today).length;
+    items.push({ ico: '🧠', title: due ? `Révisions : ${due} carte${due > 1 ? 's' : ''}` : 'Révisions à jour', sub: '≈ 5 min', done: due === 0, go: `<a class="todo-go" href="#revision">${due ? 'Réviser' : 'Cartes'}</a>` });
+  }
+  items.push({ ico: '🎯', title: '1 session de focus (25 min)', sub: `${d.focus ?? 0} faite${(d.focus ?? 0) > 1 ? 's' : ''} aujourd’hui`, done: (d.focus ?? 0) >= 1, go: '<a class="todo-go" href="#focus">Go</a>' });
+  items.push({ ico: '📖', title: 'Lire 10 pages', sub: 'Moi > Livres pour choisir', done: Boolean(d.read), go: `<button class="todo-go" data-act="read-toggle">${d.read ? 'Annuler' : 'Fait'}</button>` });
+  const prot = d.protein ?? 0;
+  items.push({ ico: '🍗', title: `Protéines : ${prot}/${PROTEIN_TARGET} portions`, sub: 'œufs, poulet, thon, skyr, lentilles', done: prot >= PROTEIN_TARGET, go: '<button class="todo-go" data-act="protein" data-v="1">+1</button>' });
+  const bed = weeklyBedtime(weekNumber(state, today), state.settings.bedtimeTarget);
+  const phoneOut = (d.habits?.sommeil ?? 0) >= 1;
+  items.push({ ico: '📵', title: `Téléphone hors de la chambre à ${bed}`, sub: 'puis coucher', done: phoneOut, go: phoneOut ? '' : '<button class="todo-go" data-act="habit" data-id="sommeil" data-lvl="1">Fait</button>' });
+  return items;
+}
+
+function planCard(today) {
+  const items = planItems(today);
+  const n = items.filter((x) => x.done).length;
+  return `<section class="card plan">
+    <div class="card-head"><h2>Ton plan du jour</h2><span class="pill">${n}/${items.length}</span></div>
+    <div class="bar"><span style="width:${(n / items.length) * 100}%"></span></div>
+    <ul class="todos">${items.map((x) => `<li class="todo ${x.done ? 'done' : ''}">
+      <span class="todo-ico" aria-hidden="true">${x.done ? '✓' : x.ico}</span>
+      <div><strong>${esc(x.title)}</strong><small>${esc(x.sub)}</small></div>
+      ${x.go}</li>`).join('')}</ul>
   </section>`;
 }
 
@@ -339,18 +395,6 @@ function deck() {
 }
 
 const rev = { queue: null, flipped: false };
-
-function revisionCard(today) {
-  const due = dueCards(deck(), today).length;
-  const total = deck().length;
-  return `<section class="card">
-    <div class="card-head"><h2>🧠 Révisions</h2><span class="pill">${due} à revoir</span></div>
-    ${total
-      ? `<p class="hint">${due ? `≈ ${Math.max(1, Math.round(due / 6))} min. Chaque carte revient juste avant que tu l’oublies.` : 'Rien à revoir aujourd’hui. Ajoute des cartes (trading, culture, livres) quand tu apprends quelque chose.'}</p>
-         <div class="row"><a class="btn ${due ? 'primary' : ''}" href="#revision">${due ? 'Réviser maintenant' : 'Voir mes cartes'}</a></div>`
-      : '<p class="hint">Chaque leçon de finance validée ajoute ses cartes ici. Tu peux aussi créer les tiennes.</p><div class="row"><a class="btn" href="#revision">Créer une carte</a></div>'}
-  </section>`;
-}
 
 function viewRevision() {
   const today = todayKey();
@@ -421,6 +465,20 @@ function plantSVG(f) {
   </svg>`;
 }
 
+function timerRing(id, f) {
+  const r = 108;
+  const c = 2 * Math.PI * r;
+  return `<svg class="tring" viewBox="0 0 240 240" aria-hidden="true"><circle cx="120" cy="120" r="${r}" class="tring-bg"/>
+    <circle id="${id}" cx="120" cy="120" r="${r}" class="tring-fg" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - Math.max(0, Math.min(1, f)))}"/></svg>`;
+}
+
+function setRing(id, f) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const c = 2 * Math.PI * 108;
+  el.setAttribute('stroke-dashoffset', c * (1 - Math.max(0, Math.min(1, f))));
+}
+
 function viewFocus() {
   const today = todayKey();
   const d = state.days[today] ?? {};
@@ -430,8 +488,9 @@ function viewFocus() {
   <section class="card center">
     <div class="card-head"><h2>${p.mode === 'work' ? 'Focus 25 min' : 'Pause 5 min'}</h2><span class="pill">${d.focus ?? 0} aujourd’hui</span></div>
     <input class="task" id="pomo-label" placeholder="Sur quoi tu travailles ? (une seule chose)" value="${esc(p.label)}">
-    ${p.mode === 'work' ? `<div class="plant" id="plant">${plantSVG(1 - pomoRemaining() / POMO_WORK)}</div>` : '<div class="plant">☕</div>'}
-    <div class="clock" id="pomo-clock">${fmtClock(p.remaining)}</div>
+    <div class="timer">${timerRing('pomo-ring', 1 - pomoRemaining() / (p.mode === 'work' ? POMO_WORK : POMO_BREAK))}
+      <div class="timer-in">${p.mode === 'work' ? `<div class="plant" id="plant">${plantSVG(1 - pomoRemaining() / POMO_WORK)}</div>` : '<div class="plant">☕</div>'}
+      <div class="clock" id="pomo-clock">${fmtClock(p.remaining)}</div></div></div>
     <div class="row center">
       <button class="btn primary" data-act="pomo-toggle" id="pomo-toggle">${p.endAt ? 'Pause' : 'Démarrer'}</button>
       <button class="btn" data-act="pomo-reset">Réinitialiser</button>
@@ -483,16 +542,26 @@ function viewSport() {
   const todayDow = (fromKey(today).getDay() + 6) % 7;
   const sw = sportWeeks(state, today);
   return `
+  ${suggestUp ? `<div class="banner ok"><strong>2 séances « faciles » de suite.</strong> Il est temps de monter. <button class="btn small primary" data-act="level" data-lvl="${lvl + 1}">Passer au niveau ${lvl + 1}</button></div>` : ''}
+  ${suggestDown ? `<div class="banner warn"><strong>2 séances « dures » de suite.</strong> Redescendre d’un niveau n’est pas un échec. <button class="btn small" data-act="level" data-lvl="${lvl - 1}">Revenir au niveau ${lvl - 1}</button></div>` : ''}
+  ${(() => {
+    const pw = WORKOUTS.find((w) => w.id === planned);
+    const did = done.includes(planned);
+    return `<section class="card today-workout">
+      <span class="wo-badge big wo-${pw.id}">${pw.id}</span>
+      <div><p class="eyebrow">Aujourd’hui</p><h2>${esc(pw.name.split(' · ')[1] ?? pw.name)}</h2><p class="muted">≈ ${workoutMinutes(pw)} min · niveau ${lvl}${did ? ' · ✓ faite' : ''}</p></div>
+      <button class="btn primary wide" data-act="start-workout" data-id="${pw.id}">${did ? 'Refaire' : 'Lancer la séance'}</button>
+      ${pw.id !== 'M' ? '<button class="btn ghost small" data-act="start-workout" data-id="M">Pas la forme ? Juste la mobilité (6 min)</button>' : ''}
+    </section>`;
+  })()}
   <section class="card program-hero">
     <div class="card-head"><h2>🔥 Régularité</h2><span class="pill">${sw.streak} semaine${sw.streak > 1 ? 's' : ''} tenue${sw.streak > 1 ? 's' : ''}</span></div>
     <div class="pips big">${Array.from({ length: sw.goal }, (_, i) => `<i class="${i < sw.thisWeek ? 'on' : ''}"></i>`).join('')}</div>
     <p class="hint">${sw.thisWeek}/${sw.goal} séances A, B ou C cette semaine (lundi → dimanche). Une semaine est tenue à ${sw.goal}. La régularité bat l’intensité : 4 séances moyennes valent mieux qu’une séance héroïque.</p>
   </section>
-  ${suggestUp ? `<div class="banner ok"><strong>2 séances « faciles » de suite.</strong> Il est temps de monter. <button class="btn small primary" data-act="level" data-lvl="${lvl + 1}">Passer au niveau ${lvl + 1}</button></div>` : ''}
-  ${suggestDown ? `<div class="banner warn"><strong>2 séances « dures » de suite.</strong> Redescendre d’un niveau n’est pas un échec. <button class="btn small" data-act="level" data-lvl="${lvl - 1}">Revenir au niveau ${lvl - 1}</button></div>` : ''}
   <section class="card">
     <div class="card-head"><h2>Ta semaine</h2></div>
-    <div class="week">${[1, 2, 3, 4, 5, 6, 0].map((dow, i) => `<div class="${i === todayDow ? 'today' : ''}"><small>${dayNames[i]}</small><b>${WEEK_PLAN[dow]}</b></div>`).join('')}</div>
+    <div class="week">${[1, 2, 3, 4, 5, 6, 0].map((dow, i) => `<div class="wk-${WEEK_PLAN[dow]} ${i === todayDow ? 'today' : ''}"><small>${dayNames[i]}</small><b>${WEEK_PLAN[dow]}</b></div>`).join('')}</div>
     <p class="hint">A = tronc, B = haut du corps, C = cardio sans saut, M = mobilité. Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
   </section>
   <section class="card">
@@ -504,7 +573,7 @@ function viewSport() {
     const steps = buildSteps(w, lvl);
     const mins = Math.round(steps.reduce((s, x) => s + x.secs, 0) / 60);
     return `<section class="card ${w.id === planned ? 'planned' : ''}">
-      <div class="card-head"><h2>${esc(w.name)}</h2><span class="pill">${w.id === planned ? 'Prévue aujourd’hui · ' : ''}${mins} min</span></div>
+      <div class="card-head"><h2><span class="wo-badge wo-${w.id}">${w.id}</span>${esc(w.name.split(' · ')[1] ?? w.name)}</h2><span class="pill">${w.id === planned ? 'Aujourd’hui · ' : ''}${mins} min</span></div>
       <p class="muted">${esc(w.desc)}</p>
       <details><summary>Voir les exercices</summary><ol class="ex">${w.exercises.map((e) => `<li><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="muted">${esc(e.cue)}</span></li>`).join('')}</ol></details>
       <div class="row"><button class="btn primary" data-act="start-workout" data-id="${w.id}">Lancer${done.includes(w.id) ? ' (déjà faite aujourd’hui)' : ''}</button></div>
@@ -564,7 +633,7 @@ function renderPlayer() {
     <div class="player-main">
       <p class="eyebrow">${{ work: 'Effort', rest: 'Repos', warm: 'Échauffement', prep: 'Départ' }[s.kind]}</p>
       <h2>${esc(s.name)}</h2>
-      <div class="clock" id="player-clock">${fmtClock(player.remaining)}</div>
+      <div class="timer">${timerRing('player-ring', 1 - player.remaining / s.secs)}<div class="clock" id="player-clock">${fmtClock(player.remaining)}</div></div>
       <p class="cue">${esc(s.cue)}</p>
       ${s.kind === 'work' ? `<p><a href="${demoUrl(s.name)}" target="_blank" rel="noopener">Voir une démo</a></p>` : ''}
       ${next ? `<p class="muted">Ensuite : ${esc(next.name)}</p>` : ''}
@@ -890,6 +959,7 @@ function tick() {
   if (p.endAt && Date.now() >= p.endAt) pomoDone();
   const pc = $('#pomo-clock');
   if (pc) pc.textContent = fmtClock(Math.ceil(pomoRemaining()));
+  setRing('pomo-ring', 1 - pomoRemaining() / (p.mode === 'work' ? POMO_WORK : POMO_BREAK));
   const pl = $('#plant');
   if (pl && p.endAt) {
     const stage = Math.floor((1 - pomoRemaining() / POMO_WORK) * 50);
@@ -914,6 +984,7 @@ function tick() {
     player.remaining = Math.max(0, Math.ceil((player.endAt - Date.now()) / 1000));
     const c = $('#player-clock');
     if (c) c.textContent = fmtClock(player.remaining);
+    setRing('player-ring', 1 - (player.endAt - Date.now()) / 1000 / player.steps[player.i].secs);
     if (player.remaining <= 3 && player.remaining > 0 && player.lastBeep !== player.remaining) {
       player.lastBeep = player.remaining;
       navigator.vibrate?.(60);
@@ -1003,6 +1074,15 @@ const actions = {
     if (el.dataset.go && currentTab() !== el.dataset.go) location.hash = el.dataset.go;
     else render();
     window.scrollTo(0, 0);
+  },
+  'read-toggle'() {
+    const today = todayKey();
+    const d = day(today);
+    d.read = !d.read;
+    if (d.read) raiseHabit(today, 'apprendre', 1);
+    save();
+    render();
+    if (d.read) toast('Lecture notée 📖');
   },
   'card-flip'() {
     rev.flipped = true;

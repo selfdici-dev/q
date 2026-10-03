@@ -16,47 +16,50 @@ export const DEFAULT_RULES = [
 ];
 
 // Séances sur tapis, sans mur, petit espace, mouvements contrôlés.
+// Matériel : le corps, un tapis et une roue abdominale. Rien d'autre.
 // work = secondes d'effort au niveau 2 ; le niveau 1 fait -10 s, le niveau 3 +10 s.
-// target = à quoi sert l'exercice (objectif : silhouette en V, abdos visibles,
-// corps sec et élancé). Les IDs A, B, C, M sont stockés : ne pas les changer.
+// target = à quoi sert l'exercice (objectif : fin, sec et élancé, abdos
+// visibles, mâchoire nette, pas de volume). Les IDs A, B, C, M sont stockés :
+// ne pas les changer.
 export const WORKOUTS = [
   {
     id: 'A',
-    name: 'A · Tronc et abdos',
-    desc: 'Abdos visibles et taille fine : gainage profond, crunch inversé et roue abdos, sans tirer sur la nuque. 3 tours.',
+    name: 'A · Abdos et tronc',
+    desc: 'Abdos visibles et taille fine : roue abdominale deux fois par tour, crunch inversé et gainage, sans tirer sur la nuque. 3 tours.',
     rounds: 3,
     rest: 15,
     roundRest: 60,
     exercises: [
-      { name: 'Dead bug', work: 40, target: 'Gainage profond · taille fine', cue: 'Bas du dos collé au tapis. Bras et jambe opposés descendent lentement. Expire en descendant.' },
-      { name: 'Planche sur avant-bras', work: 40, target: 'Gainage · ventre plat', cue: 'Coudes sous les épaules, fesses serrées, bassin ni haut ni bas. Sur les genoux si le dos creuse.' },
+      { name: 'Dead bug', work: 40, target: 'Gainage profond · taille fine', cue: 'Allongé sur le dos, bras tendus vers le plafond, genoux pliés à 90°. Bas du dos collé au tapis. Descends lentement un bras et la jambe opposée, reviens, change de côté. Expire en descendant.' },
+      { name: 'Roue abdominale à genoux (1/2)', work: 30, target: 'Abdos complets · le plus efficace', cue: 'À genoux sur le tapis, mains sur la roue sous les épaules, dos légèrement arrondi, fesses serrées. Roule devant toi tant que le bas du dos ne creuse pas, puis reviens en contractant les abdos. Niveau 1 : amplitude courte (30 cm).' },
       { name: 'Crunch inversé', work: 30, target: 'Bas des abdos · la tablette', cue: 'Sur le dos, mains au sol le long du corps, genoux pliés à 90°. Enroule le bassin pour ramener les genoux vers la poitrine, sans élan, puis redescends en 3 s sans poser les pieds.' },
-      { name: 'Planche latérale (droite)', work: 25, target: 'Obliques · taille gainée', cue: 'Coude sous l’épaule, corps aligné. Genou au sol si besoin.' },
+      { name: 'Planche sur avant-bras', work: 40, target: 'Gainage · ventre plat', cue: 'Coudes sous les épaules, fesses serrées, bassin ni haut ni bas. Sur les genoux si le dos creuse.' },
+      { name: 'Planche latérale (droite)', work: 25, target: 'Obliques · taille gainée', cue: 'Couché sur le côté, coude sous l’épaule, soulève le bassin : le corps forme une ligne droite. Genou au sol si besoin.' },
       { name: 'Planche latérale (gauche)', work: 25, target: 'Obliques · taille gainée', cue: 'Même chose de l’autre côté.' },
-      { name: 'Hollow hold genoux pliés', work: 25, target: 'Grand droit · la tablette', cue: 'Bas du dos plaqué. Si le dos décolle : genoux plus près, bras plus bas.' },
-      { name: 'Roue abdominale à genoux', work: 30, target: 'Abdos complets · le plus efficace', cue: 'À genoux sur le tapis, dos légèrement arrondi, fesses serrées. Roule devant toi seulement tant que le bas du dos ne creuse pas, puis reviens en contractant les abdos. Niveau 1 : amplitude courte (30 cm). Arrête si tu sens le bas du dos.' },
+      { name: 'Hollow hold genoux pliés', work: 25, target: 'Grand droit · la tablette', cue: 'Sur le dos, épaules et pieds décollés, bas du dos plaqué. Si le dos décolle : genoux plus près, bras plus bas.' },
+      { name: 'Roue abdominale à genoux (2/2)', work: 30, target: 'Abdos complets · deuxième passage', cue: 'Deuxième passage, tu es fatigué : garde une amplitude plus courte plutôt que de laisser le bas du dos creuser. La qualité passe avant la distance.' },
     ],
   },
   {
     id: 'B',
-    name: 'B · Haut du corps en V',
-    desc: 'Épaules et dos larges, posture droite : la largeur en haut fait paraître la taille fine et la silhouette plus élancée. Prévois 2 bouteilles d’eau de 1,5 L et une serviette. 3 tours.',
+    name: 'B · Haut du corps et posture',
+    desc: 'Poids du corps seulement : un buste dessiné et un dos droit, sans prendre de volume. Tu te muscles sans t’élargir. 3 tours.',
     rounds: 3,
     rest: 20,
     roundRest: 75,
     exercises: [
-      { name: 'Pompes', work: 40, target: 'Pectoraux · haut du V', cue: 'Corps gainé, coudes à 45°, descends lentement (2 s). Arrête 2 reps avant l’échec.' },
-      { name: 'Tirage nageur à la serviette', work: 40, target: 'Dorsaux · largeur du V', cue: 'Allongé sur le ventre, bras tendus devant, serviette tendue entre les mains écartées. Tire-la vers le haut du dos, coudes vers les hanches, poitrine décollée de 5 cm. Serre 1 s, remonte. La serviette reste tendue tout le temps.' },
-      { name: 'Pompes pike', work: 30, target: 'Épaules · carrure', cue: 'Fesses hautes en V inversé, tête qui descend devant les mains. Amplitude courte au début.' },
-      { name: 'Superman Y (allongé sur le ventre)', work: 30, target: 'Haut du dos · posture droite', cue: 'Bras en Y, pouces vers le ciel, décolle bras et poitrine de 5 cm. Regard vers le tapis.' },
-      { name: 'Élévations latérales (bouteilles d’eau)', work: 40, target: 'Milieu de l’épaule · largeur du V', cue: 'Debout, une bouteille de 1,5 L dans chaque main (ou un sac à dos léger). Monte les bras sur les côtés jusqu’à hauteur d’épaules, coudes un peu pliés, sans hausser les épaules. Descends en 3 s, sans élan.' },
-      { name: 'Superman W', work: 30, target: 'Omoplates · épaules ouvertes', cue: 'Coudes pliés en W, serre les omoplates vers le bas et l’arrière.' },
+      { name: 'Pompes', work: 40, target: 'Pectoraux · buste dessiné', cue: 'Mains un peu plus larges que les épaules, corps gainé, coudes à 45°. Descends lentement (2 s). Sur les genoux si besoin. Arrête 2 reps avant l’échec.' },
+      { name: 'Tirage superman', work: 30, target: 'Dos · se tenir droit', cue: 'Allongé sur le ventre, bras tendus devant toi. Décolle bras et poitrine de quelques cm, puis tire les coudes vers les hanches comme pour une traction. Serre le dos 1 s, retends les bras. Regard vers le tapis.' },
+      { name: 'Pompes pike', work: 30, target: 'Épaules · tenue', cue: 'Fesses hautes en V inversé, mains au sol, tête qui descend vers le tapis devant les mains. Amplitude courte au début.' },
+      { name: 'Superman Y (allongé sur le ventre)', work: 30, target: 'Haut du dos · posture droite', cue: 'Bras tendus en Y au-dessus de la tête, pouces vers le ciel. Décolle bras et poitrine de 5 cm, tiens 2 s, repose. Regard vers le tapis.' },
+      { name: 'Pompes serrées', work: 30, target: 'Triceps · bras dessinés', cue: 'Mains sous les épaules, coudes qui frôlent le corps en descendant. Sur les genoux au début : la forme passe avant le nombre.' },
+      { name: 'Superman W', work: 30, target: 'Omoplates · épaules ouvertes', cue: 'Allongé sur le ventre, coudes pliés en W le long du corps. Décolle la poitrine et serre les omoplates vers le bas et l’arrière, 2 s.' },
     ],
   },
   {
     id: 'C',
     name: 'C · Cardio sans saut',
-    desc: 'Brûler des calories dans 2 m², sans bruit pour les voisins : c’est ce qui rend sec et fait apparaître les abdos. 3 tours, ça monte vite en intensité.',
+    desc: 'Brûler des calories dans 2 m², sans bruit pour les voisins : c’est ce qui rend sec et fait apparaître abdos et mâchoire. 3 tours, ça monte vite.',
     rounds: 3,
     rest: 15,
     roundRest: 60,
@@ -64,28 +67,30 @@ export const WORKOUTS = [
       { name: 'Shadow boxing', work: 40, target: 'Cardio · corps sec', cue: 'Garde haute, enchaîne direct-direct-crochet, pivote sur les pieds. Expire à chaque coup.' },
       { name: 'Montées de genoux sur place', work: 30, target: 'Cardio · brûle des calories', cue: 'Sans sauter : un genou puis l’autre à hauteur de hanche, bras qui suivent.' },
       { name: 'Mountain climbers lents', work: 30, target: 'Cardio + abdos', cue: 'En planche haute, ramène un genou vers la poitrine puis l’autre, bassin stable.' },
-      { name: 'Burpee sans saut', work: 30, target: 'Corps entier', cue: 'Accroupi, pose les mains, recule un pied puis l’autre, reviens, relève-toi. Pas de saut.' },
+      { name: 'Jumping jacks sans saut', work: 30, target: 'Cardio · tout le corps', cue: 'Écarte un pied sur le côté pendant que les bras montent au-dessus de la tête, reviens, puis l’autre pied. Rythme rapide, toujours un pied au sol : silencieux.' },
       { name: 'Shadow boxing rapide', work: 30, target: 'Cardio · dernier effort', cue: 'Coups courts et rapides, reste léger sur les appuis.' },
     ],
   },
   {
     id: 'M',
-    name: 'M · Mobilité et posture',
-    desc: 'Tous les jours, même les jours de repos : une posture droite fait paraître plus grand. C’est aussi ton minimum de reprise.',
+    name: 'M · Mobilité, posture et mâchoire',
+    desc: 'Tous les jours, même les jours de repos : une posture droite fait paraître plus grand et dégage la mâchoire. C’est aussi ton minimum de reprise.',
     rounds: 1,
     rest: 5,
     roundRest: 0,
     fixed: true,
     exercises: [
-      { name: 'Chat-vache', work: 45, target: 'Colonne souple', cue: 'À quatre pattes, enroule puis creuse le dos lentement avec la respiration.' },
-      { name: 'Livre ouvert (droite)', work: 40, target: 'Haut du dos · poitrine ouverte', cue: 'Allongé sur le côté gauche, genoux pliés, ouvre le bras droit vers l’arrière en suivant la main des yeux.' },
+      { name: 'Chat-vache', work: 45, target: 'Colonne souple', cue: 'À quatre pattes, mains sous les épaules, genoux sous les hanches. Inspire en creusant le dos (regard devant), expire en l’arrondissant (menton vers la poitrine). Lentement.' },
+      { name: 'Livre ouvert (droite)', work: 40, target: 'Haut du dos · poitrine ouverte', cue: 'Allongé sur le côté gauche, genoux pliés, bras tendus devant toi l’un sur l’autre. Ouvre le bras droit vers l’arrière en suivant la main des yeux, puis reviens.' },
       { name: 'Livre ouvert (gauche)', work: 40, target: 'Haut du dos · poitrine ouverte', cue: 'Même chose de l’autre côté.' },
-      { name: 'Fente basse (droite)', work: 40, target: 'Hanches · se tenir droit', cue: 'Genou arrière au sol, bassin rétroversé, sens l’étirement à l’avant de la hanche. Contre la posture assise.' },
+      { name: 'Fente basse (droite)', work: 40, target: 'Hanches · se tenir droit', cue: 'Un pied devant, genou arrière posé au sol. Avance doucement le bassin : tu sens l’étirement à l’avant de la hanche arrière. Contre la posture assise.' },
       { name: 'Fente basse (gauche)', work: 40, target: 'Hanches · se tenir droit', cue: 'Même chose de l’autre côté.' },
-      { name: 'Chin tucks', work: 30, target: 'Cou · tête haute', cue: 'Assis bien droit, rentre le menton, tiens 3 s, relâche.' },
-      { name: 'Vacuum abdominal', work: 40, target: 'Muscle profond · taille fine', cue: 'À quatre pattes ou debout. Souffle tout l’air, puis rentre le nombril vers la colonne comme pour fermer un jean trop serré. Tiens 10 à 15 s en respirant à petits coups, relâche, recommence. Idéal le ventre vide.' },
-      { name: 'Posture de l’enfant', work: 45, target: 'Détente du dos', cue: 'Fesses vers les talons, bras devant, respire dans le dos.' },
-      { name: 'Respiration 4-6', work: 60, target: 'Récupération · calme', cue: 'Sur le dos : inspire 4 s par le nez, expire 6 s. Calme le système nerveux.' },
+      { name: 'Chin tucks', work: 30, target: 'Cou · tête droite, mâchoire dégagée', cue: 'Assis ou debout, dos droit. Recule la tête à l’horizontale, comme pour faire un double menton, sans baisser le regard. Tiens 3 s, relâche. Corrige la tête en avant qui « efface » la mâchoire.' },
+      { name: 'Renforcement du cou', work: 30, target: 'Cou · ligne de la mâchoire', cue: 'Allongé sur le dos, rentre le menton puis soulève la tête de 2-3 cm, tiens 5 s, repose. Tout doucement : le cou se renforce vite, sans à-coups.' },
+      { name: 'Langue au palais', work: 30, target: 'Posture de la bouche · mâchoire', cue: 'Bouche fermée, dents à peine en contact, toute la langue collée au palais (pas seulement le bout). Respire par le nez. Garde cette position aussi dans la journée.' },
+      { name: 'Vacuum abdominal', work: 40, target: 'Muscle profond · taille fine', cue: 'À quatre pattes. Souffle tout l’air, puis rentre le nombril vers la colonne comme pour fermer un jean trop serré. Tiens 10 à 15 s en respirant à petits coups, relâche, recommence. Idéal le ventre vide.' },
+      { name: 'Posture de l’enfant', work: 45, target: 'Étirement du dos · détente', cue: 'À genoux, gros orteils qui se touchent, genoux écartés. Assieds-toi sur les talons, puis penche le buste en avant jusqu’à poser le front sur le tapis, bras tendus devant toi. Relâche tout et respire dans le bas du dos.' },
+      { name: 'Respiration 4-6', work: 60, target: 'Récupération · calme', cue: 'Allongé sur le dos, genoux pliés : inspire 4 s par le nez, expire 6 s par la bouche. Calme le système nerveux.' },
     ],
   },
 ];
@@ -161,14 +166,22 @@ export const RECIPES = [
 // Démonstration vidéo : recherche YouTube (un lien de recherche ne casse pas, une vidéo précise si).
 // Certains exercices se trouvent mieux avec leur nom anglais.
 const DEMO_QUERIES = {
-  'Tirage nageur à la serviette': 'towel lat pulldown floor',
-  'Élévations latérales (bouteilles d’eau)': 'lateral raise water bottles',
+  'Tirage superman': 'prone lat pulldown bodyweight',
   'Crunch inversé': 'reverse crunch',
   'Vacuum abdominal': 'stomach vacuum exercise',
+  'Jumping jacks sans saut': 'step jacks low impact',
+  'Renforcement du cou': 'supine neck flexion chin tuck',
+  'Langue au palais': 'correct tongue posture',
 };
 
+// Nom sans précision entre parenthèses : « Roue abdominale à genoux (1/2) » → « Roue abdominale à genoux ».
+export function baseName(name) {
+  return name.replace(/\s*\([^)]*\)\s*$/, '');
+}
+
 export function demoUrl(name) {
-  const q = DEMO_QUERIES[name] ?? `${name.replace(/\s*\((droite|gauche)\)/, '').replace(/^Superman /, 'prone ')} exercice technique`;
+  const base = baseName(name);
+  const q = DEMO_QUERIES[base] ?? `${base.replace(/^Superman /, 'prone ')} exercice technique`;
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`;
 }
 

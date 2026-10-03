@@ -702,7 +702,7 @@ function viewSport() {
   <section class="card">
     <div class="card-head"><h2>Ta semaine</h2></div>
     <div class="week">${[1, 2, 3, 4, 5, 6, 0].map((dow, i) => `<div class="wk-${WEEK_PLAN[dow]} ${i === todayDow ? 'today' : ''}"><small>${dayNames[i]}</small><b>${WEEK_PLAN[dow]}</b></div>`).join('')}</div>
-    <p class="hint">A = abdos et tronc, B = haut du corps en V, C = cardio sans saut, M = mobilité et posture. Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
+    <p class="hint">A = abdos et tronc, B = haut du corps et posture, C = cardio sans saut, M = mobilité, posture et mâchoire. Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
   </section>
   <section class="card">
     <div class="card-head"><h2>Niveau</h2></div>
@@ -741,29 +741,19 @@ function viewSport() {
   </section>`;
 }
 
-// Silhouette stylisée : épaules et dorsaux (séance B), abdos (A), taille (M).
-const V_SHAPE = `<svg class="vshape" viewBox="0 0 200 150" aria-hidden="true">
-  <circle cx="100" cy="17" r="13" class="vs-body"/>
-  <path d="M28 60 L18 128 M172 60 L182 128" class="vs-arm"/>
-  <path d="M40 46 Q100 34 160 46 L136 128 Q100 136 64 128 Z" class="vs-body"/>
-  <ellipse cx="40" cy="55" rx="15" ry="12" class="vs-b"/><ellipse cx="160" cy="55" rx="15" ry="12" class="vs-b"/>
-  <path d="M52 66 Q46 94 66 120 L74 106 Q62 88 64 66 Z M148 66 Q154 94 134 120 L126 106 Q138 88 136 66 Z" class="vs-b soft"/>
-  ${[66, 84, 102].map((y) => `<rect x="87" y="${y}" width="12" height="14" rx="4" class="vs-a"/><rect x="101" y="${y}" width="12" height="14" rx="4" class="vs-a"/>`).join('')}
-  <path d="M60 128 Q100 120 140 128" class="vs-waist"/>
-</svg>`;
-
 function goalCard() {
+  const points = [
+    ['C', 'Sec avant tout.', 'Abdos et mâchoire se voient quand le taux de gras baisse : protéines, zéro grignotage, 8 000 pas, séance C. C’est l’assiette qui fait le plus gros du travail.'],
+    ['A', 'Abdos dessinés.', 'Roue abdominale deux fois par tour, crunch inversé, gainage profond pour une taille fine.'],
+    ['B', 'Musclé sans s’élargir.', 'Poids du corps seulement, aucune charge lourde : tu te dessines sans prendre de volume. Rien pour les trapèzes, qui tassent le cou.'],
+    ['M', 'Grand et droit.', 'Tête reculée (chin tucks), hanches ouvertes, dos souple : une posture droite fait paraître plus grand.'],
+    ['M', 'Mâchoire nette.', 'Cou renforcé, tête droite, langue au palais. L’os ne change pas à l’âge adulte : ce qui la révèle, c’est surtout un visage sec et une tête bien placée. Évite le chewing-gum dur, mauvais pour l’articulation.'],
+  ];
   return `<section class="card goal">
-    <div class="card-head"><h2>🎯 Ton objectif : silhouette en V</h2></div>
-    <div class="goal-top">${V_SHAPE}
-      <p class="muted">Large en haut, fin à la taille, sec, tête haute : c’est ce contraste qui donne un corps élancé, pas la taille.</p></div>
-    <ul class="goal-list">
-      <li><span class="wo-badge wo-B">B</span><div><strong>Large en haut.</strong> Milieu de l’épaule (élévations latérales) et dorsaux (tirage à la serviette) : c’est la largeur des épaules qui fait paraître la taille fine.</div></li>
-      <li><span class="wo-badge wo-M">M</span><div><strong>Taille fine.</strong> Gainage profond et vacuum chaque jour. On ne charge jamais les obliques : ça épaissit la taille.</div></li>
-      <li><span class="wo-badge wo-A">A</span><div><strong>Abdos visibles.</strong> Roue et crunch inversé les construisent, mais c’est l’assiette qui les montre : protéines, zéro grignotage, 8 000 pas, séance C.</div></li>
-      <li><span class="wo-badge wo-M">M</span><div><strong>Élancé, pas trapu.</strong> Menton rentré, épaules basses, hanches ouvertes : une posture droite fait paraître plus grand. Aucun exercice pour les trapèzes, ils tassent le cou.</div></li>
-    </ul>
-    <p class="hint">Bonus : si tu as accès à une barre (parc de street workout, barre de porte), les tractions sont le meilleur exercice pour le V. Ajoute 3 séries après la séance B.</p>
+    <p class="eyebrow">Ton objectif</p>
+    <h2 class="goal-title">Fin, sec et élancé</h2>
+    <p class="muted">Pas trapu, pas massif : un corps athlétique et léger, une posture droite, des abdos et une mâchoire visibles.</p>
+    <ul class="goal-list">${points.map(([id, title, text]) => `<li><span class="wo-badge wo-${id}">${id}</span><div><strong>${title}</strong> ${text}</div></li>`).join('')}</ul>
   </section>`;
 }
 

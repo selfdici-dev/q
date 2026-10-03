@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { WORKOUTS, WEEK_PLAN, WARMUP, demoUrl } from '../js/data.js';
+import { WORKOUTS, WEEK_PLAN, WARMUP, demoUrl, baseName } from '../js/data.js';
 
 test('séances : les IDs stockés dans l’historique ne changent pas', () => {
   assert.deepEqual(WORKOUTS.map((w) => w.id), ['A', 'B', 'C', 'M']);
@@ -22,18 +22,31 @@ test('chaque exercice a une durée, une consigne et un objectif', () => {
   for (const e of WARMUP) assert.ok(e.work > 0 && e.cue, e.name);
 });
 
-test('silhouette en V : la séance B travaille épaules latérales et dorsaux', () => {
-  const b = WORKOUTS.find((w) => w.id === 'B');
-  assert.ok(b.exercises.some((e) => /largeur du V/.test(e.target) && /Dorsaux/.test(e.target)));
-  assert.ok(b.exercises.some((e) => /largeur du V/.test(e.target) && /épaule/.test(e.target)));
-  // la taille fine se travaille chaque jour dans la mobilité
-  assert.ok(WORKOUTS.find((w) => w.id === 'M').exercises.some((e) => /taille fine/.test(e.target)));
+test('matériel : le corps, un tapis et une roue abdominale, rien d’autre', () => {
+  const all = [...WORKOUTS.flatMap((w) => [w.desc, ...w.exercises.flatMap((e) => [e.name, e.cue])]), ...WARMUP.flatMap((e) => [e.name, e.cue])];
+  for (const text of all) assert.doesNotMatch(text, /bouteille|serviette|sac à dos|haltère|élastique|barre|chaise|mur\b/i, text);
+});
+
+test('objectif fin et élancé : roue ×2, pas de burpee, cou et mâchoire', () => {
+  const ex = (id) => WORKOUTS.find((w) => w.id === id).exercises;
+  assert.equal(ex('A').filter((e) => baseName(e.name) === 'Roue abdominale à genoux').length, 2);
+  assert.ok(ex('C').every((e) => !/burpee/i.test(e.name)));
+  assert.ok(ex('M').filter((e) => /mâchoire/.test(e.target)).length >= 2);
+  // rien ne vise la largeur : pas d'exercice d'épaules latérales ni de trapèzes
+  for (const w of WORKOUTS) for (const e of w.exercises) assert.doesNotMatch(`${e.name} ${e.target}`, /latérales|trapèze|largeur/i);
+});
+
+test('nom de base sans précision entre parenthèses', () => {
+  assert.equal(baseName('Roue abdominale à genoux (1/2)'), 'Roue abdominale à genoux');
+  assert.equal(baseName('Planche latérale (gauche)'), 'Planche latérale');
+  assert.equal(baseName('Chat-vache'), 'Chat-vache');
 });
 
 test('liens de démo vidéo', () => {
   const q = (name) => decodeURIComponent(new URL(demoUrl(name)).searchParams.get('search_query'));
   assert.equal(q('Planche latérale (droite)'), 'Planche latérale exercice technique');
   assert.equal(q('Superman W'), 'prone W exercice technique');
-  assert.equal(q('Tirage nageur à la serviette'), 'towel lat pulldown floor');
+  assert.equal(q('Superman Y (allongé sur le ventre)'), 'prone Y exercice technique');
+  assert.equal(q('Tirage superman'), 'prone lat pulldown bodyweight');
   assert.ok(demoUrl('Crunch inversé').startsWith('https://www.youtube.com/results?search_query='));
 });

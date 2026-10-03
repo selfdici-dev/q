@@ -1,7 +1,7 @@
 import {
-  todayKey, addDays, diffDays, fromKey, dayStatus, chain, recoveryMode, lastNDays,
+  todayKey, addDays, diffDays, fromKey, dayStatus, chain, lastNDays,
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
-  SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, isPlannedMinimumDay,
+  SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
   dueCards, reviewCard, sportWeeks,
 } from './logic.js';
 import {
@@ -291,38 +291,49 @@ function dots(days) {
   }).join('')}</div>`;
 }
 
+// Message du jour, affiché dans la carte de la chaîne.
+const NOTICES = {
+  restart: ['⚠️', 'Deuxième raté de la semaine.', 'Une seule reprise par semaine : la chaîne repart de zéro. Fais les minimums, sans culpabilité, et note dans le bilan ce qui t’a fait rater.'],
+  twoMissed: ['🌱', 'Deux jours ratés.', 'Pas de rattrapage : seulement les minimums aujourd’hui. Une journée minimum vaut mieux qu’une journée parfaite qui n’existe pas.'],
+  recovery: ['🔄', 'Jour de reprise.', 'Jamais deux fois de suite : fais les minimums, idéalement avant midi, et la chaîne continue.'],
+  minimumDay: ['🪫', 'Jour minimum prévu.', '3ᵉ jour du sprint, celui où l’enthousiasme retombe : seuls les minimums comptent, c’est voulu.'],
+  valid: ['✅', 'Journée validée.', 'Les minimums sont faits. Le complet est un bonus, pas une obligation.'],
+  full: ['🏆', 'Tout en complet.', 'Bravo. Maintenant, repose-toi.'],
+};
+
+// Sections repliées de l'onglet Jour. Celles que tu ouvres restent ouvertes
+// d'un affichage à l'autre (mémoire de l'écran seulement, rien n'est stocké).
+const openFolds = new Set();
+
+function fold(id, ico, title, sub, pill, body) {
+  return `<details class="fold" data-fold="${id}" ${openFolds.has(id) ? 'open' : ''}>
+    <summary><span class="fold-ico" aria-hidden="true">${ico}</span>
+      <span class="fold-title"><strong>${title}</strong><small>${sub}</small></span>
+      ${pill}<span class="chev" aria-hidden="true"></span></summary>
+    <div class="fold-body">${body}</div>
+  </details>`;
+}
+
 function viewToday() {
   const today = todayKey();
   const st = dayStatus(state, today);
   const ch = chain(state, today);
-  const rec = recoveryMode(state, today);
   const sp = sprintInfo(state, today);
   const d = state.days[today] ?? { habits: {} };
-  const wo = WORKOUTS.find((w) => w.id === WEEK_PLAN[fromKey(today).getDay()]);
   const last7 = lastNDays(state, today, 7).map((x) => ({ ...x, today: x.key === today }));
   const sprintDay = Math.min(diffDays(sp.current.first, today) + 1, SPRINT_LENGTH);
-  const allDone = st.valid;
-
-  let banner = '';
-  if (rec.jokerUsed) {
-    banner = `<div class="banner warn"><strong>Deuxième raté de la semaine.</strong> Une seule reprise par semaine : la chaîne repart de zéro aujourd’hui. Ce n’est pas grave, c’est une info. Fais les minimums et note dans le bilan ce qui t’a fait rater.</div>`;
-  } else if (rec.twoMissed) {
-    banner = `<div class="banner warn"><strong>Deux jours ratés.</strong> Pas de culpabilité, pas de rattrapage : fais seulement les minimums aujourd’hui. Une journée minimum vaut infiniment plus qu’une journée parfaite qui n’existe pas.</div>`;
-  } else if (rec.active) {
-    banner = `<div class="banner"><strong>Jour de reprise.</strong> Hier est raté, c’est normal. Règle : jamais deux fois de suite. Fais les minimums, idéalement avant midi, et la chaîne continue.</div>`;
-  } else if (isPlannedMinimumDay(state, today) && !allDone) {
-    banner = `<div class="banner"><strong>Jour 3 du sprint : jour minimum prévu.</strong> C’est le jour où l’enthousiasme retombe. Aujourd’hui, seuls les minimums comptent, et c’est voulu.</div>`;
-  } else if (allDone) {
-    banner = `<div class="banner ok"><strong>Journée validée.</strong> ${st.full ? 'Tout en complet. Bravo, maintenant repose-toi.' : 'Les minimums sont faits. Le complet est un bonus, pas une obligation.'}</div>`;
-  }
-
+  const notice = NOTICES[todayNotice(state, today)];
   const lv = levelInfo(totalXP(state));
   const q = quoteOfDay(today);
+  const toDo = st.total - st.done;
+  const prot = d.protein ?? 0;
+  const snacks = d.snacks?.length ?? 0;
+  const week = weekNumber(state, today);
   return `
   <header class="hero">
     <div class="hero-top">
       <div><p class="eyebrow">${esc(longDate(today))}</p><p class="greet">${greeting()}</p></div>
-      <div class="ring-wrap ${allDone ? 'done' : ''}">${ring(st.done, st.total)}</div>
+      <div class="ring-wrap ${st.valid ? 'done' : ''}">${ring(st.done, st.total)}</div>
     </div>
     <div class="hero-stats">
       <div><span class="big">🔥 ${ch.count}</span><span class="lbl">jour${ch.count > 1 ? 's' : ''} de chaîne${ch.jokers ? ` · ${ch.jokers} reprise${ch.jokers > 1 ? 's' : ''}` : ''}</span></div>
@@ -333,42 +344,39 @@ function viewToday() {
       <div class="xpbar"><span style="width:${(lv.into / lv.span) * 100}%"></span></div>
     </div>
     ${dots(last7)}
+    ${notice ? `<p class="hero-note"><span aria-hidden="true">${notice[0]}</span><span><strong>${notice[1]}</strong> ${notice[2]}</span></p>` : ''}
   </header>
   ${backupBanner(today)}
-  ${banner}
   ${planCard(today)}
-  <section class="card">
-    <div class="card-head"><h2>Habitudes</h2><span class="pill">${st.done}/${st.total}</span></div>
-    <ul class="habits">
-      ${state.habits.map((h) => {
-        const lvl = d.habits?.[h.id] ?? 0;
-        return `<li class="habit lvl-${lvl}">
-          <span class="habit-ico" aria-hidden="true">${lvl ? '✓' : esc(h.emoji ?? '•')}</span>
-          <div class="habit-text"><strong>${esc(h.name)}</strong>
-            <span>${esc(lvl === 2 ? h.full : h.min)}</span></div>
-          <div class="habit-btns">
-            <button class="seg ${lvl === 1 ? 'on' : ''}" data-act="habit" data-id="${h.id}" data-lvl="1" aria-pressed="${lvl === 1}">Min</button>
-            <button class="seg ${lvl === 2 ? 'on' : ''}" data-act="habit" data-id="${h.id}" data-lvl="2" aria-pressed="${lvl === 2}">Complet</button>
-          </div></li>`;
-      }).join('')}
-    </ul>
-    <details class="more"><summary>Ce que valent « Min » et « Complet »</summary>
-      <ul class="tight">${state.habits.map((h) => `<li><strong>${esc(h.name)}</strong> · min : ${esc(h.min)} · complet : ${esc(h.full)}</li>`).join('')}</ul>
-      <p class="hint">La journée est validée dès que tous les minimums sont faits.</p></details>
-  </section>
-  ${snackCard(today)}
-  <section class="card">
-    <div class="card-head"><h2>Nuit dernière</h2>${d.bed && d.wake ? `<span class="pill">${fmtDuration(sleepDuration(d.bed, d.wake))}</span>` : ''}</div>
-    <div class="grid2">
-      <label>Couché à<input type="time" data-field="bed" data-key="${today}" value="${esc(d.bed ?? '')}"></label>
-      <label>Levé à<input type="time" data-field="wake" data-key="${today}" value="${esc(d.wake ?? '')}"></label>
-    </div>
-    <p class="hint">Cible de la semaine ${weekNumber(state, today)} : couché à <strong>${weeklyBedtime(weekNumber(state, today), state.settings.bedtimeTarget)}</strong>, levé à heure fixe. On avance de 15 min par semaine jusqu’à ${esc(state.settings.bedtimeTarget)}.</p>
-  </section>
-  <blockquote class="quote"><p>« ${esc(q.text)} »</p><cite>${esc(q.author)}</cite></blockquote>
-  <details class="card more"><summary><strong>Mes règles « Si… alors… »</strong></summary>
-    <ul class="rules">${state.rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
-  </details>`;
+  <div class="folds">
+    ${fold('habits', '✅', 'Habitudes', toDo ? `${toDo} à faire · min ou complet` : 'Toutes faites', `<span class="pill ${toDo ? '' : 'ok'}">${st.done}/${st.total}</span>`, `
+      <ul class="habits">
+        ${state.habits.map((h) => {
+          const lvl = d.habits?.[h.id] ?? 0;
+          return `<li class="habit lvl-${lvl}">
+            <span class="habit-ico" aria-hidden="true">${lvl ? '✓' : esc(h.emoji ?? '•')}</span>
+            <div class="habit-text"><strong>${esc(h.name)}</strong>
+              <span>${esc(lvl === 2 ? h.full : h.min)}</span></div>
+            <div class="habit-btns">
+              <button class="seg ${lvl === 1 ? 'on' : ''}" data-act="habit" data-id="${h.id}" data-lvl="1" aria-pressed="${lvl === 1}">Min</button>
+              <button class="seg ${lvl === 2 ? 'on' : ''}" data-act="habit" data-id="${h.id}" data-lvl="2" aria-pressed="${lvl === 2}">Complet</button>
+            </div></li>`;
+        }).join('')}
+      </ul>
+      <details class="more"><summary>Ce que valent « Min » et « Complet »</summary>
+        <ul class="tight">${state.habits.map((h) => `<li><strong>${esc(h.name)}</strong> · min : ${esc(h.min)} · complet : ${esc(h.full)}</li>`).join('')}</ul>
+        <p class="hint">La journée est validée dès que tous les minimums sont faits.</p></details>`)}
+    ${fold('food', '🍽️', 'Alimentation', `Protéines · ${snacks ? `${snacks} grignotage${snacks > 1 ? 's' : ''}` : 'aucun grignotage'}`, `<span class="pill ${prot >= PROTEIN_TARGET ? 'ok' : ''}">🍗 ${prot}/${PROTEIN_TARGET}</span>`, snackCard(today))}
+    ${fold('night', '🌙', 'Nuit dernière', `Ce soir : couché à ${weeklyBedtime(week, state.settings.bedtimeTarget)}`, `<span class="pill">${d.bed && d.wake ? fmtDuration(sleepDuration(d.bed, d.wake)) : 'à noter'}</span>`, `
+      <div class="grid2">
+        <label>Couché à<input type="time" data-field="bed" data-key="${today}" value="${esc(d.bed ?? '')}"></label>
+        <label>Levé à<input type="time" data-field="wake" data-key="${today}" value="${esc(d.wake ?? '')}"></label>
+      </div>
+      <p class="hint">Cible de la semaine ${week} : couché à <strong>${weeklyBedtime(week, state.settings.bedtimeTarget)}</strong>, levé à heure fixe. On avance de 15 min par semaine jusqu’à ${esc(state.settings.bedtimeTarget)}.</p>`)}
+    ${fold('rules', '🧭', 'Mes règles', '« Si… alors… »', `<span class="pill">${state.rules.length}</span>`, `<ul class="rules">${state.rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
+      <p class="hint">Modifie-les dans Moi > Réglages.</p>`)}
+    ${fold('quote', '💬', 'Pensée du jour', esc(q.author), '<span></span>', `<blockquote class="quote"><p>« ${esc(q.text)} »</p><cite>${esc(q.author)}</cite></blockquote>`)}
+  </div>`;
 }
 
 // Rappel de sauvegarde : visible seulement après 7 jours sans export.
@@ -486,8 +494,7 @@ function snackCard(key) {
   const resisted = d.snackResisted ?? 0;
   const pending = snackCard.pending;
   const prot = d.protein ?? 0;
-  return `<section class="card">
-    <div class="card-head"><h2>🍽️ Alimentation</h2></div>
+  return `
     <div class="protein">
       <div><strong>Protéines</strong> <span class="muted">${prot}/${PROTEIN_TARGET} portions</span>
         <div class="pips">${Array.from({ length: PROTEIN_TARGET }, (_, i) => `<i class="${i < prot ? 'on' : ''}"></i>`).join('')}</div></div>
@@ -500,8 +507,7 @@ function snackCard(key) {
          <div class="row"><button class="btn ghost small" data-act="snack-cancel">Annuler</button></div>`
       : `<div class="row"><button class="btn" data-act="snack-resist">Envie résistée</button><button class="btn" data-act="snack-ask">J’ai grignoté</button></div>
          <p class="hint">Pas de culpabilité : note-le, c’est tout. Au bout d’une semaine tu verras tes heures et tes déclencheurs, et on attaque ceux-là.</p>`}
-    ${snacks.length ? `<p class="hint">${snacks.map((x) => `${esc(x.time)} · ${esc(x.trigger)}`).join(' — ')}</p>` : ''}
-  </section>`;
+    ${snacks.length ? `<p class="hint">${snacks.map((x) => `${esc(x.time)} · ${esc(x.trigger)}`).join(' — ')}</p>` : ''}`;
 }
 
 // La plante pousse pendant la session (idée reprise de Forest).
@@ -1417,6 +1423,19 @@ document.addEventListener('input', (e) => {
     save();
   }
 });
+
+// Sections repliées : on retient celles que tu ouvres ; l'animation ne joue
+// que lorsque tu ouvres toi-même (pas à chaque nouvel affichage).
+document.addEventListener('toggle', (e) => {
+  const id = e.target.dataset?.fold;
+  if (!id) return;
+  if (e.target.open && !openFolds.has(id)) {
+    openFolds.add(id);
+    e.target.classList.add('opening');
+  } else if (!e.target.open) {
+    openFolds.delete(id);
+  }
+}, true);
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !$('#sheet').hidden) actions['sheet-close']();

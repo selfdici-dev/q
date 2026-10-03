@@ -29,7 +29,7 @@ Révision espacée (boîtes de Leitner) : chaque leçon de finance validée ajou
 
 | Onglet | Contenu |
 |---|---|
-| Jour | Chaîne, sprint, habitudes, révisions du jour, protéines et grignotages (avec déclencheur), séance du jour, nuit dernière, règles « Si… alors… » |
+| Jour | Au premier écran : la chaîne (sprint, niveau, message du jour) et ton plan du jour, avec « Copier mon bilan du jour ». En dessous, sections repliées avec résumé : habitudes, alimentation (protéines, grignotages avec déclencheur), nuit dernière, règles « Si… alors… », pensée du jour |
 | Focus | Minuteur 25/5 avec une plante qui pousse, jardin du jour, minuteur « Envie de scroller ? » de 10 min |
 | Argent | Parcours de 23 leçons (dont une unité Crypto : frais, fiscalité, petites cryptos) (dont une unité « La méthode » fondée sur les études : Barber & Odean, McLean & Pontiff, tendance, dérive après résultats, pratique délibérée ; volatilité/ATR, stratégie, actu), feuille de route trading en 6 étapes chiffrées, modes backtest/simulé/réel (des bases au trading, fiscalité 2026) avec quiz ; patrimoine par poches avec alertes de concentration ; trading réel/simulé avec checklist obligatoire, règles bloquantes (3 positions, 2 pertes, −25 %), aperçu du risque, courbe en R, statistiques par setup, copie pour relecture par Claude ; calculatrices (taille de position, stop ATR, intérêts composés) ; routine d’actualité et sources |
 | Corps | Régularité (séances de la semaine, semaines tenues), semaine type, séances A (tronc), B (haut du corps et posture), C (cardio sans saut), M (mobilité 8 min), échauffement intégré, ressenti en fin de séance et suggestion de niveau, 3 niveaux, lecteur guidé, démos vidéo, règles alimentaires, 6 recettes de débutant |

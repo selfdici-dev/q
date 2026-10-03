@@ -274,7 +274,7 @@ export const HELP = {
     title: 'Comment marche Jour',
     lines: [
       'Fais au moins le minimum de chaque habitude : la journée est validée et ta chaîne 🔥 avance.',
-      'Ton plan du jour te dit quoi faire ensuite : touche le gros bouton « Maintenant ».',
+      'Ton plan du jour te dit quoi faire ensuite : touche le gros bouton de la carte « Maintenant ».',
       'Un jour raté, ça arrive : jamais deux fois de suite. Le soir, copie ton bilan pour Claude.',
     ],
   },
@@ -291,7 +291,7 @@ export const HELP = {
     lines: [
       'Touche « Lancer la séance » et pose le téléphone au sol : l’appli te guide, bips compris.',
       'Chaque jour a sa séance (A, B, C ou M). Pas la forme ? La mobilité suffit pour valider.',
-      'À la fin, dis si c’était facile ou dur : après 2 fois pareil, l’appli te propose un autre niveau.',
+      'À la fin, note la séance : après 2 « Facile » ou 2 « Dur » de suite, l’appli te propose un autre niveau.',
     ],
   },
   argent: {

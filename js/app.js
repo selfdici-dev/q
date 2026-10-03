@@ -191,6 +191,8 @@ function openSheet(title, body) {
       ${body}
     </div>`;
   el.hidden = false;
+  $('#view').inert = true; // le clavier reste dans la fiche
+  $('#tabs').inert = true;
   $('.sheet-panel [data-act="sheet-close"]', el).focus();
 }
 
@@ -786,8 +788,8 @@ function viewSport() {
     <p class="hint">${sw.thisWeek}/${sw.goal} séances A, B ou C cette semaine (lundi → dimanche). Une semaine est tenue à ${sw.goal}. La régularité bat l’intensité : 4 séances moyennes valent mieux qu’une séance héroïque.</p>
   </section>
   <div class="folds">
-    ${fold('c-goal', '🎯', 'Ton objectif', 'Fin, sec et élancé : pourquoi ces séances', '<span></span>', goalBody())}
-    ${fold('c-wo', '💪', 'Les 4 séances', 'Exercices, bonshommes, semaine type', `<span class="pill">Niv. ${lvl}</span>`, `
+    ${fold('c-goal', '🎯', 'Ton objectif', 'Pourquoi ces séances', '<span></span>', goalBody())}
+    ${fold('c-wo', '💪', 'Les 4 séances', 'Exercices et semaine type', `<span class="pill">Niv. ${lvl}</span>`, `
       <div class="week">${[1, 2, 3, 4, 5, 6, 0].map((dow, i) => `<div class="wk-${WEEK_PLAN[dow]} ${i === todayDow ? 'today' : ''}"><small>${dayNames[i]}</small><b>${WEEK_PLAN[dow]}</b></div>`).join('')}</div>
       <p class="hint">A = abdos et tronc, B = haut du corps et posture, C = cardio sans saut, M = mobilité, posture et mâchoire. Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
       <div class="row">${[1, 2, 3].map((n) => `<button class="seg ${lvl === n ? 'on' : ''}" data-act="level" data-lvl="${n}" aria-pressed="${lvl === n}">Niveau ${n}</button>`).join('')}</div>
@@ -795,20 +797,20 @@ function viewSport() {
       ${WORKOUTS.map((w) => {
         const mins = workoutMinutes(w);
         return `<details class="wo-fold ${w.id === planned ? 'planned' : ''}" data-fold="wo-${w.id}" ${openFolds.has(`wo-${w.id}`) ? 'open' : ''}>
-          <summary><span class="wo-badge wo-${w.id}">${w.id}</span><strong>${esc(w.name.split(' · ')[1] ?? w.name)}</strong><span class="pill">${w.id === planned ? 'Aujourd’hui · ' : ''}${mins} min</span></summary>
+          <summary><span class="wo-badge wo-${w.id}">${w.id}</span><strong>${esc(w.name.split(' · ')[1] ?? w.name)}</strong><span class="pill">${w.id === planned ? 'Aujourd’hui' : `${mins} min`}</span><span class="chev" aria-hidden="true"></span></summary>
           <p class="muted">${esc(w.desc)}</p>
           <ol class="ex">${w.exercises.map((e) => `<li><span class="ex-fig">${figure(e.name, e.target)}</span><div><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="target-tag">🎯 ${esc(e.target)}</span><br><span class="muted">${esc(e.cue)}</span></div></li>`).join('')}</ol>
           <div class="row"><button class="btn primary" data-act="start-workout" data-id="${w.id}">Lancer${done.includes(w.id) ? ' (déjà faite aujourd’hui)' : ''}</button></div>
         </details>`;
       }).join('')}`)}
-    ${fold('c-tests', '📏', 'Tests de niveau', 'Pompes, planche, hollow · tous les 4 sprints', `<span class="pill">${state.tests.length}</span>`, testsBody())}
-    ${fold('c-food', '🍽️', 'Manger et cuisiner', `${FOOD_RULES.length} règles · ${RECIPES.length} recettes de débutant`, '<span></span>', `
+    ${fold('c-tests', '📏', 'Tests de niveau', 'Tous les 4 sprints', `<span class="pill">${state.tests.length} test${state.tests.length > 1 ? 's' : ''}</span>`, testsBody())}
+    ${fold('c-food', '🍽️', 'Manger et cuisiner', `${FOOD_RULES.length} règles · ${RECIPES.length} recettes`, '<span></span>', `
       <p class="muted">Pour des abdos visibles, l’alimentation pèse plus lourd que les séances. Six règles, pas de régime :</p>
       <ol class="tight">${FOOD_RULES.map((r) => `<li>${esc(r)}</li>`).join('')}</ol>
       <p class="hint">Objectif : maîtriser une recette par semaine. Propose à tes parents de cuisiner un repas par semaine : tu apprends, et tu choisis ce qui est dans l’assiette.</p>
       ${RECIPES.map((r) => `<details><summary><strong>${esc(r.name)}</strong> · ${esc(r.time)}</summary>
         <p><em>Ingrédients :</em> ${esc(r.items)}</p><p>${esc(r.steps)}</p></details>`).join('')}`)}
-    ${fold('c-safe', '⛑️', 'Sécurité', 'À lire avant ta première séance', '<span></span>', `
+    ${fold('c-safe', '⛑️', 'Sécurité', 'Avant ta première séance', '<span></span>', `
       <ul class="tight">
         <li>Douleur vive ou articulaire : arrête l’exercice. Une brûlure musculaire, c’est normal.</li>
         <li>Si la technique se dégrade, mets-toi en version genoux ou arrête la série. La qualité passe avant la durée.</li>
@@ -1074,7 +1076,7 @@ function viewBooks() {
 function appsFold() {
   const cats = [...new Set(APPS.map((a) => a.cat))];
   const done = APPS.filter((a) => state.setup[a.name]).length;
-  return `<div class="folds">${fold('apps', '🧰', 'Tes outils', 'Apps et réglages du téléphone, avec le mode d’emploi', `<span class="pill ${done === APPS.length ? 'ok' : ''}">${done}/${APPS.length}</span>`, `
+  return `<div class="folds">${fold('apps', '🧰', 'Tes outils', 'Apps et réglages du téléphone', `<span class="pill ${done === APPS.length ? 'ok' : ''}">${done}/${APPS.length}</span>`, `
     <p class="hint">Tout est gratuit sauf le réveil (≈ 10 €). Coche chaque outil une fois configuré.</p>
     ${cats.map((c) => `<h3 class="apps-cat">${esc(c)}</h3>
     <ul class="setup">${APPS.filter((a) => a.cat === c).map((a) => `<li>
@@ -1496,6 +1498,8 @@ const actions = {
   'sheet-close'() {
     $('#sheet').hidden = true;
     $('#sheet').innerHTML = '';
+    $('#view').inert = false;
+    $('#tabs').inert = false;
     if (sheetOpener?.isConnected) sheetOpener.focus();
     sheetOpener = null;
   },

@@ -681,7 +681,7 @@ details.card.more .rules { margin-top: 10px; }
   border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
   transform: rotate(45deg); transition: transform 0.3s cubic-bezier(.2,.8,.2,1), margin 0.3s;
 }
-.fold[open] .chev { transform: rotate(225deg); margin-top: 4px; }
+.fold[open] > summary .chev, .wo-fold[open] > summary .chev { transform: rotate(225deg); margin-top: 4px; }
 .fold-body { padding: 2px 14px 14px; }
 .fold-body > .habits { margin-top: 0; }
 .fold-body .quote { border: 0; background: var(--surface-2); }
@@ -919,7 +919,8 @@ details.card.more .rules { margin-top: 10px; }
 .avatar { display: block; width: 100%; height: 100%; overflow: visible; }
 .av-fill { fill: var(--figure, #ecdcb8); }
 .av-limb { fill: none; stroke: var(--figure, #ecdcb8); stroke-linecap: round; stroke-linejoin: round; }
-.av-line { fill: none; stroke: color-mix(in srgb, var(--figure, #ecdcb8) 42%, #000); stroke-width: 1; stroke-linecap: round; }
+/* Traits de définition : mélangés vers le fond de page, donc visibles sur le corps clair (thème sombre) comme sur le corps foncé (thème clair). */
+.av-line { fill: none; stroke: color-mix(in srgb, var(--figure, #ecdcb8) 42%, var(--bg, #000)); stroke-width: 1; stroke-linecap: round; }
 .av-ring { fill: none; stroke: var(--accent); stroke-width: 0.6; }
 .av-ground { fill: rgb(0 0 0 / 0.35); }
 .hero-side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
@@ -972,7 +973,7 @@ details.card.more .rules { margin-top: 10px; }
 .help-list { margin: 4px 0 6px; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; font-size: 1rem; line-height: 1.45; }
 .help-list li::marker { color: var(--accent); font-weight: 700; }
 .wo-fold { margin: 10px 0 0; border: 1px solid var(--line); border-radius: 14px; padding: 0 12px; }
-.wo-fold > summary { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; min-height: 52px; cursor: pointer; list-style: none; }
+.wo-fold > summary { display: grid; grid-template-columns: auto 1fr auto 14px; gap: 10px; align-items: center; min-height: 52px; cursor: pointer; list-style: none; }
 .wo-fold > summary::-webkit-details-marker { display: none; }
 .wo-fold > summary strong { min-width: 0; }
 .wo-fold[open] { padding-bottom: 12px; }

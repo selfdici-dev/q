@@ -399,12 +399,13 @@ export function createMoney(ctx) {
 
   const SUBTABS = [['parcours', 'Cours'], ['patrimoine', 'Patrimoine'], ['trading', 'Trading'], ['outils', 'Calculs'], ['actu', 'Actu']];
 
+  // Seul le parcours de leçons est affiché : patrimoine, trading, calculs et
+  // actu sont masqués (jamais utilisés). Leur code et les données restent :
+  // remettre la barre de sous-onglets suffit à les réactiver.
   function view() {
     const ui = ctx.state.ui;
     if (ui.lesson) return lessonView(ui.lesson);
-    const sub = SUBTABS.some(([id]) => id === ui.moneyTab) ? ui.moneyTab : 'parcours';
-    const body = { parcours: pathView, patrimoine: wealthView, trading: tradingView, outils: toolsView, actu: newsView }[sub]();
-    return `<nav class="subtabs five">${SUBTABS.map(([id, label]) => `<button class="${sub === id ? 'on' : ''}" data-act="money-tab" data-id="${id}">${label}</button>`).join('')}</nav>${body}`;
+    return pathView();
   }
 
   const $ = (s) => document.querySelector(s);

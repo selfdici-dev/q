@@ -385,6 +385,73 @@ export function sportWeeks(state, today, goal = 4) {
   return { thisWeek, goal, streak };
 }
 
+// ---------- Calendrier de régularité ----------
+// Une colonne par semaine du programme (sprint), une case par jour :
+// 'full' (tout en complet), 'min' (journée validée), 'miss' (ratée),
+// 'now' (aujourd'hui, pas encore validé), 'future'. `sport` : séance A, B ou C.
+export function regularityGrid(state, today, weeks = SPRINT_COUNT) {
+  const start = state.settings.startDate;
+  const total = Math.max(weeks, Math.floor(Math.max(0, diffDays(start, today)) / SPRINT_LENGTH) + 1);
+  let valid = 0;
+  let full = 0;
+  let elapsed = 0;
+  let run = 0;
+  let best = 0;
+  const cols = [];
+  for (let w = 0; w < total; w++) {
+    const days = [];
+    for (let i = 0; i < SPRINT_LENGTH; i++) {
+      const key = addDays(start, w * SPRINT_LENGTH + i);
+      const st = dayStatus(state, key);
+      const ahead = diffDays(today, key);
+      let level = 'future';
+      if (ahead <= 0) {
+        level = st.full ? 'full' : st.valid ? 'min' : ahead === 0 ? 'now' : 'miss';
+        if (ahead < 0 || st.valid) elapsed++;
+        if (st.valid) valid++;
+        if (st.full) full++;
+        run = st.valid ? run + 1 : ahead === 0 ? run : 0;
+        best = Math.max(best, run);
+      }
+      const sport = (state.days[key]?.workouts ?? []).some((x) => x !== 'M');
+      days.push({ key, level, today: ahead === 0, sport });
+    }
+    const passed = days.filter((d) => d.level === 'min' || d.level === 'full').length >= SPRINT_PASS;
+    cols.push({ number: w + 1, days, passed, finished: diffDays(days[SPRINT_LENGTH - 1].key, today) > 0 });
+  }
+  return { weeks: cols, valid, full, elapsed, best };
+}
+
+// ---------- Livres ----------
+// Étagères par catégorie. Ordre dans une étagère : en cours, puis ⭐ (par où
+// commencer), puis à lire, puis lus. filter : 'all' | 'todo' | 'reading' | 'done'.
+export function bookShelves(books, statuses = {}, filter = 'all') {
+  const status = (b) => statuses[b.id]?.status ?? 'todo';
+  const rank = (b) => ({ reading: 0, todo: b.start ? 1 : 2, done: 3 }[status(b)]);
+  const keep = (b) => filter === 'all' || status(b) === filter;
+  const counts = { all: books.length, todo: 0, reading: 0, done: 0 };
+  for (const b of books) counts[status(b)]++;
+  const cats = [...new Set(books.map((b) => b.cat))];
+  const shelves = cats
+    .map((cat) => {
+      const all = books.filter((b) => b.cat === cat);
+      const items = all.filter(keep).map((b, i) => ({ ...b, status: status(b), order: i })).sort((a, b) => rank(a) - rank(b) || a.order - b.order);
+      return { cat, items, done: all.filter((b) => status(b) === 'done').length, total: all.length };
+    })
+    .filter((sh) => sh.items.length);
+  return { counts, reading: books.filter((b) => status(b) === 'reading'), shelves };
+}
+
+// ---------- Grignotage ----------
+// Déclencheurs notés sur les `days` derniers jours, du plus fréquent au moins fréquent.
+export function snackTriggers(state, today, days = 14) {
+  const count = {};
+  for (let i = 0; i < days; i++) {
+    for (const s of state.days[addDays(today, -i)]?.snacks ?? []) count[s.trigger] = (count[s.trigger] ?? 0) + 1;
+  }
+  return Object.entries(count).sort((a, b) => b[1] - a[1]);
+}
+
 // ---------- Animations ----------
 // Mémoire du dernier affichage (une Map gardée en mémoire, jamais stockée) :
 // sert à n'animer que ce qui vient de changer.

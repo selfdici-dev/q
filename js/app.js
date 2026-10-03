@@ -2,18 +2,18 @@ import {
   todayKey, addDays, diffDays, fromKey, dayStatus, chain, lastNDays,
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
-  dueCards, reviewCard, sportWeeks, increased, previous,
+  dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers, regularityGrid, bookShelves,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
   WARMUP, PROTEIN_TARGET, PROTEIN_EXAMPLES, PHASES, MILESTONES, BOOKS, APPS,
 } from './data.js';
 import { ALL_LESSONS } from './finance-data.js';
-import { lineChart, barChart, wireTooltips } from './charts.js';
 import { createMoney, DEFAULT_CALC, DEFAULT_WEALTH } from './money.js';
 import { quoteOfDay } from './quotes.js';
 import { daySummary, weekSummary } from './summary.js';
 import { backupStatus, validateBackup } from './backup.js';
+import { figureFor, figureSVG } from './figures.js';
 
 const STORE = 'cap-v1';
 const POMO_WORK = 25 * 60;
@@ -84,7 +84,7 @@ function applyTheme() {
   if (t === 'auto') delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme = t;
   const dark = t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#000000' : '#f6f7f4');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#000000' : '#f6f1e7');
 }
 applyTheme();
 const save = () => {
@@ -116,6 +116,8 @@ function raiseHabit(key, id, level) {
 const $ = (sel, root = document) => root.querySelector(sel);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmtClock = (secs) => `${String(Math.floor(secs / 60)).padStart(2, '0')}:${String(Math.floor(secs % 60)).padStart(2, '0')}`;
+// Chronomètre de séance : « 18 » sous une minute (lisible du sol), « 1:15 » au-delà.
+const fmtStep = (secs) => (secs < 60 ? String(Math.max(0, Math.ceil(secs))) : `${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, '0')}`);
 const fmtDuration = (mins) => `${Math.floor(mins / 60)} h ${String(Math.round(mins % 60)).padStart(2, '0')}`;
 const longDate = (key) => fromKey(key).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -255,6 +257,13 @@ const seen = new Map();
 const tweens = new Map();
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+// Bonhomme animé d'un exercice, cadré sur son mouvement (immobile si le
+// téléphone demande de réduire les animations).
+function figure(name) {
+  const f = name && figureFor(name);
+  return f ? figureSVG(f.fig, { mirror: f.mirror, fit: true, animate: !reduceMotion() }) : '';
+}
+
 // Barre qui glisse de sa valeur précédente (%) vers la nouvelle.
 function tweenBar(key, pct) {
   return `<span style="width:${previous(tweens, key, pct, 0)}%" data-to="${pct}"></span>`;
@@ -327,7 +336,6 @@ const TABS = [
   { id: 'focus', label: 'Focus', icon: '🎯' },
   { id: 'sport', label: 'Corps', icon: '💪' },
   { id: 'argent', label: 'Argent', icon: '💶' },
-  { id: 'suivi', label: 'Suivi', icon: '📊' },
   { id: 'moi', label: 'Moi', icon: '🧭' },
 ];
 
@@ -336,14 +344,16 @@ function currentTab() {
   return TABS.some((t) => t.id === h) || h === 'revision' ? h : 'jour';
 }
 
+let renders = 0; // nombre d'affichages : distingue un réaffichage sur place d'une arrivée
+
 function render() {
+  renders++;
   const tab = currentTab();
-  const views = { jour: viewToday, focus: viewFocus, sport: viewSport, argent: money.view, suivi: viewTrack, moi: viewMe, revision: viewRevision };
+  const views = { jour: viewToday, focus: viewFocus, sport: viewSport, argent: money.view, moi: viewMe, revision: viewRevision };
   const heads = {
     focus: ['Focus', 'Une seule chose à la fois'],
     sport: ['Corps', 'Séance du jour, régularité, alimentation'],
-    argent: ['Argent', 'Apprendre, protéger, puis trader'],
-    suivi: ['Suivi', 'Ce qui se mesure progresse'],
+    argent: ['Argent', 'Les bases, une leçon de 10 minutes à la fois'],
     moi: ['Moi', 'Programme, bilan, livres, réglages'],
     revision: ['Révisions', 'Chaque carte revient juste avant l’oubli'],
   };
@@ -359,7 +369,6 @@ function render() {
   }
   document.querySelectorAll('#tabs a').forEach((a) => a.setAttribute('aria-current', a.dataset.tab === tab ? 'page' : 'false'));
   moveTabIndicator();
-  if (tab === 'suivi') wireTooltips($('#view'));
   runTweens();
   tick();
 }
@@ -410,6 +419,7 @@ function viewToday() {
   const prot = d.protein ?? 0;
   const snacks = d.snacks?.length ?? 0;
   const week = weekNumber(state, today);
+  const grid = regularityGrid(state, today);
   return `
   <header class="hero">
     <div class="hero-top">
@@ -454,10 +464,25 @@ function viewToday() {
         <label>Levé à<input type="time" data-field="wake" data-key="${today}" value="${esc(d.wake ?? '')}"></label>
       </div>
       <p class="hint">Cible de la semaine ${week} : couché à <strong>${weeklyBedtime(week, state.settings.bedtimeTarget)}</strong>, levé à heure fixe. On avance de 15 min par semaine jusqu’à ${esc(state.settings.bedtimeTarget)}.</p>`)}
+    ${fold('heat', '📅', 'Régularité', 'Tes 12 semaines d’un coup d’œil', `<span class="pill">${grid.valid}/${grid.elapsed}</span>`, heatmap(grid))}
     ${fold('rules', '🧭', 'Mes règles', '« Si… alors… »', `<span class="pill">${state.rules.length}</span>`, `<ul class="rules">${state.rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
       <p class="hint">Modifie-les dans Moi > Réglages.</p>`)}
     ${fold('quote', '💬', 'Pensée du jour', esc(q.author), '<span></span>', `<blockquote class="quote"><p>« ${esc(q.text)} »</p><cite>${esc(q.author)}</cite></blockquote>`)}
   </div>`;
+}
+
+// Calendrier de régularité : une colonne par semaine du programme, une case
+// par jour (raté, minimum, complet ; point = séance A, B ou C).
+function heatmap(g, enter = false) {
+  const start = state.settings.startDate;
+  const letters = Array.from({ length: SPRINT_LENGTH }, (_, i) => fromKey(addDays(start, i)).toLocaleDateString('fr-FR', { weekday: 'narrow' }));
+  const words = { full: 'tout en complet', min: 'validé', miss: 'raté', now: 'aujourd’hui', future: 'à venir' };
+  return `<div class="heat ${enter ? 'enter' : ''}" style="--weeks:${g.weeks.length}" role="img" aria-label="${g.valid} jours tenus sur ${g.elapsed}">
+      <div class="heat-days" aria-hidden="true">${letters.map((l) => `<span>${l}</span>`).join('')}<span></span></div>
+      ${g.weeks.map((w, wi) => `<div class="heat-col">${w.days.map((d, di) => `<i class="cell ${d.level}${d.today ? ' today' : ''}${d.sport ? ' sport' : ''}" style="--i:${wi + di * 2}" title="${fromKey(d.key).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} : ${words[d.level]}${d.sport ? ' · séance' : ''}"></i>`).join('')}<small class="heat-res">${w.finished && w.passed ? '✓' : w.number % 2 ? w.number : ''}</small></div>`).join('')}
+    </div>
+    <div class="heat-legend"><span><i class="cell miss"></i>Raté</span><span><i class="cell min"></i>Minimum</span><span><i class="cell full"></i>Complet</span><span><i class="cell min sport"></i>Séance</span></div>
+    <p class="hint">${g.valid} jour${g.valid > 1 ? 's' : ''} tenu${g.valid > 1 ? 's' : ''} sur ${g.elapsed} · meilleure série ${g.best} · ${g.full} en complet. Sous chaque semaine : ✓ si le sprint est réussi (5/7).</p>`;
 }
 
 // Rappel de sauvegarde : visible seulement après 7 jours sans export.
@@ -588,7 +613,12 @@ function snackCard(key) {
          <div class="row"><button class="btn ghost small" data-act="snack-cancel">Annuler</button></div>`
       : `<div class="row"><button class="btn" data-act="snack-resist">Envie résistée</button><button class="btn" data-act="snack-ask">J’ai grignoté</button></div>
          <p class="hint">Pas de culpabilité : note-le, c’est tout. Au bout d’une semaine tu verras tes heures et tes déclencheurs, et on attaque ceux-là.</p>`}
-    ${snacks.length ? `<p class="hint">${snacks.map((x) => `${esc(x.time)} · ${esc(x.trigger)}`).join(' — ')}</p>` : ''}`;
+    ${snacks.length ? `<p class="hint">${snacks.map((x) => `${esc(x.time)} · ${esc(x.trigger)}`).join(' — ')}</p>` : ''}
+    ${(() => {
+      const top = snackTriggers(state, key);
+      return top.length ? `<div class="card-head sub"><h3>Tes déclencheurs (14 jours)</h3></div>
+        <p class="hint">${top.map(([t, n]) => `<strong>${esc(t)}</strong> ×${n}`).join(' · ')}. Attaque le premier : écris une règle « Si… alors… » pour lui dans Moi > Réglages.</p>` : '';
+    })()}`;
 }
 
 // La plante pousse pendant la session (idée reprise de Forest).
@@ -702,7 +732,7 @@ function viewSport() {
   <section class="card">
     <div class="card-head"><h2>Ta semaine</h2></div>
     <div class="week">${[1, 2, 3, 4, 5, 6, 0].map((dow, i) => `<div class="wk-${WEEK_PLAN[dow]} ${i === todayDow ? 'today' : ''}"><small>${dayNames[i]}</small><b>${WEEK_PLAN[dow]}</b></div>`).join('')}</div>
-    <p class="hint">A = abdos et tronc, B = haut du corps en V, C = cardio sans saut, M = mobilité et posture. Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
+    <p class="hint">A = abdos et tronc, B = haut du corps et posture, C = cardio sans saut, M = mobilité, posture et mâchoire. Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
   </section>
   <section class="card">
     <div class="card-head"><h2>Niveau</h2></div>
@@ -715,10 +745,11 @@ function viewSport() {
     return `<section class="card ${w.id === planned ? 'planned' : ''}">
       <div class="card-head"><h2><span class="wo-badge wo-${w.id}">${w.id}</span>${esc(w.name.split(' · ')[1] ?? w.name)}</h2><span class="pill">${w.id === planned ? 'Aujourd’hui · ' : ''}${mins} min</span></div>
       <p class="muted">${esc(w.desc)}</p>
-      <details><summary>Voir les exercices</summary><ol class="ex">${w.exercises.map((e) => `<li><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="target-tag">🎯 ${esc(e.target)}</span><br><span class="muted">${esc(e.cue)}</span></li>`).join('')}</ol></details>
+      <details><summary>Voir les exercices</summary><ol class="ex">${w.exercises.map((e) => `<li><span class="ex-fig">${figure(e.name)}</span><div><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="target-tag">🎯 ${esc(e.target)}</span><br><span class="muted">${esc(e.cue)}</span></div></li>`).join('')}</ol></details>
       <div class="row"><button class="btn primary" data-act="start-workout" data-id="${w.id}">Lancer${done.includes(w.id) ? ' (déjà faite aujourd’hui)' : ''}</button></div>
     </section>`;
   }).join('')}
+  ${testsCard()}
   <section class="card">
     <div class="card-head"><h2>Sécurité</h2></div>
     <ul class="tight">
@@ -741,29 +772,19 @@ function viewSport() {
   </section>`;
 }
 
-// Silhouette stylisée : épaules et dorsaux (séance B), abdos (A), taille (M).
-const V_SHAPE = `<svg class="vshape" viewBox="0 0 200 150" aria-hidden="true">
-  <circle cx="100" cy="17" r="13" class="vs-body"/>
-  <path d="M28 60 L18 128 M172 60 L182 128" class="vs-arm"/>
-  <path d="M40 46 Q100 34 160 46 L136 128 Q100 136 64 128 Z" class="vs-body"/>
-  <ellipse cx="40" cy="55" rx="15" ry="12" class="vs-b"/><ellipse cx="160" cy="55" rx="15" ry="12" class="vs-b"/>
-  <path d="M52 66 Q46 94 66 120 L74 106 Q62 88 64 66 Z M148 66 Q154 94 134 120 L126 106 Q138 88 136 66 Z" class="vs-b soft"/>
-  ${[66, 84, 102].map((y) => `<rect x="87" y="${y}" width="12" height="14" rx="4" class="vs-a"/><rect x="101" y="${y}" width="12" height="14" rx="4" class="vs-a"/>`).join('')}
-  <path d="M60 128 Q100 120 140 128" class="vs-waist"/>
-</svg>`;
-
 function goalCard() {
+  const points = [
+    ['C', 'Sec avant tout.', 'Abdos et mâchoire se voient quand le taux de gras baisse : protéines, zéro grignotage, 8 000 pas, séance C. C’est l’assiette qui fait le plus gros du travail.'],
+    ['A', 'Abdos dessinés.', 'Roue abdominale deux fois par tour, crunch inversé, gainage profond pour une taille fine.'],
+    ['B', 'Musclé sans s’élargir.', 'Poids du corps seulement, aucune charge lourde : tu te dessines sans prendre de volume. Rien pour les trapèzes, qui tassent le cou.'],
+    ['M', 'Grand et droit.', 'Tête reculée (chin tucks), hanches ouvertes, dos souple : une posture droite fait paraître plus grand.'],
+    ['M', 'Mâchoire nette.', 'Cou renforcé, tête droite, langue au palais. L’os ne change pas à l’âge adulte : ce qui la révèle, c’est surtout un visage sec et une tête bien placée. Évite le chewing-gum dur, mauvais pour l’articulation.'],
+  ];
   return `<section class="card goal">
-    <div class="card-head"><h2>🎯 Ton objectif : silhouette en V</h2></div>
-    <div class="goal-top">${V_SHAPE}
-      <p class="muted">Large en haut, fin à la taille, sec, tête haute : c’est ce contraste qui donne un corps élancé, pas la taille.</p></div>
-    <ul class="goal-list">
-      <li><span class="wo-badge wo-B">B</span><div><strong>Large en haut.</strong> Milieu de l’épaule (élévations latérales) et dorsaux (tirage à la serviette) : c’est la largeur des épaules qui fait paraître la taille fine.</div></li>
-      <li><span class="wo-badge wo-M">M</span><div><strong>Taille fine.</strong> Gainage profond et vacuum chaque jour. On ne charge jamais les obliques : ça épaissit la taille.</div></li>
-      <li><span class="wo-badge wo-A">A</span><div><strong>Abdos visibles.</strong> Roue et crunch inversé les construisent, mais c’est l’assiette qui les montre : protéines, zéro grignotage, 8 000 pas, séance C.</div></li>
-      <li><span class="wo-badge wo-M">M</span><div><strong>Élancé, pas trapu.</strong> Menton rentré, épaules basses, hanches ouvertes : une posture droite fait paraître plus grand. Aucun exercice pour les trapèzes, ils tassent le cou.</div></li>
-    </ul>
-    <p class="hint">Bonus : si tu as accès à une barre (parc de street workout, barre de porte), les tractions sont le meilleur exercice pour le V. Ajoute 3 séries après la séance B.</p>
+    <p class="eyebrow">Ton objectif</p>
+    <h2 class="goal-title">Fin, sec et élancé</h2>
+    <p class="muted">Pas trapu, pas massif : un corps athlétique et léger, une posture droite, des abdos et une mâchoire visibles.</p>
+    <ul class="goal-list">${points.map(([id, title, text]) => `<li><span class="wo-badge wo-${id}">${id}</span><div><strong>${title}</strong> ${text}</div></li>`).join('')}</ul>
   </section>`;
 }
 
@@ -795,25 +816,29 @@ function renderPlayer() {
   const next = player.steps[player.i + 1];
   const fresh = player.shown !== player.i;
   player.shown = player.i;
-  el.className = `player ${s.kind}`;
+  el.className = `player ${s.kind} ${player.endAt ? '' : 'paused'}`;
+  // Lisible du sol : l'écran se remplit de couleur à mesure que le temps passe
+  // (or = effort, bleu = repos), chronomètre géant, gros boutons.
   el.innerHTML = `
+    <div class="player-fill" id="player-fill" style="transform:scaleY(${1 - player.remaining / s.secs})"></div>
     <div class="player-top"><span>${esc(player.workout.name)}</span><span>${s.round ? `Tour ${s.round}/${s.rounds}` : ''}</span></div>
+    <div class="progress"><span style="width:${(player.i / player.steps.length) * 100}%"></span></div>
     <div class="player-main ${fresh ? 'enter' : ''}">
-      <p class="eyebrow">${{ work: 'Effort', rest: 'Repos', warm: 'Échauffement', prep: 'Départ' }[s.kind]}</p>
+      <p class="phase">${player.endAt ? { work: 'Effort', rest: 'Repos', warm: 'Échauffement', prep: 'Départ' }[s.kind] : 'Pause'}</p>
       <h2>${esc(s.name)}</h2>
       ${s.target ? `<span class="target-tag">🎯 ${esc(s.target)}</span>` : ''}
-      <div class="timer">${timerRing('player-ring', 1 - player.remaining / s.secs)}<div class="clock" id="player-clock">${fmtClock(player.remaining)}</div></div>
-      <p class="cue">${esc(s.cue)}</p>
-      ${s.kind === 'work' ? `<p><a href="${demoUrl(s.name)}" target="_blank" rel="noopener">Voir une démo</a></p>` : ''}
-      ${next ? `<p class="muted">Ensuite : ${esc(next.name)}</p>` : ''}
+      <div class="player-fig">${figure(s.kind === 'work' || s.kind === 'warm' ? s.name : next?.name)}</div>
+      <div class="clock huge" id="player-clock">${fmtStep(player.remaining)}</div>
+      ${s.kind === 'rest' ? '' : `<p class="cue">${esc(s.cue)}</p>`}
+      ${s.kind === 'work' ? `<p class="demo"><a href="${demoUrl(s.name)}" target="_blank" rel="noopener">Voir une démo vidéo</a></p>` : ''}
+      ${next ? `<p class="next">Ensuite <strong>${esc(next.name)}</strong></p>` : ''}
     </div>
-    <div class="progress"><span style="width:${(player.i / player.steps.length) * 100}%"></span></div>
-    <div class="row center">
-      <button class="btn" data-act="player-prev">◀︎</button>
-      <button class="btn primary" data-act="player-toggle">${player.endAt ? 'Pause' : 'Reprendre'}</button>
-      <button class="btn" data-act="player-next">▶︎</button>
+    <div class="player-ctrl">
+      <button class="ctrl" data-act="player-prev" aria-label="Étape précédente">◀︎</button>
+      <button class="ctrl main" data-act="player-toggle" aria-label="${player.endAt ? 'Pause' : 'Reprendre'}">${player.endAt ? '❚❚' : '▶︎'}</button>
+      <button class="ctrl" data-act="player-next" aria-label="Étape suivante">▶︎</button>
     </div>
-    <div class="row center"><button class="btn ghost" data-act="player-stop">Arrêter la séance</button></div>`;
+    <button class="btn ghost small player-stop" data-act="player-stop">Arrêter la séance</button>`;
 }
 
 function startWorkout(id) {
@@ -849,74 +874,6 @@ function finishWorkout() {
   renderPlayer();
   render();
   celebrate(`Séance terminée · +30 XP`);
-}
-
-function viewTrack() {
-  const today = todayKey();
-  const key = viewTrack.key ?? today;
-  const d = state.days[key] ?? {};
-  const s = state.settings;
-  const weights = series(state, 'weight', today, 60);
-  const waists = series(state, 'waist', today, 84);
-  const beds = series(state, 'bed', today, 21).map((p) => ({ key: p.key, value: bedtimeMinutes(p.value) }));
-  const screens = series(state, 'screen', today, 21);
-  const steps = series(state, 'steps', today, 21);
-  const avg = (arr) => (arr.length ? arr.reduce((a, b) => a + b.value, 0) / arr.length : null);
-  const last7 = (arr) => arr.filter((p) => diffDays(p.key, today) < 7);
-  const sleeps = [];
-  for (let i = 0; i < 7; i++) {
-    const k = addDays(today, -i);
-    const x = state.days[k];
-    const dur = sleepDuration(x?.bed, x?.wake);
-    if (dur) sleeps.push({ value: dur });
-  }
-  const bedAvg = avg(last7(beds));
-  const scrAvg = avg(last7(screens));
-  const slpAvg = avg(sleeps);
-  const snackPts = [];
-  for (let i = 20; i >= 0; i--) {
-    const k = addDays(today, -i);
-    const x = state.days[k];
-    if (x && (x.snacks || x.snackResisted !== undefined)) snackPts.push({ key: k, value: (x.snacks ?? []).length });
-  }
-  const triggers = {};
-  for (let i = 0; i < 14; i++) {
-    for (const sn of state.days[addDays(today, -i)]?.snacks ?? []) triggers[sn.trigger] = (triggers[sn.trigger] ?? 0) + 1;
-  }
-  const topTriggers = Object.entries(triggers).sort((a, b) => b[1] - a[1]);
-  const trend = rollingAverage(weights);
-  const lastTrend = trend.at(-1)?.value;
-
-  return `
-  <section class="card">
-    <div class="card-head"><h2>Saisie</h2></div>
-    <label>Jour<input type="date" id="track-date" value="${key}" max="${today}"></label>
-    <div class="grid2">
-      <label>Poids (kg)<input type="number" step="0.1" inputmode="decimal" data-field="weight" data-key="${key}" value="${d.weight ?? ''}"></label>
-      <label>Tour de taille (cm)<input type="number" step="0.5" inputmode="decimal" data-field="waist" data-key="${key}" value="${d.waist ?? ''}"></label>
-      <label>Couché à<input type="time" data-field="bed" data-key="${key}" value="${esc(d.bed ?? '')}"></label>
-      <label>Levé à<input type="time" data-field="wake" data-key="${key}" value="${esc(d.wake ?? '')}"></label>
-      <label>Temps d’écran (min)<input type="number" step="5" inputmode="numeric" data-field="screen" data-key="${key}" value="${d.screen ?? ''}"></label>
-      <label>Pas<input type="number" step="100" inputmode="numeric" data-field="steps" data-key="${key}" value="${d.steps ?? ''}"></label>
-    </div>
-    <p class="hint">Poids : le matin, à jeun, après les toilettes. Seule la moyenne sur 7 jours compte. Tour de taille : au nombril, une fois par semaine. Écran : relève le chiffre d’hier dans les réglages du téléphone, chaque matin.</p>
-  </section>
-  <section class="stats">
-    <div class="stat"><span class="lbl">Poids moyen 7 j</span><span class="big">${lastTrend ? `${lastTrend.toFixed(1)}<small> kg</small>` : '—'}</span><span class="lbl">cible ${s.weightTarget} kg</span></div>
-    <div class="stat"><span class="lbl">Coucher moyen 7 j</span><span class="big">${bedAvg !== null ? minutesToHHMM(bedAvg) : '—'}</span><span class="lbl">cible ${esc(s.bedtimeTarget)}</span></div>
-    <div class="stat"><span class="lbl">Sommeil moyen 7 j</span><span class="big">${slpAvg ? fmtDuration(slpAvg) : '—'}</span><span class="lbl">cible 8 h</span></div>
-    <div class="stat"><span class="lbl">Écran moyen 7 j</span><span class="big">${scrAvg !== null ? fmtDuration(scrAvg) : '—'}</span><span class="lbl">cible ${fmtDuration(s.screenTarget)}</span></div>
-  </section>
-  ${lineChart({ title: 'Poids (60 jours)', points: weights, trend, target: Number(s.weightTarget), targetLabel: `cible ${s.weightTarget} kg`, today, days: 60, fmt: (v) => Number(v).toFixed(1), unit: ' kg', empty: 'Aucune pesée pour l’instant.' })}
-  ${barChart({ title: 'Temps d’écran (21 jours)', points: screens, target: Number(s.screenTarget), targetLabel: `cible ${fmtDuration(s.screenTarget)}`, today, days: 21, fmt: (v) => fmtDuration(v), unit: '', empty: 'Aucun temps d’écran saisi.', overIsBad: true })}
-  ${lineChart({ title: 'Heure de coucher (21 jours)', points: beds, target: bedtimeMinutes(s.bedtimeTarget), targetLabel: `cible ${s.bedtimeTarget}`, today, days: 21, fmt: (v) => minutesToHHMM(v), unit: '', empty: 'Aucune heure de coucher saisie.' })}
-  ${barChart({ title: 'Pas (21 jours)', points: steps, target: 8000, targetLabel: 'cible 8 000', today, days: 21, fmt: (v) => Math.round(v).toLocaleString('fr-FR'), unit: ' pas', empty: 'Aucun nombre de pas saisi.' })}
-  ${barChart({ title: 'Grignotages par jour (21 jours)', points: snackPts, today, days: 21, fmt: (v) => Math.round(v), unit: '', empty: 'Rien de noté. Utilise la carte « Grignotage » de l’onglet Jour.' })}
-  ${topTriggers.length ? `<section class="card"><div class="card-head"><h2>Tes déclencheurs (14 jours)</h2></div>
-    <ul class="tight">${topTriggers.map(([t, n]) => `<li><strong>${esc(t)}</strong> : ${n} fois</li>`).join('')}</ul>
-    <p class="hint">Attaque le premier de la liste : écris une règle « Si… alors… » pour lui dans l’onglet Bilan.</p></section>` : ''}
-  ${testsCard()}
-  ${lineChart({ title: 'Tour de taille (12 semaines)', points: waists, today, days: 84, fmt: (v) => Number(v).toFixed(1), unit: ' cm', empty: 'Aucune mesure. Prends-la au nombril, détendu, sans rentrer le ventre.' })}`;
 }
 
 const TEST_FIELDS = [
@@ -986,14 +943,14 @@ function viewProgram() {
     <div class="table-wrap"><table class="tests">
       <thead><tr><th>Mesure</th><th>Actuel</th><th>Cible</th><th></th></tr></thead>
       <tbody>
-        ${row('Écran (moy. 7 j)', screen, next.screen, fmtDuration, 'lower')}
+        ${screen !== null ? row('Écran (moy. 7 j)', screen, next.screen, fmtDuration, 'lower') : ''}
         ${row('Coucher (moy. 7 j)', bed, bedtimeMinutes(weeklyBedtime(next.week, state.settings.bedtimeTarget)), minutesToHHMM, 'lower')}
-        ${row('Poids (moy. 7 j)', weight, next.weight, (v) => `${Number(v).toFixed(1)} kg`, 'lower')}
+        ${weight !== null ? row('Poids (moy. 7 j)', weight, next.weight, (v) => `${Number(v).toFixed(1)} kg`, 'lower') : ''}
         ${row('Pompes', lastTest.pushups ?? null, next.pushups, (v) => v, 'higher')}
         ${row('Planche', lastTest.plank ?? null, next.plank, (v) => `${v} s`, 'higher')}
         ${row('Leçons de finance', lessons, next.lessons, (v) => v, 'higher')}
       </tbody></table></div>
-    <p class="hint">Les valeurs viennent de Suivi (saisies quotidiennes) et de tes tests de niveau.</p>
+    <p class="hint">Le coucher vient de « Nuit dernière » (onglet Jour), les pompes et la planche de tes tests de niveau (onglet Corps).</p>
   </section>
   <section class="card">
     <div class="card-head"><h2>Les 3 phases</h2></div>
@@ -1013,24 +970,63 @@ function viewProgram() {
   </section>`;
 }
 
+// Bibliothèque : des couvertures sur des étagères qui défilent. Toucher une
+// couverture la retourne (pourquoi le lire, boutons). Filtre et couvertures
+// retournées : mémoire d'écran seulement.
+const shelf = { filter: 'all', flipped: new Set(), last: { render: -1, filter: null } };
+const BOOK_CATS = [...new Set(BOOKS.map((b) => b.cat))]; // couleur de couverture stable par catégorie
+const BOOK_FILTERS = [['all', 'Tout'], ['todo', 'À lire'], ['reading', 'En cours'], ['done', 'Lus']];
+
+function bookCover(b, i) {
+  const s = b.status;
+  const stamp = increased(seen, `book:${b.id}`, s === 'done' ? 1 : 0);
+  return `<article class="book is-${s} ${shelf.flipped.has(b.id) ? 'flipped' : ''}" style="--i:${i}">
+    <div class="book-inner">
+      <button class="book-face book-front" data-act="book-flip" data-id="${b.id}" aria-label="${esc(b.title)}, ${esc(b.author)} : voir pourquoi le lire">
+        <span class="book-cat">${esc(b.cat)}</span>
+        <strong class="book-title">${esc(b.title)}</strong>
+        <span class="book-rule"></span>
+        <span class="book-author">${esc(b.author)}</span>
+        ${b.start && s === 'todo' ? '<span class="book-star">★ Commence ici</span>' : ''}
+        ${s === 'reading' ? '<span class="book-ribbon">En cours</span>' : ''}
+        ${s === 'done' ? `<span class="book-stamp ${stamp ? 'just' : ''}">Lu</span>` : ''}
+      </button>
+      <div class="book-face book-back">
+        <p class="book-why">${esc(b.why)}</p>
+        <div class="book-btns">
+          <button class="seg ${s === 'reading' ? 'on' : ''}" data-act="book-status" data-id="${b.id}" data-v="reading" aria-pressed="${s === 'reading'}">Je lis</button>
+          <button class="seg ${s === 'done' ? 'on' : ''}" data-act="book-status" data-id="${b.id}" data-v="done" aria-pressed="${s === 'done'}">Lu ✓</button>
+        </div>
+        <button class="book-turn" data-act="book-flip" data-id="${b.id}" aria-label="Retourner la couverture">↺</button>
+      </div>
+    </div>
+  </article>`;
+}
+
 function viewBooks() {
-  const cats = [...new Set(BOOKS.map((b) => b.cat))];
-  const st = (id) => state.books[id]?.status;
-  const doneCount = BOOKS.filter((b) => st(b.id) === 'done').length;
-  const reading = BOOKS.filter((b) => st(b.id) === 'reading');
-  return `
-  <section class="card">
-    <div class="card-head"><h2>📚 Bibliothèque</h2><span class="pill">${doneCount} lu${doneCount > 1 ? 's' : ''}</span></div>
-    ${reading.length ? `<p>En cours : <strong>${reading.map((b) => esc(b.title)).join(', ')}</strong></p>` : '<p class="hint">Commence par un livre marqué ⭐. Un seul à la fois, 10 pages par jour minimum.</p>'}
-    <p class="hint">Règles : bibliothèque avant achat, version originale si c’est en anglais, et si un livre t’ennuie après 50 pages, passe au suivant. +50 XP par livre terminé.</p>
+  const lib = bookShelves(BOOKS, state.books, shelf.filter);
+  const { counts } = lib;
+  // Les couvertures entrent en vague à l'arrivée ou au changement de filtre,
+  // pas quand on vient de toucher « Je lis » ou « Lu ».
+  const enter = shelf.last.render !== renders - 1 || shelf.last.filter !== shelf.filter;
+  shelf.last = { render: renders, filter: shelf.filter };
+  return `<div class="books-view ${enter ? 'enter' : ''}">
+  <section class="card library">
+    <p class="eyebrow">Bibliothèque</p>
+    <div class="lib-stats">
+      <div><span class="lib-num">${counts.done}</span><span class="lbl">lu${counts.done > 1 ? 's' : ''}</span></div>
+      <div><span class="lib-num">${counts.reading}</span><span class="lbl">en cours</span></div>
+      <div><span class="lib-num">${counts.todo}</span><span class="lbl">à lire</span></div>
+    </div>
+    <div class="bar">${tweenBar('books', (counts.done / counts.all) * 100)}</div>
+    <p class="hint">${lib.reading.length ? `Sur ta table de nuit : <strong>${lib.reading.map((b) => esc(b.title)).join(', ')}</strong>. ` : 'Commence par un livre marqué ★. '}Un seul à la fois, 10 pages par jour. Touche une couverture pour la retourner.</p>
   </section>
-  ${cats.map((c) => `<section class="card"><div class="card-head"><h2>${esc(c)}</h2></div>
-    <ul class="books">${BOOKS.filter((b) => b.cat === c).map((b) => `<li class="${st(b.id) ?? ''}">
-      <div><strong>${b.start ? '⭐ ' : ''}${esc(b.title)}</strong> <span class="muted">· ${esc(b.author)}</span><br><span class="hint">${esc(b.why)}</span></div>
-      <div class="book-btns">
-        <button class="seg ${st(b.id) === 'reading' ? 'on' : ''}" data-act="book-status" data-id="${b.id}" data-v="reading">En cours</button>
-        <button class="seg ${st(b.id) === 'done' ? 'on' : ''}" data-act="book-status" data-id="${b.id}" data-v="done">Lu</button>
-      </div></li>`).join('')}</ul></section>`).join('')}`;
+  <nav class="chips book-filter" aria-label="Filtrer les livres">${BOOK_FILTERS.map(([id, label]) => `<button class="chip ${shelf.filter === id ? 'on' : ''}" data-act="book-filter" data-id="${id}" aria-pressed="${shelf.filter === id}">${label} <small>${counts[id]}</small></button>`).join('')}</nav>
+  ${lib.shelves.length ? lib.shelves.map((sh, si) => `<section class="shelf tone-${BOOK_CATS.indexOf(sh.cat) % 4}" style="--s:${si}">
+    <div class="shelf-head"><h2>${esc(sh.cat)}</h2><span class="muted">${sh.done}/${sh.total} lus</span></div>
+    <div class="shelf-row">${sh.items.map((b, i) => bookCover(b, i)).join('')}</div>
+  </section>`).join('') : '<p class="hint center-hint">Aucun livre ici pour l’instant.</p>'}
+  <p class="hint">Règles : bibliothèque avant achat, version originale si c’est en anglais, et si un livre t’ennuie après 50 pages, passe au suivant. +50 XP par livre terminé.</p></div>`;
 }
 
 function viewApps() {
@@ -1060,10 +1056,11 @@ function viewReview() {
   <section class="card">
     <div class="card-head"><h2>Les 12 sprints</h2><span class="pill">${sp.sprints.filter((x) => x.finished && x.passed).length} réussi(s)</span></div>
     <p class="hint">Un sprint dure 7 jours. Il est réussi à ${SPRINT_PASS}/7 jours validés : pas besoin d’être parfait, il faut finir.</p>
-    <ol class="sprints">${sp.sprints.slice(0, Math.max(SPRINT_COUNT, sp.index + 1)).map((x) => `
-      <li class="${x.current ? 'current' : ''}"><span class="num">S${x.number}</span>
-        <span class="mini">${x.days.map((dd) => `<i class="${dd.future ? 'pre' : dd.valid ? 'ok' : 'miss'}"></i>`).join('')}</span>
-        <span class="res">${x.finished ? (x.passed ? '✓ réussi' : `${x.valid}/7`) : x.current ? `${x.valid}/7 en cours` : ''}</span></li>`).join('')}</ol>
+    ${(() => {
+      const first = !seen.has('heat-bilan');
+      seen.set('heat-bilan', true);
+      return heatmap(regularityGrid(state, today), first);
+    })()}
   </section>
   <section class="card">
     <div class="card-head"><h2>Bilan du sprint ${reviewTarget.number}</h2></div>
@@ -1107,8 +1104,6 @@ function viewSettings() {
     <div class="card-head"><h2>Réglages</h2></div>
     <div class="grid2">
       <label>Coucher cible<input type="time" data-setting="bedtimeTarget" value="${esc(s.bedtimeTarget)}"></label>
-      <label>Écran cible (min/jour)<input type="number" step="15" data-setting="screenTarget" value="${s.screenTarget}"></label>
-      <label>Poids cible (kg)<input type="number" step="0.5" data-setting="weightTarget" value="${s.weightTarget}"></label>
       <label>Date de départ<input type="date" data-setting="startDate" value="${s.startDate}" max="${today}"></label>
     </div>
   </section>
@@ -1160,9 +1155,10 @@ function tick() {
   if (player?.endAt) {
     player.remaining = Math.max(0, Math.ceil((player.endAt - Date.now()) / 1000));
     const c = $('#player-clock');
-    if (c) c.textContent = fmtClock(player.remaining);
-    $('#player .timer')?.classList.toggle('hurry', player.remaining <= 3);
-    setRing('player-ring', 1 - (player.endAt - Date.now()) / 1000 / player.steps[player.i].secs);
+    if (c) c.textContent = fmtStep(player.remaining);
+    $('#player-clock')?.classList.toggle('hurry', player.remaining <= 3);
+    const fill = $('#player-fill');
+    if (fill) fill.style.transform = `scaleY(${Math.min(1, 1 - (player.endAt - Date.now()) / 1000 / player.steps[player.i].secs)})`;
     if (player.remaining <= 3 && player.remaining > 0 && player.lastBeep !== player.remaining) {
       player.lastBeep = player.remaining;
       navigator.vibrate?.(60);
@@ -1314,8 +1310,20 @@ const actions = {
     save();
     render();
   },
+  'book-flip'(el) {
+    const id = el.dataset.id;
+    const card = el.closest('.book');
+    if (shelf.flipped.has(id)) shelf.flipped.delete(id);
+    else shelf.flipped.add(id);
+    card?.classList.toggle('flipped', shelf.flipped.has(id));
+  },
+  'book-filter'(el) {
+    shelf.filter = el.dataset.id;
+    render();
+  },
   'book-status'(el) {
     const id = el.dataset.id;
+    shelf.flipped.delete(id); // la couverture se remet à l'endroit pour montrer le nouveau statut
     const cur = state.books[id]?.status;
     const next = el.dataset.v === cur ? undefined : el.dataset.v;
     state.books[id] = { ...state.books[id], status: next, [`${next}At`]: next ? todayKey() : undefined };
@@ -1484,11 +1492,7 @@ document.addEventListener('change', (e) => {
     if (v === null) delete d[el.dataset.field];
     else d[el.dataset.field] = v;
     save();
-    if (currentTab() === 'suivi') render();
-    else toast('Enregistré.');
-  } else if (el.id === 'track-date') {
-    viewTrack.key = el.value || todayKey();
-    render();
+    toast('Enregistré.');
   } else if (el.dataset.setting) {
     const k = el.dataset.setting;
     if (!el.value) return;
@@ -1573,11 +1577,10 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-const TAB_ORDER = ['jour', 'revision', 'focus', 'sport', 'argent', 'suivi', 'moi'];
+const TAB_ORDER = ['jour', 'revision', 'focus', 'sport', 'argent', 'moi'];
 let shownTab = currentTab();
 
 window.addEventListener('hashchange', () => {
-  viewTrack.key = null;
   if (currentTab() === 'revision') {
     rev.queue = null;
     rev.flipped = false;

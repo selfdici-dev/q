@@ -207,3 +207,53 @@ test('animations : seulement ce qui vient de changer', async () => {
   assert.equal(previous(bars, 'ring', 0.6, 0), 0.6);
   assert.equal(previous(bars, 'x', 5), 5);
 });
+
+test('déclencheurs de grignotage sur 14 jours', async () => {
+  const { snackTriggers } = await import('../js/logic.js');
+  const st = { days: {
+    '2026-10-14': { snacks: [{ trigger: 'Ennui' }, { trigger: 'Stress' }] },
+    '2026-10-10': { snacks: [{ trigger: 'Ennui' }] },
+    '2026-09-30': { snacks: [{ trigger: 'Faim' }] }, // il y a 14 jours : hors fenêtre
+  } };
+  assert.deepEqual(snackTriggers(st, '2026-10-14'), [['Ennui', 2], ['Stress', 1]]);
+  assert.deepEqual(snackTriggers(st, '2026-10-14', 15).at(-1), ['Faim', 1]);
+});
+
+test('calendrier de régularité', async () => {
+  const { regularityGrid } = await import('../js/logic.js');
+  const s = '2026-10-01';
+  const st = mk(s, '1101111');
+  st.days[s].habits = { a: 2, b: 2 }; // jour 1 en complet
+  st.days[addDays(s, 1)].workouts = ['B'];
+  st.days[addDays(s, 4)].workouts = ['M'];
+  const g = regularityGrid(st, addDays(s, 8));
+  assert.equal(g.weeks.length, 12);
+  assert.deepEqual(g.weeks[0].days.map((d) => d.level), ['full', 'min', 'miss', 'min', 'min', 'min', 'min']);
+  assert.deepEqual([g.weeks[0].passed, g.weeks[0].finished], [true, true]);
+  assert.deepEqual(g.weeks[1].days.slice(0, 3).map((d) => d.level), ['miss', 'now', 'future']);
+  assert.equal(g.weeks[1].days[1].today, true);
+  assert.deepEqual(g.weeks[0].days.map((d) => d.sport), [false, true, false, false, false, false, false]);
+  // 6 validés sur 8 jours écoulés (aujourd'hui en cours ne compte pas), meilleure série 4
+  assert.deepEqual([g.valid, g.full, g.elapsed, g.best], [6, 1, 8, 4]);
+  // au-delà de 12 semaines, la grille s'allonge
+  assert.equal(regularityGrid(st, addDays(s, 7 * 12 + 1)).weeks.length, 13);
+});
+
+test('étagères de livres : ordre, filtres, compteurs', async () => {
+  const { bookShelves } = await import('../js/logic.js');
+  const books = [
+    { id: 'a', cat: 'Philo' }, { id: 'b', cat: 'Philo', start: true }, { id: 'c', cat: 'Philo' },
+    { id: 'd', cat: 'Finance' }, { id: 'e', cat: 'Finance' },
+  ];
+  const st = { a: { status: 'done' }, c: { status: 'reading' }, e: { status: 'done' } };
+  const all = bookShelves(books, st);
+  assert.deepEqual(all.counts, { all: 5, todo: 2, reading: 1, done: 2 });
+  assert.deepEqual(all.shelves.map((s) => s.cat), ['Philo', 'Finance']);
+  assert.deepEqual(all.shelves[0].items.map((b) => b.id), ['c', 'b', 'a']); // en cours, ⭐, lu
+  assert.deepEqual([all.shelves[0].done, all.shelves[0].total], [1, 3]);
+  assert.deepEqual(all.reading.map((b) => b.id), ['c']);
+  const done = bookShelves(books, st, 'done');
+  assert.deepEqual(done.shelves.map((s) => s.items.map((b) => b.id)), [['a'], ['e']]);
+  assert.deepEqual(bookShelves(books, st, 'reading').shelves.map((s) => s.cat), ['Philo']); // étagère vide masquée
+  assert.equal(bookShelves(books).counts.todo, 5);
+});

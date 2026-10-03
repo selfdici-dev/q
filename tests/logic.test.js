@@ -218,3 +218,23 @@ test('déclencheurs de grignotage sur 14 jours', async () => {
   assert.deepEqual(snackTriggers(st, '2026-10-14'), [['Ennui', 2], ['Stress', 1]]);
   assert.deepEqual(snackTriggers(st, '2026-10-14', 15).at(-1), ['Faim', 1]);
 });
+
+test('calendrier de régularité', async () => {
+  const { regularityGrid } = await import('../js/logic.js');
+  const s = '2026-10-01';
+  const st = mk(s, '1101111');
+  st.days[s].habits = { a: 2, b: 2 }; // jour 1 en complet
+  st.days[addDays(s, 1)].workouts = ['B'];
+  st.days[addDays(s, 4)].workouts = ['M'];
+  const g = regularityGrid(st, addDays(s, 8));
+  assert.equal(g.weeks.length, 12);
+  assert.deepEqual(g.weeks[0].days.map((d) => d.level), ['full', 'min', 'miss', 'min', 'min', 'min', 'min']);
+  assert.deepEqual([g.weeks[0].passed, g.weeks[0].finished], [true, true]);
+  assert.deepEqual(g.weeks[1].days.slice(0, 3).map((d) => d.level), ['miss', 'now', 'future']);
+  assert.equal(g.weeks[1].days[1].today, true);
+  assert.deepEqual(g.weeks[0].days.map((d) => d.sport), [false, true, false, false, false, false, false]);
+  // 6 validés sur 8 jours écoulés (aujourd'hui en cours ne compte pas), meilleure série 4
+  assert.deepEqual([g.valid, g.full, g.elapsed, g.best], [6, 1, 8, 4]);
+  // au-delà de 12 semaines, la grille s'allonge
+  assert.equal(regularityGrid(st, addDays(s, 7 * 12 + 1)).weeks.length, 13);
+});

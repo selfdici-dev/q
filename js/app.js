@@ -1,8 +1,8 @@
 import {
-  todayKey, diffDays, fromKey, dayStatus, chain, lastNDays,
+  todayKey, addDays, diffDays, fromKey, dayStatus, chain, lastNDays,
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
-  dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers,
+  dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers, regularityGrid,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
@@ -406,6 +406,7 @@ function viewToday() {
   const prot = d.protein ?? 0;
   const snacks = d.snacks?.length ?? 0;
   const week = weekNumber(state, today);
+  const grid = regularityGrid(state, today);
   return `
   <header class="hero">
     <div class="hero-top">
@@ -450,10 +451,25 @@ function viewToday() {
         <label>Levé à<input type="time" data-field="wake" data-key="${today}" value="${esc(d.wake ?? '')}"></label>
       </div>
       <p class="hint">Cible de la semaine ${week} : couché à <strong>${weeklyBedtime(week, state.settings.bedtimeTarget)}</strong>, levé à heure fixe. On avance de 15 min par semaine jusqu’à ${esc(state.settings.bedtimeTarget)}.</p>`)}
+    ${fold('heat', '📅', 'Régularité', 'Tes 12 semaines d’un coup d’œil', `<span class="pill">${grid.valid}/${grid.elapsed}</span>`, heatmap(grid))}
     ${fold('rules', '🧭', 'Mes règles', '« Si… alors… »', `<span class="pill">${state.rules.length}</span>`, `<ul class="rules">${state.rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
       <p class="hint">Modifie-les dans Moi > Réglages.</p>`)}
     ${fold('quote', '💬', 'Pensée du jour', esc(q.author), '<span></span>', `<blockquote class="quote"><p>« ${esc(q.text)} »</p><cite>${esc(q.author)}</cite></blockquote>`)}
   </div>`;
+}
+
+// Calendrier de régularité : une colonne par semaine du programme, une case
+// par jour (raté, minimum, complet ; point = séance A, B ou C).
+function heatmap(g, enter = false) {
+  const start = state.settings.startDate;
+  const letters = Array.from({ length: SPRINT_LENGTH }, (_, i) => fromKey(addDays(start, i)).toLocaleDateString('fr-FR', { weekday: 'narrow' }));
+  const words = { full: 'tout en complet', min: 'validé', miss: 'raté', now: 'aujourd’hui', future: 'à venir' };
+  return `<div class="heat ${enter ? 'enter' : ''}" style="--weeks:${g.weeks.length}" role="img" aria-label="${g.valid} jours tenus sur ${g.elapsed}">
+      <div class="heat-days" aria-hidden="true">${letters.map((l) => `<span>${l}</span>`).join('')}<span></span></div>
+      ${g.weeks.map((w, wi) => `<div class="heat-col">${w.days.map((d, di) => `<i class="cell ${d.level}${d.today ? ' today' : ''}${d.sport ? ' sport' : ''}" style="--i:${wi + di * 2}" title="${fromKey(d.key).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} : ${words[d.level]}${d.sport ? ' · séance' : ''}"></i>`).join('')}<small class="heat-res">${w.finished && w.passed ? '✓' : w.number % 2 ? w.number : ''}</small></div>`).join('')}
+    </div>
+    <div class="heat-legend"><span><i class="cell miss"></i>Raté</span><span><i class="cell min"></i>Minimum</span><span><i class="cell full"></i>Complet</span><span><i class="cell min sport"></i>Séance</span></div>
+    <p class="hint">${g.valid} jour${g.valid > 1 ? 's' : ''} tenu${g.valid > 1 ? 's' : ''} sur ${g.elapsed} · meilleure série ${g.best} · ${g.full} en complet. Sous chaque semaine : ✓ si le sprint est réussi (5/7).</p>`;
 }
 
 // Rappel de sauvegarde : visible seulement après 7 jours sans export.
@@ -984,10 +1000,11 @@ function viewReview() {
   <section class="card">
     <div class="card-head"><h2>Les 12 sprints</h2><span class="pill">${sp.sprints.filter((x) => x.finished && x.passed).length} réussi(s)</span></div>
     <p class="hint">Un sprint dure 7 jours. Il est réussi à ${SPRINT_PASS}/7 jours validés : pas besoin d’être parfait, il faut finir.</p>
-    <ol class="sprints">${sp.sprints.slice(0, Math.max(SPRINT_COUNT, sp.index + 1)).map((x) => `
-      <li class="${x.current ? 'current' : ''}"><span class="num">S${x.number}</span>
-        <span class="mini">${x.days.map((dd) => `<i class="${dd.future ? 'pre' : dd.valid ? 'ok' : 'miss'}"></i>`).join('')}</span>
-        <span class="res">${x.finished ? (x.passed ? '✓ réussi' : `${x.valid}/7`) : x.current ? `${x.valid}/7 en cours` : ''}</span></li>`).join('')}</ol>
+    ${(() => {
+      const first = !seen.has('heat-bilan');
+      seen.set('heat-bilan', true);
+      return heatmap(regularityGrid(state, today), first);
+    })()}
   </section>
   <section class="card">
     <div class="card-head"><h2>Bilan du sprint ${reviewTarget.number}</h2></div>

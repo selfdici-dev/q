@@ -385,6 +385,43 @@ export function sportWeeks(state, today, goal = 4) {
   return { thisWeek, goal, streak };
 }
 
+// ---------- Calendrier de régularité ----------
+// Une colonne par semaine du programme (sprint), une case par jour :
+// 'full' (tout en complet), 'min' (journée validée), 'miss' (ratée),
+// 'now' (aujourd'hui, pas encore validé), 'future'. `sport` : séance A, B ou C.
+export function regularityGrid(state, today, weeks = SPRINT_COUNT) {
+  const start = state.settings.startDate;
+  const total = Math.max(weeks, Math.floor(Math.max(0, diffDays(start, today)) / SPRINT_LENGTH) + 1);
+  let valid = 0;
+  let full = 0;
+  let elapsed = 0;
+  let run = 0;
+  let best = 0;
+  const cols = [];
+  for (let w = 0; w < total; w++) {
+    const days = [];
+    for (let i = 0; i < SPRINT_LENGTH; i++) {
+      const key = addDays(start, w * SPRINT_LENGTH + i);
+      const st = dayStatus(state, key);
+      const ahead = diffDays(today, key);
+      let level = 'future';
+      if (ahead <= 0) {
+        level = st.full ? 'full' : st.valid ? 'min' : ahead === 0 ? 'now' : 'miss';
+        if (ahead < 0 || st.valid) elapsed++;
+        if (st.valid) valid++;
+        if (st.full) full++;
+        run = st.valid ? run + 1 : ahead === 0 ? run : 0;
+        best = Math.max(best, run);
+      }
+      const sport = (state.days[key]?.workouts ?? []).some((x) => x !== 'M');
+      days.push({ key, level, today: ahead === 0, sport });
+    }
+    const passed = days.filter((d) => d.level === 'min' || d.level === 'full').length >= SPRINT_PASS;
+    cols.push({ number: w + 1, days, passed, finished: diffDays(days[SPRINT_LENGTH - 1].key, today) > 0 });
+  }
+  return { weeks: cols, valid, full, elapsed, best };
+}
+
 // ---------- Grignotage ----------
 // Déclencheurs notés sur les `days` derniers jours, du plus fréquent au moins fréquent.
 export function snackTriggers(state, today, days = 14) {

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { solve, between, timeline, figureSVG, figureFor, frameBox, VIEW, BONES, LIMBS, JOINTS } from '../js/figures.js';
+import { solve, between, timeline, figureSVG, figureFor, frameBox, focusFor, BODY, VIEW, BONES, LIMBS, JOINTS } from '../js/figures.js';
 import { POSES } from '../js/poses.js';
 import { WORKOUTS, WARMUP } from '../js/data.js';
 
@@ -50,7 +50,10 @@ test('animation : temps croissants, boucle fermée', () => {
 
 test('SVG : animé, immobile, miroir, roue', () => {
   const fig = POSES.Pompes;
-  assert.match(figureSVG(fig), /<animate attributeName="points"/);
+  assert.match(figureSVG(fig), /<animate attributeName="x1"/);
+  assert.equal((figureSVG(fig).match(/<line /g) ?? []).length, BODY.length); // un trait par os
+  assert.match(figureSVG(fig), /<g class="fig-far">/); // le côté du fond est à part (plus sombre)
+  assert.doesNotMatch(figureSVG({ ...fig, front: true }), /fig-far/); // vue de face : les deux côtés pareils
   assert.doesNotMatch(figureSVG(fig, { animate: false }), /<animate/);
   assert.match(figureSVG(fig, { mirror: true }), /scale\(-1 1\)/);
   assert.doesNotMatch(figureSVG(fig), /fig-wheel/);
@@ -103,4 +106,19 @@ test('chaque exercice des séances et de l’échauffement a son bonhomme', () =
   assert.equal(figureFor('Planche latérale (gauche)').mirror, true);
   assert.equal(figureFor('Planche latérale (droite)').mirror, false);
   assert.equal(figureFor('Roue abdominale à genoux (2/2)').fig, POSES['Roue abdominale à genoux']);
+});
+
+test('muscle travaillé allumé d’après l’objectif', () => {
+  assert.deepEqual(focusFor('Bas des abdos · la tablette'), ['waist']);
+  assert.deepEqual(focusFor('Pectoraux · buste dessiné'), ['chest']);
+  assert.deepEqual(focusFor('Cou · tête droite, mâchoire dégagée'), ['neck']);
+  assert.deepEqual(focusFor('Triceps · bras dessinés'), ['upperArmN', 'upperArmF', 'forearmN', 'forearmF']);
+  assert.deepEqual(focusFor('Colonne souple'), ['waist', 'chest']);
+  assert.deepEqual(focusFor('Cardio · corps sec'), []);
+  const svg = figureSVG(POSES.Pompes, { focus: ['chest'] });
+  assert.equal((svg.match(/fig-focus/g) ?? []).length, 1);
+  // chaque exercice qui vise un muscle en allume au moins un (sauf cardio pur et récupération)
+  for (const w of WORKOUTS) for (const e of w.exercises) {
+    if (!/cardio|corps entier|récupération|calme/i.test(e.target)) assert.ok(focusFor(e.target).length, `rien d’allumé : ${e.name} (${e.target})`);
+  }
 });

@@ -13,6 +13,7 @@ L'utilisateur est débutant : explique simplement, en français.
 - `js/figures.js` : moteur des bonshommes animés (poses en angles → SVG animé) ;
   `js/poses.js` : une pose par exercice (vue de profil, tête à droite, sol à y = 70).
 - `js/avatar.js` : « ton double », personnage qui évolue avec le niveau (calculé, jamais stocké).
+- `js/tree.js` : arbre du focus qui pousse pendant la session (unique par session, calculé).
 - `js/data.js`, `js/finance-data.js`, `js/quotes.js` : contenu (séances, leçons…).
 - `css/styles.css` : styles de base ; `css/luxe.css` : design « Horlogerie »
   (noir, or champagne, jetons de couleur), chargé après.

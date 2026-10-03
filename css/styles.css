@@ -370,10 +370,6 @@ body { font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Seg
 /* Focus : la plante */
 .plant { width: 150px; height: 125px; margin: 4px auto -6px; display: grid; place-items: center; font-size: 3rem; }
 .plant svg { width: 100%; height: 100%; }
-.plant .soil { fill: #a16207; opacity: 0.35; }
-.plant .stem { fill: #16a34a; }
-.plant .leaf { fill: #22c55e; }
-.plant .crown { fill: #16a34a; animation: pop 0.5s ease-out; }
 .garden { margin-top: 10px; font-size: 1.6rem; letter-spacing: 2px; line-height: 1.3; }
 .garden .muted { display: block; font-size: 0.85rem; letter-spacing: 0; line-height: 1.4; }
 
@@ -939,3 +935,13 @@ details.card.more .rules { margin-top: 10px; }
 .avatar-steps li { margin: 4px 0; }
 .avatar-steps li.done { color: var(--text); }
 .avatar-steps li.done::marker { color: var(--accent); }
+
+/* ---------- v24 : l'arbre du focus ---------- */
+.timer .plant { width: 132px; height: 110px; margin: -10px 0 -6px; }
+.tree { display: block; width: 100%; height: 100%; overflow: visible; }
+.tree-branch { stroke: color-mix(in srgb, var(--accent) 72%, var(--text)); stroke-linecap: round; fill: none; }
+.tree-leaf { fill: var(--accent); opacity: 0.85; }
+.tree-fruit { fill: var(--gold, var(--accent)); filter: drop-shadow(0 0 2px var(--gold, var(--accent))); }
+.tree-soil { fill: color-mix(in srgb, var(--accent) 16%, transparent); }
+.garden { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; }
+.garden .tree.mini { width: 46px; height: 44px; }

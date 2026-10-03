@@ -15,6 +15,7 @@ import { daySummary, weekSummary } from './summary.js';
 import { backupStatus, validateBackup } from './backup.js';
 import { figureFor, figureSVG, focusFor } from './figures.js';
 import { avatarParams, avatarSVG, STAGES, STAGE_GAINS } from './avatar.js';
+import { treeSVG, seedOf } from './tree.js';
 
 const STORE = 'cap-v1';
 const POMO_WORK = 25 * 60;
@@ -646,17 +647,13 @@ function snackCard(key) {
     })()}`;
 }
 
-// La plante pousse pendant la session (idée reprise de Forest).
-function plantSVG(f) {
-  const g = Math.max(0, Math.min(1, f));
-  const stem = 10 + g * 50;
-  const leaf = (y, side, size) => (g * 60 > 75 - y ? `<ellipse cx="${60 + side * (6 + size)}" cy="${y}" rx="${size}" ry="${size / 2.2}" transform="rotate(${side * -30} ${60 + side * (6 + size)} ${y})" class="leaf"/>` : '');
-  return `<svg viewBox="0 0 120 100" aria-hidden="true">
-    <ellipse cx="60" cy="88" rx="34" ry="6" class="soil"/>
-    <rect x="58" y="${86 - stem}" width="4" height="${stem}" rx="2" class="stem"/>
-    ${leaf(70, -1, 9)}${leaf(62, 1, 10)}${leaf(52, -1, 11)}${leaf(42, 1, 12)}${leaf(34, -1, 12)}
-    ${g >= 0.98 ? '<circle cx="60" cy="24" r="16" class="crown"/>' : ''}
-  </svg>`;
+// Un arbre pousse au centre du minuteur pendant la session (idée reprise de
+// Forest) : chaque session a le sien (graine = date + numéro de session).
+const focusSeed = (key, i) => seedOf(`${key}#${i}`);
+
+function focusTree(f) {
+  const key = todayKey();
+  return treeSVG(f, focusSeed(key, state.days[key]?.focus ?? 0));
 }
 
 function timerRing(id, f) {
@@ -683,7 +680,7 @@ function viewFocus() {
     <div class="card-head"><h2>${p.mode === 'work' ? 'Focus 25 min' : 'Pause 5 min'}</h2><span class="pill">${d.focus ?? 0} aujourd’hui</span></div>
     <input class="task" id="pomo-label" placeholder="Sur quoi tu travailles ? (une seule chose)" value="${esc(p.label)}">
     <div class="timer">${timerRing('pomo-ring', 1 - pomoRemaining() / (p.mode === 'work' ? POMO_WORK : POMO_BREAK))}
-      <div class="timer-in">${p.mode === 'work' ? `<div class="plant" id="plant">${plantSVG(1 - pomoRemaining() / POMO_WORK)}</div>` : '<div class="plant">☕</div>'}
+      <div class="timer-in">${p.mode === 'work' ? `<div class="plant" id="plant">${focusTree(1 - pomoRemaining() / POMO_WORK)}</div>` : '<div class="plant">☕</div>'}
       <div class="clock" id="pomo-clock">${fmtClock(p.remaining)}</div></div></div>
     <div class="row center">
       <button class="btn primary" data-act="pomo-toggle" id="pomo-toggle">${p.endAt ? 'Pause' : 'Démarrer'}</button>
@@ -691,7 +688,7 @@ function viewFocus() {
       <button class="btn" data-act="pomo-skip">${p.mode === 'work' ? 'Passer en pause' : 'Passer la pause'}</button>
     </div>
     <p class="hint">Avant de démarrer : téléphone dans une autre pièce, ou face cachée en mode avion. 1 session valide le minimum « Focus », 4 valident le complet.</p>
-    <div class="garden" aria-label="Sessions terminées aujourd’hui">${'🌳'.repeat(d.focus ?? 0) || '<span class="muted">Ton jardin du jour est vide. Chaque session fait pousser un arbre.</span>'}</div>
+    <div class="garden" aria-label="${d.focus ?? 0} arbre${(d.focus ?? 0) > 1 ? 's' : ''} : sessions terminées aujourd’hui">${Array.from({ length: d.focus ?? 0 }, (_, i) => treeSVG(1, focusSeed(today, i), { mini: true })).join('') || '<span class="muted">Ton jardin du jour est vide. Chaque session fait pousser un arbre.</span>'}</div>
   </section>
   <section class="card center urge">
     <div class="card-head"><h2>Envie de scroller ?</h2><span class="pill">${d.urges ?? 0} envie${(d.urges ?? 0) > 1 ? 's' : ''} retardée${(d.urges ?? 0) > 1 ? 's' : ''}</span></div>
@@ -1159,10 +1156,10 @@ function tick() {
   setRing('pomo-ring', 1 - pomoRemaining() / (p.mode === 'work' ? POMO_WORK : POMO_BREAK));
   const pl = $('#plant');
   if (pl && p.endAt) {
-    const stage = Math.floor((1 - pomoRemaining() / POMO_WORK) * 50);
+    const stage = Math.floor((1 - pomoRemaining() / POMO_WORK) * 100);
     if (pl.dataset.stage !== String(stage)) {
       pl.dataset.stage = stage;
-      pl.innerHTML = plantSVG(stage / 50);
+      pl.innerHTML = focusTree(stage / 100);
     }
   }
 

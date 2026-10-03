@@ -183,6 +183,21 @@ function showSheet(text) {
 }
 
 let audioCtx;
+function tone(freq, secs, vol = 0.18) {
+  try {
+    audioCtx ??= new AudioContext();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.frequency.value = freq;
+    o.connect(g).connect(audioCtx.destination);
+    const t0 = audioCtx.currentTime;
+    g.gain.setValueAtTime(vol, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + secs);
+    o.start(t0);
+    o.stop(t0 + secs + 0.02);
+  } catch { /* son indisponible */ }
+}
+
 function beep(times = 1) {
   try {
     audioCtx ??= new AudioContext();
@@ -579,7 +594,7 @@ function buildSteps(w, level) {
   }
   for (let r = 1; r <= rounds; r++) {
     w.exercises.forEach((ex, i) => {
-      steps.push({ kind: 'work', name: ex.name, secs: Math.max(15, ex.work + delta), cue: ex.cue, round: r, rounds });
+      steps.push({ kind: 'work', name: ex.name, secs: Math.max(15, ex.work + delta), cue: ex.cue, target: ex.target, round: r, rounds });
       const lastInRound = i === w.exercises.length - 1;
       if (!lastInRound && w.rest) steps.push({ kind: 'rest', name: 'Récupère', secs: w.rest, cue: `Ensuite : ${w.exercises[i + 1].name}`, round: r, rounds });
       if (lastInRound && r < rounds && w.roundRest) steps.push({ kind: 'rest', name: 'Fin du tour', secs: w.roundRest, cue: `Ensuite : ${w.exercises[0].name}. Bois une gorgée d’eau.`, round: r, rounds });
@@ -609,7 +624,7 @@ function viewSport() {
       <span class="wo-badge big wo-${pw.id}">${pw.id}</span>
       <div><p class="eyebrow">Aujourd’hui</p><h2>${esc(pw.name.split(' · ')[1] ?? pw.name)}</h2><p class="muted">≈ ${workoutMinutes(pw)} min · niveau ${lvl}${did ? ' · ✓ faite' : ''}</p></div>
       <button class="btn primary wide" data-act="start-workout" data-id="${pw.id}">${did ? 'Refaire' : 'Lancer la séance'}</button>
-      ${pw.id !== 'M' ? '<button class="btn ghost small" data-act="start-workout" data-id="M">Pas la forme ? Juste la mobilité (6 min)</button>' : ''}
+      ${pw.id !== 'M' ? `<button class="btn ghost small" data-act="start-workout" data-id="M">Pas la forme ? Juste la mobilité (${workoutMinutes(WORKOUTS.find((w) => w.id === 'M'))} min)</button>` : ''}
     </section>`;
   })()}
   <section class="card program-hero">
@@ -617,10 +632,11 @@ function viewSport() {
     <div class="pips big">${Array.from({ length: sw.goal }, (_, i) => `<i class="${i < sw.thisWeek ? 'on' : ''}"></i>`).join('')}</div>
     <p class="hint">${sw.thisWeek}/${sw.goal} séances A, B ou C cette semaine (lundi → dimanche). Une semaine est tenue à ${sw.goal}. La régularité bat l’intensité : 4 séances moyennes valent mieux qu’une séance héroïque.</p>
   </section>
+  ${goalCard()}
   <section class="card">
     <div class="card-head"><h2>Ta semaine</h2></div>
     <div class="week">${[1, 2, 3, 4, 5, 6, 0].map((dow, i) => `<div class="wk-${WEEK_PLAN[dow]} ${i === todayDow ? 'today' : ''}"><small>${dayNames[i]}</small><b>${WEEK_PLAN[dow]}</b></div>`).join('')}</div>
-    <p class="hint">A = tronc, B = haut du corps, C = cardio sans saut, M = mobilité. Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
+    <p class="hint">A = abdos et tronc, B = haut du corps en V, C = cardio sans saut, M = mobilité et posture. Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
   </section>
   <section class="card">
     <div class="card-head"><h2>Niveau</h2></div>
@@ -633,7 +649,7 @@ function viewSport() {
     return `<section class="card ${w.id === planned ? 'planned' : ''}">
       <div class="card-head"><h2><span class="wo-badge wo-${w.id}">${w.id}</span>${esc(w.name.split(' · ')[1] ?? w.name)}</h2><span class="pill">${w.id === planned ? 'Aujourd’hui · ' : ''}${mins} min</span></div>
       <p class="muted">${esc(w.desc)}</p>
-      <details><summary>Voir les exercices</summary><ol class="ex">${w.exercises.map((e) => `<li><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="muted">${esc(e.cue)}</span></li>`).join('')}</ol></details>
+      <details><summary>Voir les exercices</summary><ol class="ex">${w.exercises.map((e) => `<li><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="target-tag">🎯 ${esc(e.target)}</span><br><span class="muted">${esc(e.cue)}</span></li>`).join('')}</ol></details>
       <div class="row"><button class="btn primary" data-act="start-workout" data-id="${w.id}">Lancer${done.includes(w.id) ? ' (déjà faite aujourd’hui)' : ''}</button></div>
     </section>`;
   }).join('')}
@@ -656,6 +672,32 @@ function viewSport() {
     <p class="hint">Objectif : maîtriser une recette par semaine. Propose à tes parents de cuisiner un repas par semaine : tu apprends, et tu choisis ce qui est dans l’assiette.</p>
     ${RECIPES.map((r) => `<details><summary><strong>${esc(r.name)}</strong> · ${esc(r.time)}</summary>
       <p><em>Ingrédients :</em> ${esc(r.items)}</p><p>${esc(r.steps)}</p></details>`).join('')}
+  </section>`;
+}
+
+// Silhouette stylisée : épaules et dorsaux (séance B), abdos (A), taille (M).
+const V_SHAPE = `<svg class="vshape" viewBox="0 0 200 150" aria-hidden="true">
+  <circle cx="100" cy="17" r="13" class="vs-body"/>
+  <path d="M28 60 L18 128 M172 60 L182 128" class="vs-arm"/>
+  <path d="M40 46 Q100 34 160 46 L136 128 Q100 136 64 128 Z" class="vs-body"/>
+  <ellipse cx="40" cy="55" rx="15" ry="12" class="vs-b"/><ellipse cx="160" cy="55" rx="15" ry="12" class="vs-b"/>
+  <path d="M52 66 Q46 94 66 120 L74 106 Q62 88 64 66 Z M148 66 Q154 94 134 120 L126 106 Q138 88 136 66 Z" class="vs-b soft"/>
+  ${[66, 84, 102].map((y) => `<rect x="87" y="${y}" width="12" height="14" rx="4" class="vs-a"/><rect x="101" y="${y}" width="12" height="14" rx="4" class="vs-a"/>`).join('')}
+  <path d="M60 128 Q100 120 140 128" class="vs-waist"/>
+</svg>`;
+
+function goalCard() {
+  return `<section class="card goal">
+    <div class="card-head"><h2>🎯 Ton objectif : silhouette en V</h2></div>
+    <div class="goal-top">${V_SHAPE}
+      <p class="muted">Large en haut, fin à la taille, sec, tête haute : c’est ce contraste qui donne un corps élancé, pas la taille.</p></div>
+    <ul class="goal-list">
+      <li><span class="wo-badge wo-B">B</span><div><strong>Large en haut.</strong> Milieu de l’épaule (élévations latérales) et dorsaux (tirage à la serviette) : c’est la largeur des épaules qui fait paraître la taille fine.</div></li>
+      <li><span class="wo-badge wo-M">M</span><div><strong>Taille fine.</strong> Gainage profond et vacuum chaque jour. On ne charge jamais les obliques : ça épaissit la taille.</div></li>
+      <li><span class="wo-badge wo-A">A</span><div><strong>Abdos visibles.</strong> Roue et crunch inversé les construisent, mais c’est l’assiette qui les montre : protéines, zéro grignotage, 8 000 pas, séance C.</div></li>
+      <li><span class="wo-badge wo-M">M</span><div><strong>Élancé, pas trapu.</strong> Menton rentré, épaules basses, hanches ouvertes : une posture droite fait paraître plus grand. Aucun exercice pour les trapèzes, ils tassent le cou.</div></li>
+    </ul>
+    <p class="hint">Bonus : si tu as accès à une barre (parc de street workout, barre de porte), les tractions sont le meilleur exercice pour le V. Ajoute 3 séries après la séance B.</p>
   </section>`;
 }
 
@@ -691,6 +733,7 @@ function renderPlayer() {
     <div class="player-main">
       <p class="eyebrow">${{ work: 'Effort', rest: 'Repos', warm: 'Échauffement', prep: 'Départ' }[s.kind]}</p>
       <h2>${esc(s.name)}</h2>
+      ${s.target ? `<span class="target-tag">🎯 ${esc(s.target)}</span>` : ''}
       <div class="timer">${timerRing('player-ring', 1 - player.remaining / s.secs)}<div class="clock" id="player-clock">${fmtClock(player.remaining)}</div></div>
       <p class="cue">${esc(s.cue)}</p>
       ${s.kind === 'work' ? `<p><a href="${demoUrl(s.name)}" target="_blank" rel="noopener">Voir une démo</a></p>` : ''}
@@ -709,6 +752,11 @@ function startWorkout(id) {
   const w = WORKOUTS.find((x) => x.id === id);
   const steps = buildSteps(w, state.settings.level);
   player = { workout: w, steps, i: 0, remaining: steps[0].secs, endAt: Date.now() + steps[0].secs * 1000 };
+  try {
+    // Le son se prépare pendant l'appui (sinon l'iPhone reste muet).
+    audioCtx ??= new AudioContext();
+    audioCtx.resume?.();
+  } catch { /* son indisponible */ }
   keepAwake(true);
   renderPlayer();
 }
@@ -1049,6 +1097,7 @@ function tick() {
     if (player.remaining <= 3 && player.remaining > 0 && player.lastBeep !== player.remaining) {
       player.lastBeep = player.remaining;
       navigator.vibrate?.(60);
+      tone(660, 0.09); // 3, 2, 1…
     }
     if (player.remaining === 0) {
       beep(1);

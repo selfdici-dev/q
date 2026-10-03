@@ -683,3 +683,9 @@ details.card.more .rules { margin-top: 10px; }
 .sheet-panel textarea { font-size: 0.9rem; line-height: 1.4; }
 @keyframes fade { from { opacity: 0; } }
 @keyframes sheet-up { from { transform: translateY(100%); } }
+
+/* ---------- v9 : sauvegarde ---------- */
+.banner.backup { display: flex; align-items: center; justify-content: space-between; gap: 12px; animation: fade-in 0.3s ease-out; }
+.banner.backup > div { display: flex; flex-direction: column; gap: 2px; }
+.banner.backup span { font-size: 0.82rem; color: var(--text-2); }
+.banner.backup .btn { flex-shrink: 0; }

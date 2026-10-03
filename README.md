@@ -42,7 +42,7 @@ Révision espacée (boîtes de Leitner) : chaque leçon de finance validée ajou
 2. Ouvre l’URL dans Chrome (Android) ou Safari (iPhone).
 3. Android : menu ⋮ > *Ajouter à l’écran d’accueil*. iPhone : bouton Partager > *Sur l’écran d’accueil*.
 
-Les données sont propres à chaque appareil. Pour passer du téléphone à l’ordi, utilise *Bilan > Exporter*, puis *Importer* sur l’autre appareil. **Exporte chaque semaine** : c’est ta seule sauvegarde.
+Les données sont propres à chaque appareil. Pour passer du téléphone à l’ordi, utilise *Moi > Réglages > Exporter*, puis *Importer* sur l’autre appareil. **Exporte chaque semaine** : c’est ta seule sauvegarde. Au-delà de 7 jours sans export, un bandeau sur l’onglet Jour te le rappelle, avec un bouton d’export direct. À l’import, le fichier est entièrement vérifié (format, dates, valeurs) et son contenu t’est montré avant de remplacer quoi que ce soit.
 
 ## Hébergement gratuit
 

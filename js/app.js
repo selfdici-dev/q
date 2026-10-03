@@ -13,11 +13,13 @@ import { lineChart, barChart, wireTooltips } from './charts.js';
 import { createMoney, DEFAULT_CALC, DEFAULT_WEALTH } from './money.js';
 import { quoteOfDay } from './quotes.js';
 import { daySummary, weekSummary } from './summary.js';
+import { backupStatus, validateBackup } from './backup.js';
 
 const STORE = 'cap-v1';
 const POMO_WORK = 25 * 60;
 const POMO_BREAK = 5 * 60;
 const URGE_DELAY = 10 * 60;
+const MAX_IMPORT = 20 * 1024 * 1024; // une sauvegarde Cap pèse quelques centaines de Ko
 
 // ---------- état ----------
 
@@ -117,12 +119,12 @@ const fmtClock = (secs) => `${String(Math.floor(secs / 60)).padStart(2, '0')}:${
 const fmtDuration = (mins) => `${Math.floor(mins / 60)} h ${String(Math.round(mins % 60)).padStart(2, '0')}`;
 const longDate = (key) => fromKey(key).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 
-function toast(msg) {
+function toast(msg, ms = 3200) {
   const t = $('#toast');
   t.textContent = msg;
   t.hidden = false;
   clearTimeout(toast.h);
-  toast.h = setTimeout(() => (t.hidden = true), 3200);
+  toast.h = setTimeout(() => (t.hidden = true), ms);
 }
 
 function celebrate(msg) {
@@ -332,6 +334,7 @@ function viewToday() {
     </div>
     ${dots(last7)}
   </header>
+  ${backupBanner(today)}
   ${banner}
   ${planCard(today)}
   <section class="card">
@@ -366,6 +369,17 @@ function viewToday() {
   <details class="card more"><summary><strong>Mes règles « Si… alors… »</strong></summary>
     <ul class="rules">${state.rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
   </details>`;
+}
+
+// Rappel de sauvegarde : visible seulement après 7 jours sans export.
+function backupBanner(today) {
+  const b = backupStatus(state, today);
+  if (!b.overdue) return '';
+  return `<div class="banner warn backup">
+    <div><strong>💾 ${b.never ? `Aucune sauvegarde depuis ${b.days} jours` : `Dernière sauvegarde il y a ${b.days} jours`}</strong>
+    <span>Un appui : le fichier reste sur ton téléphone, rien n’est envoyé.</span></div>
+    <button class="btn small primary" data-act="export">Exporter</button>
+  </div>`;
 }
 
 // ---------- Plan du jour : ce qu'il faut faire, dans l'ordre ----------
@@ -943,7 +957,8 @@ function viewReview() {
 function viewSettings() {
   const today = todayKey();
   const s = state.settings;
-  const lastExp = s.lastExport ? diffDays(s.lastExport.slice(0, 10), today) : null;
+  const bk = backupStatus(state, today);
+  const lastExp = bk.never ? null : bk.days;
   return `
   <section class="card">
     <div class="card-head"><h2>Thème</h2></div>
@@ -1303,11 +1318,14 @@ const actions = {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `cap-sauvegarde-${todayKey()}.json`;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(a.href);
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
     state.settings.lastExport = new Date().toISOString();
     save();
     render();
+    toast('Sauvegarde exportée ✓ Le fichier est dans tes téléchargements.');
   },
   reset() {
     if (!confirm('Tout effacer ? Exporte d’abord si tu veux garder tes données.')) return;
@@ -1359,21 +1377,38 @@ document.addEventListener('change', (e) => {
     save();
     toast('Règles enregistrées.');
   } else if (el.id === 'import' && el.files[0]) {
-    el.files[0].text().then((txt) => {
-      try {
-        const s = JSON.parse(txt);
-        if (!s.days || !s.habits) throw new Error('format');
-        if (!confirm('Remplacer les données actuelles par ce fichier ?')) return;
-        localStorage.setItem(STORE, JSON.stringify(s));
-        state = load();
-        render();
-        toast('Import réussi.');
-      } catch {
-        toast('Fichier invalide.');
-      }
-    });
+    importFile(el.files[0]);
+    el.value = ''; // permet de choisir à nouveau le même fichier
   }
 });
+
+// Import : rien n'est remplacé tant que le fichier n'est pas vérifié et confirmé.
+async function importFile(file) {
+  const no = (why) => toast(`Import annulé, rien n’a changé. ${why}`, 6000);
+  if (file.size > MAX_IMPORT) return no('Fichier trop gros pour être une sauvegarde Cap.');
+  let data;
+  try {
+    data = JSON.parse(await file.text());
+  } catch {
+    return no('Ce fichier n’est pas un export de Cap (JSON illisible).');
+  }
+  const check = validateBackup(data);
+  if (!check.ok) return no(check.error);
+  const { days, habits, first, last } = check.info;
+  const when = (k) => fromKey(k).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+  const range = first ? ` (du ${when(first)} au ${when(last)})` : '';
+  if (!confirm(`Sauvegarde vérifiée : ${days} jour${days > 1 ? 's' : ''}${range}, ${habits} habitude${habits > 1 ? 's' : ''}.\n\nRemplacer TOUTES les données de cet appareil par ce fichier ?`)) return;
+  delete data.timers; // un minuteur en cours au moment de l'export ne doit pas repartir
+  try {
+    localStorage.setItem(STORE, JSON.stringify(data));
+  } catch {
+    return no('Stockage du navigateur plein.');
+  }
+  state = load();
+  applyTheme();
+  render();
+  toast('Import réussi ✓');
+}
 
 document.addEventListener('input', (e) => {
   if (money.onInput(e.target)) return;

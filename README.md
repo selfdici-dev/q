@@ -2,7 +2,7 @@
 
 Appli personnelle pour **tenir** et **apprendre** : habitudes à deux niveaux (minimum / complet), règle « jamais deux fois de suite », sprints de 7 jours, focus 25 min, minuteur anti-scroll, séances guidées sur tapis, sommeil.
 
-Design « Horlogerie » : noir pur, or champagne, titres et chiffres à empattements (thème clair ivoire et bronze en option). Elle fonctionne hors ligne et s’installe sur le téléphone. Aucune donnée ne quitte l’appareil. Les animations (changement d’onglet, anneau et barres qui se remplissent, case cochée) se coupent si le téléphone demande de réduire les animations.
+Design « Noir » : une planche de manga en noir et blanc, sans couleur vive (trames de points, hachures, titres penchés à l’encre, « ゴゴゴ » à côté de ta chaîne, lignes de concentration derrière ton double, cadran de montre pour le focus ; thème clair en papier blanc et encre noire en option). Elle fonctionne hors ligne et s’installe sur le téléphone. Aucune donnée ne quitte l’appareil. Les animations (changement d’onglet, anneau et barres qui se remplissent, case cochée) se coupent si le téléphone demande de réduire les animations.
 
 ## Principes
 

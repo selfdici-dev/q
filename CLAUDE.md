@@ -15,8 +15,8 @@ L'utilisateur est débutant : explique simplement, en français.
 - `js/avatar.js` : « ton double », personnage qui évolue avec le niveau (calculé, jamais stocké).
 - `js/tree.js` : arbre du focus qui pousse pendant la session (unique par session, calculé).
 - `js/data.js`, `js/finance-data.js`, `js/quotes.js` : contenu (séances, leçons…).
-- `css/styles.css` : styles de base ; `css/luxe.css` : design « Horlogerie »
-  (noir, or champagne, jetons de couleur), chargé après.
+- `css/styles.css` : styles de base ; `css/luxe.css` : design « Noir »
+  (manga noir et blanc, sans couleur vive, jetons de couleur), chargé après.
 - `tests/*.test.js` : tests `node --test`. `sw.js` : cache hors ligne.
 
 ## Règles

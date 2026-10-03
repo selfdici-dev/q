@@ -472,16 +472,19 @@ export function previous(memo, key, value, initial = value) {
 // ---------- Plan du jour : « Maintenant » ----------
 // La prochaine chose à faire : la première pas encore faite, dans l'ordre du
 // plan. Exception : de 1 h avant le coucher visé jusqu'à 3 h après, poser le
-// téléphone (id 'coucher') passe devant tout. now et bed : « HH:MM ».
+// téléphone (id 'coucher') passe devant tout, sans dépasser le changement de
+// jour (4 h) : après, c'est déjà le plan du lendemain. now et bed : « HH:MM ».
 // Renvoie null quand tout est fait.
 export function nextAction(items, now, bed) {
   const open = items.filter((x) => !x.done);
   if (!open.length) return null;
-  const mins = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+  // Minutes écoulées depuis le début de la journée de l'appli (4 h = 0).
+  const inDay = (t) => { const [h, m] = t.split(':').map(Number); return (((h - DAY_ROLLOVER_HOUR) * 60 + m) % 1440 + 1440) % 1440; };
   const bedItem = open.find((x) => x.id === 'coucher');
   if (bedItem && now && bed) {
-    const delta = (((mins(now) - mins(bed) + 720) % 1440) + 1440) % 1440 - 720; // entre -12 h et +12 h
-    if (delta >= -60 && delta <= 180) return bedItem;
+    const n = inDay(now);
+    const b = inDay(bed);
+    if (n >= b - 60 && n <= b + 180) return bedItem;
   }
   return open[0];
 }

@@ -291,7 +291,7 @@ export const HELP = {
     lines: [
       'Touche « Lancer la séance » et pose le téléphone au sol : l’appli te guide, bips compris.',
       'Chaque jour a sa séance (A, B, C ou M). Pas la forme ? La mobilité suffit pour valider.',
-      'À la fin, dis si c’était facile ou dur : le niveau s’ajuste. Le reste est rangé plus bas.',
+      'À la fin, dis si c’était facile ou dur : après 2 fois pareil, l’appli te propose un autre niveau.',
     ],
   },
   argent: {

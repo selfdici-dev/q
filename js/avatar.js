@@ -38,7 +38,14 @@ export function avatarParams(level, chain = 0) {
     jaw: clamp((stage - 3) / 2), // mâchoire (palier 4+)
     vline: clamp((stage - 5) / 1.5), // V du bas du ventre (palier 6+)
     aura: Math.round((0.12 + 0.68 * clamp(chain / 21)) * 100) / 100, // 3 semaines de chaîne = aura pleine
+    charge: Math.round(clamp(chain / 21) * 100), // aura en % (affiché) : 100 % à 3 semaines
   };
+}
+
+// Le double change-t-il d'allure en passant de prevLevel à level ?
+// (un palier tous les 2 niveaux, plus rien après le dernier)
+export function evolved(prevLevel, level) {
+  return avatarParams(level).stage > avatarParams(prevLevel).stage;
 }
 
 // SVG du double (viewBox 120 × 160), couleurs par les jetons CSS :

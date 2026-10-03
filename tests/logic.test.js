@@ -273,4 +273,7 @@ test('« Maintenant » : la première chose pas faite, le coucher passe devant l
   assert.equal(nextAction(plan(), '23:00', '01:00').id, 'seance');
   // téléphone déjà posé : on revient à l'ordre du plan
   assert.equal(nextAction(plan(['coucher']), '22:30', '23:00').id, 'seance');
+  // jamais au-delà du changement de jour (4 h) : c'est déjà le plan du lendemain
+  assert.equal(nextAction(plan(), '03:50', '01:15').id, 'coucher');
+  assert.equal(nextAction(plan(), '04:05', '01:15').id, 'seance');
 });

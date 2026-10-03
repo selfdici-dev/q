@@ -14,7 +14,7 @@ import { quoteOfDay } from './quotes.js';
 import { daySummary, weekSummary } from './summary.js';
 import { backupStatus, validateBackup } from './backup.js';
 import { figureFor, figureSVG, focusFor } from './figures.js';
-import { avatarParams, avatarSVG, STAGES, STAGE_GAINS } from './avatar.js';
+import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS } from './avatar.js';
 import { treeSVG, seedOf } from './tree.js';
 
 const STORE = 'cap-v1';
@@ -180,14 +180,18 @@ async function copyText(text, btn, okMsg) {
 }
 
 // Fenêtre qui monte du bas (titre + contenu HTML déjà échappé).
+let sheetOpener = null; // bouton qui a ouvert la fiche : il retrouve le focus à la fermeture
+
 function openSheet(title, body) {
   const el = $('#sheet');
+  sheetOpener = document.activeElement;
   el.innerHTML = `<div class="sheet-back" data-act="sheet-close"></div>
     <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
       <div class="card-head"><h2 id="sheet-title">${title}</h2><button class="btn ghost small" data-act="sheet-close">Fermer</button></div>
       ${body}
     </div>`;
   el.hidden = false;
+  $('.sheet-panel [data-act="sheet-close"]', el).focus();
 }
 
 function showSheet(text) {
@@ -214,7 +218,7 @@ function showAvatar() {
   openSheet('Ton double', `<div class="avatar-sheet">
       <div class="avatar-big">${avatarSVG(av, { animate: !reduceMotion() })}</div>
       <div><p class="eyebrow">Palier ${av.stage + 1}/${STAGES}</p><p class="avatar-rank">${esc(av.rank)}</p>
-        <p class="hint">Niveau ${lv.level} · ${lv.into}/${lv.span} XP · aura ${Math.round(av.aura * 100)} %</p></div>
+        <p class="hint">Niveau ${lv.level} · ${lv.into}/${lv.span} XP · aura ${av.charge} %</p></div>
     </div>
     <p>${av.nextLevel ? `Au niveau ${av.nextLevel} : <strong>${esc(av.nextGain)}</strong>` : '<strong>Dernier palier atteint.</strong> Garde la chaîne pour garder l’aura.'}</p>
     <ol class="avatar-steps">${STAGE_GAINS.map((g, i) => `<li class="${i <= av.stage ? 'done' : ''}">${esc(g)}</li>`).join('')}</ol>
@@ -388,14 +392,15 @@ function render() {
     revision: ['Révisions', 'Chaque carte revient juste avant l’oubli'],
   };
   const h = heads[tab];
-  const head = h && !(tab === 'argent' && state.ui.lesson) ? `<header class="page-head"><h1>${h[0]}${HELP[tab] ? helpBtn(tab) : ''}</h1><p>${h[1]}</p></header>` : '';
+  const head = h && !(tab === 'argent' && state.ui.lesson) ? `<header class="page-head"><div class="page-title"><h1>${h[0]}</h1>${HELP[tab] ? helpBtn(tab) : ''}</div><p>${h[1]}</p></header>` : '';
   $('#view').innerHTML = head + views[tab]();
   $('#view').dataset.tab = tab;
   const lv = levelInfo(totalXP(state));
   if (lv.level > (state.ui.lastLevel ?? 1)) {
+    const grew = evolved(state.ui.lastLevel ?? 1, lv.level);
     state.ui.lastLevel = lv.level;
     save();
-    celebrate(`Niveau ${lv.level} atteint : ${lv.rank}${lv.level % 2 ? ' · ton double évolue' : ''}`);
+    celebrate(`Niveau ${lv.level} atteint : ${lv.rank}${grew ? ' · ton double évolue' : ''}`);
   }
   document.querySelectorAll('#tabs a').forEach((a) => a.setAttribute('aria-current', a.dataset.tab === tab ? 'page' : 'false'));
   moveTabIndicator();
@@ -718,7 +723,7 @@ function viewFocus() {
       <button class="btn" data-act="pomo-skip">${p.mode === 'work' ? 'Passer en pause' : 'Passer la pause'}</button>
     </div>
     <p class="hint">Avant de démarrer : téléphone dans une autre pièce, ou face cachée en mode avion. 1 session valide le minimum « Focus », 4 valident le complet.</p>
-    <div class="garden" aria-label="${d.focus ?? 0} arbre${(d.focus ?? 0) > 1 ? 's' : ''} : sessions terminées aujourd’hui">${Array.from({ length: d.focus ?? 0 }, (_, i) => treeSVG(1, focusSeed(today, i), { mini: true })).join('') || '<span class="muted">Ton jardin du jour est vide. Chaque session fait pousser un arbre.</span>'}</div>
+    <div class="garden" role="img" aria-label="${d.focus ?? 0} arbre${(d.focus ?? 0) > 1 ? 's' : ''} : sessions terminées aujourd’hui">${Array.from({ length: d.focus ?? 0 }, (_, i) => treeSVG(1, focusSeed(today, i), { mini: true })).join('') || '<span class="muted">Ton jardin du jour est vide. Chaque session fait pousser un arbre.</span>'}</div>
   </section>
   <section class="card center urge">
     <div class="card-head"><h2>Envie de scroller ?</h2><span class="pill">${d.urges ?? 0} envie${(d.urges ?? 0) > 1 ? 's' : ''} retardée${(d.urges ?? 0) > 1 ? 's' : ''}</span></div>
@@ -1280,8 +1285,9 @@ const actions = {
   },
   'me-tab'(el) {
     const ids = ME_TABS.map(([id]) => id);
-    const dir = ids.indexOf(el.dataset.id) < ids.indexOf(state.ui.meTab) ? 'back' : 'fwd';
-    const same = el.dataset.id === state.ui.meTab;
+    const cur = ids.includes(state.ui.meTab) ? state.ui.meTab : 'programme'; // sous-onglet affiché
+    const dir = ids.indexOf(el.dataset.id) < ids.indexOf(cur) ? 'back' : 'fwd';
+    const same = el.dataset.id === cur;
     state.ui.meTab = el.dataset.id;
     save();
     if (el.dataset.go && currentTab() !== el.dataset.go) location.hash = el.dataset.go;
@@ -1490,6 +1496,8 @@ const actions = {
   'sheet-close'() {
     $('#sheet').hidden = true;
     $('#sheet').innerHTML = '';
+    if (sheetOpener?.isConnected) sheetOpener.focus();
+    sheetOpener = null;
   },
   export() {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
@@ -1609,10 +1617,21 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !$('#sheet').hidden) actions['sheet-close']();
 });
 
+// « Maintenant » suit l'heure (coucher) et ce qui vient d'être fait : on
+// réaffiche Jour quand la prochaine action change, sauf pendant une saisie.
+function refreshNow() {
+  const card = $('.now-card');
+  if (!card || currentTab() !== 'jour' || document.activeElement?.matches('input, textarea, select')) return;
+  const items = planItems(todayKey());
+  const next = nextAction(items, nowHHMM(), items.at(-1).bed);
+  if ((card.dataset.now ?? '') !== (next?.id ?? '')) render();
+}
+
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     if (player?.endAt || state.timers.pomo.endAt) keepAwake(true);
     tick();
+    refreshNow();
   }
 });
 
@@ -1650,7 +1669,7 @@ setInterval(() => {
   if (todayKey() !== shownDay) {
     shownDay = todayKey();
     render();
-  }
+  } else refreshNow();
 }, 60000);
 
 navigator.storage?.persist?.();

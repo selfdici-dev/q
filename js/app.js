@@ -14,6 +14,7 @@ import { quoteOfDay } from './quotes.js';
 import { daySummary, weekSummary } from './summary.js';
 import { backupStatus, validateBackup } from './backup.js';
 import { figureFor, figureSVG, focusFor } from './figures.js';
+import { avatarParams, avatarSVG, STAGES, STAGE_GAINS } from './avatar.js';
 
 const STORE = 'cap-v1';
 const POMO_WORK = 25 * 60;
@@ -177,18 +178,38 @@ async function copyText(text, btn, okMsg) {
   }
 }
 
-function showSheet(text) {
+// Fenêtre qui monte du bas (titre + contenu HTML déjà échappé).
+function openSheet(title, body) {
   const el = $('#sheet');
   el.innerHTML = `<div class="sheet-back" data-act="sheet-close"></div>
     <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
-      <div class="card-head"><h2 id="sheet-title">Texte à copier</h2><button class="btn ghost small" data-act="sheet-close">Fermer</button></div>
-      <p class="hint">La copie automatique n’a pas marché : appuie longuement dans le texte, puis « Tout sélectionner » et « Copier ».</p>
-      <textarea readonly rows="12">${esc(text)}</textarea>
+      <div class="card-head"><h2 id="sheet-title">${title}</h2><button class="btn ghost small" data-act="sheet-close">Fermer</button></div>
+      ${body}
     </div>`;
   el.hidden = false;
-  const ta = $('textarea', el);
+}
+
+function showSheet(text) {
+  openSheet('Texte à copier', `<p class="hint">La copie automatique n’a pas marché : appuie longuement dans le texte, puis « Tout sélectionner » et « Copier ».</p>
+      <textarea readonly rows="12">${esc(text)}</textarea>`);
+  const ta = $('#sheet textarea');
   ta.focus();
   ta.select();
+}
+
+// Fiche « Ton double » : palier, ce qui le fait évoluer, prochain gain.
+function showAvatar() {
+  const lv = levelInfo(totalXP(state));
+  const ch = chain(state, todayKey()).count;
+  const av = avatarParams(lv.level, ch);
+  openSheet('Ton double', `<div class="avatar-sheet">
+      <div class="avatar-big">${avatarSVG(av, { animate: !reduceMotion() })}</div>
+      <div><p class="eyebrow">Palier ${av.stage + 1}/${STAGES}</p><p class="avatar-rank">${esc(av.rank)}</p>
+        <p class="hint">Niveau ${lv.level} · ${lv.into}/${lv.span} XP · aura ${Math.round(av.aura * 100)} %</p></div>
+    </div>
+    <p>${av.nextLevel ? `Au niveau ${av.nextLevel} : <strong>${esc(av.nextGain)}</strong>` : '<strong>Dernier palier atteint.</strong> Garde la chaîne pour garder l’aura.'}</p>
+    <ol class="avatar-steps">${STAGE_GAINS.map((g, i) => `<li class="${i <= av.stage ? 'done' : ''}">${esc(g)}</li>`).join('')}</ol>
+    <p class="hint">Il évolue avec ton niveau : chaque minimum, séance, session de focus, leçon ou livre lui fait gagner de l’XP. Son aura suit ta chaîne (pleine à 3 semaines). Ce n’est pas une prédiction de ton corps : c’est le reflet de ta régularité.</p>`);
 }
 
 let audioCtx;
@@ -365,7 +386,7 @@ function render() {
   if (lv.level > (state.ui.lastLevel ?? 1)) {
     state.ui.lastLevel = lv.level;
     save();
-    celebrate(`Niveau ${lv.level} atteint : ${lv.rank}`);
+    celebrate(`Niveau ${lv.level} atteint : ${lv.rank}${lv.level % 2 ? ' · ton double évolue' : ''}`);
   }
   document.querySelectorAll('#tabs a').forEach((a) => a.setAttribute('aria-current', a.dataset.tab === tab ? 'page' : 'false'));
   moveTabIndicator();
@@ -426,13 +447,17 @@ function viewToday() {
       <div><p class="eyebrow">${esc(longDate(today))}</p><p class="greet">${greeting()}</p></div>
       <div class="ring-wrap ${st.valid ? 'done' : ''} ${increased(seen, 'valid', st.valid ? 1 : 0) ? 'just' : ''}">${ring(st.done, st.total)}</div>
     </div>
-    <div class="hero-stats">
-      <div><span class="big ${increased(seen, 'chain', ch.count) ? 'bump' : ''}">🔥 ${ch.count}</span><span class="lbl">jour${ch.count > 1 ? 's' : ''} de chaîne${ch.jokers ? ` · ${ch.jokers} reprise${ch.jokers > 1 ? 's' : ''}` : ''}</span></div>
-      <div><span class="big">🏁 ${sp.current.number}<small>/${SPRINT_COUNT}</small></span><span class="lbl">sprint · jour ${sprintDay}/7 · ${sp.current.valid} validé${sp.current.valid > 1 ? 's' : ''}</span></div>
-    </div>
-    <div class="level">
-      <span class="badge">Niv. ${lv.level}</span><span class="rank">${lv.rank}</span><span class="xp">${lv.into}/${lv.span} XP</span>
-      <div class="xpbar">${tweenBar('xp', (lv.into / lv.span) * 100)}</div>
+    <div class="hero-main">
+      <button class="avatar-btn ${increased(seen, 'stage', avatarParams(lv.level).stage) ? 'just' : ''}" data-act="avatar" aria-label="Ton double : ${esc(lv.rank)}, voir comment il évolue">${avatarSVG(avatarParams(lv.level, ch.count), { animate: !reduceMotion() })}</button>
+      <div class="hero-side">
+        <div class="hero-stat"><span class="big ${increased(seen, 'chain', ch.count) ? 'bump' : ''}">🔥 ${ch.count}</span><span class="lbl">jour${ch.count > 1 ? 's' : ''} de chaîne${ch.jokers ? ` · ${ch.jokers} reprise${ch.jokers > 1 ? 's' : ''}` : ''}</span></div>
+        <div class="hero-stat"><span class="mid">🏁 Sprint ${sp.current.number}<small>/${SPRINT_COUNT}</small></span><span class="lbl">jour ${sprintDay}/7 · ${sp.current.valid} validé${sp.current.valid > 1 ? 's' : ''}</span></div>
+        <div class="level">
+          <span class="badge">Niv. ${lv.level}</span><span class="rank">${lv.rank}</span>
+          <div class="xpbar">${tweenBar('xp', (lv.into / lv.span) * 100)}</div>
+          <span class="xp">${lv.into}/${lv.span} XP</span>
+        </div>
+      </div>
     </div>
     ${dots(last7)}
     ${notice ? `<p class="hero-note"><span aria-hidden="true">${notice[0]}</span><span><strong>${notice[1]}</strong> ${notice[2]}</span></p>` : ''}
@@ -1447,6 +1472,9 @@ const actions = {
   },
   'copy-week'(el) {
     copyText(weekSummary(state, el.dataset.first, todayKey()), el, 'Bilan de la semaine copié : colle-le dans Claude.');
+  },
+  avatar() {
+    showAvatar();
   },
   'sheet-close'() {
     $('#sheet').hidden = true;

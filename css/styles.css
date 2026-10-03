@@ -666,3 +666,20 @@ details.card.more .rules { margin-top: 10px; }
 .week .today b { color: var(--accent-ink); }
 .timer-in { position: relative; display: flex; flex-direction: column; align-items: center; }
 .timer .plant { width: 96px; height: 72px; margin: 0 0 -6px; font-size: 2.2rem; }
+
+/* ---------- v8 : bilans à copier ---------- */
+.copy-btn { margin-top: 12px; gap: 6px; font-weight: 650; transition: transform 0.1s, background 0.25s, color 0.25s, border-color 0.25s; }
+.copy-btn.copied { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); animation: pop 0.35s ease-out; }
+.center-hint { text-align: center; margin-top: 6px; }
+
+#sheet { position: fixed; inset: 0; z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
+.sheet-back { position: absolute; inset: 0; background: rgb(0 0 0 / 0.55); animation: fade 0.2s ease-out; }
+.sheet-panel {
+  position: relative; width: min(640px, 100%); max-height: 85vh; overflow: auto;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 24px 24px 0 0;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  animation: sheet-up 0.32s cubic-bezier(.2,.9,.3,1);
+}
+.sheet-panel textarea { font-size: 0.9rem; line-height: 1.4; }
+@keyframes fade { from { opacity: 0; } }
+@keyframes sheet-up { from { transform: translateY(100%); } }

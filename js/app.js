@@ -12,6 +12,7 @@ import { ALL_LESSONS } from './finance-data.js';
 import { lineChart, barChart, wireTooltips } from './charts.js';
 import { createMoney, DEFAULT_CALC, DEFAULT_WEALTH } from './money.js';
 import { quoteOfDay } from './quotes.js';
+import { daySummary, weekSummary } from './summary.js';
 
 const STORE = 'cap-v1';
 const POMO_WORK = 25 * 60;
@@ -142,6 +143,41 @@ function celebrate(msg) {
   document.body.appendChild(box);
   navigator.vibrate?.([30, 40, 30]);
   setTimeout(() => box.remove(), 2200);
+}
+
+// Copie dans le presse-papiers (rien ne sort de l'appareil). Si le navigateur
+// refuse, le texte s'affiche dans une fenêtre, déjà sélectionné.
+async function copyText(text, btn, okMsg) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast(okMsg);
+    navigator.vibrate?.(15);
+    if (btn?.isConnected) {
+      const label = btn.innerHTML;
+      btn.classList.add('copied');
+      btn.textContent = '✓ Copié';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = label;
+      }, 1800);
+    }
+  } catch {
+    showSheet(text);
+  }
+}
+
+function showSheet(text) {
+  const el = $('#sheet');
+  el.innerHTML = `<div class="sheet-back" data-act="sheet-close"></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <div class="card-head"><h2 id="sheet-title">Texte à copier</h2><button class="btn ghost small" data-act="sheet-close">Fermer</button></div>
+      <p class="hint">La copie automatique n’a pas marché : appuie longuement dans le texte, puis « Tout sélectionner » et « Copier ».</p>
+      <textarea readonly rows="12">${esc(text)}</textarea>
+    </div>`;
+  el.hidden = false;
+  const ta = $('textarea', el);
+  ta.focus();
+  ta.select();
 }
 
 let audioCtx;
@@ -381,6 +417,8 @@ function planCard(today) {
       <span class="todo-ico" aria-hidden="true">${x.done ? '✓' : x.ico}</span>
       <div><strong>${esc(x.title)}</strong><small>${esc(x.sub)}</small></div>
       ${x.go}</li>`).join('')}</ul>
+    <button class="btn wide copy-btn" data-act="copy-day">📋 Copier mon bilan du jour</button>
+    <p class="hint center-hint">Le soir, colle-le dans ta conversation avec Claude.</p>
   </section>`;
 }
 
@@ -897,6 +935,8 @@ function viewReview() {
     <label>Qu’est-ce qui a marché ?<textarea data-review="${reviewTarget.number}" data-q="win" rows="2">${esc(rv.win)}</textarea></label>
     <label>Qu’est-ce qui m’a fait rater, concrètement (heure, lieu, déclencheur) ?<textarea data-review="${reviewTarget.number}" data-q="fail" rows="2">${esc(rv.fail)}</textarea></label>
     <label>La seule chose que je change la semaine prochaine :<textarea data-review="${reviewTarget.number}" data-q="change" rows="2">${esc(rv.change)}</textarea></label>
+    <button class="btn primary wide copy-btn" data-act="copy-week" data-first="${reviewTarget.first}">📋 Copier mon bilan de la semaine</button>
+    <p class="hint center-hint">Chiffres du sprint ${reviewTarget.number} + tes 3 réponses, prêts à coller dans Claude.</p>
   </section>`;
 }
 
@@ -1248,6 +1288,16 @@ const actions = {
     save();
     render();
   },
+  'copy-day'(el) {
+    copyText(daySummary(state, todayKey()), el, 'Bilan du jour copié : colle-le dans Claude.');
+  },
+  'copy-week'(el) {
+    copyText(weekSummary(state, el.dataset.first, todayKey()), el, 'Bilan de la semaine copié : colle-le dans Claude.');
+  },
+  'sheet-close'() {
+    $('#sheet').hidden = true;
+    $('#sheet').innerHTML = '';
+  },
   export() {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -1331,6 +1381,10 @@ document.addEventListener('input', (e) => {
     state.timers.pomo.label = e.target.value;
     save();
   }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !$('#sheet').hidden) actions['sheet-close']();
 });
 
 document.addEventListener('visibilitychange', () => {

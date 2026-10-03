@@ -14,6 +14,13 @@ Elle fonctionne hors ligne et s’installe sur le téléphone. Aucune donnée ne
 - **Bilan du dimanche.** 3 questions et une seule chose à changer.
 - **XP et niveaux.** Calculés à partir de tes données (habitudes, séances, sessions, leçons, trades), jamais stockés : impossible de tricher par erreur.
 
+## Bilan pour Claude
+
+- *Jour > Ton plan du jour > Copier mon bilan du jour* : habitudes faites, séance, focus, protéines, grignotages, coucher visé, poids si saisi.
+- *Moi > Bilan > Copier mon bilan de la semaine* : les mêmes chiffres sur le sprint, plus tes 3 réponses du bilan.
+
+Le texte part seulement dans le presse-papiers : tu le colles toi-même dans Claude.
+
 ## Révisions
 
 Révision espacée (boîtes de Leitner) : chaque leçon de finance validée ajoute ses questions comme cartes, et tu crées les tiennes (trading, crypto, culture, livres). Une carte réussie revient après 1, 3, 7, 14, 30, 60 puis 120 jours ; une carte ratée revient le jour même. Accès depuis la carte « Révisions » de l’onglet Jour (`#revision`).

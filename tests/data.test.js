@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { WORKOUTS, WEEK_PLAN, WARMUP, demoUrl, baseName } from '../js/data.js';
+import { WORKOUTS, WEEK_PLAN, WARMUP, HELP, demoUrl, baseName } from '../js/data.js';
 
 test('séances : les IDs stockés dans l’historique ne changent pas', () => {
   assert.deepEqual(WORKOUTS.map((w) => w.id), ['A', 'B', 'C', 'M']);
@@ -49,4 +49,13 @@ test('liens de démo vidéo', () => {
   assert.equal(q('Superman Y (allongé sur le ventre)'), 'prone Y exercice technique');
   assert.equal(q('Tirage superman'), 'prone lat pulldown bodyweight');
   assert.ok(demoUrl('Crunch inversé').startsWith('https://www.youtube.com/results?search_query='));
+});
+
+test('aide « ? » : chaque onglet expliqué en 3 phrases courtes', () => {
+  assert.deepEqual(Object.keys(HELP), ['jour', 'focus', 'sport', 'argent', 'moi']);
+  for (const [tab, h] of Object.entries(HELP)) {
+    assert.ok(h.title, tab);
+    assert.equal(h.lines.length, 3, tab);
+    for (const l of h.lines) assert.ok(l.length <= 110, `${tab} : phrase trop longue (${l.length})`);
+  }
 });

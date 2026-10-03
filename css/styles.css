@@ -945,3 +945,34 @@ details.card.more .rules { margin-top: 10px; }
 .tree-soil { fill: color-mix(in srgb, var(--accent) 16%, transparent); }
 .garden { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; }
 .garden .tree.mini { width: 46px; height: 44px; }
+
+/* ---------- v25 : plus simple (Maintenant, aide « ? », sections repliées) ---------- */
+.now-card { display: grid; grid-template-columns: 44px 1fr; gap: 4px 12px; align-items: center; margin: 12px 0 6px; padding: 14px;
+  border-radius: 16px; border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  background: linear-gradient(150deg, color-mix(in srgb, var(--accent) 16%, var(--surface)), var(--surface)); }
+.now-card .now-ico { width: 44px; height: 44px; display: grid; place-items: center; font-size: 1.5rem; border-radius: 50%; background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.now-card .now-text { display: flex; flex-direction: column; min-width: 0; }
+.now-card .eyebrow { margin: 0; color: var(--accent); }
+.now-card strong { font-size: 1.12rem; line-height: 1.25; }
+.now-card small { color: var(--muted); font-size: 0.86rem; margin-top: 2px; }
+.now-card .now-go { grid-column: 1 / -1; margin-top: 8px; min-height: 52px; font-size: 1.05rem; text-align: center; text-decoration: none; display: grid; place-items: center; }
+.now-card.all-done { border-style: dashed; }
+.todo.is-now { box-shadow: inset 3px 0 0 var(--accent); }
+.help-btn { display: inline-grid; place-items: center; width: 26px; height: 26px; margin-left: 10px; padding: 0; vertical-align: middle;
+  border-radius: 50%; border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); background: transparent;
+  color: var(--accent); font: 600 0.85rem/1 var(--sans, system-ui, sans-serif); letter-spacing: 0; cursor: pointer; }
+.page-head h1 .help-btn { transform: translateY(-0.25em); }
+.eyebrow .help-btn { width: 22px; height: 22px; margin-left: 8px; font-size: 0.75rem; transform: translateY(-1px); }
+.help-btn:active { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.help-list { margin: 4px 0 6px; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; font-size: 1rem; line-height: 1.45; }
+.help-list li::marker { color: var(--accent); font-weight: 700; }
+.wo-fold { margin: 10px 0 0; border: 1px solid var(--line); border-radius: 14px; padding: 0 12px; }
+.wo-fold > summary { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; min-height: 52px; cursor: pointer; list-style: none; }
+.wo-fold > summary::-webkit-details-marker { display: none; }
+.wo-fold > summary strong { min-width: 0; }
+.wo-fold[open] { padding-bottom: 12px; }
+.wo-fold.planned { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+.fold-body .goal-list { margin-top: 8px; }
+.fold-body > .week { margin-bottom: 4px; }
+.apps-cat { margin: 14px 0 4px; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.subtabs button { white-space: nowrap; }

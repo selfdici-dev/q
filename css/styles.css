@@ -804,7 +804,8 @@ details.card.more .rules { margin-top: 10px; }
 .chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 650; }
 .chip small { font-size: 0.75em; opacity: 0.75; margin-left: 2px; color: inherit; }
 
-.shelf { animation: fade-in 0.45s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--s) * 70ms); }
+.books-view { display: flex; flex-direction: column; gap: 16px; }
+.books-view.enter .shelf { animation: fade-in 0.45s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--s) * 70ms); }
 .shelf-head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 4px; }
 .shelf-head h2 { font-family: var(--serif, ui-serif, Georgia, serif); font-weight: 600; font-size: 1.3rem; }
 .shelf-row {
@@ -813,7 +814,8 @@ details.card.more .rules { margin-top: 10px; }
 }
 .shelf-row::-webkit-scrollbar { display: none; }
 
-.book { flex: 0 0 132px; height: 198px; perspective: 900px; scroll-snap-align: start; animation: book-in 0.5s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--s, 0) * 70ms + var(--i) * 45ms); }
+.book { flex: 0 0 132px; height: 198px; perspective: 900px; scroll-snap-align: start; }
+.books-view.enter .book { animation: book-in 0.5s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--s, 0) * 70ms + var(--i) * 45ms); }
 @keyframes book-in { from { opacity: 0; transform: translateY(14px) rotate(-2deg); } }
 .book-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.7s cubic-bezier(.2,.8,.2,1); }
 .book.flipped .book-inner { transform: rotateY(180deg); }

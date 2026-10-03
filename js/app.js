@@ -344,7 +344,10 @@ function currentTab() {
   return TABS.some((t) => t.id === h) || h === 'revision' ? h : 'jour';
 }
 
+let renders = 0; // nombre d'affichages : distingue un réaffichage sur place d'une arrivée
+
 function render() {
+  renders++;
   const tab = currentTab();
   const views = { jour: viewToday, focus: viewFocus, sport: viewSport, argent: money.view, moi: viewMe, revision: viewRevision };
   const heads = {
@@ -970,7 +973,7 @@ function viewProgram() {
 // Bibliothèque : des couvertures sur des étagères qui défilent. Toucher une
 // couverture la retourne (pourquoi le lire, boutons). Filtre et couvertures
 // retournées : mémoire d'écran seulement.
-const shelf = { filter: 'all', flipped: new Set() };
+const shelf = { filter: 'all', flipped: new Set(), last: { render: -1, filter: null } };
 const BOOK_CATS = [...new Set(BOOKS.map((b) => b.cat))]; // couleur de couverture stable par catégorie
 const BOOK_FILTERS = [['all', 'Tout'], ['todo', 'À lire'], ['reading', 'En cours'], ['done', 'Lus']];
 
@@ -1003,7 +1006,11 @@ function bookCover(b, i) {
 function viewBooks() {
   const lib = bookShelves(BOOKS, state.books, shelf.filter);
   const { counts } = lib;
-  return `
+  // Les couvertures entrent en vague à l'arrivée ou au changement de filtre,
+  // pas quand on vient de toucher « Je lis » ou « Lu ».
+  const enter = shelf.last.render !== renders - 1 || shelf.last.filter !== shelf.filter;
+  shelf.last = { render: renders, filter: shelf.filter };
+  return `<div class="books-view ${enter ? 'enter' : ''}">
   <section class="card library">
     <p class="eyebrow">Bibliothèque</p>
     <div class="lib-stats">
@@ -1019,7 +1026,7 @@ function viewBooks() {
     <div class="shelf-head"><h2>${esc(sh.cat)}</h2><span class="muted">${sh.done}/${sh.total} lus</span></div>
     <div class="shelf-row">${sh.items.map((b, i) => bookCover(b, i)).join('')}</div>
   </section>`).join('') : '<p class="hint center-hint">Aucun livre ici pour l’instant.</p>'}
-  <p class="hint">Règles : bibliothèque avant achat, version originale si c’est en anglais, et si un livre t’ennuie après 50 pages, passe au suivant. +50 XP par livre terminé.</p>`;
+  <p class="hint">Règles : bibliothèque avant achat, version originale si c’est en anglais, et si un livre t’ennuie après 50 pages, passe au suivant. +50 XP par livre terminé.</p></div>`;
 }
 
 function viewApps() {

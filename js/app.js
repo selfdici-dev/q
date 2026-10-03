@@ -505,7 +505,7 @@ function viewToday() {
         <label>Levé à<input type="time" data-field="wake" data-key="${today}" value="${esc(d.wake ?? '')}"></label>
       </div>
       <p class="hint">Cible de la semaine ${week} : couché à <strong>${weeklyBedtime(week, state.settings.bedtimeTarget)}</strong>, levé à heure fixe. On avance de 15 min par semaine jusqu’à ${esc(state.settings.bedtimeTarget)}.</p>`)}
-    ${fold('heat', '📅', 'Régularité', 'Tes 12 semaines d’un coup d’œil', `<span class="pill">${grid.valid}/${grid.elapsed}</span>`, heatmap(grid))}
+    ${fold('heat', '📅', 'Régularité', '12 semaines d’un coup d’œil', `<span class="pill">${grid.valid}/${grid.elapsed}</span>`, heatmap(grid))}
     ${fold('rules', '🧭', 'Mes règles', '« Si… alors… »', `<span class="pill">${state.rules.length}</span>`, `<ul class="rules">${state.rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
       <p class="hint">Modifie-les dans Moi > Réglages.</p>`)}
     ${fold('quote', '💬', 'Pensée du jour', esc(q.author), '<span></span>', `<blockquote class="quote"><p>« ${esc(q.text)} »</p><cite>${esc(q.author)}</cite></blockquote>`)}
@@ -1076,7 +1076,7 @@ function viewBooks() {
 function appsFold() {
   const cats = [...new Set(APPS.map((a) => a.cat))];
   const done = APPS.filter((a) => state.setup[a.name]).length;
-  return `<div class="folds">${fold('apps', '🧰', 'Tes outils', 'Apps et réglages du téléphone', `<span class="pill ${done === APPS.length ? 'ok' : ''}">${done}/${APPS.length}</span>`, `
+  return `<div class="folds">${fold('apps', '🧰', 'Tes outils', 'Apps et réglages', `<span class="pill ${done === APPS.length ? 'ok' : ''}">${done}/${APPS.length}</span>`, `
     <p class="hint">Tout est gratuit sauf le réveil (≈ 10 €). Coche chaque outil une fois configuré.</p>
     ${cats.map((c) => `<h3 class="apps-cat">${esc(c)}</h3>
     <ul class="setup">${APPS.filter((a) => a.cat === c).map((a) => `<li>

@@ -1,15 +1,14 @@
 import {
-  todayKey, addDays, diffDays, fromKey, dayStatus, chain, lastNDays,
+  todayKey, diffDays, fromKey, dayStatus, chain, lastNDays,
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
-  dueCards, reviewCard, sportWeeks, increased, previous,
+  dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
   WARMUP, PROTEIN_TARGET, PROTEIN_EXAMPLES, PHASES, MILESTONES, BOOKS, APPS,
 } from './data.js';
 import { ALL_LESSONS } from './finance-data.js';
-import { lineChart, barChart, wireTooltips } from './charts.js';
 import { createMoney, DEFAULT_CALC, DEFAULT_WEALTH } from './money.js';
 import { quoteOfDay } from './quotes.js';
 import { daySummary, weekSummary } from './summary.js';
@@ -327,7 +326,6 @@ const TABS = [
   { id: 'focus', label: 'Focus', icon: '🎯' },
   { id: 'sport', label: 'Corps', icon: '💪' },
   { id: 'argent', label: 'Argent', icon: '💶' },
-  { id: 'suivi', label: 'Suivi', icon: '📊' },
   { id: 'moi', label: 'Moi', icon: '🧭' },
 ];
 
@@ -338,12 +336,11 @@ function currentTab() {
 
 function render() {
   const tab = currentTab();
-  const views = { jour: viewToday, focus: viewFocus, sport: viewSport, argent: money.view, suivi: viewTrack, moi: viewMe, revision: viewRevision };
+  const views = { jour: viewToday, focus: viewFocus, sport: viewSport, argent: money.view, moi: viewMe, revision: viewRevision };
   const heads = {
     focus: ['Focus', 'Une seule chose à la fois'],
     sport: ['Corps', 'Séance du jour, régularité, alimentation'],
-    argent: ['Argent', 'Apprendre, protéger, puis trader'],
-    suivi: ['Suivi', 'Ce qui se mesure progresse'],
+    argent: ['Argent', 'Les bases, une leçon de 10 minutes à la fois'],
     moi: ['Moi', 'Programme, bilan, livres, réglages'],
     revision: ['Révisions', 'Chaque carte revient juste avant l’oubli'],
   };
@@ -359,7 +356,6 @@ function render() {
   }
   document.querySelectorAll('#tabs a').forEach((a) => a.setAttribute('aria-current', a.dataset.tab === tab ? 'page' : 'false'));
   moveTabIndicator();
-  if (tab === 'suivi') wireTooltips($('#view'));
   runTweens();
   tick();
 }
@@ -588,7 +584,12 @@ function snackCard(key) {
          <div class="row"><button class="btn ghost small" data-act="snack-cancel">Annuler</button></div>`
       : `<div class="row"><button class="btn" data-act="snack-resist">Envie résistée</button><button class="btn" data-act="snack-ask">J’ai grignoté</button></div>
          <p class="hint">Pas de culpabilité : note-le, c’est tout. Au bout d’une semaine tu verras tes heures et tes déclencheurs, et on attaque ceux-là.</p>`}
-    ${snacks.length ? `<p class="hint">${snacks.map((x) => `${esc(x.time)} · ${esc(x.trigger)}`).join(' — ')}</p>` : ''}`;
+    ${snacks.length ? `<p class="hint">${snacks.map((x) => `${esc(x.time)} · ${esc(x.trigger)}`).join(' — ')}</p>` : ''}
+    ${(() => {
+      const top = snackTriggers(state, key);
+      return top.length ? `<div class="card-head sub"><h3>Tes déclencheurs (14 jours)</h3></div>
+        <p class="hint">${top.map(([t, n]) => `<strong>${esc(t)}</strong> ×${n}`).join(' · ')}. Attaque le premier : écris une règle « Si… alors… » pour lui dans Moi > Réglages.</p>` : '';
+    })()}`;
 }
 
 // La plante pousse pendant la session (idée reprise de Forest).
@@ -719,6 +720,7 @@ function viewSport() {
       <div class="row"><button class="btn primary" data-act="start-workout" data-id="${w.id}">Lancer${done.includes(w.id) ? ' (déjà faite aujourd’hui)' : ''}</button></div>
     </section>`;
   }).join('')}
+  ${testsCard()}
   <section class="card">
     <div class="card-head"><h2>Sécurité</h2></div>
     <ul class="tight">
@@ -841,74 +843,6 @@ function finishWorkout() {
   celebrate(`Séance terminée · +30 XP`);
 }
 
-function viewTrack() {
-  const today = todayKey();
-  const key = viewTrack.key ?? today;
-  const d = state.days[key] ?? {};
-  const s = state.settings;
-  const weights = series(state, 'weight', today, 60);
-  const waists = series(state, 'waist', today, 84);
-  const beds = series(state, 'bed', today, 21).map((p) => ({ key: p.key, value: bedtimeMinutes(p.value) }));
-  const screens = series(state, 'screen', today, 21);
-  const steps = series(state, 'steps', today, 21);
-  const avg = (arr) => (arr.length ? arr.reduce((a, b) => a + b.value, 0) / arr.length : null);
-  const last7 = (arr) => arr.filter((p) => diffDays(p.key, today) < 7);
-  const sleeps = [];
-  for (let i = 0; i < 7; i++) {
-    const k = addDays(today, -i);
-    const x = state.days[k];
-    const dur = sleepDuration(x?.bed, x?.wake);
-    if (dur) sleeps.push({ value: dur });
-  }
-  const bedAvg = avg(last7(beds));
-  const scrAvg = avg(last7(screens));
-  const slpAvg = avg(sleeps);
-  const snackPts = [];
-  for (let i = 20; i >= 0; i--) {
-    const k = addDays(today, -i);
-    const x = state.days[k];
-    if (x && (x.snacks || x.snackResisted !== undefined)) snackPts.push({ key: k, value: (x.snacks ?? []).length });
-  }
-  const triggers = {};
-  for (let i = 0; i < 14; i++) {
-    for (const sn of state.days[addDays(today, -i)]?.snacks ?? []) triggers[sn.trigger] = (triggers[sn.trigger] ?? 0) + 1;
-  }
-  const topTriggers = Object.entries(triggers).sort((a, b) => b[1] - a[1]);
-  const trend = rollingAverage(weights);
-  const lastTrend = trend.at(-1)?.value;
-
-  return `
-  <section class="card">
-    <div class="card-head"><h2>Saisie</h2></div>
-    <label>Jour<input type="date" id="track-date" value="${key}" max="${today}"></label>
-    <div class="grid2">
-      <label>Poids (kg)<input type="number" step="0.1" inputmode="decimal" data-field="weight" data-key="${key}" value="${d.weight ?? ''}"></label>
-      <label>Tour de taille (cm)<input type="number" step="0.5" inputmode="decimal" data-field="waist" data-key="${key}" value="${d.waist ?? ''}"></label>
-      <label>Couché à<input type="time" data-field="bed" data-key="${key}" value="${esc(d.bed ?? '')}"></label>
-      <label>Levé à<input type="time" data-field="wake" data-key="${key}" value="${esc(d.wake ?? '')}"></label>
-      <label>Temps d’écran (min)<input type="number" step="5" inputmode="numeric" data-field="screen" data-key="${key}" value="${d.screen ?? ''}"></label>
-      <label>Pas<input type="number" step="100" inputmode="numeric" data-field="steps" data-key="${key}" value="${d.steps ?? ''}"></label>
-    </div>
-    <p class="hint">Poids : le matin, à jeun, après les toilettes. Seule la moyenne sur 7 jours compte. Tour de taille : au nombril, une fois par semaine. Écran : relève le chiffre d’hier dans les réglages du téléphone, chaque matin.</p>
-  </section>
-  <section class="stats">
-    <div class="stat"><span class="lbl">Poids moyen 7 j</span><span class="big">${lastTrend ? `${lastTrend.toFixed(1)}<small> kg</small>` : '—'}</span><span class="lbl">cible ${s.weightTarget} kg</span></div>
-    <div class="stat"><span class="lbl">Coucher moyen 7 j</span><span class="big">${bedAvg !== null ? minutesToHHMM(bedAvg) : '—'}</span><span class="lbl">cible ${esc(s.bedtimeTarget)}</span></div>
-    <div class="stat"><span class="lbl">Sommeil moyen 7 j</span><span class="big">${slpAvg ? fmtDuration(slpAvg) : '—'}</span><span class="lbl">cible 8 h</span></div>
-    <div class="stat"><span class="lbl">Écran moyen 7 j</span><span class="big">${scrAvg !== null ? fmtDuration(scrAvg) : '—'}</span><span class="lbl">cible ${fmtDuration(s.screenTarget)}</span></div>
-  </section>
-  ${lineChart({ title: 'Poids (60 jours)', points: weights, trend, target: Number(s.weightTarget), targetLabel: `cible ${s.weightTarget} kg`, today, days: 60, fmt: (v) => Number(v).toFixed(1), unit: ' kg', empty: 'Aucune pesée pour l’instant.' })}
-  ${barChart({ title: 'Temps d’écran (21 jours)', points: screens, target: Number(s.screenTarget), targetLabel: `cible ${fmtDuration(s.screenTarget)}`, today, days: 21, fmt: (v) => fmtDuration(v), unit: '', empty: 'Aucun temps d’écran saisi.', overIsBad: true })}
-  ${lineChart({ title: 'Heure de coucher (21 jours)', points: beds, target: bedtimeMinutes(s.bedtimeTarget), targetLabel: `cible ${s.bedtimeTarget}`, today, days: 21, fmt: (v) => minutesToHHMM(v), unit: '', empty: 'Aucune heure de coucher saisie.' })}
-  ${barChart({ title: 'Pas (21 jours)', points: steps, target: 8000, targetLabel: 'cible 8 000', today, days: 21, fmt: (v) => Math.round(v).toLocaleString('fr-FR'), unit: ' pas', empty: 'Aucun nombre de pas saisi.' })}
-  ${barChart({ title: 'Grignotages par jour (21 jours)', points: snackPts, today, days: 21, fmt: (v) => Math.round(v), unit: '', empty: 'Rien de noté. Utilise la carte « Grignotage » de l’onglet Jour.' })}
-  ${topTriggers.length ? `<section class="card"><div class="card-head"><h2>Tes déclencheurs (14 jours)</h2></div>
-    <ul class="tight">${topTriggers.map(([t, n]) => `<li><strong>${esc(t)}</strong> : ${n} fois</li>`).join('')}</ul>
-    <p class="hint">Attaque le premier de la liste : écris une règle « Si… alors… » pour lui dans l’onglet Bilan.</p></section>` : ''}
-  ${testsCard()}
-  ${lineChart({ title: 'Tour de taille (12 semaines)', points: waists, today, days: 84, fmt: (v) => Number(v).toFixed(1), unit: ' cm', empty: 'Aucune mesure. Prends-la au nombril, détendu, sans rentrer le ventre.' })}`;
-}
-
 const TEST_FIELDS = [
   ['pushups', 'Pompes', '', 'max, propres, sans pause'],
   ['plank', 'Planche', ' s', 'avant-bras, jusqu’à ce que le bassin tombe'],
@@ -976,14 +910,14 @@ function viewProgram() {
     <div class="table-wrap"><table class="tests">
       <thead><tr><th>Mesure</th><th>Actuel</th><th>Cible</th><th></th></tr></thead>
       <tbody>
-        ${row('Écran (moy. 7 j)', screen, next.screen, fmtDuration, 'lower')}
+        ${screen !== null ? row('Écran (moy. 7 j)', screen, next.screen, fmtDuration, 'lower') : ''}
         ${row('Coucher (moy. 7 j)', bed, bedtimeMinutes(weeklyBedtime(next.week, state.settings.bedtimeTarget)), minutesToHHMM, 'lower')}
-        ${row('Poids (moy. 7 j)', weight, next.weight, (v) => `${Number(v).toFixed(1)} kg`, 'lower')}
+        ${weight !== null ? row('Poids (moy. 7 j)', weight, next.weight, (v) => `${Number(v).toFixed(1)} kg`, 'lower') : ''}
         ${row('Pompes', lastTest.pushups ?? null, next.pushups, (v) => v, 'higher')}
         ${row('Planche', lastTest.plank ?? null, next.plank, (v) => `${v} s`, 'higher')}
         ${row('Leçons de finance', lessons, next.lessons, (v) => v, 'higher')}
       </tbody></table></div>
-    <p class="hint">Les valeurs viennent de Suivi (saisies quotidiennes) et de tes tests de niveau.</p>
+    <p class="hint">Le coucher vient de « Nuit dernière » (onglet Jour), les pompes et la planche de tes tests de niveau (onglet Corps).</p>
   </section>
   <section class="card">
     <div class="card-head"><h2>Les 3 phases</h2></div>
@@ -1097,8 +1031,6 @@ function viewSettings() {
     <div class="card-head"><h2>Réglages</h2></div>
     <div class="grid2">
       <label>Coucher cible<input type="time" data-setting="bedtimeTarget" value="${esc(s.bedtimeTarget)}"></label>
-      <label>Écran cible (min/jour)<input type="number" step="15" data-setting="screenTarget" value="${s.screenTarget}"></label>
-      <label>Poids cible (kg)<input type="number" step="0.5" data-setting="weightTarget" value="${s.weightTarget}"></label>
       <label>Date de départ<input type="date" data-setting="startDate" value="${s.startDate}" max="${today}"></label>
     </div>
   </section>
@@ -1474,11 +1406,7 @@ document.addEventListener('change', (e) => {
     if (v === null) delete d[el.dataset.field];
     else d[el.dataset.field] = v;
     save();
-    if (currentTab() === 'suivi') render();
-    else toast('Enregistré.');
-  } else if (el.id === 'track-date') {
-    viewTrack.key = el.value || todayKey();
-    render();
+    toast('Enregistré.');
   } else if (el.dataset.setting) {
     const k = el.dataset.setting;
     if (!el.value) return;
@@ -1563,11 +1491,10 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-const TAB_ORDER = ['jour', 'revision', 'focus', 'sport', 'argent', 'suivi', 'moi'];
+const TAB_ORDER = ['jour', 'revision', 'focus', 'sport', 'argent', 'moi'];
 let shownTab = currentTab();
 
 window.addEventListener('hashchange', () => {
-  viewTrack.key = null;
   if (currentTab() === 'revision') {
     rev.queue = null;
     rev.flipped = false;

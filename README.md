@@ -1,6 +1,6 @@
 # Cap
 
-Appli personnelle pour **tenir** et **apprendre** : habitudes à deux niveaux (minimum / complet), règle « jamais deux fois de suite », sprints de 7 jours, focus 25 min, minuteur anti-scroll, séances guidées sur tapis, suivi du poids, du sommeil, de l’écran et des pas.
+Appli personnelle pour **tenir** et **apprendre** : habitudes à deux niveaux (minimum / complet), règle « jamais deux fois de suite », sprints de 7 jours, focus 25 min, minuteur anti-scroll, séances guidées sur tapis, sommeil.
 
 Elle fonctionne hors ligne et s’installe sur le téléphone. Aucune donnée ne quitte l’appareil. Les animations (changement d’onglet, anneau et barres qui se remplissent, case cochée) se coupent si le téléphone demande de réduire les animations.
 
@@ -29,11 +29,10 @@ Révision espacée (boîtes de Leitner) : chaque leçon de finance validée ajou
 
 | Onglet | Contenu |
 |---|---|
-| Jour | Au premier écran : la chaîne (sprint, niveau, message du jour) et ton plan du jour, avec « Copier mon bilan du jour ». En dessous, sections repliées avec résumé : habitudes, alimentation (protéines, grignotages avec déclencheur), nuit dernière, règles « Si… alors… », pensée du jour |
+| Jour | Au premier écran : la chaîne (sprint, niveau, message du jour) et ton plan du jour, avec « Copier mon bilan du jour ». En dessous, sections repliées avec résumé : habitudes, alimentation (protéines, grignotages avec déclencheur, déclencheurs des 14 derniers jours), nuit dernière, règles « Si… alors… », pensée du jour |
 | Focus | Minuteur 25/5 avec une plante qui pousse, jardin du jour, minuteur « Envie de scroller ? » de 10 min |
-| Argent | Parcours de 23 leçons (dont une unité Crypto : frais, fiscalité, petites cryptos) (dont une unité « La méthode » fondée sur les études : Barber & Odean, McLean & Pontiff, tendance, dérive après résultats, pratique délibérée ; volatilité/ATR, stratégie, actu), feuille de route trading en 6 étapes chiffrées, modes backtest/simulé/réel (des bases au trading, fiscalité 2026) avec quiz ; patrimoine par poches avec alertes de concentration ; trading réel/simulé avec checklist obligatoire, règles bloquantes (3 positions, 2 pertes, −25 %), aperçu du risque, courbe en R, statistiques par setup, copie pour relecture par Claude ; calculatrices (taille de position, stop ATR, intérêts composés) ; routine d’actualité et sources |
-| Corps | Objectif « fin, sec et élancé » (abdos et mâchoire visibles, posture droite, pas de volume), régularité (séances de la semaine, semaines tenues), semaine type, séances au poids du corps (tapis + roue abdominale seulement) : A (abdos : roue ×2, crunch inversé, gainage), B (haut du corps et posture : pompes, tirage superman, pike, Y, W), C (cardio sans saut), M (mobilité, posture, cou et mâchoire, vacuum, ≈ 8 min), objectif de chaque exercice affiché, bips 3-2-1, échauffement intégré, ressenti en fin de séance et suggestion de niveau, 3 niveaux, lecteur guidé, démos vidéo, règles alimentaires, 6 recettes de débutant |
-| Suivi | Saisie, moyennes sur 7 jours, graphiques, déclencheurs de grignotage, tests de niveau (pompes, planches, hollow) |
+| Argent | Parcours de 23 leçons courtes (idée, exemple, exercice réel, quiz) dont les questions deviennent des cartes de révision. Patrimoine, trading, calculatrices et actu sont masqués : leur code et tes données restent |
+| Corps | Objectif « fin, sec et élancé » (abdos et mâchoire visibles, posture droite, pas de volume), régularité (séances de la semaine, semaines tenues), semaine type, séances au poids du corps (tapis + roue abdominale seulement) : A (abdos : roue ×2, crunch inversé, gainage), B (haut du corps et posture : pompes, tirage superman, pike, Y, W), C (cardio sans saut), M (mobilité, posture, cou et mâchoire, vacuum, ≈ 8 min), objectif de chaque exercice affiché, bips 3-2-1, échauffement intégré, ressenti en fin de séance et suggestion de niveau, 3 niveaux, lecteur guidé, démos vidéo, règles alimentaires, 6 recettes de débutant, tests de niveau (pompes, planches, hollow) |
 | Bilan | 12 sprints, revue hebdomadaire, habitudes, règles, réglages, export/import |
 
 ## Installer sur le téléphone

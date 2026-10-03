@@ -385,6 +385,16 @@ export function sportWeeks(state, today, goal = 4) {
   return { thisWeek, goal, streak };
 }
 
+// ---------- Grignotage ----------
+// Déclencheurs notés sur les `days` derniers jours, du plus fréquent au moins fréquent.
+export function snackTriggers(state, today, days = 14) {
+  const count = {};
+  for (let i = 0; i < days; i++) {
+    for (const s of state.days[addDays(today, -i)]?.snacks ?? []) count[s.trigger] = (count[s.trigger] ?? 0) + 1;
+  }
+  return Object.entries(count).sort((a, b) => b[1] - a[1]);
+}
+
 // ---------- Animations ----------
 // Mémoire du dernier affichage (une Map gardée en mémoire, jamais stockée) :
 // sert à n'animer que ce qui vient de changer.

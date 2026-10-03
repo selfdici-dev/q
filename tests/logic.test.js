@@ -207,3 +207,14 @@ test('animations : seulement ce qui vient de changer', async () => {
   assert.equal(previous(bars, 'ring', 0.6, 0), 0.6);
   assert.equal(previous(bars, 'x', 5), 5);
 });
+
+test('déclencheurs de grignotage sur 14 jours', async () => {
+  const { snackTriggers } = await import('../js/logic.js');
+  const st = { days: {
+    '2026-10-14': { snacks: [{ trigger: 'Ennui' }, { trigger: 'Stress' }] },
+    '2026-10-10': { snacks: [{ trigger: 'Ennui' }] },
+    '2026-09-30': { snacks: [{ trigger: 'Faim' }] }, // il y a 14 jours : hors fenêtre
+  } };
+  assert.deepEqual(snackTriggers(st, '2026-10-14'), [['Ennui', 2], ['Stress', 1]]);
+  assert.deepEqual(snackTriggers(st, '2026-10-14', 15).at(-1), ['Faim', 1]);
+});

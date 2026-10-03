@@ -115,6 +115,8 @@ function raiseHabit(key, id, level) {
 const $ = (sel, root = document) => root.querySelector(sel);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmtClock = (secs) => `${String(Math.floor(secs / 60)).padStart(2, '0')}:${String(Math.floor(secs % 60)).padStart(2, '0')}`;
+// Chronomètre de séance : « 18 » sous une minute (lisible du sol), « 1:15 » au-delà.
+const fmtStep = (secs) => (secs < 60 ? String(Math.max(0, Math.ceil(secs))) : `${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, '0')}`);
 const fmtDuration = (mins) => `${Math.floor(mins / 60)} h ${String(Math.round(mins % 60)).padStart(2, '0')}`;
 const longDate = (key) => fromKey(key).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -803,25 +805,28 @@ function renderPlayer() {
   const next = player.steps[player.i + 1];
   const fresh = player.shown !== player.i;
   player.shown = player.i;
-  el.className = `player ${s.kind}`;
+  el.className = `player ${s.kind} ${player.endAt ? '' : 'paused'}`;
+  // Lisible du sol : l'écran se remplit de couleur à mesure que le temps passe
+  // (or = effort, bleu = repos), chronomètre géant, gros boutons.
   el.innerHTML = `
+    <div class="player-fill" id="player-fill" style="transform:scaleY(${1 - player.remaining / s.secs})"></div>
     <div class="player-top"><span>${esc(player.workout.name)}</span><span>${s.round ? `Tour ${s.round}/${s.rounds}` : ''}</span></div>
+    <div class="progress"><span style="width:${(player.i / player.steps.length) * 100}%"></span></div>
     <div class="player-main ${fresh ? 'enter' : ''}">
-      <p class="eyebrow">${{ work: 'Effort', rest: 'Repos', warm: 'Échauffement', prep: 'Départ' }[s.kind]}</p>
+      <p class="phase">${player.endAt ? { work: 'Effort', rest: 'Repos', warm: 'Échauffement', prep: 'Départ' }[s.kind] : 'Pause'}</p>
       <h2>${esc(s.name)}</h2>
       ${s.target ? `<span class="target-tag">🎯 ${esc(s.target)}</span>` : ''}
-      <div class="timer">${timerRing('player-ring', 1 - player.remaining / s.secs)}<div class="clock" id="player-clock">${fmtClock(player.remaining)}</div></div>
-      <p class="cue">${esc(s.cue)}</p>
-      ${s.kind === 'work' ? `<p><a href="${demoUrl(s.name)}" target="_blank" rel="noopener">Voir une démo</a></p>` : ''}
-      ${next ? `<p class="muted">Ensuite : ${esc(next.name)}</p>` : ''}
+      <div class="clock huge" id="player-clock">${fmtStep(player.remaining)}</div>
+      ${s.kind === 'rest' ? '' : `<p class="cue">${esc(s.cue)}</p>`}
+      ${s.kind === 'work' ? `<p class="demo"><a href="${demoUrl(s.name)}" target="_blank" rel="noopener">Voir une démo vidéo</a></p>` : ''}
+      ${next ? `<p class="next">Ensuite <strong>${esc(next.name)}</strong></p>` : ''}
     </div>
-    <div class="progress"><span style="width:${(player.i / player.steps.length) * 100}%"></span></div>
-    <div class="row center">
-      <button class="btn" data-act="player-prev">◀︎</button>
-      <button class="btn primary" data-act="player-toggle">${player.endAt ? 'Pause' : 'Reprendre'}</button>
-      <button class="btn" data-act="player-next">▶︎</button>
+    <div class="player-ctrl">
+      <button class="ctrl" data-act="player-prev" aria-label="Étape précédente">◀︎</button>
+      <button class="ctrl main" data-act="player-toggle" aria-label="${player.endAt ? 'Pause' : 'Reprendre'}">${player.endAt ? '❚❚' : '▶︎'}</button>
+      <button class="ctrl" data-act="player-next" aria-label="Étape suivante">▶︎</button>
     </div>
-    <div class="row center"><button class="btn ghost" data-act="player-stop">Arrêter la séance</button></div>`;
+    <button class="btn ghost small player-stop" data-act="player-stop">Arrêter la séance</button>`;
 }
 
 function startWorkout(id) {
@@ -1134,9 +1139,10 @@ function tick() {
   if (player?.endAt) {
     player.remaining = Math.max(0, Math.ceil((player.endAt - Date.now()) / 1000));
     const c = $('#player-clock');
-    if (c) c.textContent = fmtClock(player.remaining);
-    $('#player .timer')?.classList.toggle('hurry', player.remaining <= 3);
-    setRing('player-ring', 1 - (player.endAt - Date.now()) / 1000 / player.steps[player.i].secs);
+    if (c) c.textContent = fmtStep(player.remaining);
+    $('#player-clock')?.classList.toggle('hurry', player.remaining <= 3);
+    const fill = $('#player-fill');
+    if (fill) fill.style.transform = `scaleY(${Math.min(1, 1 - (player.endAt - Date.now()) / 1000 / player.steps[player.i].secs)})`;
     if (player.remaining <= 3 && player.remaining > 0 && player.lastBeep !== player.remaining) {
       player.lastBeep = player.remaining;
       navigator.vibrate?.(60);

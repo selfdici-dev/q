@@ -859,3 +859,41 @@ details.card.more .rules { margin-top: 10px; }
 .tone-1 .book { --c1: #15452f; --c2: #08190f; } /* émeraude */
 .tone-2 .book { --c1: #1a2a52; --c2: #0a1124; } /* nuit */
 .tone-3 .book { --c1: #3d3021; --c2: #15100a; } /* bronze */
+
+/* ---------- v17 : séance lisible du sol ---------- */
+.player { --fill: var(--effort, #c9a253); background: #050505; color: #f5f1e8; overflow: hidden; justify-content: flex-start; gap: 10px; }
+.player.work { --fill: var(--effort, #c9a253); }
+.player.work, .player.rest, .player.warm, .player.prep { background: #050505; }
+.player.rest { --fill: var(--rest, #2f6fd6); }
+.player.warm { --fill: #b07a2c; }
+.player.prep { --fill: #6f6a60; }
+.player-fill {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none; transform-origin: bottom;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--fill) 55%, transparent), color-mix(in srgb, var(--fill) 85%, #000));
+  opacity: 0.55; transition: transform 0.25s linear;
+}
+.player.paused .player-fill { opacity: 0.25; }
+.player > :not(.player-fill) { position: relative; z-index: 1; }
+.player .player-top { color: rgb(245 241 232 / 0.7); }
+.player .progress { background: rgb(255 255 255 / 0.12); }
+.player .progress span { background: #f5f1e8; }
+.player .player-main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.player .phase { margin: 0; font-size: 1rem; font-weight: 800; letter-spacing: 0.32em; text-transform: uppercase; color: var(--fill); filter: brightness(1.35); }
+.player-main h2 { font-size: clamp(1.6rem, 7.5vw, 2.3rem); line-height: 1.1; margin: 0; max-width: 16ch; }
+.player .clock.huge { font-size: clamp(7rem, 44vw, 13rem); line-height: 0.95; font-weight: 800; letter-spacing: -0.04em; margin: 6px 0; font-variant-numeric: tabular-nums; }
+.player .clock.hurry { animation: hurry 1s ease-in-out infinite; color: var(--fill); filter: brightness(1.4); }
+.player .cue { font-size: 0.95rem; color: rgb(245 241 232 / 0.75); max-width: 32em; }
+.player .demo { margin: 0; font-size: 0.85rem; }
+.player .demo a { color: rgb(245 241 232 / 0.8); }
+.player .next { margin: 4px 0 0; font-size: 0.95rem; color: rgb(245 241 232 / 0.7); }
+.player .next strong { display: block; color: #f5f1e8; font-size: 1.1rem; }
+.player.rest .next strong { font-size: 1.5rem; }
+.player-ctrl { display: flex; justify-content: center; align-items: center; gap: 22px; padding: 4px 0; }
+.ctrl {
+  width: 64px; height: 64px; border-radius: 50%; border: 1px solid rgb(255 255 255 / 0.18); background: rgb(255 255 255 / 0.06);
+  color: #f5f1e8; font-size: 1.3rem; cursor: pointer; display: grid; place-items: center; transition: transform 0.1s, background 0.2s;
+}
+.ctrl.main { width: 84px; height: 84px; font-size: 1.6rem; background: #f5f1e8; color: #0a0a0a; border-color: #f5f1e8; }
+.ctrl:active { transform: scale(0.94); }
+.player-stop { align-self: center; color: rgb(245 241 232 / 0.6); }
+@media (max-height: 700px) { .player .cue { display: none; } }

@@ -2,7 +2,7 @@ import {
   todayKey, addDays, diffDays, fromKey, dayStatus, chain, lastNDays,
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
-  dueCards, reviewCard, sportWeeks,
+  dueCards, reviewCard, sportWeeks, increased, previous,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
@@ -122,9 +122,16 @@ const longDate = (key) => fromKey(key).toLocaleDateString('fr-FR', { weekday: 'l
 function toast(msg, ms = 3200) {
   const t = $('#toast');
   t.textContent = msg;
+  t.classList.remove('out');
+  t.style.animation = 'none';
+  void t.offsetWidth; // rejoue l'entrée si un message en remplace un autre
+  t.style.animation = '';
   t.hidden = false;
   clearTimeout(toast.h);
-  toast.h = setTimeout(() => (t.hidden = true), ms);
+  toast.h = setTimeout(() => {
+    t.classList.add('out');
+    toast.h = setTimeout(() => (t.hidden = true), 220);
+  }, ms);
 }
 
 function celebrate(msg) {
@@ -240,13 +247,70 @@ const money = createMoney({
   esc,
 });
 
+// ---------- animations ----------
+// `seen` retient ce qui était affiché pour n'animer que ce qui vient de changer ;
+// `tweens` donne le point de départ des barres et anneaux qui glissent.
+// Mémoire d'écran seulement : rien n'est enregistré.
+const seen = new Map();
+const tweens = new Map();
+const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Barre qui glisse de sa valeur précédente (%) vers la nouvelle.
+function tweenBar(key, pct) {
+  return `<span style="width:${previous(tweens, key, pct, 0)}%" data-to="${pct}"></span>`;
+}
+
+// Après chaque affichage : on fige l'état de départ, puis on lance les transitions.
+function runTweens() {
+  const els = document.querySelectorAll('#view [data-to], #view [data-to-offset]');
+  if (!els.length) return;
+  document.body.getBoundingClientRect();
+  for (const el of els) {
+    if (el.dataset.to !== undefined) el.style.width = `${el.dataset.to}%`;
+    else el.setAttribute('stroke-dashoffset', el.dataset.toOffset);
+  }
+}
+
+// Pastille de l'onglet actif qui glisse d'un onglet à l'autre.
+function moveTabIndicator(instant = false) {
+  const ind = $('#tabs .tab-ind');
+  const a = $('#tabs a[aria-current="page"]');
+  if (!ind) return;
+  ind.style.opacity = a ? '1' : '0';
+  if (!a) return;
+  if (instant) ind.style.transition = 'none';
+  ind.style.width = `${a.offsetWidth}px`;
+  ind.style.transform = `translateX(${a.offsetLeft}px)`;
+  if (instant) {
+    ind.getBoundingClientRect();
+    ind.style.transition = '';
+  }
+}
+
+// Changement d'écran : glisse vers la gauche ou la droite (View Transitions si
+// le navigateur sait faire, sinon simple entrée en fondu).
+function swap(update, dir) {
+  if (!dir || reduceMotion()) return update();
+  document.documentElement.dataset.dir = dir;
+  if (document.startViewTransition) {
+    document.startViewTransition(update);
+    return;
+  }
+  update();
+  const v = $('#view');
+  v.classList.remove('enter-fwd', 'enter-back');
+  void v.offsetWidth;
+  v.classList.add(`enter-${dir}`);
+}
+
 function ring(done, total) {
   const r = 30;
   const c = 2 * Math.PI * r;
   const f = total ? done / total : 0;
+  const from = previous(tweens, 'ring', f, 0);
   return `<svg class="ring" viewBox="0 0 72 72" aria-hidden="true">
     <circle cx="36" cy="36" r="${r}" class="ring-bg"/>
-    <circle cx="36" cy="36" r="${r}" class="ring-fg" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - f)}"/>
+    <circle cx="36" cy="36" r="${r}" class="ring-fg" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - from)}" data-to-offset="${c * (1 - f)}"/>
   </svg><span class="ring-txt">${done}/${total}</span>`;
 }
 
@@ -294,7 +358,9 @@ function render() {
     celebrate(`Niveau ${lv.level} atteint : ${lv.rank}`);
   }
   document.querySelectorAll('#tabs a').forEach((a) => a.setAttribute('aria-current', a.dataset.tab === tab ? 'page' : 'false'));
+  moveTabIndicator();
   if (tab === 'suivi') wireTooltips($('#view'));
+  runTweens();
   tick();
 }
 
@@ -348,15 +414,15 @@ function viewToday() {
   <header class="hero">
     <div class="hero-top">
       <div><p class="eyebrow">${esc(longDate(today))}</p><p class="greet">${greeting()}</p></div>
-      <div class="ring-wrap ${st.valid ? 'done' : ''}">${ring(st.done, st.total)}</div>
+      <div class="ring-wrap ${st.valid ? 'done' : ''} ${increased(seen, 'valid', st.valid ? 1 : 0) ? 'just' : ''}">${ring(st.done, st.total)}</div>
     </div>
     <div class="hero-stats">
-      <div><span class="big">🔥 ${ch.count}</span><span class="lbl">jour${ch.count > 1 ? 's' : ''} de chaîne${ch.jokers ? ` · ${ch.jokers} reprise${ch.jokers > 1 ? 's' : ''}` : ''}</span></div>
+      <div><span class="big ${increased(seen, 'chain', ch.count) ? 'bump' : ''}">🔥 ${ch.count}</span><span class="lbl">jour${ch.count > 1 ? 's' : ''} de chaîne${ch.jokers ? ` · ${ch.jokers} reprise${ch.jokers > 1 ? 's' : ''}` : ''}</span></div>
       <div><span class="big">🏁 ${sp.current.number}<small>/${SPRINT_COUNT}</small></span><span class="lbl">sprint · jour ${sprintDay}/7 · ${sp.current.valid} validé${sp.current.valid > 1 ? 's' : ''}</span></div>
     </div>
     <div class="level">
       <span class="badge">Niv. ${lv.level}</span><span class="rank">${lv.rank}</span><span class="xp">${lv.into}/${lv.span} XP</span>
-      <div class="xpbar"><span style="width:${(lv.into / lv.span) * 100}%"></span></div>
+      <div class="xpbar">${tweenBar('xp', (lv.into / lv.span) * 100)}</div>
     </div>
     ${dots(last7)}
     ${notice ? `<p class="hero-note"><span aria-hidden="true">${notice[0]}</span><span><strong>${notice[1]}</strong> ${notice[2]}</span></p>` : ''}
@@ -368,7 +434,7 @@ function viewToday() {
       <ul class="habits">
         ${state.habits.map((h) => {
           const lvl = d.habits?.[h.id] ?? 0;
-          return `<li class="habit lvl-${lvl}">
+          return `<li class="habit lvl-${lvl} ${increased(seen, `habit:${h.id}`, lvl) ? 'just' : ''}">
             <span class="habit-ico" aria-hidden="true">${lvl ? '✓' : esc(h.emoji ?? '•')}</span>
             <div class="habit-text"><strong>${esc(h.name)}</strong>
               <span>${esc(lvl === 2 ? h.full : h.min)}</span></div>
@@ -449,8 +515,8 @@ function planCard(today) {
   const n = items.filter((x) => x.done).length;
   return `<section class="card plan">
     <div class="card-head"><h2>Ton plan du jour</h2><span class="pill">${n}/${items.length}</span></div>
-    <div class="bar"><span style="width:${(n / items.length) * 100}%"></span></div>
-    <ul class="todos">${items.map((x) => `<li class="todo ${x.done ? 'done' : ''}">
+    <div class="bar">${tweenBar('plan', (n / items.length) * 100)}</div>
+    <ul class="todos">${items.map((x) => `<li class="todo ${x.done ? 'done' : ''} ${increased(seen, `todo:${x.ico}`, x.done ? 1 : 0) ? 'just' : ''}">
       <span class="todo-ico" aria-hidden="true">${x.done ? '✓' : x.ico}</span>
       <div><strong>${esc(x.title)}</strong><small>${esc(x.sub)}</small></div>
       ${x.go}</li>`).join('')}</ul>
@@ -727,10 +793,12 @@ function renderPlayer() {
   }
   const s = player.steps[player.i];
   const next = player.steps[player.i + 1];
+  const fresh = player.shown !== player.i;
+  player.shown = player.i;
   el.className = `player ${s.kind}`;
   el.innerHTML = `
     <div class="player-top"><span>${esc(player.workout.name)}</span><span>${s.round ? `Tour ${s.round}/${s.rounds}` : ''}</span></div>
-    <div class="player-main">
+    <div class="player-main ${fresh ? 'enter' : ''}">
       <p class="eyebrow">${{ work: 'Effort', rest: 'Repos', warm: 'Échauffement', prep: 'Départ' }[s.kind]}</p>
       <h2>${esc(s.name)}</h2>
       ${s.target ? `<span class="target-tag">🎯 ${esc(s.target)}</span>` : ''}
@@ -976,7 +1044,7 @@ function viewApps() {
   </section>
   ${cats.map((c) => `<section class="card"><div class="card-head"><h2>${esc(c)}</h2></div>
     <ul class="setup">${APPS.filter((a) => a.cat === c).map((a) => `<li>
-      <button class="tick ${state.setup[a.name] ? 'on' : ''}" data-act="setup-toggle" data-id="${esc(a.name)}" aria-pressed="${Boolean(state.setup[a.name])}" aria-label="Configuré : ${esc(a.name)}">${state.setup[a.name] ? '✓' : ''}</button>
+      <button class="tick ${state.setup[a.name] ? 'on' : ''} ${increased(seen, `setup:${a.name}`, state.setup[a.name] ? 1 : 0) ? 'just' : ''}" data-act="setup-toggle" data-id="${esc(a.name)}" aria-pressed="${Boolean(state.setup[a.name])}" aria-label="Configuré : ${esc(a.name)}">${state.setup[a.name] ? '✓' : ''}</button>
       <div><strong>${esc(a.name)}</strong><br><span class="hint">${esc(a.how)}</span></div></li>`).join('')}</ul></section>`).join('')}`;
 }
 
@@ -1093,6 +1161,7 @@ function tick() {
     player.remaining = Math.max(0, Math.ceil((player.endAt - Date.now()) / 1000));
     const c = $('#player-clock');
     if (c) c.textContent = fmtClock(player.remaining);
+    $('#player .timer')?.classList.toggle('hurry', player.remaining <= 3);
     setRing('player-ring', 1 - (player.endAt - Date.now()) / 1000 / player.steps[player.i].secs);
     if (player.remaining <= 3 && player.remaining > 0 && player.lastBeep !== player.remaining) {
       player.lastBeep = player.remaining;
@@ -1138,6 +1207,7 @@ const actions = {
     const d = day(today);
     const lvl = Number(el.dataset.lvl);
     d.habits[el.dataset.id] = (d.habits[el.dataset.id] ?? 0) === lvl ? 0 : lvl;
+    if (d.habits[el.dataset.id]) navigator.vibrate?.(10);
     save();
     render();
     if (dayStatus(state, today).valid && chain(state, today).count > before) celebrate('Journée validée 🔥 Chaîne +1');
@@ -1174,16 +1244,22 @@ const actions = {
   protein(el) {
     const d = day(todayKey());
     d.protein = Math.max(0, (d.protein ?? 0) + Number(el.dataset.v));
+    navigator.vibrate?.(8);
     save();
     render();
     if (d.protein === PROTEIN_TARGET && el.dataset.v === '1') celebrate('Objectif protéines atteint 💪');
   },
   'me-tab'(el) {
+    const ids = ME_TABS.map(([id]) => id);
+    const dir = ids.indexOf(el.dataset.id) < ids.indexOf(state.ui.meTab) ? 'back' : 'fwd';
+    const same = el.dataset.id === state.ui.meTab;
     state.ui.meTab = el.dataset.id;
     save();
     if (el.dataset.go && currentTab() !== el.dataset.go) location.hash = el.dataset.go;
-    else render();
-    window.scrollTo(0, 0);
+    else swap(() => {
+      render();
+      window.scrollTo(0, 0);
+    }, same ? null : dir);
   },
   'read-toggle'() {
     const today = todayKey();
@@ -1497,6 +1573,9 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+const TAB_ORDER = ['jour', 'revision', 'focus', 'sport', 'argent', 'suivi', 'moi'];
+let shownTab = currentTab();
+
 window.addEventListener('hashchange', () => {
   viewTrack.key = null;
   if (currentTab() === 'revision') {
@@ -1504,16 +1583,24 @@ window.addEventListener('hashchange', () => {
     rev.flipped = false;
   }
   if (currentTab() !== 'argent') state.ui.lesson = null;
-  render();
-  window.scrollTo(0, 0);
+  const tab = currentTab();
+  const dir = tab === shownTab ? null : TAB_ORDER.indexOf(tab) < TAB_ORDER.indexOf(shownTab) ? 'back' : 'fwd';
+  shownTab = tab;
+  swap(() => {
+    render();
+    window.scrollTo(0, 0);
+  }, dir);
 });
 
 // ---------- démarrage ----------
 
-$('#tabs').innerHTML = TABS.map((t) => `<a href="#${t.id}" data-tab="${t.id}"><span class="tab-ico" aria-hidden="true">${t.icon}</span>${t.label}</a>`).join('');
+$('#tabs').innerHTML = `<span class="tab-ind" aria-hidden="true"></span>${TABS.map((t) => `<a href="#${t.id}" data-tab="${t.id}"><span class="tab-ico" aria-hidden="true">${t.icon}</span>${t.label}</a>`).join('')}`;
+$('#tabs').classList.add('has-ind');
+addEventListener('resize', () => moveTabIndicator(true));
 state.ui.lastLevel = Math.max(state.ui.lastLevel ?? 1, levelInfo(totalXP(state)).level);
 save();
 render();
+moveTabIndicator(true);
 setInterval(tick, 250);
 // Le changement de jour (4 h) se voit sans recharger.
 let shownDay = todayKey();

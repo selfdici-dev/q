@@ -192,3 +192,18 @@ test('message du jour sous la chaîne', async () => {
   // la reprise passe avant le jour minimum
   assert.equal(todayNotice(mk(s, '10'), addDays(s, 2)), 'recovery');
 });
+
+test('animations : seulement ce qui vient de changer', async () => {
+  const { increased, previous } = await import('../js/logic.js');
+  const memo = new Map();
+  assert.equal(increased(memo, 'h', 0), false); // premier affichage : pas d'animation
+  assert.equal(increased(memo, 'h', 0), false);
+  assert.equal(increased(memo, 'h', 1), true); // coché à l'instant
+  assert.equal(increased(memo, 'h', 1), false); // nouvel affichage : on ne rejoue pas
+  assert.equal(increased(memo, 'h', 0), false); // décoché : pas de fête
+  const bars = new Map();
+  assert.equal(previous(bars, 'ring', 0.4, 0), 0); // à l'ouverture, l'anneau part de 0
+  assert.equal(previous(bars, 'ring', 0.6, 0), 0.4);
+  assert.equal(previous(bars, 'ring', 0.6, 0), 0.6);
+  assert.equal(previous(bars, 'x', 5), 5);
+});

@@ -384,3 +384,20 @@ export function sportWeeks(state, today, goal = 4) {
   }
   return { thisWeek, goal, streak };
 }
+
+// ---------- Animations ----------
+// Mémoire du dernier affichage (une Map gardée en mémoire, jamais stockée) :
+// sert à n'animer que ce qui vient de changer.
+export function increased(memo, key, value) {
+  const prev = memo.get(key);
+  memo.set(key, value);
+  return prev !== undefined && value > prev;
+}
+
+// Valeur affichée la fois précédente (ou `initial` la première fois) : point
+// de départ d'une barre ou d'un anneau qui glisse vers la nouvelle valeur.
+export function previous(memo, key, value, initial = value) {
+  const prev = memo.has(key) ? memo.get(key) : initial;
+  memo.set(key, value);
+  return prev;
+}

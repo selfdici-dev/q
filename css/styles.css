@@ -748,3 +748,65 @@ details.card.more .rules { margin-top: 10px; }
 .vs-waist { fill: none; stroke: var(--wo-M); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 4 5; }
 .goal-list { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; }
 .goal-list li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; }
+
+/* ---------- v12 : animations ---------- */
+/* Changement d'onglet (View Transitions) : le contenu glisse dans le sens du geste. */
+#view { view-transition-name: view; }
+#tabs { view-transition-name: tabs; }
+::view-transition-group(view) { animation: none; }
+::view-transition-old(view) { animation: vt-out 0.12s ease-in both; }
+::view-transition-new(view) { animation: vt-in 0.34s cubic-bezier(.2,.8,.2,1) both; }
+:root[data-dir="back"]::view-transition-old(view) { animation-name: vt-out-back; }
+:root[data-dir="back"]::view-transition-new(view) { animation-name: vt-in-back; }
+::view-transition-group(tabs), ::view-transition-new(tabs) { animation: none; }
+::view-transition-old(tabs) { display: none; }
+@keyframes vt-out { to { opacity: 0; transform: translateX(-24px); } }
+@keyframes vt-in { from { opacity: 0; transform: translateX(32px); } }
+@keyframes vt-out-back { to { opacity: 0; transform: translateX(24px); } }
+@keyframes vt-in-back { from { opacity: 0; transform: translateX(-32px); } }
+#view.enter-fwd { animation: vt-in 0.34s cubic-bezier(.2,.8,.2,1); }
+#view.enter-back { animation: vt-in-back 0.34s cubic-bezier(.2,.8,.2,1); }
+
+/* Pastille de l'onglet actif qui glisse */
+.tab-ind {
+  position: absolute; top: 4px; bottom: 4px; left: 0; width: 0; border-radius: 18px;
+  background: var(--accent-soft); pointer-events: none;
+  transition: transform 0.42s cubic-bezier(.3,1.35,.5,1), width 0.3s, opacity 0.2s;
+}
+#tabs a { position: relative; z-index: 1; }
+#tabs.has-ind a[aria-current="page"] { background: transparent; }
+
+/* Messages : entrée par le bas, sortie en fondu */
+#toast:not([hidden]) { animation: toast-in 0.38s cubic-bezier(.2,.9,.3,1.25); }
+#toast.out { opacity: 0; transform: translateX(-50%) translateY(10px); transition: opacity 0.2s, transform 0.2s; }
+@keyframes toast-in { from { opacity: 0; transform: translateX(-50%) translateY(16px) scale(0.96); } }
+
+/* Seul ce qui vient de changer s'anime */
+.habit.lvl-1 .habit-ico, .habit.lvl-2 .habit-ico, .ring-wrap.done, .tick.on { animation: none; }
+.habit.just { animation: glow 0.7s ease-out; }
+.habit.just .habit-ico, .todo.just .todo-ico, .tick.just { animation: pop 0.45s cubic-bezier(.3,1.5,.5,1); }
+.todo.just { animation: glow 0.7s ease-out; }
+.ring-wrap.just { animation: pop 0.6s cubic-bezier(.3,1.5,.5,1); }
+.big.bump { display: inline-block; animation: bump 0.7s cubic-bezier(.3,1.6,.5,1); transform-origin: left center; }
+@keyframes glow { from { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 55%, transparent); } to { box-shadow: 0 0 0 0 transparent; } }
+@keyframes bump { 0% { transform: scale(1); } 35% { transform: scale(1.3); text-shadow: 0 0 18px #fde68a; } 100% { transform: scale(1); } }
+.ring-fg { transition: stroke-dashoffset 0.8s cubic-bezier(.2,.8,.2,1); }
+.bar span, .xpbar span { transition: width 0.8s cubic-bezier(.2,.8,.2,1); }
+.todo { transition: opacity 0.35s, background 0.35s; }
+
+/* Lecteur : chaque nouvelle étape entre en glissant, les 3 dernières secondes pulsent */
+.player-main.enter .eyebrow, .player-main.enter h2, .player-main.enter .target-tag, .player-main.enter .cue {
+  animation: step-in 0.4s cubic-bezier(.2,.8,.2,1) both;
+}
+.player-main.enter h2 { animation-delay: 0.04s; }
+.player-main.enter .target-tag { animation-delay: 0.08s; }
+.player-main.enter .cue { animation-delay: 0.12s; }
+@keyframes step-in { from { opacity: 0; transform: translateY(10px); } }
+.timer.hurry .clock { animation: hurry 1s ease-in-out infinite; color: var(--gold); }
+.timer.hurry .tring-fg { stroke: var(--gold); }
+@keyframes hurry { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.12); } }
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(view), ::view-transition-new(view) { animation: none !important; }
+}
+.card-head.sub { flex-wrap: wrap; row-gap: 4px; }

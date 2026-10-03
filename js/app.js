@@ -2,7 +2,7 @@ import {
   todayKey, addDays, diffDays, fromKey, dayStatus, chain, lastNDays,
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
-  dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers, regularityGrid,
+  dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers, regularityGrid, bookShelves,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
@@ -953,24 +953,59 @@ function viewProgram() {
   </section>`;
 }
 
+// Bibliothèque : des couvertures sur des étagères qui défilent. Toucher une
+// couverture la retourne (pourquoi le lire, boutons). Filtre et couvertures
+// retournées : mémoire d'écran seulement.
+const shelf = { filter: 'all', flipped: new Set() };
+const BOOK_CATS = [...new Set(BOOKS.map((b) => b.cat))]; // couleur de couverture stable par catégorie
+const BOOK_FILTERS = [['all', 'Tout'], ['todo', 'À lire'], ['reading', 'En cours'], ['done', 'Lus']];
+
+function bookCover(b, i) {
+  const s = b.status;
+  const stamp = increased(seen, `book:${b.id}`, s === 'done' ? 1 : 0);
+  return `<article class="book is-${s} ${shelf.flipped.has(b.id) ? 'flipped' : ''}" style="--i:${i}">
+    <div class="book-inner">
+      <button class="book-face book-front" data-act="book-flip" data-id="${b.id}" aria-label="${esc(b.title)}, ${esc(b.author)} : voir pourquoi le lire">
+        <span class="book-cat">${esc(b.cat)}</span>
+        <strong class="book-title">${esc(b.title)}</strong>
+        <span class="book-rule"></span>
+        <span class="book-author">${esc(b.author)}</span>
+        ${b.start && s === 'todo' ? '<span class="book-star">★ Commence ici</span>' : ''}
+        ${s === 'reading' ? '<span class="book-ribbon">En cours</span>' : ''}
+        ${s === 'done' ? `<span class="book-stamp ${stamp ? 'just' : ''}">Lu</span>` : ''}
+      </button>
+      <div class="book-face book-back">
+        <p class="book-why">${esc(b.why)}</p>
+        <div class="book-btns">
+          <button class="seg ${s === 'reading' ? 'on' : ''}" data-act="book-status" data-id="${b.id}" data-v="reading" aria-pressed="${s === 'reading'}">Je lis</button>
+          <button class="seg ${s === 'done' ? 'on' : ''}" data-act="book-status" data-id="${b.id}" data-v="done" aria-pressed="${s === 'done'}">Lu ✓</button>
+        </div>
+        <button class="book-turn" data-act="book-flip" data-id="${b.id}" aria-label="Retourner la couverture">↺</button>
+      </div>
+    </div>
+  </article>`;
+}
+
 function viewBooks() {
-  const cats = [...new Set(BOOKS.map((b) => b.cat))];
-  const st = (id) => state.books[id]?.status;
-  const doneCount = BOOKS.filter((b) => st(b.id) === 'done').length;
-  const reading = BOOKS.filter((b) => st(b.id) === 'reading');
+  const lib = bookShelves(BOOKS, state.books, shelf.filter);
+  const { counts } = lib;
   return `
-  <section class="card">
-    <div class="card-head"><h2>📚 Bibliothèque</h2><span class="pill">${doneCount} lu${doneCount > 1 ? 's' : ''}</span></div>
-    ${reading.length ? `<p>En cours : <strong>${reading.map((b) => esc(b.title)).join(', ')}</strong></p>` : '<p class="hint">Commence par un livre marqué ⭐. Un seul à la fois, 10 pages par jour minimum.</p>'}
-    <p class="hint">Règles : bibliothèque avant achat, version originale si c’est en anglais, et si un livre t’ennuie après 50 pages, passe au suivant. +50 XP par livre terminé.</p>
+  <section class="card library">
+    <p class="eyebrow">Bibliothèque</p>
+    <div class="lib-stats">
+      <div><span class="lib-num">${counts.done}</span><span class="lbl">lu${counts.done > 1 ? 's' : ''}</span></div>
+      <div><span class="lib-num">${counts.reading}</span><span class="lbl">en cours</span></div>
+      <div><span class="lib-num">${counts.todo}</span><span class="lbl">à lire</span></div>
+    </div>
+    <div class="bar">${tweenBar('books', (counts.done / counts.all) * 100)}</div>
+    <p class="hint">${lib.reading.length ? `Sur ta table de nuit : <strong>${lib.reading.map((b) => esc(b.title)).join(', ')}</strong>. ` : 'Commence par un livre marqué ★. '}Un seul à la fois, 10 pages par jour. Touche une couverture pour la retourner.</p>
   </section>
-  ${cats.map((c) => `<section class="card"><div class="card-head"><h2>${esc(c)}</h2></div>
-    <ul class="books">${BOOKS.filter((b) => b.cat === c).map((b) => `<li class="${st(b.id) ?? ''}">
-      <div><strong>${b.start ? '⭐ ' : ''}${esc(b.title)}</strong> <span class="muted">· ${esc(b.author)}</span><br><span class="hint">${esc(b.why)}</span></div>
-      <div class="book-btns">
-        <button class="seg ${st(b.id) === 'reading' ? 'on' : ''}" data-act="book-status" data-id="${b.id}" data-v="reading">En cours</button>
-        <button class="seg ${st(b.id) === 'done' ? 'on' : ''}" data-act="book-status" data-id="${b.id}" data-v="done">Lu</button>
-      </div></li>`).join('')}</ul></section>`).join('')}`;
+  <nav class="chips book-filter" aria-label="Filtrer les livres">${BOOK_FILTERS.map(([id, label]) => `<button class="chip ${shelf.filter === id ? 'on' : ''}" data-act="book-filter" data-id="${id}" aria-pressed="${shelf.filter === id}">${label} <small>${counts[id]}</small></button>`).join('')}</nav>
+  ${lib.shelves.length ? lib.shelves.map((sh, si) => `<section class="shelf tone-${BOOK_CATS.indexOf(sh.cat) % 4}" style="--s:${si}">
+    <div class="shelf-head"><h2>${esc(sh.cat)}</h2><span class="muted">${sh.done}/${sh.total} lus</span></div>
+    <div class="shelf-row">${sh.items.map((b, i) => bookCover(b, i)).join('')}</div>
+  </section>`).join('') : '<p class="hint center-hint">Aucun livre ici pour l’instant.</p>'}
+  <p class="hint">Règles : bibliothèque avant achat, version originale si c’est en anglais, et si un livre t’ennuie après 50 pages, passe au suivant. +50 XP par livre terminé.</p>`;
 }
 
 function viewApps() {
@@ -1253,8 +1288,20 @@ const actions = {
     save();
     render();
   },
+  'book-flip'(el) {
+    const id = el.dataset.id;
+    const card = el.closest('.book');
+    if (shelf.flipped.has(id)) shelf.flipped.delete(id);
+    else shelf.flipped.add(id);
+    card?.classList.toggle('flipped', shelf.flipped.has(id));
+  },
+  'book-filter'(el) {
+    shelf.filter = el.dataset.id;
+    render();
+  },
   'book-status'(el) {
     const id = el.dataset.id;
+    shelf.flipped.delete(id); // la couverture se remet à l'endroit pour montrer le nouveau statut
     const cur = state.books[id]?.status;
     const next = el.dataset.v === cur ? undefined : el.dataset.v;
     state.books[id] = { ...state.books[id], status: next, [`${next}At`]: next ? todayKey() : undefined };

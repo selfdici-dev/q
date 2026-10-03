@@ -238,3 +238,22 @@ test('calendrier de régularité', async () => {
   // au-delà de 12 semaines, la grille s'allonge
   assert.equal(regularityGrid(st, addDays(s, 7 * 12 + 1)).weeks.length, 13);
 });
+
+test('étagères de livres : ordre, filtres, compteurs', async () => {
+  const { bookShelves } = await import('../js/logic.js');
+  const books = [
+    { id: 'a', cat: 'Philo' }, { id: 'b', cat: 'Philo', start: true }, { id: 'c', cat: 'Philo' },
+    { id: 'd', cat: 'Finance' }, { id: 'e', cat: 'Finance' },
+  ];
+  const st = { a: { status: 'done' }, c: { status: 'reading' }, e: { status: 'done' } };
+  const all = bookShelves(books, st);
+  assert.deepEqual(all.counts, { all: 5, todo: 2, reading: 1, done: 2 });
+  assert.deepEqual(all.shelves.map((s) => s.cat), ['Philo', 'Finance']);
+  assert.deepEqual(all.shelves[0].items.map((b) => b.id), ['c', 'b', 'a']); // en cours, ⭐, lu
+  assert.deepEqual([all.shelves[0].done, all.shelves[0].total], [1, 3]);
+  assert.deepEqual(all.reading.map((b) => b.id), ['c']);
+  const done = bookShelves(books, st, 'done');
+  assert.deepEqual(done.shelves.map((s) => s.items.map((b) => b.id)), [['a'], ['e']]);
+  assert.deepEqual(bookShelves(books, st, 'reading').shelves.map((s) => s.cat), ['Philo']); // étagère vide masquée
+  assert.equal(bookShelves(books).counts.todo, 5);
+});

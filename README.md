@@ -33,7 +33,7 @@ Révision espacée (boîtes de Leitner) : chaque leçon de finance validée ajou
 | Focus | Minuteur 25/5 avec une plante qui pousse, jardin du jour, minuteur « Envie de scroller ? » de 10 min |
 | Argent | Parcours de 23 leçons courtes (idée, exemple, exercice réel, quiz) dont les questions deviennent des cartes de révision. Patrimoine, trading, calculatrices et actu sont masqués : leur code et tes données restent |
 | Corps | Objectif « fin, sec et élancé » (abdos et mâchoire visibles, posture droite, pas de volume), régularité (séances de la semaine, semaines tenues), semaine type, séances au poids du corps (tapis + roue abdominale seulement) : A (abdos : roue ×2, crunch inversé, gainage), B (haut du corps et posture : pompes, tirage superman, pike, Y, W), C (cardio sans saut), M (mobilité, posture, cou et mâchoire, vacuum, ≈ 8 min), objectif de chaque exercice affiché, bips 3-2-1, échauffement intégré, ressenti en fin de séance et suggestion de niveau, 3 niveaux, lecteur guidé, démos vidéo, règles alimentaires, 6 recettes de débutant, tests de niveau (pompes, planches, hollow) |
-| Moi | Programme, bilan (calendrier de régularité des 12 sprints : raté, minimum, complet, séance ; revue hebdomadaire), livres, apps, réglages (habitudes, règles, export/import) |
+| Moi | Programme, bilan (calendrier de régularité des 12 sprints : raté, minimum, complet, séance ; revue hebdomadaire), livres (couvertures sur des étagères par catégorie, à retourner pour lire le résumé et changer le statut, filtres À lire / En cours / Lus), apps, réglages (habitudes, règles, export/import) |
 
 ## Installer sur le téléphone
 

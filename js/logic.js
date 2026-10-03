@@ -422,6 +422,26 @@ export function regularityGrid(state, today, weeks = SPRINT_COUNT) {
   return { weeks: cols, valid, full, elapsed, best };
 }
 
+// ---------- Livres ----------
+// Étagères par catégorie. Ordre dans une étagère : en cours, puis ⭐ (par où
+// commencer), puis à lire, puis lus. filter : 'all' | 'todo' | 'reading' | 'done'.
+export function bookShelves(books, statuses = {}, filter = 'all') {
+  const status = (b) => statuses[b.id]?.status ?? 'todo';
+  const rank = (b) => ({ reading: 0, todo: b.start ? 1 : 2, done: 3 }[status(b)]);
+  const keep = (b) => filter === 'all' || status(b) === filter;
+  const counts = { all: books.length, todo: 0, reading: 0, done: 0 };
+  for (const b of books) counts[status(b)]++;
+  const cats = [...new Set(books.map((b) => b.cat))];
+  const shelves = cats
+    .map((cat) => {
+      const all = books.filter((b) => b.cat === cat);
+      const items = all.filter(keep).map((b, i) => ({ ...b, status: status(b), order: i })).sort((a, b) => rank(a) - rank(b) || a.order - b.order);
+      return { cat, items, done: all.filter((b) => status(b) === 'done').length, total: all.length };
+    })
+    .filter((sh) => sh.items.length);
+  return { counts, reading: books.filter((b) => status(b) === 'reading'), shelves };
+}
+
 // ---------- Grignotage ----------
 // Déclencheurs notés sur les `days` derniers jours, du plus fréquent au moins fréquent.
 export function snackTriggers(state, today, days = 14) {

@@ -512,12 +512,7 @@ label.radio:has(input:checked) { border-color: var(--accent); background: var(--
 
 .program-hero { background: linear-gradient(160deg, color-mix(in srgb, var(--hero-c) 14%, var(--surface)), var(--surface)); }
 
-.books, .setup { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.books li { display: flex; gap: 10px; justify-content: space-between; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
-.books li:first-child { border-top: 0; }
-.books li.done strong { color: var(--pos); }
-.book-btns { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
-.book-btns .seg { min-width: 84px; min-height: 34px; font-size: 0.8rem; }
+.setup { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .setup li { display: flex; gap: 12px; align-items: flex-start; }
 .tick {
   width: 32px; height: 32px; flex-shrink: 0; border-radius: 10px; cursor: pointer;
@@ -795,3 +790,72 @@ details.card.more .rules { margin-top: 10px; }
 .heat-legend .cell { width: 12px; border-radius: 3px; }
 .heat.enter .cell, .fold.opening .heat .cell { animation: cell-in 0.5s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * 18ms); }
 @keyframes cell-in { from { opacity: 0; transform: scale(0.3); } }
+
+/* ---------- v16 : bibliothèque en couvertures ---------- */
+.library .eyebrow { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem; }
+.lib-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 6px 0 4px; }
+.lib-stats > div { display: flex; flex-direction: column; }
+.lib-num { font-family: var(--serif, ui-serif, Georgia, serif); font-size: 2.2rem; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.book-filter {
+  position: sticky; top: calc(60px + env(safe-area-inset-top)); z-index: 3; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+  padding: 4px; border-radius: 999px; background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(10px);
+}
+.book-filter .chip { min-height: 38px; padding: 0 6px; font-size: 0.82rem; white-space: nowrap; }
+.chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 650; }
+.chip small { font-size: 0.75em; opacity: 0.75; margin-left: 2px; color: inherit; }
+
+.shelf { animation: fade-in 0.45s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--s) * 70ms); }
+.shelf-head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 4px; }
+.shelf-head h2 { font-family: var(--serif, ui-serif, Georgia, serif); font-weight: 600; font-size: 1.3rem; }
+.shelf-row {
+  display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+  margin: 8px -16px 0; padding: 6px 16px 18px; scroll-padding-left: 16px;
+}
+.shelf-row::-webkit-scrollbar { display: none; }
+
+.book { flex: 0 0 132px; height: 198px; perspective: 900px; scroll-snap-align: start; animation: book-in 0.5s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--s, 0) * 70ms + var(--i) * 45ms); }
+@keyframes book-in { from { opacity: 0; transform: translateY(14px) rotate(-2deg); } }
+.book-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.7s cubic-bezier(.2,.8,.2,1); }
+.book.flipped .book-inner { transform: rotateY(180deg); }
+.book-face {
+  position: absolute; inset: 0; border-radius: 4px 10px 10px 4px; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  display: flex; flex-direction: column; padding: 14px 12px 12px 16px; text-align: left; border: 0; color: #f3e7c9; font: inherit; cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06), 0 10px 24px rgb(0 0 0 / 0.45);
+}
+.book-front {
+  background:
+    linear-gradient(90deg, rgb(0 0 0 / 0.35) 0, rgb(255 255 255 / 0.08) 5px, transparent 9px),
+    linear-gradient(160deg, var(--c1), var(--c2));
+  transition: transform 0.15s;
+}
+.book-front:active { transform: scale(0.97); }
+.book-front::after { content: ""; position: absolute; inset: 7px 7px 7px 11px; border: 1px solid rgb(232 205 140 / 0.45); border-radius: 2px 6px 6px 2px; pointer-events: none; box-shadow: inset 0 0 0 3px transparent, inset 0 0 0 4px rgb(232 205 140 / 0.18); }
+.book-cat { font-size: 0.56rem; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.7; margin-bottom: 10px; }
+.book-title {
+  font-family: var(--serif, ui-serif, Georgia, serif); font-size: 1.02rem; line-height: 1.15; font-weight: 600;
+  background: linear-gradient(180deg, #f6e7bf, #c9a253); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.book-rule { width: 26px; height: 1px; background: rgb(232 205 140 / 0.6); margin: 10px 0 8px; }
+.book-author { font-size: 0.68rem; letter-spacing: 0.06em; opacity: 0.85; }
+.book-star { margin-top: auto; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: #e8cd8c; }
+.book-ribbon {
+  position: absolute; top: 0; right: 14px; padding: 14px 5px 8px; font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase;
+  writing-mode: vertical-rl; background: #c9a253; color: #1a1408; font-weight: 700; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 88%, 0 100%);
+}
+.book-stamp {
+  position: absolute; right: 10px; bottom: 12px; padding: 3px 10px; border: 2px solid #e8cd8c; border-radius: 4px; color: #e8cd8c;
+  font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; font-size: 0.7rem; transform: rotate(-12deg);
+}
+.book-stamp.just { animation: stamp 0.55s cubic-bezier(.3,1.6,.5,1); }
+@keyframes stamp { from { opacity: 0; transform: rotate(-12deg) scale(2.2); } }
+.book.is-done .book-front { filter: saturate(0.75); }
+.book-back { transform: rotateY(180deg); background: linear-gradient(160deg, var(--c2), #0a0a0a); cursor: default; gap: 8px; }
+.book-why { margin: 18px 0 0; font-size: 0.8rem; line-height: 1.35; color: #efe3c4; flex: 1; overflow: auto; }
+.book-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.book-btns .seg { min-width: 0; min-height: 34px; font-size: 0.72rem; padding: 0 4px; background: rgb(255 255 255 / 0.06); border-color: rgb(232 205 140 / 0.3); color: #f3e7c9; }
+.book-btns .seg.on { background: #c9a253; border-color: #c9a253; color: #1a1408; }
+.book-turn { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 50%; border: 0; background: rgb(255 255 255 / 0.08); color: #f3e7c9; cursor: pointer; }
+.tone-0 .book { --c1: #5b1d24; --c2: #24090d; } /* bordeaux */
+.tone-1 .book { --c1: #15452f; --c2: #08190f; } /* émeraude */
+.tone-2 .book { --c1: #1a2a52; --c2: #0a1124; } /* nuit */
+.tone-3 .book { --c1: #3d3021; --c2: #15100a; } /* bronze */

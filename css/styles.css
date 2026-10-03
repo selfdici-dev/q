@@ -877,12 +877,12 @@ details.card.more .rules { margin-top: 10px; }
 .player .player-top { color: rgb(245 241 232 / 0.7); }
 .player .progress { background: rgb(255 255 255 / 0.12); }
 .player .progress span { background: #f5f1e8; }
-.player .player-main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.player .player-main { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
 .player .phase { margin: 0; font-size: 1rem; font-weight: 800; letter-spacing: 0.32em; text-transform: uppercase; color: var(--fill); filter: brightness(1.35); }
-.player-main h2 { font-size: clamp(1.6rem, 7.5vw, 2.3rem); line-height: 1.1; margin: 0; max-width: 16ch; }
-.player .clock.huge { font-size: clamp(7rem, 44vw, 13rem); line-height: 0.95; font-weight: 800; letter-spacing: -0.04em; margin: 6px 0; font-variant-numeric: tabular-nums; }
+.player-main h2 { font-size: clamp(1.4rem, 6.5vw, 2rem); line-height: 1.1; margin: 0; max-width: 18ch; }
+.player .clock.huge { font-size: min(44vw, 20vh, 13rem); line-height: 0.95; font-weight: 800; letter-spacing: -0.04em; margin: 6px 0; font-variant-numeric: tabular-nums; }
 .player .clock.hurry { animation: hurry 1s ease-in-out infinite; color: var(--fill); filter: brightness(1.4); }
-.player .cue { font-size: 0.95rem; color: rgb(245 241 232 / 0.75); max-width: 32em; }
+.player .cue { font-size: 0.9rem; color: rgb(245 241 232 / 0.75); max-width: 32em; margin: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
 .player .demo { margin: 0; font-size: 0.85rem; }
 .player .demo a { color: rgb(245 241 232 / 0.8); }
 .player .next { margin: 4px 0 0; font-size: 0.95rem; color: rgb(245 241 232 / 0.7); }
@@ -897,3 +897,17 @@ details.card.more .rules { margin-top: 10px; }
 .ctrl:active { transform: scale(0.94); }
 .player-stop { align-self: center; color: rgb(245 241 232 / 0.6); }
 @media (max-height: 700px) { .player .cue { display: none; } }
+
+/* ---------- v19 : bonshommes animés ---------- */
+.fig { display: block; width: 100%; height: 100%; overflow: visible; }
+.fig polyline { fill: none; stroke: var(--figure, #d9b46a); stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
+.fig .fig-far { opacity: 0.38; }
+.fig-head { fill: var(--figure, #d9b46a); }
+.fig-mat { fill: color-mix(in srgb, var(--figure, #d9b46a) 22%, transparent); }
+.fig-wheel { fill: none; stroke: var(--figure, #d9b46a); stroke-width: 2.2; }
+.player-fig { width: min(80vw, 340px); height: clamp(70px, 15vh, 150px); margin: 2px 0; --figure: #f5f1e8; }
+.player.rest .player-fig { opacity: 0.85; }
+.ex { list-style: none; padding-left: 0; counter-reset: ex; }
+.ex li { display: grid; grid-template-columns: 84px 1fr; gap: 12px; align-items: start; padding: 10px 0; border-top: 1px solid var(--line); }
+.ex li:first-child { border-top: 0; }
+.ex-fig { width: 84px; height: 56px; padding: 4px; border-radius: 12px; background: var(--surface-2); }

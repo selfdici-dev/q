@@ -121,8 +121,26 @@ const CHAINS = [
   ['armN', ['shoulder', 'elbowN', 'handN']],
 ];
 
+// Cadre serré autour de tout le mouvement (pour grossir le bonhomme à
+// l'écran), sol compris, avec une marge.
+export function frameBox(keys, wheel = false, pad = 5) {
+  let [x0, y0, x1] = [Infinity, Infinity, -Infinity];
+  for (const { joints } of keys) {
+    for (const k of JOINTS) {
+      const r = k === 'head' ? BONES.head : k === 'handN' && wheel ? WHEEL : 2;
+      x0 = Math.min(x0, joints[k][0] - r);
+      x1 = Math.max(x1, joints[k][0] + r);
+      y0 = Math.min(y0, joints[k][1] - r);
+    }
+  }
+  const bottom = VIEW.floor + 7;
+  const top = Math.min(y0 - pad, bottom - 30); // au moins 30 de haut : un bonhomme couché ne devient pas géant
+  return [round(x0 - pad), round(top), round(x1 - x0 + 2 * pad), round(bottom - top)];
+}
+
 // SVG du bonhomme. animate=false : première pose, immobile (mouvement réduit).
-export function figureSVG(fig, { animate = true, mirror = false } = {}) {
+// fit=true : cadre serré autour du mouvement au lieu du cadre fixe 120 × 80.
+export function figureSVG(fig, { animate = true, mirror = false, fit = false } = {}) {
   const keys = timeline(fig);
   const still = !animate || fig.frames.length === 1;
   const times = keys.map((k) => round(k.t * 1000) / 1000).join(';');
@@ -136,7 +154,10 @@ export function figureSVG(fig, { animate = true, mirror = false } = {}) {
   // Roue abdominale : tenue dans les mains (centre de la roue = mains).
   const wheel = fig.wheel ? `<circle class="fig-wheel" cx="${first.handN[0]}" cy="${first.handN[1]}" r="${WHEEL}">${anim('cx', keys.map((k) => k.joints.handN[0]))}${anim('cy', keys.map((k) => k.joints.handN[1]))}</circle>` : '';
   const body = `${lines.join('')}${head}${wheel}`;
-  return `<svg class="fig" viewBox="0 0 ${VIEW.w} ${VIEW.h}" aria-hidden="true"><rect class="fig-mat" x="6" y="${VIEW.floor + 2.5}" width="${VIEW.w - 12}" height="3" rx="1.5"/>${mirror ? `<g transform="translate(${VIEW.w} 0) scale(-1 1)">${body}</g>` : body}</svg>`;
+  const [bx, by, bw, bh] = fit ? frameBox(keys, fig.wheel) : [0, 0, VIEW.w, VIEW.h];
+  // En miroir, le cadre serré est retourné lui aussi autour de l'axe x = 60.
+  const vx = fit && mirror ? round(VIEW.w - bx - bw) : bx;
+  return `<svg class="fig" viewBox="${vx} ${by} ${bw} ${bh}" aria-hidden="true"><rect class="fig-mat" x="${vx + 2}" y="${VIEW.floor + 2.5}" width="${bw - 4}" height="3" rx="1.5"/>${mirror ? `<g transform="translate(${VIEW.w} 0) scale(-1 1)">${body}</g>` : body}</svg>`;
 }
 
 // Bonhomme d'un exercice d'après son nom ; « (gauche) » = image en miroir.

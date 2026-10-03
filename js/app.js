@@ -13,6 +13,7 @@ import { createMoney, DEFAULT_CALC, DEFAULT_WEALTH } from './money.js';
 import { quoteOfDay } from './quotes.js';
 import { daySummary, weekSummary } from './summary.js';
 import { backupStatus, validateBackup } from './backup.js';
+import { figureFor, figureSVG } from './figures.js';
 
 const STORE = 'cap-v1';
 const POMO_WORK = 25 * 60;
@@ -255,6 +256,13 @@ const money = createMoney({
 const seen = new Map();
 const tweens = new Map();
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Bonhomme animé d'un exercice, cadré sur son mouvement (immobile si le
+// téléphone demande de réduire les animations).
+function figure(name) {
+  const f = name && figureFor(name);
+  return f ? figureSVG(f.fig, { mirror: f.mirror, fit: true, animate: !reduceMotion() }) : '';
+}
 
 // Barre qui glisse de sa valeur précédente (%) vers la nouvelle.
 function tweenBar(key, pct) {
@@ -734,7 +742,7 @@ function viewSport() {
     return `<section class="card ${w.id === planned ? 'planned' : ''}">
       <div class="card-head"><h2><span class="wo-badge wo-${w.id}">${w.id}</span>${esc(w.name.split(' · ')[1] ?? w.name)}</h2><span class="pill">${w.id === planned ? 'Aujourd’hui · ' : ''}${mins} min</span></div>
       <p class="muted">${esc(w.desc)}</p>
-      <details><summary>Voir les exercices</summary><ol class="ex">${w.exercises.map((e) => `<li><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="target-tag">🎯 ${esc(e.target)}</span><br><span class="muted">${esc(e.cue)}</span></li>`).join('')}</ol></details>
+      <details><summary>Voir les exercices</summary><ol class="ex">${w.exercises.map((e) => `<li><span class="ex-fig">${figure(e.name)}</span><div><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="target-tag">🎯 ${esc(e.target)}</span><br><span class="muted">${esc(e.cue)}</span></div></li>`).join('')}</ol></details>
       <div class="row"><button class="btn primary" data-act="start-workout" data-id="${w.id}">Lancer${done.includes(w.id) ? ' (déjà faite aujourd’hui)' : ''}</button></div>
     </section>`;
   }).join('')}
@@ -816,6 +824,7 @@ function renderPlayer() {
       <p class="phase">${player.endAt ? { work: 'Effort', rest: 'Repos', warm: 'Échauffement', prep: 'Départ' }[s.kind] : 'Pause'}</p>
       <h2>${esc(s.name)}</h2>
       ${s.target ? `<span class="target-tag">🎯 ${esc(s.target)}</span>` : ''}
+      <div class="player-fig">${figure(s.kind === 'work' || s.kind === 'warm' ? s.name : next?.name)}</div>
       <div class="clock huge" id="player-clock">${fmtStep(player.remaining)}</div>
       ${s.kind === 'rest' ? '' : `<p class="cue">${esc(s.cue)}</p>`}
       ${s.kind === 'work' ? `<p class="demo"><a href="${demoUrl(s.name)}" target="_blank" rel="noopener">Voir une démo vidéo</a></p>` : ''}

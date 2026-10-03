@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { solve, between, timeline, figureSVG, figureFor, VIEW, BONES, LIMBS, JOINTS } from '../js/figures.js';
+import { solve, between, timeline, figureSVG, figureFor, frameBox, VIEW, BONES, LIMBS, JOINTS } from '../js/figures.js';
 import { POSES } from '../js/poses.js';
+import { WORKOUTS, WARMUP } from '../js/data.js';
 
 const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 const bonesKept = (j) => {
@@ -78,4 +79,28 @@ test('toutes les poses : sur le tapis, dans le cadre, sans membre étiré', () =
       assert.ok(Math.max(...JOINTS.map((k) => j[k][1])) >= VIEW.floor - 1.5, `${name} : flotte au-dessus du tapis`);
     }
   }
+});
+
+test('cadre serré : tout le mouvement et le sol, sans couper la tête', () => {
+  const keys = timeline(POSES.Pompes);
+  const [x, y, w, h] = frameBox(keys);
+  for (const { joints } of keys) {
+    for (const k of JOINTS) {
+      assert.ok(joints[k][0] >= x && joints[k][0] <= x + w, k);
+      assert.ok(joints[k][1] >= y && joints[k][1] <= y + h, k);
+    }
+    assert.ok(joints.head[1] - BONES.head >= y);
+  }
+  assert.ok(y + h >= VIEW.floor + 5 && h >= 30);
+  assert.match(figureSVG(POSES.Pompes, { fit: true }), new RegExp(`viewBox="${x} ${y} ${w} ${h}"`));
+  // en miroir, le cadre est retourné autour du centre
+  assert.match(figureSVG(POSES.Pompes, { fit: true, mirror: true }), new RegExp(`viewBox="${Math.round((VIEW.w - x - w) * 10) / 10} ${y} `));
+});
+
+test('chaque exercice des séances et de l’échauffement a son bonhomme', () => {
+  const names = [...WORKOUTS.flatMap((w) => w.exercises.map((e) => e.name)), ...WARMUP.map((e) => e.name)];
+  for (const name of names) assert.ok(figureFor(name), `bonhomme manquant : ${name}`);
+  assert.equal(figureFor('Planche latérale (gauche)').mirror, true);
+  assert.equal(figureFor('Planche latérale (droite)').mirror, false);
+  assert.equal(figureFor('Roue abdominale à genoux (2/2)').fig, POSES['Roue abdominale à genoux']);
 });

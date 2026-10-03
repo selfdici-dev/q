@@ -175,3 +175,35 @@ test('semaines de sport tenues', async () => {
   const r = sportWeeks(st, '2026-09-30');
   assert.deepEqual(r, { thisWeek: 2, goal: 4, streak: 1 });
 });
+
+test('message du jour sous la chaîne', async () => {
+  const { todayNotice } = await import('../js/logic.js');
+  const s = '2026-10-01';
+  const full = (st, k) => { st.days[k] = { habits: { a: 2, b: 2 } }; return st; };
+  assert.equal(todayNotice(mk(s, '1'), s), 'valid');
+  assert.equal(todayNotice(full(mk(s, ''), s), s), 'full');
+  assert.equal(todayNotice(mk(s, '10'), addDays(s, 1)), null);
+  assert.equal(todayNotice(mk(s, '100'), addDays(s, 2)), 'recovery');
+  assert.equal(todayNotice(mk(s, '1000'), addDays(s, 3)), 'twoMissed');
+  assert.equal(todayNotice(mk(s, '110100'), addDays(s, 5)), 'restart');
+  // 3e jour du sprint : jour minimum prévu, sauf s'il est déjà validé
+  assert.equal(todayNotice(mk(s, '11'), addDays(s, 2)), 'minimumDay');
+  assert.equal(todayNotice(mk(s, '111'), addDays(s, 2)), 'valid');
+  // la reprise passe avant le jour minimum
+  assert.equal(todayNotice(mk(s, '10'), addDays(s, 2)), 'recovery');
+});
+
+test('animations : seulement ce qui vient de changer', async () => {
+  const { increased, previous } = await import('../js/logic.js');
+  const memo = new Map();
+  assert.equal(increased(memo, 'h', 0), false); // premier affichage : pas d'animation
+  assert.equal(increased(memo, 'h', 0), false);
+  assert.equal(increased(memo, 'h', 1), true); // coché à l'instant
+  assert.equal(increased(memo, 'h', 1), false); // nouvel affichage : on ne rejoue pas
+  assert.equal(increased(memo, 'h', 0), false); // décoché : pas de fête
+  const bars = new Map();
+  assert.equal(previous(bars, 'ring', 0.4, 0), 0); // à l'ouverture, l'anneau part de 0
+  assert.equal(previous(bars, 'ring', 0.6, 0), 0.4);
+  assert.equal(previous(bars, 'ring', 0.6, 0), 0.6);
+  assert.equal(previous(bars, 'x', 5), 5);
+});

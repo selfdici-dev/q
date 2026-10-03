@@ -10,6 +10,8 @@ L'utilisateur est débutant : explique simplement, en français.
 - `js/app.js` : vues et événements (DOM). `js/money.js` : onglet Argent.
 - `js/logic.js` : logique pure (dates, chaîne, sprints, XP, finance).
 - `js/summary.js`, `js/backup.js` : bilans à copier, sauvegarde (logique pure).
+- `js/figures.js` : moteur des bonshommes animés (poses en angles → SVG animé) ;
+  `js/poses.js` : une pose par exercice (vue de profil, tête à droite, sol à y = 70).
 - `js/data.js`, `js/finance-data.js`, `js/quotes.js` : contenu (séances, leçons…).
 - `tests/*.test.js` : tests `node --test`. `sw.js` : cache hors ligne.
 

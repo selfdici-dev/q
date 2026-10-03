@@ -1,10 +1,10 @@
 // Cache hors ligne. Incrémente VERSION à chaque modification des fichiers.
-const VERSION = 'cap-v17';
+const VERSION = 'cap-v18';
 const FILES = [
   './', './index.html', './css/styles.css', './manifest.webmanifest',
   './js/app.js', './js/logic.js', './js/data.js',
   './js/money.js', './js/finance-data.js', './js/quotes.js', './js/summary.js',
-  './js/backup.js',
+  './js/backup.js', './js/figures.js', './js/poses.js',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
 ];
 

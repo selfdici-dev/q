@@ -25,18 +25,18 @@ export const WORKOUTS = [
   {
     id: 'A',
     name: 'A · Abdos et tronc',
-    desc: 'Abdos visibles et taille fine : roue abdominale deux fois par tour, crunch inversé et gainage, sans tirer sur la nuque. 3 tours.',
+    desc: 'Abdos visibles et taille fine : roue abdominale deux fois par tour, crunch, crunch inversé, Russian twist et gainage, sans tirer sur la nuque. 3 tours.',
     rounds: 3,
     rest: 15,
     roundRest: 60,
     exercises: [
-      { name: 'Dead bug', work: 40, target: 'Gainage profond · taille fine', cue: 'Allongé sur le dos, bras tendus vers le plafond, genoux pliés à 90°. Bas du dos collé au tapis. Descends lentement un bras et la jambe opposée, reviens, change de côté. Expire en descendant.' },
+      { name: 'Crunch', work: 30, target: 'Haut des abdos · la tablette', cue: 'Sur le dos, genoux pliés, pieds au sol, mains croisées sur la poitrine (jamais derrière la nuque). Enroule le haut du dos pour décoller les omoplates en expirant, tiens 1 s, redescends lentement. Le bas du dos reste collé au tapis.' },
       { name: 'Roue abdominale à genoux (1/2)', work: 30, target: 'Abdos complets · le plus efficace', cue: 'À genoux sur le tapis, mains sur la roue sous les épaules, dos légèrement arrondi, fesses serrées. Roule devant toi tant que le bas du dos ne creuse pas, puis reviens en contractant les abdos. Niveau 1 : amplitude courte (30 cm).' },
       { name: 'Crunch inversé', work: 30, target: 'Bas des abdos · la tablette', cue: 'Sur le dos, mains au sol le long du corps, genoux pliés à 90°. Enroule le bassin pour ramener les genoux vers la poitrine, sans élan, puis redescends en 3 s sans poser les pieds.' },
       { name: 'Planche sur avant-bras', work: 40, target: 'Gainage · ventre plat', cue: 'Coudes sous les épaules, fesses serrées, bassin ni haut ni bas. Sur les genoux si le dos creuse.' },
       { name: 'Planche latérale (droite)', work: 25, target: 'Obliques · taille gainée', cue: 'Couché sur le côté, coude sous l’épaule, soulève le bassin : le corps forme une ligne droite. Genou au sol si besoin.' },
       { name: 'Planche latérale (gauche)', work: 25, target: 'Obliques · taille gainée', cue: 'Même chose de l’autre côté.' },
-      { name: 'Hollow hold genoux pliés', work: 25, target: 'Grand droit · la tablette', cue: 'Sur le dos, épaules et pieds décollés, bas du dos plaqué. Si le dos décolle : genoux plus près, bras plus bas.' },
+      { name: 'Russian twist', work: 30, target: 'Obliques · taille dessinée', cue: 'Assis, genoux pliés, buste penché en arrière, dos bien droit. Mains jointes devant la poitrine : tourne les épaules d’un côté puis de l’autre, lentement, le regard suit les mains. Pieds au sol au début, décollés quand c’est facile.' },
       { name: 'Roue abdominale à genoux (2/2)', work: 30, target: 'Abdos complets · deuxième passage', cue: 'Deuxième passage, tu es fatigué : garde une amplitude plus courte plutôt que de laisser le bas du dos creuser. La qualité passe avant la distance.' },
     ],
   },
@@ -49,8 +49,8 @@ export const WORKOUTS = [
     roundRest: 75,
     exercises: [
       { name: 'Pompes', work: 40, target: 'Pectoraux · buste dessiné', cue: 'Mains un peu plus larges que les épaules, corps gainé, coudes à 45°. Descends lentement (2 s). Sur les genoux si besoin. Arrête 2 reps avant l’échec.' },
-      { name: 'Tirage superman', work: 30, target: 'Dos · se tenir droit', cue: 'Allongé sur le ventre, bras tendus devant toi. Décolle bras et poitrine de quelques cm, puis tire les coudes vers les hanches comme pour une traction. Serre le dos 1 s, retends les bras. Regard vers le tapis.' },
-      { name: 'Pompes pike', work: 30, target: 'Épaules · tenue', cue: 'Fesses hautes en V inversé, mains au sol, tête qui descend vers le tapis devant les mains. Amplitude courte au début.' },
+      { name: 'Planche inversée', work: 30, target: 'Dos et épaules · poitrine ouverte', cue: 'Assis, genoux pliés, pieds à plat, mains au sol derrière toi, doigts vers les pieds. Pousse dans les mains et les talons pour monter le bassin en table : épaules, hanches et genoux alignés. Serre les omoplates 3 s, redescends. Contre le dos rond.' },
+      { name: 'Toucher d’épaules en planche', work: 30, target: 'Épaules · gainage', cue: 'En planche haute, mains sous les épaules, pieds écartés à la largeur des hanches. Touche l’épaule gauche avec la main droite, repose, puis l’autre côté, sans que le bassin bascule. Sur les genoux si besoin.' },
       { name: 'Superman Y (allongé sur le ventre)', work: 30, target: 'Haut du dos · posture droite', cue: 'Bras tendus en Y au-dessus de la tête, pouces vers le ciel. Décolle bras et poitrine de 5 cm, tiens 2 s, repose. Regard vers le tapis.' },
       { name: 'Pompes serrées', work: 30, target: 'Triceps · bras dessinés', cue: 'Mains sous les épaules, coudes qui frôlent le corps en descendant. Sur les genoux au début : la forme passe avant le nombre.' },
       { name: 'Superman W', work: 30, target: 'Omoplates · épaules ouvertes', cue: 'Allongé sur le ventre, coudes pliés en W le long du corps. Décolle la poitrine et serre les omoplates vers le bas et l’arrière, 2 s.' },
@@ -166,7 +166,10 @@ export const RECIPES = [
 // Démonstration vidéo : recherche YouTube (un lien de recherche ne casse pas, une vidéo précise si).
 // Certains exercices se trouvent mieux avec leur nom anglais.
 const DEMO_QUERIES = {
-  'Tirage superman': 'prone lat pulldown bodyweight',
+  Crunch: 'crunch abdominal bonne technique',
+  'Russian twist': 'russian twist débutant',
+  'Planche inversée': 'reverse tabletop exercise',
+  'Toucher d’épaules en planche': 'plank shoulder taps',
   'Crunch inversé': 'reverse crunch',
   'Vacuum abdominal': 'stomach vacuum exercise',
   'Jumping jacks sans saut': 'step jacks low impact',

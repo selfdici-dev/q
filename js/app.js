@@ -86,7 +86,7 @@ function applyTheme() {
   if (t === 'auto') delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme = t;
   const dark = t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#000000' : '#f4f4f4');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#040407' : '#f6f5fb');
 }
 applyTheme();
 const save = () => {
@@ -823,7 +823,7 @@ function viewSport() {
 function goalBody() {
   const points = [
     ['C', 'Sec avant tout.', 'Abdos et mâchoire se voient quand le taux de gras baisse : protéines, zéro grignotage, 8 000 pas, séance C. C’est l’assiette qui fait le plus gros du travail.'],
-    ['A', 'Abdos dessinés.', 'Roue abdominale deux fois par tour, crunch inversé, gainage profond pour une taille fine.'],
+    ['A', 'Abdos dessinés.', 'Roue abdominale deux fois par tour, crunch pour le haut, crunch inversé pour le bas, Russian twist pour les obliques, gainage pour une taille fine.'],
     ['B', 'Musclé sans s’élargir.', 'Poids du corps seulement, aucune charge lourde : tu te dessines sans prendre de volume. Rien pour les trapèzes, qui tassent le cou.'],
     ['M', 'Grand et droit.', 'Tête reculée (chin tucks), hanches ouvertes, dos souple : une posture droite fait paraître plus grand.'],
     ['M', 'Mâchoire nette.', 'Cou renforcé, tête droite, langue au palais. L’os ne change pas à l’âge adulte : ce qui la révèle, c’est surtout un visage sec et une tête bien placée. Évite le chewing-gum dur, mauvais pour l’articulation.'],

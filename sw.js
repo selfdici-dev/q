@@ -1,5 +1,5 @@
 // Cache hors ligne. Incrémente VERSION à chaque modification des fichiers.
-const VERSION = 'cap-v30';
+const VERSION = 'cap-v31';
 const FILES = [
   './', './index.html', './css/styles.css', './css/luxe.css', './manifest.webmanifest',
   './js/app.js', './js/logic.js', './js/data.js',
@@ -21,10 +21,13 @@ self.addEventListener('activate', (e) => {
 });
 
 // Réseau d'abord (pour recevoir les mises à jour), cache si hors ligne.
+// « no-cache » : le navigateur redemande toujours au serveur si le fichier a
+// changé, au lieu de resservir sa copie gardée jusqu'à 10 min (GitHub Pages).
+// Sans ça, une mise à jour pouvait ne pas s'afficher tout de suite.
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request, e.request.mode === 'navigate' ? undefined : { cache: 'no-cache' })
       .then((res) => {
         const copy = res.clone();
         caches.open(VERSION).then((c) => c.put(e.request, copy));

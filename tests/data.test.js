@@ -33,7 +33,13 @@ test('objectif fin et élancé : roue ×2, pas de burpee, cou et mâchoire', () 
   assert.ok(ex('C').every((e) => !/burpee/i.test(e.name)));
   assert.ok(ex('M').filter((e) => /mâchoire/.test(e.target)).length >= 2);
   // A : crunch (haut des abdos) et Russian twist (obliques) ; B sans pompes pike ni tirage superman
-  assert.ok(['Crunch', 'Crunch inversé', 'Russian twist'].every((n) => ex('A').some((e) => e.name === n)));
+  // A : crunch vélo (n° 1 des études EMG), crunch inversé, Russian twist ×2 ; que des exercices qu'on sent
+  assert.ok(['Crunch vélo', 'Crunch inversé'].every((n) => ex('A').some((e) => e.name === n)));
+  assert.equal(ex('A').filter((e) => baseName(e.name) === 'Russian twist').length, 2);
+  // M : posture (bassin, dos, nuque) et cou, pas d'exercice « où on ne sent rien », ≈ 7 min
+  assert.ok(['Pont fessier', 'Superman', 'Extension du cou'].every((n) => ex('M').some((e) => e.name === n)));
+  assert.ok(ex('M').every((e) => !/respiration|langue|posture de l/i.test(e.name)));
+  assert.ok(ex('M').reduce((t, e) => t + e.work + 5, 0) <= 11 * 60);
   assert.ok(ex('B').every((e) => !/pike|tirage superman/i.test(e.name)));
   // rien ne vise la largeur : pas d'exercice d'épaules latérales ni de trapèzes
   for (const w of WORKOUTS) for (const e of w.exercises) assert.doesNotMatch(`${e.name} ${e.target}`, /latérales|trapèze|largeur/i);

@@ -673,7 +673,9 @@ details.card.more .rules { margin-top: 10px; }
 .fold > summary:active { background: var(--surface-2); }
 .fold-ico { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; font-size: 1.1rem; background: var(--surface-2); }
 .fold-title { display: flex; flex-direction: column; min-width: 0; }
-.fold-title strong, .fold-title small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fold-title strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Le sous-titre passe à la ligne plutôt que d'être coupé (petits écrans, grandes polices). */
+.fold-title small { white-space: normal; overflow-wrap: anywhere; }
 .fold-title strong { font-weight: 700; letter-spacing: -0.01em; }
 .fold-title small { font-size: 0.78rem; color: var(--muted); margin-top: 1px; }
 .chev {

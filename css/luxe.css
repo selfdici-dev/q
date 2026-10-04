@@ -481,7 +481,7 @@ label.radio:has(input:checked) { border-color: var(--ink); background: var(--acc
 
 /* Ton double : un esprit debout derrière toi, des lignes de concentration rayonnent */
 .avatar-btn {
-  --figure: var(--av-body); --accent: var(--av-aura);
+  --accent: var(--av-aura);
   position: relative; isolation: isolate; border-radius: 4px;
 }
 /* lignes fines et serrées, près de la silhouette */
@@ -502,11 +502,6 @@ label.radio:has(input:checked) { border-color: var(--ink); background: var(--acc
   opacity: 0.8;
 }
 .avatar-btn:focus-visible { outline-color: var(--text); }
-/* le double a un écho décalé, pâle : un esprit qui se tient juste derrière lui */
-.avatar-btn .avatar { filter: drop-shadow(8px -6px 0 var(--echo)); }
-.av-ring { stroke: var(--speed-2); stroke-width: 1; stroke-dasharray: 2 3; }
-.av-line { stroke: var(--av-ink); stroke-width: 1.3; }
-.av-ground { fill: var(--tone-2); }
 .hero-stat .mid { font-family: var(--display); font-stretch: condensed; font-weight: 800; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.02em; }
 .hero-stat .mid small { font-family: var(--sans); color: var(--muted); }
 
@@ -905,7 +900,7 @@ input.task { text-align: center; margin: 4px 0 6px; }
 }
 .sheet-panel .card-head h2 { font-size: 1.4rem; font-weight: 900; }
 .avatar-rank { font-family: var(--display); font-stretch: condensed; font-weight: 900; text-transform: uppercase; }
-.avatar-big { --figure: var(--av-body); --accent: var(--av-aura); }
+.avatar-big { --accent: var(--av-aura); }
 
 /* ——— Calendrier de régularité : une grille de cases ——— */
 .cell { border-radius: 1px; background: var(--surface-2); }

@@ -32,6 +32,9 @@ test('objectif fin et élancé : roue ×2, pas de burpee, cou et mâchoire', () 
   assert.equal(ex('A').filter((e) => baseName(e.name) === 'Roue abdominale à genoux').length, 2);
   assert.ok(ex('C').every((e) => !/burpee/i.test(e.name)));
   assert.ok(ex('M').filter((e) => /mâchoire/.test(e.target)).length >= 2);
+  // A : crunch (haut des abdos) et Russian twist (obliques) ; B sans pompes pike ni tirage superman
+  assert.ok(['Crunch', 'Crunch inversé', 'Russian twist'].every((n) => ex('A').some((e) => e.name === n)));
+  assert.ok(ex('B').every((e) => !/pike|tirage superman/i.test(e.name)));
   // rien ne vise la largeur : pas d'exercice d'épaules latérales ni de trapèzes
   for (const w of WORKOUTS) for (const e of w.exercises) assert.doesNotMatch(`${e.name} ${e.target}`, /latérales|trapèze|largeur/i);
 });
@@ -47,7 +50,7 @@ test('liens de démo vidéo', () => {
   assert.equal(q('Planche latérale (droite)'), 'Planche latérale exercice technique');
   assert.equal(q('Superman W'), 'prone W exercice technique');
   assert.equal(q('Superman Y (allongé sur le ventre)'), 'prone Y exercice technique');
-  assert.equal(q('Tirage superman'), 'prone lat pulldown bodyweight');
+  assert.equal(q('Toucher d’épaules en planche'), 'plank shoulder taps');
   assert.ok(demoUrl('Crunch inversé').startsWith('https://www.youtube.com/results?search_query='));
 });
 

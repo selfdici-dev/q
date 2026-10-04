@@ -253,4 +253,39 @@ export const POSES = {
       { anchor: 'footN', at: [60, 70], torso: -90.5, neck: -90, armN: [94, 86], armF: [91, 85], legN: [90, 90], legF: [88, 92] },
     ],
   },
+
+  // Ronde 4 : crunch et Russian twist (A), planche inversée et touchers d’épaules (B)
+  Crunch: {
+    dur: 3, loop: 'cycle', hold: 0.1,
+    frames: [
+      { at: [52, 68.5], torso: 0, neck: -2, armN: [201, -12], armF: [197, -8], legN: { to: [31, 70], bend: 1 }, legF: { to: [33.5, 70], bend: 1 } },
+      { at: [52, 68.5], torso: -22, neck: -30, armN: [179, -34], armF: [175, -30], legN: { to: [31, 70], bend: 1 }, legF: { to: [33.5, 70], bend: 1 } },
+      { at: [52, 68.5], torso: -23, neck: -31, armN: [178, -35], armF: [174, -31], legN: { to: [31, 70], bend: 1 }, legF: { to: [33.5, 70], bend: 1 } },
+    ],
+  },
+  'Russian twist': {
+    dur: 3, loop: 'cycle', hold: 0.1,
+    frames: [
+      { at: [58, 68.5], torso: -48, neck: -55, armN: { to: [50.6, 53], bend: 1 }, armF: { to: [52.1, 53], bend: -1 }, legN: { to: [38, 70], bend: 1 }, legF: { to: [40.5, 70], bend: 1 } },
+      { at: [58, 68.5], torso: -46, neck: -58, armN: { to: [53, 62.5], bend: 1 }, armF: { to: [54.5, 62.5], bend: -1 }, legN: { to: [38, 70], bend: 1 }, legF: { to: [40.5, 70], bend: 1 } },
+      { at: [58, 68.5], torso: -48, neck: -55, armN: { to: [50.6, 53], bend: 1 }, armF: { to: [52.1, 53], bend: -1 }, legN: { to: [38, 70], bend: 1 }, legF: { to: [40.5, 70], bend: 1 } },
+      { at: [58, 68.5], torso: -46, neck: -52, armN: { to: [59, 67.5], bend: 1 }, armF: { to: [65.5, 68], bend: -1 }, legN: { to: [38, 70], bend: 1 }, legF: { to: [40.5, 70], bend: 1 } },
+    ],
+  },
+  'Planche inversée': {
+    dur: 3.5, hold: 0.3,
+    frames: [
+      { anchor: 'handN', at: [90, 70], torso: -61.83, neck: -74, armN: [65.29, 65.29], armF: { to: [91.5, 70] }, legN: { to: [51.7, 70], bend: 1 }, legF: { to: [53.7, 70], bend: 1 } },
+      { anchor: 'handN', at: [90, 70], torso: -13.88, neck: -18, armN: [84, 84], armF: { to: [91.5, 70] }, legN: { to: [51.7, 70], bend: 1 }, legF: { to: [53.7, 70], bend: 1 } },
+    ],
+  },
+  'Toucher d’épaules en planche': {
+    dur: 3, loop: 'cycle', hold: 0.2,
+    frames: [
+      { anchor: 'footN', at: [20, 70], torso: -26.81, neck: -17, armN: [90, 90], armF: [86.3, 86.3], legN: [153.19, 153.19], legF: [154.5, 154.5] },
+      { anchor: 'footN', at: [20, 70], torso: -26.81, neck: -17, armN: [132, -36], armF: [86.3, 86.3], legN: [153.19, 153.19], legF: [154.5, 154.5] },
+      { anchor: 'footN', at: [20, 70], torso: -26.81, neck: -17, armN: [90, 90], armF: [86.3, 86.3], legN: [153.19, 153.19], legF: [154.5, 154.5] },
+      { anchor: 'footN', at: [20, 70], torso: -26.81, neck: -17, armN: [90, 90], armF: [115, -54], legN: [153.19, 153.19], legF: [154.5, 154.5] },
+    ],
+  },
 };

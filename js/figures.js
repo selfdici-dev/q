@@ -161,7 +161,7 @@ const FOCUS = [
   [/épaules|carrure/i, ['upperArmN', 'upperArmF']],
   [/triceps|\bbras\b/i, ['upperArmN', 'upperArmF', 'forearmN', 'forearmF']],
   [/\bcou\b|mâchoire|tête/i, ['neck']],
-  [/hanches/i, ['thighN', 'thighF']],
+  [/hanches|fessiers/i, ['thighN', 'thighF']],
 ];
 
 export function focusFor(target = '') {

@@ -288,4 +288,38 @@ export const POSES = {
       { anchor: 'footN', at: [20, 70], torso: -26.81, neck: -17, armN: [90, 90], armF: [115, -54], legN: [153.19, 153.19], legF: [154.5, 154.5] },
     ],
   },
+
+  // Ronde 5 : crunch vélo (A), pont fessier, superman, extension du cou (M)
+  'Crunch vélo': {
+    dur: 3, loop: 'cycle', hold: 0.05,
+    frames: [
+      { at: [52, 68.5], torso: -24, neck: -32, armN: { to: [78.5, 55], bend: -1 }, armF: { to: [79.5, 56], bend: -1 }, legN: [-118, 168], legF: [186, 184] },
+      { at: [52, 68.5], torso: -24, neck: -32, armN: { to: [78.5, 55], bend: -1 }, armF: { to: [79.5, 56], bend: -1 }, legN: [186, 184], legF: [-118, 168] },
+    ],
+  },
+  'Pont fessier': {
+    dur: 4, hold: 0.25,
+    frames: [
+      { anchor: 'shoulder', at: [76, 68.5], torso: 0, neck: 0, armN: { to: [58, 70], bend: 1 }, armF: { to: [58.5, 70], bend: 1 }, legN: { to: [40, 70], bend: 1 }, legF: { to: [42, 70], bend: 1 } },
+      { anchor: 'shoulder', at: [76, 68.5], torso: 27, neck: 0, armN: { to: [58, 70], bend: 1 }, armF: { to: [58.5, 70], bend: 1 }, legN: { to: [40, 70], bend: 1 }, legF: { to: [42, 70], bend: 1 } },
+    ],
+  },
+  Superman: {
+    dur: 5, loop: 'cycle', hold: 0.2,
+    frames: [
+      { at: [49, 68.5], torso: 0, neck: 0, armN: [4, 4], armF: [2, 2], legN: [179, 179], legF: [181, 180.5] },
+      { at: [49, 68.5], torso: -10, neck: -6, armN: [-13, -13], armF: [-9, -9], legN: [190, 190], legF: [188, 188] },
+      { at: [49, 68.5], torso: -10.5, neck: -6.5, armN: [-13.5, -13.5], armF: [-9.5, -9.5], legN: [190.5, 190.5], legF: [188.5, 188.5] },
+      { at: [49, 68.5], torso: -0.5, neck: 0, armN: [4, 4], armF: [2, 2], legN: [179, 179], legF: [181, 180.5] },
+    ],
+  },
+  'Extension du cou': {
+    dur: 5, loop: 'cycle', hold: 0.25,
+    frames: [
+      { at: [49, 68.5], torso: 0, neck: 10, armN: [176, -3], armF: [178, -2], legN: [179, 179], legF: [181, 180.5] },
+      { at: [49, 68.5], torso: 0, neck: -24, armN: [176, -3], armF: [178, -2], legN: [179, 179], legF: [181, 180.5] },
+      { at: [49, 68.5], torso: 0, neck: -25, armN: [176, -3], armF: [178, -2], legN: [179, 179], legF: [181, 180.5] },
+      { at: [49, 68.5], torso: 0, neck: 9, armN: [176, -3], armF: [178, -2], legN: [179, 179], legF: [181, 180.5] },
+    ],
+  },
 };

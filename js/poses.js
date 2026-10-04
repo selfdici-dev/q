@@ -322,4 +322,15 @@ export const POSES = {
       { at: [49, 68.5], torso: 0, neck: 9, armN: [176, -3], armF: [178, -2], legN: [179, 179], legF: [181, 180.5] },
     ],
   },
+
+  // Ronde 6 : cardio sans saut (C)
+  'Genou-coude croisé debout': {
+    dur: 1.6, loop: 'cycle', hold: 0.05,
+    frames: [
+      { at: [60, 41], torso: -90, neck: -90, armN: [-40, 200], armF: [-44, 204], legN: [90, 90], legF: [88, 92] },
+      { at: [60, 41], torso: -76, neck: -70, armN: [-40, 200], armF: [72, -118], legN: [-14, 96], legF: [90, 90] },
+      { at: [60, 41], torso: -90, neck: -90, armN: [-40, 200], armF: [-44, 204], legN: [90, 90], legF: [88, 92] },
+      { at: [60, 41], torso: -76, neck: -70, armN: [72, -118], armF: [-44, 204], legN: [90, 90], legF: [-14, 96] },
+    ],
+  },
 };

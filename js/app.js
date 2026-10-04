@@ -823,9 +823,9 @@ function viewSport() {
 function goalBody() {
   const points = [
     ['C', 'Sec avant tout.', 'Abdos et mâchoire se voient quand le taux de gras baisse : protéines, zéro grignotage, 8 000 pas, séance C. C’est l’assiette qui fait le plus gros du travail.'],
-    ['A', 'Abdos dessinés.', 'Les exercices qui font le plus travailler les abdos dans les mesures (crunch vélo, roue ×2, crunch inversé), Russian twist ×2 pour les obliques et le V du bas du ventre, planches latérales pour une taille fine.'],
+    ['A', 'Abdos dessinés.', 'Crunch vélo (le n° 1 des mesures), roue ×2, Russian twist pour les obliques et le V du bas du ventre, planche, planches latérales (main sous le torse) et hollow body pour une taille fine.'],
     ['B', 'Musclé sans s’élargir.', 'Poids du corps seulement, aucune charge lourde : tu te dessines sans prendre de volume. Rien pour les trapèzes, qui tassent le cou.'],
-    ['M', 'Grand et droit.', 'Bassin droit (fentes basses, pont fessier), dos fort (superman), nuque forte et tête reculée (chin tucks, extension du cou) : on gagne visuellement quelques centimètres et une démarche plus sûre.'],
+    ['M', 'Grand et droit.', 'Bassin droit (fentes basses, pont fessier), dos fort et poitrine ouverte (superman, livre ouvert), nuque forte et tête reculée (chin tucks, extension du cou) : on gagne visuellement quelques centimètres et une démarche plus sûre.'],
     ['M', 'Mâchoire nette.', 'Cou renforcé, tête droite, langue au palais. L’os ne change pas à l’âge adulte : ce qui la révèle, c’est surtout un visage sec et une tête bien placée. Évite le chewing-gum dur, mauvais pour l’articulation.'],
   ];
   return `<p class="muted">Pas trapu, pas massif : un corps athlétique et léger, une posture droite, des abdos et une mâchoire visibles.</p>

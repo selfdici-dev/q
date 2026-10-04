@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   todayKey, addDays, chain, recoveryMode, sprintInfo, bedtimeMinutes, minutesToHHMM,
-  sleepDuration, rollingAverage,
+  sleepDuration, rollingAverage, nextAction,
 } from '../js/logic.js';
 
 const habits = [{ id: 'a' }, { id: 'b' }];
@@ -256,4 +256,24 @@ test('étagères de livres : ordre, filtres, compteurs', async () => {
   assert.deepEqual(done.shelves.map((s) => s.items.map((b) => b.id)), [['a'], ['e']]);
   assert.deepEqual(bookShelves(books, st, 'reading').shelves.map((s) => s.cat), ['Philo']); // étagère vide masquée
   assert.equal(bookShelves(books).counts.todo, 5);
+});
+
+test('« Maintenant » : la première chose pas faite, le coucher passe devant le soir', () => {
+  const plan = (doneIds = []) => ['seance', 'focus', 'coucher'].map((id) => ({ id, done: doneIds.includes(id) }));
+  assert.equal(nextAction(plan(), '10:00', '23:00').id, 'seance');
+  assert.equal(nextAction(plan(['seance']), '10:00', '23:00').id, 'focus');
+  assert.equal(nextAction(plan(['seance', 'focus', 'coucher']), '10:00', '23:00'), null);
+  // dans l'heure avant le coucher, et jusqu'à 3 h après
+  assert.equal(nextAction(plan(), '22:15', '23:00').id, 'coucher');
+  assert.equal(nextAction(plan(), '01:30', '23:00').id, 'coucher');
+  assert.equal(nextAction(plan(), '21:30', '23:00').id, 'seance');
+  assert.equal(nextAction(plan(), '08:00', '23:00').id, 'seance');
+  // coucher visé après minuit
+  assert.equal(nextAction(plan(), '00:30', '01:00').id, 'coucher');
+  assert.equal(nextAction(plan(), '23:00', '01:00').id, 'seance');
+  // téléphone déjà posé : on revient à l'ordre du plan
+  assert.equal(nextAction(plan(['coucher']), '22:30', '23:00').id, 'seance');
+  // jamais au-delà du changement de jour (4 h) : c'est déjà le plan du lendemain
+  assert.equal(nextAction(plan(), '03:50', '01:15').id, 'coucher');
+  assert.equal(nextAction(plan(), '04:05', '01:15').id, 'seance');
 });

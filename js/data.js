@@ -257,7 +257,7 @@ export const APPS = [
   { cat: 'Discipline', name: 'ScreenZen', how: 'Gratuit. Pause de 10 s et 5 ouvertures max par jour pour TikTok et Snap.' },
   { cat: 'Discipline', name: 'Écran en gris', how: 'Réglages > Accessibilité > Raccourci > Filtres de couleur. Triple clic le soir.' },
   { cat: 'Discipline', name: 'Réveil à piles', how: '≈ 10 €. Il permet de laisser le téléphone hors de la chambre.' },
-  { cat: 'Corps', name: 'Santé (iPhone)', how: 'Compte tes pas automatiquement. Recopie le chiffre le soir dans Suivi.' },
+  { cat: 'Corps', name: 'Santé (iPhone)', how: 'Compte tes pas automatiquement. Vise 8 000 pas par jour.' },
   { cat: 'Corps', name: 'Jow', how: 'Gratuit. Une recette par semaine, la liste de courses se fait toute seule.' },
   { cat: 'Argent', name: 'Fortuneo (PEA)', how: 'Programme un versement mensuel. Ne regarde le portefeuille qu’une fois par mois.' },
   { cat: 'Argent', name: 'Trade Republic', how: 'Vérifie ton IBAN (FR ou DE). Poche trading + espèces rémunérées pour la précaution.' },
@@ -267,3 +267,47 @@ export const APPS = [
   { cat: 'Argent', name: 'Finimize', how: 'Newsletter gratuite en anglais : 5 min d’actu finance chaque matin.' },
   { cat: 'Culture', name: 'Bibliothèque municipale', how: 'Carte souvent gratuite pour les jeunes. Emprunte avant d’acheter.' },
 ];
+
+// ---------- Aide « ? » : comment marche chaque onglet, en 3 phrases ----------
+export const HELP = {
+  jour: {
+    title: 'Comment marche Jour',
+    lines: [
+      'Fais au moins le minimum de chaque habitude : la journée est validée et ta chaîne 🔥 avance.',
+      'Ton plan du jour te dit quoi faire ensuite : touche le gros bouton de la carte « Maintenant ».',
+      'Un jour raté, ça arrive : jamais deux fois de suite. Le soir, copie ton bilan pour Claude.',
+    ],
+  },
+  focus: {
+    title: 'Comment marche Focus',
+    lines: [
+      'Écris la seule chose sur laquelle tu travailles, pose le téléphone loin, puis Démarrer.',
+      'Un arbre pousse pendant les 25 minutes : va au bout et il rejoint ton jardin du jour.',
+      'Envie de scroller ? Lance le minuteur de 10 minutes et fais autre chose en attendant.',
+    ],
+  },
+  sport: {
+    title: 'Comment marche Corps',
+    lines: [
+      'Touche « Lancer la séance » et pose le téléphone au sol : l’appli te guide, bips compris.',
+      'Chaque jour a sa séance (A, B, C ou M). Pas la forme ? La mobilité suffit pour valider.',
+      'À la fin, note la séance : après 2 « Facile » ou 2 « Dur » de suite, l’appli te propose un autre niveau.',
+    ],
+  },
+  argent: {
+    title: 'Comment marche Argent',
+    lines: [
+      'Une leçon dure environ 10 minutes : une idée, un exemple, un exercice réel, un quiz.',
+      'Les leçons s’ouvrent dans l’ordre : fais la suivante quand ton plan du jour la propose.',
+      'Les questions du quiz reviennent ensuite en cartes de révision, juste avant l’oubli.',
+    ],
+  },
+  moi: {
+    title: 'Comment marche Moi',
+    lines: [
+      'Programme : où tu en es sur les 12 semaines, tes objectifs et tes outils à configurer.',
+      'Bilan : tes sprints et ta semaine à copier pour Claude. Livres : quoi lire ensuite.',
+      'Réglages : habitudes, règles, thème et sauvegarde. Exporte une fois par semaine.',
+    ],
+  },
+};

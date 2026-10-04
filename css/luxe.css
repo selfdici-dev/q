@@ -1,573 +1,993 @@
-/* Design « Horlogerie » : noir pur, or champagne, chiffres à empattements.
+/* Design « Noir » : une planche de manga en noir et blanc.
+   Noir profond, gris, blanc : aucune couleur d'accent (l'accent, c'est le blanc,
+   et le noir en thème clair). Seules les lettres de séance A/B/C/M, l'alerte et
+   les gains/pertes gardent une teinte très éteinte pour rester reconnaissables.
+   Même la fête (confettis) reste en noir, blanc et gris.
+   Le drame est réservé à l'accueil, aux titres et aux boutons clés :
+   titres penchés avec ombre d'encre, « ゴゴゴ » dans sa propre colonne à droite
+   des chiffres du jour, lignes de concentration derrière ton double, trames et
+   hachures dégradées, cases à cadre épais. Le focus est un cadran de montre
+   épuré. Les longs textes restent sobres.
    Chargée APRÈS styles.css : ne change que l'apparence (aucun HTML, aucune
    donnée). Polices système seulement, rien n'est chargé depuis Internet.
    Pour revenir à l'ancien look : retirer la ligne luxe.css de index.html. */
 
-/* ——— Jetons : thème clair « ivoire et bronze » ——— */
+/* ——— Jetons : thème clair « papier de manga, encre noire » ——— */
 :root,
 :root[data-theme="light"] {
   color-scheme: light;
-  --serif: ui-serif, "New York", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  /* titres : linéale étroite et très grasse quand le téléphone en a une */
+  --display: "Avenir Next Condensed", "Roboto Condensed", "sans-serif-condensed", "Arial Narrow", "Helvetica Neue", system-ui, -apple-system, sans-serif;
+  --serif: var(--display);
   --sans: system-ui, -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-  --bg: #f6f1e7;
-  --surface: #fffcf6;
-  --surface-2: #f0eadc;
-  --line: #e0d6c2;
-  --text: #1a160f;
-  --text-2: #4d4536;
-  --muted: #6b6252;
-  --accent: #7d5e28;
-  --accent-ink: #fffaf0;
-  --accent-soft: #f2e7cf;
-  --gold: #9a7330;
-  --warn: #a4501d;
-  --warn-soft: #fbeee0;
-  --pos: #2f7a55;
-  --neg: #b03a3a;
-  --miss: #ddd3c0;
-  --series-1: #8a6a32;
-  --series-raw: #b3a891;
-  --cat-1: #355f9e; --cat-2: #b8612c; --cat-3: #2f7a55; --cat-4: #9a7330;
-  --hero-a: #8a6a32; --hero-b: #b08a48; --hero-c: #6f5223;
-  --violet: #6f52a8;
-  --wo-A: #276e51;
-  --wo-B: #355f9e;
-  --wo-C: #a8384a;
-  --wo-M: #6f52a8;
-  --effort: #c9a253;
-  --rest: #2f62c4;
-  --figure: #3a2f1e;
-  --radius: 18px;
-  --shadow: 0 1px 2px rgb(60 45 20 / 0.05), 0 10px 28px -14px rgb(60 45 20 / 0.18);
+  /* onomatopée : la police japonaise déjà présente sur le téléphone */
+  --jp: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", "Noto Sans JP", "Yu Gothic", Meiryo, system-ui, sans-serif;
+  --bg: #f4f4f4;
+  --surface: #ffffff;
+  --surface-2: #ececec;
+  --line: #d2d2d2;
+  --text: #0c0c0c;
+  --text-2: #343434;
+  --muted: #595959;
+  --accent: #0f0f0f;
+  --accent-ink: #ffffff;
+  --accent-soft: #e6e6e6;
+  --gold: #000000;
+  --warn: #7a5638;
+  --warn-soft: #f1ece6;
+  --pos: #3d5c47;
+  --neg: #8a4040;
+  --miss: #dadada;
+  --series-1: #262626;
+  --series-raw: #a3a3a3;
+  --cat-1: #111111; --cat-2: #4d4d4d; --cat-3: #8a8a8a; --cat-4: #bdbdbd;
+  --hero-a: #3a3a3a; --hero-b: #7a7a7a; --hero-c: #1a1a1a;
+  --violet: #4a4a4a;
+  --wo-A: #44594c;
+  --wo-B: #444f60;
+  --wo-C: #664b50;
+  --wo-M: #564f68;
+  --effort: #d2d2d2;
+  --rest: #555555;
+  --figure: #6b6b6b;
+  --figure-focus: #000000;
+  /* membres du côté éloigné : plus pâles que le corps, mais le muscle travaillé
+     y reste net (couleurs plutôt qu'opacité) */
+  --figure-far: #8c8c8c;
+  --figure-focus-far: #262626;
+  --radius: 6px;
+  --shadow: none;
   /* jetons propres au style */
-  --hair: rgb(125 94 40 / 0.22);
-  --hair-strong: rgb(125 94 40 / 0.5);
-  --edge: rgb(60 45 20 / 0.1);
-  --edge-2: rgb(60 45 20 / 0.18);
-  --row: rgb(60 45 20 / 0.035);
-  --field: #fffdf9;
-  --tick: rgb(60 45 20 / 0.32);
-  --metal: linear-gradient(180deg, #8c6c30 0%, #75571f 55%, #5f4519 100%);
-  --metal-h: linear-gradient(90deg, #6f5223, #a07c3a 60%, #c9a35c);
-  --card-bg: linear-gradient(180deg, #fffdf9 0%, #fbf7ee 100%);
-  --satin: repeating-linear-gradient(90deg, rgb(90 70 30 / 0.012) 0 1px, transparent 1px 3px);
-  --dial: radial-gradient(130% 95% at 88% 0%, #fffaf0 0%, #f7efdf 45%, #ede2cc 100%);
-  --dot-bg: radial-gradient(circle at 35% 30%, #fffdf8, #ebe2cf 75%);
-  --glass: rgb(255 252 246 / 0.9);
-  --gild: grayscale(1) sepia(0.75) saturate(1.4) brightness(0.9);
+  --ink: #0c0c0c;
+  --ink-2: #222222;
+  --hair: rgb(0 0 0 / 0.2);
+  --hair-strong: rgb(0 0 0 / 0.72);
+  --edge: rgb(0 0 0 / 0.12);
+  --edge-2: rgb(0 0 0 / 0.46);
+  --rule: rgb(0 0 0 / 0.16);
+  --row: rgb(0 0 0 / 0.025);
+  --field: #ffffff;
+  --tick: rgb(0 0 0 / 0.38);
+  --tone: rgb(0 0 0 / 0.18);
+  --tone-2: rgb(0 0 0 / 0.4);
+  --tone-3: rgb(0 0 0 / 0.62);
+  --hatch: rgb(0 0 0 / 0.07);
+  --hatch-2: rgb(0 0 0 / 0.16);
+  --speed: rgb(0 0 0 / 0.55);
+  --speed-2: rgb(0 0 0 / 0.28);
+  --pop: #9a9a9a;
+  --title-shadow: #c2c2c2;
+  --gogo: rgb(0 0 0 / 0.07);
+  --gogo-line: rgb(0 0 0 / 0.42);
+  --balloon: #ffffff;
+  --balloon-ink: #0c0c0c;
+  --panel: #ffffff;
+  --av-body: #1a1a1a;
+  --av-ink: #ffffff;
+  --av-aura: #8a8a8a;
+  --echo: rgb(0 0 0 / 0.2);
+  --metal: linear-gradient(180deg, #222222 0%, #050505 100%);
+  --metal-h: linear-gradient(90deg, #8f8f8f, #2a2a2a 65%, #000000);
+  --card-bg: linear-gradient(180deg, #ffffff 0%, #ffffff 100%);
+  --satin: linear-gradient(transparent, transparent);
+  --dial: linear-gradient(170deg, #ffffff 0%, #fafafa 55%, #f1f1f1 100%);
+  --dot-bg: radial-gradient(circle at 35% 30%, #ffffff, #e0e0e0 75%);
+  --glass: rgb(255 255 255 / 0.92);
+  --gild: grayscale(1) contrast(1.3) brightness(0.92);
 }
 
-/* ——— Jetons : thème noir (par défaut) ——— */
+/* ——— Jetons : thème encre noire (par défaut) ——— */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #000000;
-    --surface: #0c0c0d;
-    --surface-2: #161617;
-    --line: #272522;
-    --text: #f4efe4;
-    --text-2: #c8c0b0;
-    --muted: #968e7f;
-    --accent: #d6ba82;
-    --accent-ink: #17120a;
-    --accent-soft: #1e1a11;
-    --gold: #e6cb92;
-    --warn: #e8955f;
-    --warn-soft: #24160d;
-    --pos: #5cc495;
-    --neg: #ef8a7a;
-    --miss: #2a2927;
-    --series-1: #d6ba82;
-    --series-raw: #6e685e;
-    --cat-1: #7fa6ec; --cat-2: #e8955f; --cat-3: #5cc495; --cat-4: #d6ba82;
-    --hero-a: #b8955a; --hero-b: #d6ba82; --hero-c: #8a6a3a;
-    --violet: #b89ae8;
-    --wo-A: #5cc495;
-    --wo-B: #7fa6ec;
-    --wo-C: #ea7a8a;
-    --wo-M: #b89ae8;
-    --effort: #c9a253;
-    --rest: #2f62c4;
-    --figure: #ecdcb8;
-    --shadow: 0 18px 40px -26px rgb(0 0 0 / 0.9);
-    --hair: rgb(214 186 130 / 0.2);
-    --hair-strong: rgb(214 186 130 / 0.45);
-    --edge: rgb(255 255 255 / 0.07);
-    --edge-2: rgb(255 255 255 / 0.13);
-    --row: rgb(255 255 255 / 0.025);
-    --field: rgb(255 255 255 / 0.035);
-    --tick: rgb(255 255 255 / 0.3);
-    --metal: linear-gradient(180deg, #f0dcae 0%, #d6ba82 48%, #b8955a 100%);
-    --metal-h: linear-gradient(90deg, #8a6a3a, #d6ba82 60%, #f3e2b8);
-    --card-bg: linear-gradient(180deg, #111112 0%, #0a0a0b 100%);
-    --satin: repeating-linear-gradient(90deg, rgb(255 255 255 / 0.008) 0 1px, transparent 1px 3px);
-    --dial: radial-gradient(130% 95% at 88% 0%, #221c12 0%, #0d0b08 48%, #040404 100%);
-    --dot-bg: radial-gradient(circle at 35% 30%, #2a2824, #0d0d0e 72%);
-    --glass: rgb(12 12 13 / 0.9);
-    --gild: grayscale(1) sepia(0.6) saturate(1.3) brightness(1.05);
+    --bg: #070707;
+    --surface: #121212;
+    --surface-2: #1b1b1b;
+    --line: #2c2c2c;
+    --text: #f2f2f2;
+    --text-2: #c6c6c6;
+    --muted: #9c9c9c;
+    --accent: #ececec;
+    --accent-ink: #080808;
+    --accent-soft: #262626;
+    --gold: #ffffff;
+    --warn: #cdb193;
+    --warn-soft: #1d1a16;
+    --pos: #b4c9bb;
+    --neg: #dbb1ae;
+    --miss: #262626;
+    --series-1: #dcdcdc;
+    --series-raw: #6b6b6b;
+    --cat-1: #eeeeee; --cat-2: #b3b3b3; --cat-3: #858585; --cat-4: #636363;
+    --hero-a: #8c8c8c; --hero-b: #d6d6d6; --hero-c: #5a5a5a;
+    --violet: #c4c4c4;
+    --wo-A: #bccabf;
+    --wo-B: #bcc2cd;
+    --wo-C: #cfbdc0;
+    --wo-M: #c4bfce;
+    --effort: #d2d2d2;
+    --rest: #555555;
+    --figure: #8a8a8a;
+    --figure-focus: #ffffff;
+    --figure-far: #666666;
+    --figure-focus-far: #d0d0d0;
+    --shadow: none;
+    --ink: #ececec;
+    --ink-2: #4a4a4a;
+    --hair: rgb(255 255 255 / 0.22);
+    --hair-strong: rgb(255 255 255 / 0.62);
+    --edge: rgb(255 255 255 / 0.1);
+    --edge-2: rgb(255 255 255 / 0.36);
+    --rule: rgb(255 255 255 / 0.15);
+    --row: rgb(255 255 255 / 0.03);
+    --field: rgb(255 255 255 / 0.04);
+    --tick: rgb(255 255 255 / 0.32);
+    --tone: rgb(255 255 255 / 0.18);
+    --tone-2: rgb(255 255 255 / 0.36);
+    --tone-3: rgb(255 255 255 / 0.5);
+    --hatch: rgb(255 255 255 / 0.05);
+    --hatch-2: rgb(255 255 255 / 0.12);
+    --speed: rgb(255 255 255 / 0.6);
+    --speed-2: rgb(255 255 255 / 0.3);
+    --pop: #4a4a4a;
+    --title-shadow: #353535;
+    --gogo: rgb(255 255 255 / 0.1);
+    --gogo-line: rgb(255 255 255 / 0.42);
+    --balloon: #f2f2f2;
+    --balloon-ink: #0c0c0c;
+    --panel: #0e0e0e;
+    --av-body: #ebebeb;
+    --av-ink: #000000;
+    --av-aura: #9a9a9a;
+    --echo: rgb(255 255 255 / 0.2);
+    --metal: linear-gradient(180deg, #ffffff 0%, #e0e0e0 100%);
+    --metal-h: linear-gradient(90deg, #8f8f8f, #e2e2e2 65%, #ffffff);
+    --card-bg: linear-gradient(180deg, #141414 0%, #101010 100%);
+    --satin: linear-gradient(transparent, transparent);
+    --dial: linear-gradient(170deg, #171717 0%, #0b0b0b 50%, #040404 100%);
+    --dot-bg: radial-gradient(circle at 35% 30%, #2b2b2b, #0e0e0e 72%);
+    --glass: rgb(10 10 10 / 0.92);
+    --gild: grayscale(1) contrast(1.2) brightness(1.12);
   }
 }
 
 :root[data-theme="dark"],
 .player {
   color-scheme: dark;
-  --bg: #000000;
-  --surface: #0c0c0d;
-  --surface-2: #161617;
-  --line: #272522;
-  --text: #f4efe4;
-  --text-2: #c8c0b0;
-  --muted: #968e7f;
-  --accent: #d6ba82;
-  --accent-ink: #17120a;
-  --accent-soft: #1e1a11;
-  --gold: #e6cb92;
-  --warn: #e8955f;
-  --warn-soft: #24160d;
-  --pos: #5cc495;
-  --neg: #ef8a7a;
-  --miss: #2a2927;
-  --series-1: #d6ba82;
-  --series-raw: #6e685e;
-  --cat-1: #7fa6ec; --cat-2: #e8955f; --cat-3: #5cc495; --cat-4: #d6ba82;
-  --hero-a: #b8955a; --hero-b: #d6ba82; --hero-c: #8a6a3a;
-  --violet: #b89ae8;
-  --wo-A: #5cc495;
-  --wo-B: #7fa6ec;
-  --wo-C: #ea7a8a;
-  --wo-M: #b89ae8;
-  --effort: #c9a253;
-  --rest: #2f62c4;
-  --figure: #ecdcb8;
-  --shadow: 0 18px 40px -26px rgb(0 0 0 / 0.9);
-  --hair: rgb(214 186 130 / 0.2);
-  --hair-strong: rgb(214 186 130 / 0.45);
-  --edge: rgb(255 255 255 / 0.07);
-  --edge-2: rgb(255 255 255 / 0.13);
-  --row: rgb(255 255 255 / 0.025);
-  --field: rgb(255 255 255 / 0.035);
-  --tick: rgb(255 255 255 / 0.3);
-  --metal: linear-gradient(180deg, #f0dcae 0%, #d6ba82 48%, #b8955a 100%);
-  --metal-h: linear-gradient(90deg, #8a6a3a, #d6ba82 60%, #f3e2b8);
-  --card-bg: linear-gradient(180deg, #111112 0%, #0a0a0b 100%);
-  --satin: repeating-linear-gradient(90deg, rgb(255 255 255 / 0.008) 0 1px, transparent 1px 3px);
-  --dial: radial-gradient(130% 95% at 88% 0%, #221c12 0%, #0d0b08 48%, #040404 100%);
-  --dot-bg: radial-gradient(circle at 35% 30%, #2a2824, #0d0d0e 72%);
-  --glass: rgb(12 12 13 / 0.9);
-  --gild: grayscale(1) sepia(0.6) saturate(1.3) brightness(1.05);
+  --bg: #070707;
+  --surface: #121212;
+  --surface-2: #1b1b1b;
+  --line: #2c2c2c;
+  --text: #f2f2f2;
+  --text-2: #c6c6c6;
+  --muted: #9c9c9c;
+  --accent: #ececec;
+  --accent-ink: #080808;
+  --accent-soft: #262626;
+  --gold: #ffffff;
+  --warn: #cdb193;
+  --warn-soft: #1d1a16;
+  --pos: #b4c9bb;
+  --neg: #dbb1ae;
+  --miss: #262626;
+  --series-1: #dcdcdc;
+  --series-raw: #6b6b6b;
+  --cat-1: #eeeeee; --cat-2: #b3b3b3; --cat-3: #858585; --cat-4: #636363;
+  --hero-a: #8c8c8c; --hero-b: #d6d6d6; --hero-c: #5a5a5a;
+  --violet: #c4c4c4;
+  --wo-A: #bccabf;
+  --wo-B: #bcc2cd;
+  --wo-C: #cfbdc0;
+  --wo-M: #c4bfce;
+  --effort: #d2d2d2;
+  --rest: #555555;
+  --figure: #8a8a8a;
+  --figure-focus: #ffffff;
+  --figure-far: #666666;
+  --figure-focus-far: #d0d0d0;
+  --shadow: none;
+  --ink: #ececec;
+  --ink-2: #4a4a4a;
+  --hair: rgb(255 255 255 / 0.22);
+  --hair-strong: rgb(255 255 255 / 0.62);
+  --edge: rgb(255 255 255 / 0.1);
+  --edge-2: rgb(255 255 255 / 0.36);
+  --rule: rgb(255 255 255 / 0.15);
+  --row: rgb(255 255 255 / 0.03);
+  --field: rgb(255 255 255 / 0.04);
+  --tick: rgb(255 255 255 / 0.32);
+  --tone: rgb(255 255 255 / 0.18);
+  --tone-2: rgb(255 255 255 / 0.36);
+  --tone-3: rgb(255 255 255 / 0.5);
+  --hatch: rgb(255 255 255 / 0.05);
+  --hatch-2: rgb(255 255 255 / 0.12);
+  --speed: rgb(255 255 255 / 0.6);
+  --speed-2: rgb(255 255 255 / 0.3);
+  --pop: #4a4a4a;
+  --title-shadow: #353535;
+  --gogo: rgb(255 255 255 / 0.1);
+  --gogo-line: rgb(255 255 255 / 0.42);
+  --balloon: #f2f2f2;
+  --balloon-ink: #0c0c0c;
+  --panel: #0e0e0e;
+  --av-body: #ebebeb;
+  --av-ink: #000000;
+  --av-aura: #9a9a9a;
+  --echo: rgb(255 255 255 / 0.2);
+  --metal: linear-gradient(180deg, #ffffff 0%, #e0e0e0 100%);
+  --metal-h: linear-gradient(90deg, #8f8f8f, #e2e2e2 65%, #ffffff);
+  --card-bg: linear-gradient(180deg, #141414 0%, #101010 100%);
+  --satin: linear-gradient(transparent, transparent);
+  --dial: linear-gradient(170deg, #171717 0%, #0b0b0b 50%, #040404 100%);
+  --dot-bg: radial-gradient(circle at 35% 30%, #2b2b2b, #0e0e0e 72%);
+  --glass: rgb(10 10 10 / 0.92);
+  --gild: grayscale(1) contrast(1.2) brightness(1.12);
 }
 
-/* ——— Base ——— */
+/* ——— Base : page noire, une trame de points s'efface sous le titre ——— */
 body {
   font-family: var(--sans);
   letter-spacing: 0;
-  background: radial-gradient(120% 420px at 50% -60px, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%), var(--bg);
-  background-repeat: no-repeat;
+  background:
+    linear-gradient(180deg, transparent 0, var(--bg) 300px),
+    radial-gradient(circle, var(--tone) 0 0.9px, transparent 1.3px) 0 0 / 6px 6px,
+    var(--bg);
   background-color: var(--bg);
 }
-::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }
-h1, h2, h3 { font-family: var(--serif); letter-spacing: 0; }
-a { color: var(--accent); text-decoration-color: var(--hair-strong); text-underline-offset: 3px; }
+::selection { background: var(--accent); color: var(--accent-ink); }
+h1, h2, h3 { font-family: var(--display); font-stretch: condensed; letter-spacing: 0; }
+a { color: var(--accent); text-decoration-color: var(--hair-strong); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
 button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 2px;
 }
 summary::marker { color: var(--accent); }
+/* les emojis des titres et des boutons passent en niveaux de gris, comme imprimés */
+.card-head h2, .card > h2, .banner strong, .copy-btn, .big-emoji, .shelf-head h2, .apps-cat, #toast,
+.help-list, .pill:not(.warn-pill), .avatar-steps,
+.seg, .feel .btn, .lesson h3, .tests td:not(.pos):not(.neg) { filter: grayscale(1); }
 
 /* Petites capitales espacées : dates, libellés, onglets */
 .eyebrow {
-  text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.72rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.68rem; font-weight: 700;
   color: var(--accent); margin: 0;
 }
-.lbl { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.66rem; font-weight: 600; color: var(--muted); }
-.big { font-family: var(--serif); font-weight: 500; letter-spacing: -0.01em; }
-.big small { font-family: var(--sans); font-size: 0.42em; letter-spacing: 0.04em; }
+.lbl { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.64rem; font-weight: 650; color: var(--muted); }
+.big { font-family: var(--display); font-stretch: condensed; font-weight: 900; letter-spacing: -0.01em; }
+.big small { font-family: var(--sans); font-size: 0.42em; font-weight: 700; letter-spacing: 0.04em; }
 
-/* Titres de page */
-.page-head { padding: 12px 4px 4px; }
-.page-head h1 { font-family: var(--serif); font-weight: 500; font-size: 2.3rem; letter-spacing: -0.01em; line-height: 1.1; }
+/* ——— Titres de page : capitales très grasses, penchées, ombre d'encre décalée ——— */
+.page-head { position: relative; isolation: isolate; padding: 16px 4px 6px; }
+/* lignes de vitesse horizontales, à droite, derrière le titre */
+.page-head::after {
+  content: ""; position: absolute; z-index: -1; right: -16px; top: 4px; width: 58%; height: 70px; pointer-events: none;
+  background:
+    repeating-linear-gradient(180deg, var(--speed) 0 1.5px, transparent 1.5px 8px),
+    repeating-linear-gradient(180deg, transparent 0 4px, var(--speed-2) 4px 4.8px, transparent 4.8px 11px);
+  -webkit-mask: linear-gradient(90deg, transparent, #000 80%);
+  mask: linear-gradient(90deg, transparent, #000 80%);
+  opacity: 0.4;
+}
+.page-head h1 {
+  font-family: var(--display); font-stretch: condensed; font-weight: 900; font-size: 2.8rem;
+  text-transform: uppercase; letter-spacing: 0.01em; line-height: 1;
+  /* penché comme un titre de chapitre ; le filet de fond détache l'ombre grise */
+  transform: skewX(-9deg); transform-origin: 0 100%;
+  text-shadow: 1.5px 1.5px 0 var(--bg), 4px 4px 0 var(--title-shadow), 5px 5px 0 var(--title-shadow);
+}
 .page-head p {
-  display: flex; align-items: baseline; gap: 10px; margin-top: 8px;
-  text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.66rem; font-weight: 600; color: var(--muted);
+  display: inline-block; margin-top: 12px; padding: 5px 10px;
+  border: 1.5px solid var(--ink-2); background: var(--panel);
+  text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.64rem; font-weight: 700; color: var(--text-2);
 }
-.page-head p::before { content: ""; flex: 0 0 22px; height: 1px; background: var(--accent); transform: translateY(-0.32em); }
 
-/* ——— Cartes : satin brossé, filet discret ——— */
-.card { border-radius: 20px; padding: 18px; }
-:root:root .card, :root:root .stat, :root:root .chart, :root:root .fold {
-  background: var(--satin), var(--card-bg);
-  border: 1px solid var(--edge);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04), var(--shadow);
+/* ——— Cartes : cases d'encre, trame dans l'angle ——— */
+.card { border-radius: 4px; padding: 18px; }
+:root:root .card, :root:root .stat, :root:root .chart {
+  background:
+    linear-gradient(225deg, transparent 0, var(--panel) 70px),
+    radial-gradient(circle, var(--tone) 0 0.9px, transparent 1.3px) 0 0 / 5px 5px,
+    var(--panel);
+  border: 2px solid var(--ink-2);
+  box-shadow: none;
 }
-:root:root .card.planned { border-color: var(--hair-strong); }
-.card-head { margin-bottom: 8px; }
-.card-head h2, .card > h2 { font-size: 1.2rem; font-weight: 600; }
-.card-head.sub { border-top-color: var(--edge); }
-.card-head.sub h3 { font-size: 1.05rem; font-weight: 600; }
+:root:root .fold {
+  background: var(--panel);
+  border: 2px solid var(--ink-2);
+  box-shadow: none;
+}
+:root:root .card.planned { border-color: var(--ink); }
+.card-head { margin-bottom: 10px; }
+.card-head h2, .card > h2 {
+  font-family: var(--display); font-stretch: condensed; font-size: 1.18rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.03em;
+}
+.card-head.sub { border-top: 1.5px solid var(--rule); }
+.card-head.sub h3 { font-size: 1.05rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; }
 
-/* Cartes « vedettes » : reflet doré dans l'angle */
+/* Cartes « vedettes » : trame plus forte, hachures légères */
 :root:root .card.program-hero,
 :root:root .card.money-hero {
-  background: var(--satin), radial-gradient(130% 110% at 100% 0%, color-mix(in srgb, var(--accent) 11%, transparent), transparent 55%), var(--card-bg);
-  border-color: var(--hair);
+  background:
+    linear-gradient(225deg, transparent 0, var(--panel) 150px),
+    radial-gradient(circle, var(--tone-2) 0 1px, transparent 1.4px) 0 0 / 6px 6px,
+    repeating-linear-gradient(-45deg, var(--hatch) 0 1px, transparent 1px 7px),
+    var(--panel);
+  border-color: var(--ink);
 }
 :root:root .card.today-workout {
-  background: var(--satin), radial-gradient(120% 120% at 0% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%), var(--card-bg) !important;
-  border-color: var(--hair-strong);
+  background:
+    linear-gradient(225deg, transparent 0, var(--panel) 150px),
+    radial-gradient(circle, var(--tone-2) 0 1px, transparent 1.4px) 0 0 / 6px 6px,
+    repeating-linear-gradient(-45deg, var(--hatch) 0 1px, transparent 1px 7px),
+    var(--panel) !important;
+  border: 3px solid var(--ink);
+  box-shadow: 5px 5px 0 0 var(--title-shadow);
 }
 :root:root .card.goal {
-  background: var(--satin), radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 60%), var(--card-bg) !important;
-  border-color: var(--hair);
+  background:
+    linear-gradient(225deg, transparent 0, var(--panel) 120px),
+    radial-gradient(circle, var(--tone) 0 1px, transparent 1.4px) 0 0 / 6px 6px,
+    var(--panel) !important;
+  border-color: var(--ink-2);
 }
 
-/* Pastilles */
+/* Pastilles : petites étiquettes carrées */
 .pill {
-  background: transparent; border: 1px solid var(--edge-2); color: var(--text-2);
-  font-size: 0.68rem; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase;
-  padding: 3px 10px; font-variant-numeric: tabular-nums;
+  background: transparent; border: 1.5px solid var(--edge-2); color: var(--text-2); border-radius: 2px;
+  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 8px; font-variant-numeric: tabular-nums;
 }
-.pill.ok { background: var(--accent-soft); border-color: var(--hair-strong); color: var(--accent); }
-.tag { background: transparent; border: 1px solid var(--edge-2); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.64rem; }
-.tag.real { background: var(--accent-soft); border-color: var(--hair-strong); color: var(--accent); }
-.warn-pill { background: var(--warn-soft); border-color: color-mix(in srgb, var(--warn) 40%, transparent); color: var(--warn); }
+.pill.ok { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.tag { background: transparent; border: 1.5px solid var(--edge-2); border-radius: 2px; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.62rem; }
+.tag.real { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.warn-pill { background: var(--warn-soft); border-color: color-mix(in srgb, var(--warn) 50%, transparent); color: var(--warn); }
 
-/* ——— Boutons ——— */
+/* ——— Boutons : coins vifs ; le principal imprimé en blanc, ombre d'encre décalée ——— */
 .btn, .seg {
-  min-height: 44px; border-radius: 12px; border: 1px solid var(--edge-2);
-  background: var(--field); color: var(--text); font-weight: 500;
-  transition: transform 0.1s, background 0.2s, border-color 0.2s, color 0.2s;
+  min-height: 44px; border-radius: 3px; border: 1.5px solid var(--edge-2);
+  background: var(--field); color: var(--text); font-weight: 600;
 }
 .seg { min-height: 44px; }
 .btn.small { min-height: 44px; font-size: 0.85rem; }
 .btn.primary, .copy-btn.copied {
-  background: var(--metal); border-color: transparent; color: var(--accent-ink);
-  font-weight: 650; letter-spacing: 0.02em;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), inset 0 -1px 0 rgb(0 0 0 / 0.18), 0 10px 24px -14px color-mix(in srgb, var(--accent) 80%, transparent);
+  background: var(--metal); border: 2px solid var(--accent); color: var(--accent-ink);
+  font-family: var(--display); font-stretch: condensed; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.07em;
+  box-shadow: 4px 4px 0 0 var(--pop);
+}
+.btn.primary:active { box-shadow: 1px 1px 0 0 var(--pop); transform: translate(2px, 2px); }
+@media (prefers-reduced-motion: no-preference) {
+  .btn, .seg { transition: transform 0.1s, background 0.2s, border-color 0.2s, color 0.2s; }
+  .btn.primary { transition: transform 0.1s, background 0.2s, box-shadow 0.12s; }
 }
 .btn.ghost { background: transparent; border-color: transparent; color: var(--muted); }
 .seg.on {
-  background: var(--accent-soft); border-color: var(--hair-strong); color: var(--accent); font-weight: 650;
+  background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 800;
 }
-.copy-btn:not(.primary):not(.copied) { border-color: var(--hair); color: var(--accent); background: transparent; }
-.chip { min-height: 44px; border-color: var(--edge-2); background: var(--field); }
+.copy-btn:not(.primary):not(.copied) { border-color: var(--hair-strong); color: var(--text); background: transparent; }
+.chip { min-height: 44px; border: 1.5px solid var(--edge-2); background: var(--field); border-radius: 3px; }
 
 /* Champs */
 input, textarea, select {
-  background: var(--field); border: 1px solid var(--edge-2); border-radius: 12px; color: var(--text);
+  background: var(--field); border: 1.5px solid var(--edge-2); border-radius: 3px; color: var(--text);
 }
-input:focus, textarea:focus, select:focus { border-color: var(--hair-strong); }
+input:focus, textarea:focus, select:focus { border-color: var(--ink); }
 input::placeholder, textarea::placeholder { color: var(--muted); }
-.habit-edit { border-color: var(--edge); border-radius: 14px; }
+.habit-edit { border: 1.5px solid var(--edge); border-radius: 4px; }
 .habit-edit input { min-height: 44px; }
-label.radio { min-height: 44px; border-color: var(--edge-2); }
-label.radio:has(input:checked) { border-color: var(--hair-strong); background: var(--accent-soft); }
-.checks { border-color: var(--edge); }
+label.radio { min-height: 44px; border: 1.5px solid var(--edge-2); border-radius: 3px; }
+label.radio:has(input:checked) { border-color: var(--ink); background: var(--accent-soft); }
+.checks { border: 1.5px solid var(--edge); border-radius: 4px; }
 
-/* ——— Accueil : le cadran ——— */
+/* ——— Accueil : la grande case d'ouverture ——— */
 :root:root .hero {
   position: relative; isolation: isolate; overflow: hidden;
-  border-radius: 26px; padding: 20px 18px 18px;
+  border-radius: 4px; padding: 20px 18px 18px;
   color: var(--text);
   background: var(--dial);
-  border: 1px solid var(--hair-strong);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 30px 60px -34px rgb(0 0 0 / 0.9);
+  border: 3px solid var(--ink);
+  box-shadow: 6px 6px 0 0 var(--title-shadow);
 }
-/* second filet intérieur, comme une lunette */
+/* trame dégradée : gros points dans l'angle haut droit… */
 .hero::before {
-  content: ""; position: absolute; inset: 6px; z-index: -1; pointer-events: none;
-  border-radius: 20px; border: 1px solid var(--hair);
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(circle, var(--tone-3) 0 1.7px, transparent 2.1px) 0 0 / 7px 7px;
+  -webkit-mask: linear-gradient(212deg, #000 0%, rgb(0 0 0 / 0.75) 9%, transparent 24%);
+  mask: linear-gradient(212deg, #000 0%, rgb(0 0 0 / 0.75) 9%, transparent 24%);
 }
-/* soleillé : rayons très fins partant du compteur */
+/* … qui deviennent de petits points plus loin */
+.hero-top::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(circle, var(--tone-2) 0 0.9px, transparent 1.3px) 3.5px 3.5px / 7px 7px;
+  -webkit-mask: linear-gradient(212deg, transparent 10%, #000 20%, rgb(0 0 0 / 0.5) 32%, transparent 46%);
+  mask: linear-gradient(212deg, transparent 10%, #000 20%, rgb(0 0 0 / 0.5) 32%, transparent 46%);
+}
+/* hachures croisées qui montent du coin bas gauche */
 .hero::after {
-  content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none;
-  background: repeating-conic-gradient(from 0deg at calc(100% - 54px) 56px, rgb(255 255 255 / 0.03) 0deg 0.6deg, transparent 0.6deg 1.8deg);
-  -webkit-mask: radial-gradient(90% 80% at calc(100% - 54px) 56px, #000, transparent 75%);
-  mask: radial-gradient(90% 80% at calc(100% - 54px) 56px, #000, transparent 75%);
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    repeating-linear-gradient(-45deg, var(--hatch-2) 0 1px, transparent 1px 6px),
+    repeating-linear-gradient(45deg, var(--hatch) 0 1px, transparent 1px 9px);
+  -webkit-mask: linear-gradient(28deg, #000 0%, rgb(0 0 0 / 0.6) 18%, transparent 40%);
+  mask: linear-gradient(28deg, #000 0%, rgb(0 0 0 / 0.6) 18%, transparent 40%);
+}
+/* « ゴゴゴ » : l'onomatopée du grondement, pâle et contournée, dans sa propre
+   colonne au bord droit de l'accueil (la colonne de droite garde une petite
+   marge : même une chaîne à 3 chiffres ne passe jamais dessous).
+   Décor seulement : texte alternatif vide, jamais cliquable. */
+.hero-main { position: relative; }
+.hero-side { padding-right: 11px; }
+.hero-main::after {
+  content: "ゴゴゴ" / "";
+  position: absolute; top: 4px; right: -14px; z-index: -1; pointer-events: none;
+  writing-mode: vertical-rl; text-orientation: upright;
+  font: 900 1.7rem/1 var(--jp); letter-spacing: 0.02em; white-space: nowrap;
+  color: var(--gogo);
+  -webkit-text-stroke: 1.2px var(--gogo-line);
+  text-shadow: 2px 2px 0 var(--bg);
+  /* penché sans déborder : les signes s'inclinent, la colonne reste droite */
+  transform: rotate(5deg) skewY(-10deg); transform-origin: 50% 50%;
+}
+/* petit téléphone (360 px) : colonne plus fine, le texte garde sa place */
+@media (max-width: 380px) {
+  .hero-main::after { font-size: 1.4rem; right: -13px; }
+  .hero-side { padding-right: 13px; }
 }
 .hero .eyebrow { color: var(--accent); }
 .hero .lbl, .hero small { color: var(--muted); }
-.greet { font-family: var(--serif); font-weight: 500; font-size: 1.22rem; line-height: 1.3; margin-top: 6px; }
+.greet {
+  font-family: var(--display); font-stretch: condensed; font-weight: 900; font-size: 1.24rem; line-height: 1.12;
+  margin-top: 8px; text-transform: uppercase; letter-spacing: 0.01em;
+  text-shadow: 2px 2px 0 var(--title-shadow);
+}
 
+/* anneau du jour : disque tramé + 12 traits d'encre */
 .ring-wrap::before {
-  content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  content: ""; position: absolute; inset: 7px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, var(--tone) 0 0.9px, transparent 1.3px) 0 0 / 4px 4px;
+  -webkit-mask: radial-gradient(closest-side, transparent 55%, #000 100%);
+  mask: radial-gradient(closest-side, transparent 55%, #000 100%);
+}
+.ring-wrap::after {
+  content: ""; position: absolute; inset: -5px; border-radius: 50%; pointer-events: none;
   background: repeating-conic-gradient(from -1deg, var(--accent) 0 2deg, transparent 2deg 30deg);
   -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
   mask: radial-gradient(closest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+}
+.ring-bg { stroke: var(--edge-2); stroke-width: 3; }
+.ring-fg { stroke: var(--accent); stroke-width: 5; stroke-linecap: butt; }
+.ring-wrap.done .ring-fg { stroke: var(--gold); }
+.ring-txt { font-family: var(--display); font-stretch: condensed; font-weight: 900; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+
+/* Ton double : un esprit debout derrière toi, des lignes de concentration rayonnent */
+.avatar-btn {
+  --figure: var(--av-body); --accent: var(--av-aura);
+  position: relative; isolation: isolate; border-radius: 4px;
+}
+/* lignes fines et serrées, près de la silhouette */
+.avatar-btn::before {
+  content: ""; position: absolute; inset: -8px -12px -2px; z-index: -1; pointer-events: none;
+  background:
+    repeating-conic-gradient(from 1deg at 50% 50%, var(--speed) 0 0.6deg, transparent 0.6deg 5.3deg),
+    repeating-conic-gradient(from 3deg at 50% 50%, var(--speed-2) 0 0.4deg, transparent 0.4deg 3.1deg);
+  -webkit-mask: radial-gradient(closest-side, transparent 48%, #000 64%, rgb(0 0 0 / 0.7) 84%, transparent 100%);
+  mask: radial-gradient(closest-side, transparent 48%, #000 64%, rgb(0 0 0 / 0.7) 84%, transparent 100%);
+}
+/* grands traits épais, plus rares, qui partent plus loin : l'aura qui gronde */
+.avatar-btn::after {
+  content: ""; position: absolute; inset: -12px -12px -4px; z-index: -1; pointer-events: none;
+  background: repeating-conic-gradient(from 5deg at 50% 50%, var(--speed) 0 1.8deg, transparent 1.8deg 19deg);
+  -webkit-mask: radial-gradient(closest-side, transparent 36%, #000 52%, rgb(0 0 0 / 0.5) 80%, transparent 100%);
+  mask: radial-gradient(closest-side, transparent 36%, #000 52%, rgb(0 0 0 / 0.5) 80%, transparent 100%);
   opacity: 0.8;
 }
-.ring-bg { stroke: var(--edge-2); stroke-width: 2; }
-.ring-fg { stroke: var(--accent); stroke-width: 3.5; }
-.ring-wrap.done .ring-fg { stroke: var(--gold); }
-.ring-txt { font-family: var(--serif); font-weight: 500; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+.avatar-btn:focus-visible { outline-color: var(--text); }
+/* le double a un écho décalé, pâle : un esprit qui se tient juste derrière lui */
+.avatar-btn .avatar { filter: drop-shadow(8px -6px 0 var(--echo)); }
+.av-ring { stroke: var(--speed-2); stroke-width: 1; stroke-dasharray: 2 3; }
+.av-line { stroke: var(--av-ink); stroke-width: 1.3; }
+.av-ground { fill: var(--tone-2); }
+.hero-stat .mid { font-family: var(--display); font-stretch: condensed; font-weight: 800; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.02em; }
+.hero-stat .mid small { font-family: var(--sans); color: var(--muted); }
 
 .hero-stats { gap: 0; margin: 16px 0 16px; }
-.hero-stats > div + div { border-left: 1px solid var(--hair); padding-left: 16px; }
-.hero .big { font-size: 2.5rem; line-height: 1.05; filter: var(--gild); } /* flamme et drapeau « gravés » */
+.hero-stats > div + div { border-left: 1.5px solid var(--rule); padding-left: 16px; }
+/* hauteur de ligne un peu plus grande : la flamme ne mord plus sur « jours de chaîne » */
+.hero .big { font-size: clamp(2.35rem, 11.4vw, 2.8rem); line-height: 1.14; white-space: nowrap; filter: var(--gild); text-shadow: 3px 3px 0 var(--title-shadow); }
+.hero .mid { filter: var(--gild); }
 .hero-stats .lbl { margin-top: 4px; }
 
 .level { gap: 6px 10px; margin-bottom: 16px; }
 .badge {
-  background: transparent; border: 1px solid var(--hair-strong); color: var(--accent);
-  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px;
+  background: var(--accent); border: 0; border-radius: 0; color: var(--accent-ink);
+  font-size: 0.64rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 10px 3px 8px;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
 }
-.rank { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 1.02rem; }
-.xp { color: var(--muted); font-size: 0.72rem; letter-spacing: 0.04em; }
-.xpbar { height: 3px; border-radius: 2px; background: var(--edge-2); }
-.xpbar span { background: var(--metal-h); border-radius: 2px; }
+.rank { font-family: var(--display); font-stretch: condensed; font-weight: 900; font-size: clamp(0.98rem, 4.2vw, 1.1rem); text-transform: uppercase; letter-spacing: 0.02em; min-width: 0; overflow-wrap: anywhere; -webkit-hyphens: auto; hyphens: auto; line-height: 1.1; }
+.badge { white-space: nowrap; }
+/* le rang se met à côté du badge s'il tient, sinon juste en dessous :
+   « Inarrêtable » n'est jamais coupé au milieu du mot sur un petit écran */
+.hero-side .level { display: flex; flex-wrap: wrap; align-items: center; }
+.hero-side .level > .xpbar, .hero-side .level > .xp { flex: 0 0 100%; }
+.xp { color: var(--muted); font-size: 0.7rem; letter-spacing: 0.06em; font-weight: 600; }
+/* barre d'XP : rail tramé, remplissage plein */
+.xpbar {
+  height: 7px; border-radius: 0; border: 1.5px solid var(--edge-2);
+  background: radial-gradient(circle, var(--tone) 0 0.7px, transparent 1px) 0 0 / 3px 3px;
+}
+.xpbar span { background: var(--accent); border-radius: 0; }
 
 .hero .dot-day b {
-  width: 28px; height: 28px; background: transparent; border: 1px solid var(--edge-2);
-  color: var(--accent-ink); font-size: 0.8rem; font-weight: 700;
+  width: 28px; height: 28px; border: 1.5px solid var(--edge-2); color: var(--accent-ink); font-size: 0.8rem; font-weight: 900;
+  background: repeating-linear-gradient(-45deg, var(--hatch-2) 0 1px, transparent 1px 4px);
 }
-.hero .dot-day.ok b { background: var(--metal); border-color: transparent; }
-.hero .dot-day.now b { border: 1px solid var(--accent); background: radial-gradient(circle, var(--accent) 0 2.5px, transparent 3px); }
-.hero .dot-day.pre b { border: 1px dashed var(--edge-2); }
-.hero .dot-day small { color: var(--muted); font-size: 0.62rem; letter-spacing: 0.08em; font-weight: 600; margin-top: 2px; }
+.hero .dot-day.ok b { background: var(--metal); border: 2px solid var(--accent); }
+.hero .dot-day.now b { border: 2px solid var(--accent); background: radial-gradient(circle, var(--accent) 0 3px, transparent 3.5px); }
+.hero .dot-day.pre b { border: 1.5px dashed var(--edge-2); background: transparent; }
+.hero .dot-day small { color: var(--muted); font-size: 0.62rem; letter-spacing: 0.1em; font-weight: 700; margin-top: 3px; }
 
+/* note : un cartouche de narration */
 .hero-note {
-  margin-top: 16px; padding: 12px 14px; border-radius: 14px;
-  background: var(--row); border: 1px solid var(--hair);
+  margin-top: 16px; padding: 12px 14px; border-radius: 0;
+  background: var(--panel); border: 1.5px solid var(--ink-2);
   color: var(--text-2); font-size: 0.86rem;
 }
 .hero-note strong { color: var(--text); }
+.hero-note > span[aria-hidden] { filter: var(--gild); }
 
 /* ——— Bandeaux ——— */
 .banner {
-  background: var(--row); border: 1px solid var(--edge); border-left: 2px solid var(--accent);
-  border-radius: 14px; padding: 12px 14px;
+  background: var(--panel); border: 1.5px solid var(--ink-2); border-left: 5px solid var(--accent);
+  border-radius: 3px; padding: 12px 14px;
 }
-.banner.warn { background: linear-gradient(90deg, var(--warn-soft), transparent 85%), var(--surface); border-color: color-mix(in srgb, var(--warn) 28%, transparent); border-left-color: var(--warn); }
-.banner.ok { background: linear-gradient(90deg, var(--accent-soft), transparent 85%), var(--surface); border-color: var(--hair); border-left-color: var(--accent); }
-.alerts { background: var(--warn-soft); border-left-width: 2px; border-radius: 12px; }
+.banner.warn {
+  background: repeating-linear-gradient(-45deg, var(--hatch) 0 1px, transparent 1px 6px), var(--panel);
+  border-color: var(--ink-2); border-left-color: var(--warn);
+}
+.banner.warn strong { color: var(--text); }
+/* sauvegarde : bouton un peu plus serré, le titre tient sur deux lignes */
+.banner.backup { border-left-width: 4px; }
+.banner.backup .btn.primary { padding: 0 13px; letter-spacing: 0.05em; }
+.banner.ok { background: var(--accent-soft); border-color: var(--hair); border-left-color: var(--accent); }
+.alerts { background: var(--warn-soft); border-left-width: 4px; border-radius: 3px; }
 
-/* ——— Plan du jour : liste à filets ——— */
-.bar { height: 3px; border-radius: 2px; background: var(--edge-2); }
-.bar span { background: var(--metal-h); border-radius: 2px; }
-.plan .bar { margin: 4px 0 6px; }
+/* ——— Plan du jour ——— */
+.bar { height: 7px; border-radius: 0; border: 1.5px solid var(--edge-2); background: radial-gradient(circle, var(--tone) 0 0.7px, transparent 1px) 0 0 / 3px 3px; }
+.bar span { background: var(--accent); border-radius: 0; }
+.plan .bar { margin: 4px 0 8px; }
+
+/* « Maintenant » : la case qu'on ne peut pas rater, cadre épais, trame dégradée */
+.now-card {
+  position: relative; isolation: isolate; border-radius: 3px; border: 3px solid var(--ink);
+  box-shadow: 5px 5px 0 0 var(--title-shadow);
+  /* petits points en lisière de la trame, fondus avant le texte */
+  background:
+    linear-gradient(235deg, transparent 0, transparent 24px, var(--panel) 84px),
+    radial-gradient(circle, var(--tone-2) 0 1.1px, transparent 1.5px) 3.5px 3.5px / 7px 7px,
+    var(--panel);
+}
+.now-card::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(circle, var(--tone-3) 0 1.7px, transparent 2.1px) 0 0 / 7px 7px;
+  -webkit-mask: radial-gradient(130px 58px at 100% 0, #000 0, rgb(0 0 0 / 0.6) 45%, transparent 100%);
+  mask: radial-gradient(130px 58px at 100% 0, #000 0, rgb(0 0 0 / 0.6) 45%, transparent 100%);
+}
+/* hachures en bas à gauche, sous le bouton seulement */
+.now-card::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: repeating-linear-gradient(-45deg, var(--hatch-2) 0 1px, transparent 1px 5px);
+  -webkit-mask: linear-gradient(20deg, #000 0, transparent 34%);
+  mask: linear-gradient(20deg, #000 0, transparent 34%);
+}
+.now-card .now-ico { background: var(--accent-soft); border: 2px solid var(--ink); border-radius: 50%; filter: var(--gild); }
+.now-card .eyebrow {
+  align-self: flex-start; color: var(--accent-ink); background: var(--accent);
+  padding: 3px 16px 3px 8px; letter-spacing: 0.24em; font-weight: 900;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+.now-card strong { font-family: var(--display); font-stretch: condensed; font-weight: 900; font-size: 1.28rem; margin-top: 6px; }
+.now-card.all-done { border-style: dashed; box-shadow: none; }
+.now-card .now-go { box-shadow: 5px 5px 0 0 var(--pop); font-size: 1.08rem; letter-spacing: 0.09em; }
+
 .todos { gap: 0; }
 .todo {
   background: transparent; border-radius: 0; padding: 12px 2px;
-  border-top: 1px solid var(--edge);
+  border-top: 1px solid var(--rule);
 }
 .todos > .todo:first-child { border-top: 0; }
-.todo strong { font-weight: 600; }
+.todo strong { font-weight: 700; }
+.todo.is-now { box-shadow: inset 4px 0 0 var(--accent); padding-left: 12px; background: var(--row); }
 .todo-ico {
   width: 42px; height: 42px; border-radius: 50%;
-  background: transparent; border: 1px solid var(--edge-2); filter: var(--gild);
+  background: transparent; border: 1.5px solid var(--rule); filter: var(--gild);
 }
-.todo.done { opacity: 0.55; }
-.todo.done .todo-ico { background: var(--metal); border-color: transparent; color: var(--accent-ink); filter: none; }
+.todo.done { opacity: 0.86; }
+.todo.done .todo-ico { background: var(--metal); border-color: var(--accent); color: var(--accent-ink); filter: none; font-weight: 900; }
 .todo-go {
-  min-height: 44px; padding: 0 14px; border-radius: 12px;
-  background: transparent; border: 1px solid var(--hair-strong); color: var(--accent);
-  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  min-height: 44px; padding: 0 14px; border-radius: 3px;
+  background: transparent; border: 1.5px solid var(--hair-strong); color: var(--text);
+  font-size: 0.7rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
 }
 .todo.done .todo-go { border-color: var(--edge-2); color: var(--muted); }
 
+/* Bouton d'aide « ? » : une petite bulle d'encre */
+.help-btn {
+  border: 2px solid var(--accent); color: var(--accent); background: var(--panel);
+  font-weight: 900;
+}
+.help-btn:active { background: var(--accent); color: var(--accent-ink); }
+.page-title .help-btn { box-shadow: 2px 2px 0 0 var(--title-shadow); }
+.help-list { counter-reset: none; }
+.help-list li::marker { color: var(--accent); font-family: var(--display); font-weight: 900; }
+
 /* ——— Sections repliées ——— */
-.fold { border-radius: 18px; }
-.fold > summary { min-height: 60px; border-radius: 18px; }
+.fold { border-radius: 4px; }
+.fold > summary { min-height: 60px; border-radius: 3px; }
 .fold > summary:active { background: var(--row); }
-.fold-ico { border-radius: 50%; background: transparent; border: 1px solid var(--edge-2); filter: var(--gild); }
-.fold-title strong { font-family: var(--serif); font-weight: 600; font-size: 1.06rem; letter-spacing: 0; }
+.fold-ico { border-radius: 50%; background: transparent; border: 1.5px solid var(--rule); filter: var(--gild); }
+.fold-title strong { font-family: var(--sans); font-weight: 750; font-size: 1.02rem; letter-spacing: 0; }
 .fold-title small { color: var(--muted); }
-.chev { width: 8px; height: 8px; border-right: 1.5px solid var(--accent); border-bottom: 1.5px solid var(--accent); }
-.fold[open] > summary { border-bottom: 1px solid var(--edge); border-radius: 18px 18px 0 0; }
+.chev { width: 9px; height: 9px; border-right: 2.5px solid var(--accent); border-bottom: 2.5px solid var(--accent); }
+.fold[open] > summary { border-bottom: 1.5px solid var(--rule); border-radius: 3px 3px 0 0; }
 .fold-body { padding: 12px 14px 14px; }
-.fold-body .quote { background: var(--row); border: 1px solid var(--edge); }
+.wo-fold { border: 1.5px solid var(--edge-2); border-radius: 3px; }
+.wo-fold.planned { border: 2px solid var(--ink); }
+.wo-fold > summary strong { font-weight: 750; }
 
 /* Habitudes */
 .habits { gap: 8px; }
 .habit {
-  background: var(--row); border: 1px solid var(--edge); border-left: 1px solid var(--edge);
-  border-radius: 14px; padding: 10px 10px 10px 12px;
+  background: transparent; border: 1.5px solid var(--rule); border-left: 1.5px solid var(--rule);
+  border-radius: 3px; padding: 10px 10px 10px 12px;
 }
 .habit.lvl-1, .habit.lvl-2 {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent 80%), var(--row);
-  border-color: var(--hair); border-left-color: var(--hair);
+  background: repeating-linear-gradient(-45deg, var(--hatch) 0 1px, transparent 1px 6px), var(--row);
+  border-color: var(--hair-strong); border-left: 4px solid var(--accent);
 }
 .habit-ico {
   width: 40px; height: 40px; border-radius: 50%;
-  background: transparent; border: 1px solid var(--edge-2); box-shadow: none; filter: var(--gild);
+  background: transparent; border: 1.5px solid var(--rule); box-shadow: none; filter: var(--gild);
 }
-.habit.lvl-1 .habit-ico, .habit.lvl-2 .habit-ico { background: var(--metal); border-color: transparent; color: var(--accent-ink); filter: none; }
-/* « Complet » : double anneau d'or */
-.habit.lvl-2 .habit-ico { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--accent); }
-.habit-text strong { font-weight: 600; }
+.habit.lvl-1 .habit-ico, .habit.lvl-2 .habit-ico { background: var(--metal); border-color: var(--accent); color: var(--accent-ink); filter: none; font-weight: 900; }
+/* « Complet » : double anneau d'encre */
+.habit.lvl-2 .habit-ico { box-shadow: 0 0 0 2px var(--panel), 0 0 0 3.5px var(--accent); }
+.habit-text strong { font-weight: 700; }
 .habit-btns .seg { min-width: 88px; }
+/* « Ce que valent Min et Complet » : zone touchable portée à 44 px, sans rien déplacer */
+details.more:not(.card) > summary { position: relative; }
+details.more:not(.card) > summary::after { content: ""; position: absolute; inset: -12px 0; }
+/* recettes, phases du programme, cartes : des lignes de 44 px pour le pouce */
+.fold-body details:not([class]) > summary, #view details:not([class]) > summary { padding-block: 12px; }
 
-.quote::before { color: var(--accent); font-family: var(--serif); }
-.quote p { font-family: var(--serif); font-size: 1rem; line-height: 1.5; }
-.quote cite { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.66rem; }
-
-/* ——— Barre d'onglets flottante ——— */
-:root:root #tabs {
-  background: var(--glass); border: 1px solid var(--hair); border-radius: 22px;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 20px 40px -14px rgb(0 0 0 / 0.75);
-  -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3);
+/* Pensée du jour : une bulle de dialogue */
+:root:root .quote, :root:root .fold-body .quote {
+  position: relative; margin: 4px 0 14px; padding: 16px 20px;
+  background: var(--balloon); color: var(--balloon-ink);
+  border: 2px solid var(--ink); border-radius: 26px;
 }
-#tabs a { color: var(--muted); font-size: 0.62rem; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; gap: 3px; border-radius: 17px; }
-#tabs a[aria-current="page"] { color: var(--accent); }
-#tabs .tab-ico { font-size: 1.2rem; filter: grayscale(1); opacity: 0.5; }
-#tabs a[aria-current="page"] .tab-ico { filter: var(--gild); opacity: 1; transform: translateY(-1px); }
-.tab-ind { top: 4px; bottom: 4px; border-radius: 17px; background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--hair); }
+.quote::before {
+  content: ""; position: absolute; top: auto; left: 34px; bottom: -14px; width: 20px; height: 14px;
+  background: var(--ink); clip-path: polygon(0 0, 100% 0, 10% 100%);
+}
+.quote::after {
+  content: ""; position: absolute; left: 36.5px; bottom: -9.5px; width: 14px; height: 10px;
+  background: var(--balloon); clip-path: polygon(0 0, 100% 0, 10% 100%);
+}
+.quote p { font-family: var(--sans); font-style: normal; font-weight: 600; font-size: 1rem; line-height: 1.45; color: var(--balloon-ink); }
+.quote cite { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.62rem; font-weight: 700; color: #4a4a4a; }
+
+/* ——— Barre d'onglets : bandeau noir, onglet actif imprimé en blanc ——— */
+:root:root #tabs {
+  background: var(--glass); border: 2px solid var(--ink-2); border-radius: 6px;
+  box-shadow: 0 18px 36px -14px rgb(0 0 0 / 0.7);
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+}
+#tabs a { color: var(--muted); font-size: 0.6rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; gap: 3px; border-radius: 3px; }
+#tabs a[aria-current="page"] { color: var(--accent-ink); }
+#tabs .tab-ico { font-size: 1.2rem; filter: grayscale(1); opacity: 0.55; }
+#tabs a[aria-current="page"] .tab-ico { filter: grayscale(1) contrast(1.3); opacity: 1; transform: translateY(-1px); }
+.tab-ind { top: 4px; bottom: 4px; border-radius: 3px; background: var(--accent); box-shadow: none; }
+#tabs:not(.has-ind) a[aria-current="page"] { background: var(--accent); }
 
 /* Sous-onglets */
 .subtabs {
-  background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--edge);
-  border-radius: 14px; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  background: var(--glass); border: 1.5px solid var(--ink-2);
+  border-radius: 4px; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
 }
-.subtabs button { min-height: 44px; border-radius: 10px; color: var(--muted); }
-.subtabs button.on { background: var(--accent-soft); color: var(--accent); font-weight: 650; box-shadow: inset 0 0 0 1px var(--hair-strong); }
+.subtabs button { min-height: 44px; border-radius: 3px; color: var(--muted); font-weight: 650; }
+.subtabs button.on { background: var(--accent); color: var(--accent-ink); font-weight: 800; box-shadow: none; }
 
-/* ——— Minuteurs : cadran de chronographe ——— */
+/* ——— Minuteurs : cadran d'encre ——— */
 .timer::before, .timer::after {
   content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
 }
 /* 60 traits de minutes */
 .timer::before {
-  background: repeating-conic-gradient(from -0.4deg, var(--tick) 0 0.8deg, transparent 0.8deg 6deg);
-  -webkit-mask: radial-gradient(closest-side, transparent 95%, #000 95.5%, #000 99.6%, transparent 100%);
-  mask: radial-gradient(closest-side, transparent 95%, #000 95.5%, #000 99.6%, transparent 100%);
+  background: repeating-conic-gradient(from -0.5deg, var(--tick) 0 1deg, transparent 1deg 6deg);
+  -webkit-mask: radial-gradient(closest-side, transparent 94.5%, #000 95%, #000 99.6%, transparent 100%);
+  mask: radial-gradient(closest-side, transparent 94.5%, #000 95%, #000 99.6%, transparent 100%);
 }
-/* 12 index dorés */
+/* 12 index plus longs, comme un cadran de montre (rien derrière le chiffre ni l'arbre) */
 .timer::after {
-  background: repeating-conic-gradient(from -1deg, var(--accent) 0 2deg, transparent 2deg 30deg);
-  -webkit-mask: radial-gradient(closest-side, transparent 93%, #000 93.5%, #000 99.6%, transparent 100%);
-  mask: radial-gradient(closest-side, transparent 93%, #000 93.5%, #000 99.6%, transparent 100%);
+  background: repeating-conic-gradient(from -0.9deg, var(--text-2) 0 1.8deg, transparent 1.8deg 30deg);
+  -webkit-mask: radial-gradient(closest-side, transparent 91.5%, #000 92%, #000 99.6%, transparent 100%);
+  mask: radial-gradient(closest-side, transparent 91.5%, #000 92%, #000 99.6%, transparent 100%);
 }
-.tring-bg { stroke: var(--edge-2); stroke-width: 2; }
-.tring-fg { stroke: var(--accent); stroke-width: 5; }
-.clock { font-family: var(--serif); font-weight: 400; letter-spacing: 0; font-variant-numeric: tabular-nums lining-nums; }
-.timer .clock { font-size: clamp(2.8rem, 13vw, 3.6rem); }
+.tring-bg { stroke: var(--edge-2); stroke-width: 3; }
+.tring-fg { stroke: var(--accent); stroke-width: 7; stroke-linecap: butt; }
+.clock { font-family: var(--display); font-stretch: condensed; font-weight: 900; letter-spacing: 0; font-variant-numeric: tabular-nums lining-nums; }
+.timer .clock { font-size: clamp(3rem, 14vw, 3.8rem); }
 .clock.small { font-size: 2.8rem; }
 
-/* Focus : la plante en feuille d'or */
-.plant .soil { fill: var(--accent); opacity: 0.25; }
-.plant .stem { fill: color-mix(in srgb, var(--accent) 75%, var(--bg)); }
-.plant .leaf { fill: var(--accent); }
+/* Focus : l'arbre dessiné à l'encre, fruits blancs (noirs en clair) */
+.tree-branch { stroke: var(--text); }
+.tree-leaf { fill: color-mix(in srgb, var(--accent) 55%, var(--bg)); stroke: var(--bg); stroke-width: 0.6; opacity: 1; }
+.tree-fruit { fill: var(--gold); stroke: var(--bg); stroke-width: 0.7; filter: none; }
+.tree-soil { fill: var(--tone-2); }
+.plant .soil { fill: var(--tone-2); }
+.plant .stem { fill: var(--text); }
+.plant .leaf { fill: color-mix(in srgb, var(--accent) 55%, var(--bg)); }
 .plant .crown { fill: var(--gold); }
-.garden { filter: var(--gild); }
+.garden { filter: none; }
 input.task { text-align: center; margin: 4px 0 6px; }
 
-/* ——— Lecteur de séance : toujours noir, l'or monte pendant l'effort, le saphir pendant le repos ——— */
-.player-top { font-size: 0.68rem; font-weight: 650; letter-spacing: 0.14em; text-transform: uppercase; }
-.player .progress { height: 3px; border-radius: 2px; }
-.player .progress span { background: var(--metal-h); }
-.player-main h2 { font-family: var(--serif); font-weight: 500; letter-spacing: 0; }
-.player .clock.huge {
-  font-family: var(--serif); font-weight: 500; letter-spacing: -0.02em;
-  font-size: clamp(5.2rem, 29vw, 10rem); font-variant-numeric: tabular-nums lining-nums;
+/* ——— Lecteur de séance : toujours noir.
+   Effort : gris clair, lignes de vitesse verticales serrées.
+   Repos : encre sombre, hachures diagonales larges. ——— */
+.player, .player.work, .player.rest, .player.warm, .player.prep { background: #050505; color: #f2f2f2; }
+.player .player-top { color: rgb(242 242 242 / 0.72); }
+.player .next strong { color: #f2f2f2; }
+.player.warm { --fill: #a8a8a8; }
+.player.prep { --fill: #6a6a6a; }
+.player-top { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
+.player .progress { height: 4px; border-radius: 0; background: rgb(255 255 255 / 0.14); }
+.player .progress span { background: #ffffff; }
+/* la phase : une étiquette en biais (la forme penche, pas le texte) */
+.player .phase {
+  display: inline-block; padding: 5px 20px; filter: none;
+  background: color-mix(in srgb, var(--fill), #fff 55%); color: #080808; font-weight: 900; letter-spacing: 0.3em;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
 }
-.player .next strong { font-family: var(--serif); font-weight: 500; letter-spacing: 0; }
-.player .demo a { color: var(--accent); }
-.player.work .phase, .player.warm .phase, .player.paused .phase { filter: brightness(1.12); }
-.player .target-tag { font-size: 0.72rem; margin-top: 4px; }
-/* boutons-poussoirs de chronographe */
-.ctrl { border: 1px solid var(--hair-strong); background: rgb(255 255 255 / 0.04); color: var(--accent); }
+.player.rest .phase {
+  color: #f2f2f2;
+  background: repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.16) 0 1px, transparent 1px 5px), #2a2a2a;
+}
+.player.paused .phase { color: #f2f2f2; background: #3a3a3a; }
+.player-main h2 { font-family: var(--display); font-stretch: condensed; font-weight: 900; letter-spacing: 0.01em; text-transform: uppercase; }
+.player .clock.huge {
+  font-family: var(--display); font-stretch: condensed; font-weight: 900; letter-spacing: -0.02em;
+  font-size: clamp(5.4rem, 30vw, 10rem); font-variant-numeric: tabular-nums lining-nums;
+}
+.player .next strong { font-family: var(--display); font-stretch: condensed; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; }
+.player .demo a { color: #f2f2f2; }
+.player .target-tag { font-size: 0.7rem; margin-top: 6px; }
+.player-fig { --figure: #8f8f8f; --figure-focus: #ffffff; --figure-far: #5e5e5e; --figure-focus-far: #d0d0d0; }
+/* au repos, le prochain exercice est montré plus pâle, mais lisible (couleurs plutôt qu'opacité) */
+.player.rest .player-fig { opacity: 1; --figure: #7a7a7a; --figure-focus: #e6e6e6; --figure-far: #5c5c5c; --figure-focus-far: #bdbdbd; }
+/* boutons : cercles d'encre, le principal en blanc cerclé */
+.ctrl { border: 2px solid rgb(255 255 255 / 0.55); background: #0a0a0a; color: #f2f2f2; }
 .ctrl.main {
-  background: var(--metal); border-color: transparent; color: var(--accent-ink);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5), inset 0 -2px 0 rgb(0 0 0 / 0.15), 0 0 0 5px rgb(0 0 0 / 0.6), 0 0 0 6px var(--hair-strong), 0 14px 34px -12px rgb(214 186 130 / 0.45);
+  background: #f2f2f2; border-color: #f2f2f2; color: #080808;
+  box-shadow: 0 0 0 5px #050505, 0 0 0 7.5px #f2f2f2;
 }
 .player.done .player-main h2 { font-size: 1.7rem; }
 .player.done .feel .btn { min-height: 52px; white-space: nowrap; padding: 0 8px; letter-spacing: 0; }
-/* l'or (ou le saphir) monte comme un liquide : reflet en surface, plus sombre au fond */
+/* le temps qui passe : la couche monte. Effort = lignes verticales serrées et claires */
 .player-fill {
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--fill), #fff 30%) 0,
-    color-mix(in srgb, var(--fill) 80%, transparent) 1.2%,
-    color-mix(in srgb, var(--fill) 55%, transparent) 30%,
-    color-mix(in srgb, var(--fill) 70%, #000) 100%);
-  opacity: 0.5;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 9px, rgb(255 255 255 / 0.2) 9px 10px, transparent 10px 23px),
+    repeating-linear-gradient(90deg, transparent 0 4px, rgb(255 255 255 / 0.08) 4px 5px, transparent 5px 13px),
+    linear-gradient(180deg, color-mix(in srgb, var(--fill) 26%, transparent), color-mix(in srgb, var(--fill) 29%, #000) 100%);
+  opacity: 1;
 }
-.player .cue, .player .next { color: rgb(245 241 232 / 0.86); text-shadow: 0 1px 2px rgb(0 0 0 / 0.35); }
-.player .clock.huge, .player-main h2 { text-shadow: 0 2px 12px rgb(0 0 0 / 0.35); }
+/* Repos = encre sombre et hachures diagonales larges */
+.player.rest .player-fill {
+  background:
+    repeating-linear-gradient(-45deg, transparent 0 11px, rgb(255 255 255 / 0.2) 11px 12.5px),
+    linear-gradient(180deg, color-mix(in srgb, var(--fill) 16%, transparent), color-mix(in srgb, var(--fill) 22%, #000) 100%);
+  opacity: 1;
+}
+.player.paused .player-fill { opacity: 0.4; }
+.player .btn.player-stop { color: #c9c9c9; }
+.player .cue, .player .next { color: rgb(242 242 242 / 0.9); text-shadow: 0 1px 2px rgb(0 0 0 / 0.7); }
+.player .clock.huge, .player-main h2 { text-shadow: 3px 3px 0 rgb(0 0 0 / 0.7); }
 .target-tag {
-  background: transparent; border: 1px solid var(--hair-strong); color: var(--text-2);
-  font-size: 0.68rem; font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px;
+  background: transparent; border: 1.5px solid var(--hair-strong); border-radius: 2px; color: var(--text-2);
+  font-size: 0.64rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 9px;
+  filter: grayscale(1);
 }
 
 /* ——— Corps ——— */
 .wo-A { --wo: var(--wo-A); } .wo-B { --wo: var(--wo-B); } .wo-C { --wo: var(--wo-C); } .wo-M { --wo: var(--wo-M); }
 :root:root .wo-badge {
-  border-radius: 50%; font-family: var(--serif); font-weight: 600;
+  border-radius: 50%; font-family: var(--display); font-stretch: condensed; font-weight: 900;
   color: var(--wo, var(--text));
-  background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--wo, var(--muted)) 32%, transparent), color-mix(in srgb, var(--wo, var(--muted)) 10%, var(--surface)) 70%);
-  border: 1px solid color-mix(in srgb, var(--wo, var(--muted)) 60%, transparent);
+  background: radial-gradient(circle, color-mix(in srgb, var(--wo, var(--muted)) 30%, transparent) 0 0.9px, transparent 1.3px) 0 0 / 4px 4px, var(--panel);
+  border: 2px solid var(--wo, var(--muted));
 }
-.wo-badge.big { font-size: 1.7rem; }
-.today-workout h2 { font-size: 1.45rem; font-weight: 600; }
+.wo-badge.big { font-size: 1.9rem; }
+.today-workout h2 { font-size: 1.5rem; font-weight: 900; text-transform: uppercase; }
 .today-workout .eyebrow { margin-bottom: 2px; }
-.week div { background: transparent; border: 1px solid var(--edge); border-radius: 12px; padding: 8px 0; }
-.week small { text-transform: uppercase; letter-spacing: 0.06em; }
-.week b { font-family: var(--serif); font-weight: 600; font-size: 1.15rem; }
-.week .today { background: var(--metal); border-color: transparent; }
-.pips i { background: var(--surface-2); border-color: var(--edge); }
-.pips i.on { background: var(--metal); border-color: transparent; }
-.pips.big i { height: 6px; border-radius: 3px; }
-.goal-title { font-weight: 500; font-size: 1.55rem; }
+.week div { background: transparent; border: 1.5px solid var(--rule); border-radius: 2px; padding: 8px 0; }
+.week small { text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.week b { font-family: var(--display); font-stretch: condensed; font-weight: 900; font-size: 1.2rem; }
+.week .today { background: var(--metal); border-color: var(--accent); }
+.pips i { background: transparent; border: 1.5px solid var(--edge-2); border-radius: 0; }
+.pips i.on { background: var(--accent); border-color: var(--accent); }
+.pips.big i { height: 7px; border-radius: 0; }
+.goal-title { font-family: var(--display); font-stretch: condensed; font-weight: 900; font-size: 1.6rem; text-transform: uppercase; }
+/* bonshommes : sur une petite case tramée */
+.ex li { border-top: 1.5px solid var(--edge); }
+.ex-fig {
+  border-radius: 2px; border: 1.5px solid var(--rule);
+  background:
+    linear-gradient(0deg, transparent 0, var(--panel) 75%),
+    radial-gradient(circle, var(--tone-2) 0 0.8px, transparent 1.2px) 0 0 / 4px 4px,
+    var(--panel);
+}
+
+/* membres du côté éloigné : teinte propre au lieu d'une opacité de 45 %,
+   pour qu'un muscle travaillé de ce côté ne se confonde pas avec le corps */
+.fig .fig-far { opacity: 1; }
+.fig .fig-far .fig-bone { stroke: var(--figure-far, var(--figure)); }
+.fig .fig-far .fig-focus { stroke: var(--figure-focus-far, var(--figure-focus)); }
 
 /* ——— Bilan, sprints, tableaux ——— */
-.sprints li.current { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--hair); }
-.sprints .num { font-family: var(--serif); font-weight: 600; }
-.mini i { width: 12px; height: 12px; border-radius: 50%; background: var(--miss); }
-.mini i.ok { background: var(--metal); }
-.mini i.pre { border-color: var(--edge-2); }
-.tests th { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.66rem; font-weight: 650; }
-.tests th, .tests td { border-bottom-color: var(--edge); }
-.stat .big, .kpi { font-family: var(--serif); font-weight: 600; }
-.kpis > div, .result { background: var(--row); border: 1px solid var(--edge); }
-.chart figcaption { font-family: var(--serif); font-weight: 600; font-size: 1.05rem; }
+.sprints li.current { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--hair-strong); border-radius: 2px; }
+.sprints .num { font-family: var(--display); font-weight: 900; }
+.mini i { width: 12px; height: 12px; border-radius: 1px; background: var(--miss); }
+.mini i.ok { background: var(--accent); }
+.mini i.pre { border: 1px dashed var(--edge-2); }
+.tests th { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.64rem; font-weight: 800; }
+.tests th, .tests td { border-bottom-color: var(--rule); }
+.stat .big, .kpi { font-family: var(--display); font-stretch: condensed; font-weight: 900; }
+.kpis > div, .result { background: var(--row); border: 1.5px solid var(--rule); border-radius: 3px; }
+.chart figcaption { font-family: var(--display); font-stretch: condensed; font-weight: 800; font-size: 1.1rem; text-transform: uppercase; }
 .chart .legend { font-family: var(--sans); }
-.tick { position: relative; border-width: 1px; border-color: var(--edge-2); border-radius: 50%; background: transparent; }
+.tick { position: relative; border-width: 1.5px; border-color: var(--edge-2); border-radius: 2px; background: transparent; }
 .tick::after { content: ""; position: absolute; inset: -7px; }
-.tick.on { background: var(--metal); border-color: transparent; }
+.tick.on { background: var(--metal); border-color: var(--accent); }
 .book-btns .seg { min-height: 44px; }
 
 /* ——— Argent : parcours de leçons ——— */
-.unit-title { font-size: 1.15rem; font-weight: 600; margin-top: 10px; }
+.unit-title { font-family: var(--display); font-stretch: condensed; font-size: 1.2rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 10px; }
 .unit-title span { filter: var(--gild); }
 .node-dot {
-  font-family: var(--serif); font-weight: 500; font-size: 1.3rem; color: var(--text-2);
-  background: var(--dot-bg); border: 1px solid var(--edge-2);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 8px 18px -10px rgb(0 0 0 / 0.8);
+  font-family: var(--display); font-stretch: condensed; font-weight: 900; font-size: 1.35rem; color: var(--text-2);
+  background: var(--dot-bg); border: 1.5px solid var(--edge-2);
+  box-shadow: none;
 }
 .node.open .node-dot, .node.current .node-dot {
-  background: var(--dot-bg); color: var(--accent); border: 1px solid var(--hair-strong);
-  box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px var(--hair-strong), 0 8px 18px -10px rgb(0 0 0 / 0.8);
+  background: radial-gradient(circle, var(--tone) 0 0.9px, transparent 1.3px) 0 0 / 5px 5px, var(--panel);
+  color: var(--accent); border: 2px solid var(--ink);
+  box-shadow: 0 0 0 4px var(--bg), 0 0 0 6px var(--ink);
 }
-.node.done .node-dot { background: var(--metal); color: var(--accent-ink); border-color: transparent; box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), 0 8px 18px -10px rgb(0 0 0 / 0.8); }
+.node.done .node-dot { background: var(--metal); color: var(--accent-ink); border-color: var(--accent); box-shadow: 3px 3px 0 0 var(--pop); }
 .node.locked .node-dot { filter: grayscale(1); opacity: 0.6; }
-.node.current .node-label { font-family: var(--serif); font-size: 1rem; font-weight: 600; }
-.answer { border-width: 1px; border-color: var(--edge-2); border-radius: 12px; background: var(--field); }
-.answer.picked { border-color: var(--accent); background: var(--accent-soft); }
-.lesson-title { font-weight: 500; font-size: 1.6rem; }
-.flash-back { background: var(--accent-soft); border-left-width: 2px; }
+.node.current .node-label { font-family: var(--display); font-stretch: condensed; font-size: 1.05rem; font-weight: 800; text-transform: uppercase; }
+.answer { border-width: 1.5px; border-color: var(--edge-2); border-bottom-width: 1.5px; border-radius: 3px; background: var(--field); }
+.answer.picked { border-color: var(--ink); background: var(--accent-soft); }
+.lesson-title { font-family: var(--display); font-stretch: condensed; font-weight: 900; font-size: 1.7rem; text-transform: uppercase; }
+.flash-back { background: var(--accent-soft); border-left: 4px solid var(--accent); border-radius: 3px; }
 
 /* ——— Messages et panneau ——— */
 #toast {
-  background: var(--glass); color: var(--text); border: 1px solid var(--hair-strong);
-  border-radius: 14px; font-size: 0.88rem;
-  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
-  box-shadow: 0 16px 40px -12px rgb(0 0 0 / 0.7);
+  background: var(--accent); color: var(--accent-ink); border: 1.5px solid var(--accent);
+  border-radius: 3px; font-size: 0.88rem; font-weight: 650;
+  box-shadow: 4px 4px 0 0 var(--pop);
 }
-.sheet-panel { background: var(--surface); border-color: var(--hair); }
+:root:root #sheet .sheet-panel {
+  background:
+    linear-gradient(180deg, transparent 0, var(--surface) 90px),
+    radial-gradient(circle, var(--tone) 0 0.9px, transparent 1.3px) 0 0 / 5px 5px,
+    var(--surface);
+  border: 0; border-top: 3px solid var(--ink); border-radius: 8px 8px 0 0;
+}
+.sheet-panel .card-head h2 { font-size: 1.4rem; font-weight: 900; }
+.avatar-rank { font-family: var(--display); font-stretch: condensed; font-weight: 900; text-transform: uppercase; }
+.avatar-big { --figure: var(--av-body); --accent: var(--av-aura); }
 
-/* ——— Calendrier de régularité ——— */
-.cell { border-radius: 4px; background: var(--surface-2); }
-.cell.miss { background: color-mix(in srgb, var(--muted) 16%, var(--surface-2)); }
-.cell.min { background: color-mix(in srgb, var(--accent) 16%, var(--surface-2)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 75%, transparent); }
-.cell.full { background: var(--metal); box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 28%, transparent); }
-.cell.future { background: transparent; box-shadow: inset 0 0 0 1px var(--edge-2); }
-.cell.now { background: transparent; box-shadow: inset 0 0 0 1px var(--accent); }
-.cell.today { outline: 1px solid var(--text); outline-offset: 2px; }
-.cell.sport::after { background: var(--accent); opacity: 1; inset: 36%; }
-.cell.full.sport::after { background: var(--accent-ink); opacity: 0.8; }
-.heat-days span, .heat-res { font-weight: 600; letter-spacing: 0.04em; }
+/* ——— Calendrier de régularité : une grille de cases ——— */
+.cell { border-radius: 1px; background: var(--surface-2); }
+/* raté : hachures fines et pâles (peu d'encre) ; minimum : trame + cadre ; complet : plein.
+   Plus la journée est tenue, plus la case est « encrée » : on les distingue même de loin. */
+.cell.miss { background: repeating-linear-gradient(-45deg, var(--hair) 0 1px, transparent 1px 4px), var(--surface-2); }
+.cell.min { background: radial-gradient(circle, var(--tone-2) 0 0.8px, transparent 1.2px) 0 0 / 3px 3px, var(--surface-2); box-shadow: inset 0 0 0 1.5px var(--hair-strong); }
+.cell.full { background: var(--accent); box-shadow: none; }
+.cell.future { background: transparent; box-shadow: inset 0 0 0 1px var(--rule); }
+.cell.now { background: transparent; box-shadow: inset 0 0 0 1.5px var(--accent); }
+.cell.today { outline: 1.5px solid var(--text); outline-offset: 2px; }
+.cell.sport::after { background: var(--accent); opacity: 1; inset: 34%; }
+.cell.full.sport::after { background: var(--accent-ink); opacity: 1; }
+.heat-legend .cell { border-radius: 1px; }
+.heat-days span, .heat-res { font-weight: 700; letter-spacing: 0.04em; }
 
-/* ——— Bibliothèque ——— */
-.lib-num { font-weight: 500; }
-.book-filter { border: 1px solid var(--edge); background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
-.book-filter .chip { min-height: 44px; border-color: transparent; background: transparent; color: var(--muted); }
-.chip.on, .book-filter .chip.on { background: var(--accent-soft); border-color: var(--hair-strong); color: var(--accent); }
-.shelf-head h2 { font-weight: 500; }
+/* ——— Bibliothèque : volumes en noir et gris, chaque rayon sa trame ——— */
+.lib-num { font-family: var(--display); font-stretch: condensed; font-weight: 900; }
+.book-filter { border: 1.5px solid var(--ink-2); border-radius: 4px; background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.book-filter .chip { min-height: 44px; border-color: transparent; background: transparent; color: var(--muted); border-radius: 3px; }
+.chip small { opacity: 0.85; }
+.chip.on, .book-filter .chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 800; }
+.shelf-head h2 { font-family: var(--display); font-stretch: condensed; font-weight: 900; text-transform: uppercase; letter-spacing: 0.02em; }
+.tone-0 .book { --c1: #3a3a3a; --c2: #121212; --tex: radial-gradient(circle, rgb(255 255 255 / 0.17) 0 1px, transparent 1.4px) 0 0 / 5px 5px; }
+.tone-1 .book { --c1: #464646; --c2: #151515; --tex: repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.1) 0 1px, transparent 1px 6px); }
+.tone-2 .book { --c1: #2c2c2c; --c2: #080808; --tex: repeating-linear-gradient(0deg, rgb(255 255 255 / 0.1) 0 1px, transparent 1px 5px); }
+.tone-3 .book { --c1: #555555; --c2: #1d1d1d; --tex: repeating-linear-gradient(45deg, rgb(255 255 255 / 0.08) 0 1px, transparent 1px 6px), repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.08) 0 1px, transparent 1px 6px); }
+.book-face { color: #f2f2f2; border-radius: 2px 4px 4px 2px; box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.18), 4px 4px 0 0 rgb(0 0 0 / 0.55); }
+.book-front {
+  background:
+    linear-gradient(90deg, rgb(0 0 0 / 0.45) 0, rgb(255 255 255 / 0.1) 5px, transparent 9px),
+    linear-gradient(200deg, transparent 0 30%, rgb(0 0 0 / 0.55) 75%),
+    var(--tex, none),
+    linear-gradient(160deg, var(--c1), var(--c2));
+}
+.book-front::after { border: 1.5px solid rgb(255 255 255 / 0.5); border-radius: 1px; box-shadow: none; }
+.book-cat { opacity: 0.85; font-weight: 700; }
+.book-title {
+  font-family: var(--display); font-stretch: condensed; font-weight: 900; text-transform: uppercase; letter-spacing: 0; font-size: 0.86rem; line-height: 1.12;
+  background: none; -webkit-background-clip: border-box; background-clip: border-box; color: #ffffff;
+  text-shadow: 2px 2px 0 rgb(0 0 0 / 0.7);
+  /* un mot long se coupe proprement au lieu de sortir de la couverture */
+  overflow-wrap: anywhere; -webkit-hyphens: auto; hyphens: auto;
+}
+.book-rule { width: 30px; height: 2px; background: #ffffff; }
+.book-author { opacity: 0.9; font-weight: 600; }
+.book-star { color: #ffffff; font-weight: 800; }
+/* « En cours » et « Lu » prennent place SOUS l'auteur, dans le flux de la couverture :
+   ils ne recouvrent plus jamais le titre ni l'auteur, même long */
+.book-ribbon {
+  position: static; margin-top: auto; align-self: flex-start; writing-mode: horizontal-tb;
+  padding: 4px 16px 4px 8px; font-size: 0.56rem; letter-spacing: 0.16em;
+  background: #f2f2f2; color: #080808; font-weight: 900;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 50%, 100% 100%, 0 100%);
+}
+.book-stamp {
+  position: static; margin: auto 0 4px; align-self: flex-end;
+  border: 2.5px solid #ffffff; color: #ffffff; border-radius: 2px; font-weight: 900; background: rgb(0 0 0 / 0.35);
+}
+.book.is-done .book-front { filter: none; }
+.book-back { background: repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.04) 0 1px, transparent 1px 6px), linear-gradient(160deg, var(--c2), #050505); }
+.book-why { color: #ececec; }
+.book-btns .seg { background: rgb(255 255 255 / 0.06); border-color: rgb(255 255 255 / 0.35); color: #f2f2f2; }
+.book-btns .seg.on { background: #f2f2f2; border-color: #f2f2f2; color: #080808; }
+.book-turn { color: #f2f2f2; background: rgb(255 255 255 / 0.1); }
 .book-turn::after { content: ""; position: absolute; inset: -8px; }
+
+/* Fête (seulement quand les mouvements sont permis) : confettis de papier blanc,
+   gris et noir au lieu des couleurs vives (la couleur en ligne est remplacée) */
+.confetti i { background: var(--ink) !important; }
+.confetti i:nth-child(3n) { background: var(--figure) !important; }
+.confetti i:nth-child(3n + 1) { background: var(--muted) !important; }
+
+/* Animation existante « chaîne +1 » : éclat blanc au lieu de l'or */
+@keyframes bump { 0% { transform: scale(1); } 35% { transform: scale(1.3); text-shadow: 0 0 18px rgb(255 255 255 / 0.8); } 100% { transform: scale(1); } }
+
+/* ——— Mouvement : seulement si le téléphone ne demande pas de le réduire ——— */
+@media (prefers-reduced-motion: no-preference) {
+  /* « ゴゴゴ » frémit, à peine */
+  .hero-main::after { animation: nd-menace 3.2s ease-in-out infinite; }
+  @keyframes nd-menace {
+    0%, 100% { transform: rotate(5deg) skewY(-10deg) translate(0, 0); }
+    50% { transform: rotate(5deg) skewY(-10deg) translate(-1px, -2px); }
+  }
+}

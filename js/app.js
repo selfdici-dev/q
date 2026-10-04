@@ -2,18 +2,20 @@ import {
   todayKey, addDays, diffDays, fromKey, dayStatus, chain, lastNDays,
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
-  dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers, regularityGrid, bookShelves,
+  dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
-  WARMUP, PROTEIN_TARGET, PROTEIN_EXAMPLES, PHASES, MILESTONES, BOOKS, APPS,
+  WARMUP, PROTEIN_TARGET, PROTEIN_EXAMPLES, PHASES, MILESTONES, BOOKS, APPS, HELP,
 } from './data.js';
 import { ALL_LESSONS } from './finance-data.js';
 import { createMoney, DEFAULT_CALC, DEFAULT_WEALTH } from './money.js';
 import { quoteOfDay } from './quotes.js';
 import { daySummary, weekSummary } from './summary.js';
 import { backupStatus, validateBackup } from './backup.js';
-import { figureFor, figureSVG } from './figures.js';
+import { figureFor, figureSVG, focusFor } from './figures.js';
+import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS } from './avatar.js';
+import { treeSVG, seedOf } from './tree.js';
 
 const STORE = 'cap-v1';
 const POMO_WORK = 25 * 60;
@@ -84,7 +86,7 @@ function applyTheme() {
   if (t === 'auto') delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme = t;
   const dark = t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#000000' : '#f6f1e7');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#000000' : '#f4f4f4');
 }
 applyTheme();
 const save = () => {
@@ -177,18 +179,52 @@ async function copyText(text, btn, okMsg) {
   }
 }
 
-function showSheet(text) {
+// Fenêtre qui monte du bas (titre + contenu HTML déjà échappé).
+let sheetOpener = null; // bouton qui a ouvert la fiche : il retrouve le focus à la fermeture
+
+function openSheet(title, body) {
   const el = $('#sheet');
+  sheetOpener = document.activeElement;
   el.innerHTML = `<div class="sheet-back" data-act="sheet-close"></div>
     <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
-      <div class="card-head"><h2 id="sheet-title">Texte à copier</h2><button class="btn ghost small" data-act="sheet-close">Fermer</button></div>
-      <p class="hint">La copie automatique n’a pas marché : appuie longuement dans le texte, puis « Tout sélectionner » et « Copier ».</p>
-      <textarea readonly rows="12">${esc(text)}</textarea>
+      <div class="card-head"><h2 id="sheet-title">${title}</h2><button class="btn ghost small" data-act="sheet-close">Fermer</button></div>
+      ${body}
     </div>`;
   el.hidden = false;
-  const ta = $('textarea', el);
+  $('#view').inert = true; // le clavier reste dans la fiche
+  $('#tabs').inert = true;
+  $('.sheet-panel [data-act="sheet-close"]', el).focus();
+}
+
+function showSheet(text) {
+  openSheet('Texte à copier', `<p class="hint">La copie automatique n’a pas marché : appuie longuement dans le texte, puis « Tout sélectionner » et « Copier ».</p>
+      <textarea readonly rows="12">${esc(text)}</textarea>`);
+  const ta = $('#sheet textarea');
   ta.focus();
   ta.select();
+}
+
+// Aide « ? » d'un onglet : 3 phrases, rien de plus.
+const helpBtn = (tab) => `<button class="help-btn" data-act="help" data-id="${tab}" aria-label="Aide : comment marche cet onglet">?</button>`;
+
+function showHelp(tab) {
+  const h = HELP[tab];
+  if (h) openSheet(h.title, `<ol class="help-list">${h.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ol>`);
+}
+
+// Fiche « Ton double » : palier, ce qui le fait évoluer, prochain gain.
+function showAvatar() {
+  const lv = levelInfo(totalXP(state));
+  const ch = chain(state, todayKey()).count;
+  const av = avatarParams(lv.level, ch);
+  openSheet('Ton double', `<div class="avatar-sheet">
+      <div class="avatar-big">${avatarSVG(av, { animate: !reduceMotion() })}</div>
+      <div><p class="eyebrow">Palier ${av.stage + 1}/${STAGES}</p><p class="avatar-rank">${esc(av.rank)}</p>
+        <p class="hint">Niveau ${lv.level} · ${lv.into}/${lv.span} XP · aura ${av.charge} %</p></div>
+    </div>
+    <p>${av.nextLevel ? `Au niveau ${av.nextLevel} : <strong>${esc(av.nextGain)}</strong>` : '<strong>Dernier palier atteint.</strong> Garde la chaîne pour garder l’aura.'}</p>
+    <ol class="avatar-steps">${STAGE_GAINS.map((g, i) => `<li class="${i <= av.stage ? 'done' : ''}">${esc(g)}</li>`).join('')}</ol>
+    <p class="hint">Il évolue avec ton niveau : chaque minimum, séance, session de focus, leçon ou livre lui fait gagner de l’XP. Son aura suit ta chaîne (pleine à 3 semaines). Ce n’est pas une prédiction de ton corps : c’est le reflet de ta régularité.</p>`);
 }
 
 let audioCtx;
@@ -257,11 +293,11 @@ const seen = new Map();
 const tweens = new Map();
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// Bonhomme animé d'un exercice, cadré sur son mouvement (immobile si le
-// téléphone demande de réduire les animations).
-function figure(name) {
+// Bonhomme animé d'un exercice, cadré sur son mouvement, muscle travaillé en
+// or (immobile si le téléphone demande de réduire les animations).
+function figure(name, target) {
   const f = name && figureFor(name);
-  return f ? figureSVG(f.fig, { mirror: f.mirror, fit: true, animate: !reduceMotion() }) : '';
+  return f ? figureSVG(f.fig, { mirror: f.mirror, fit: true, animate: !reduceMotion(), focus: focusFor(target) }) : '';
 }
 
 // Barre qui glisse de sa valeur précédente (%) vers la nouvelle.
@@ -358,14 +394,15 @@ function render() {
     revision: ['Révisions', 'Chaque carte revient juste avant l’oubli'],
   };
   const h = heads[tab];
-  const head = h && !(tab === 'argent' && state.ui.lesson) ? `<header class="page-head"><h1>${h[0]}</h1><p>${h[1]}</p></header>` : '';
+  const head = h && !(tab === 'argent' && state.ui.lesson) ? `<header class="page-head"><div class="page-title"><h1>${h[0]}</h1>${HELP[tab] ? helpBtn(tab) : ''}</div><p>${h[1]}</p></header>` : '';
   $('#view').innerHTML = head + views[tab]();
   $('#view').dataset.tab = tab;
   const lv = levelInfo(totalXP(state));
   if (lv.level > (state.ui.lastLevel ?? 1)) {
+    const grew = evolved(state.ui.lastLevel ?? 1, lv.level);
     state.ui.lastLevel = lv.level;
     save();
-    celebrate(`Niveau ${lv.level} atteint : ${lv.rank}`);
+    celebrate(`Niveau ${lv.level} atteint : ${lv.rank}${grew ? ' · ton double évolue' : ''}`);
   }
   document.querySelectorAll('#tabs a').forEach((a) => a.setAttribute('aria-current', a.dataset.tab === tab ? 'page' : 'false'));
   moveTabIndicator();
@@ -423,16 +460,20 @@ function viewToday() {
   return `
   <header class="hero">
     <div class="hero-top">
-      <div><p class="eyebrow">${esc(longDate(today))}</p><p class="greet">${greeting()}</p></div>
+      <div><p class="eyebrow">${esc(longDate(today))}${helpBtn('jour')}</p><p class="greet">${greeting()}</p></div>
       <div class="ring-wrap ${st.valid ? 'done' : ''} ${increased(seen, 'valid', st.valid ? 1 : 0) ? 'just' : ''}">${ring(st.done, st.total)}</div>
     </div>
-    <div class="hero-stats">
-      <div><span class="big ${increased(seen, 'chain', ch.count) ? 'bump' : ''}">🔥 ${ch.count}</span><span class="lbl">jour${ch.count > 1 ? 's' : ''} de chaîne${ch.jokers ? ` · ${ch.jokers} reprise${ch.jokers > 1 ? 's' : ''}` : ''}</span></div>
-      <div><span class="big">🏁 ${sp.current.number}<small>/${SPRINT_COUNT}</small></span><span class="lbl">sprint · jour ${sprintDay}/7 · ${sp.current.valid} validé${sp.current.valid > 1 ? 's' : ''}</span></div>
-    </div>
-    <div class="level">
-      <span class="badge">Niv. ${lv.level}</span><span class="rank">${lv.rank}</span><span class="xp">${lv.into}/${lv.span} XP</span>
-      <div class="xpbar">${tweenBar('xp', (lv.into / lv.span) * 100)}</div>
+    <div class="hero-main">
+      <button class="avatar-btn ${increased(seen, 'stage', avatarParams(lv.level).stage) ? 'just' : ''}" data-act="avatar" aria-label="Ton double : ${esc(lv.rank)}, voir comment il évolue">${avatarSVG(avatarParams(lv.level, ch.count), { animate: !reduceMotion() })}</button>
+      <div class="hero-side">
+        <div class="hero-stat"><span class="big ${increased(seen, 'chain', ch.count) ? 'bump' : ''}">🔥 ${ch.count}</span><span class="lbl">jour${ch.count > 1 ? 's' : ''} de chaîne${ch.jokers ? ` · ${ch.jokers} reprise${ch.jokers > 1 ? 's' : ''}` : ''}</span></div>
+        <div class="hero-stat"><span class="mid">🏁 Sprint ${sp.current.number}<small>/${SPRINT_COUNT}</small></span><span class="lbl">jour ${sprintDay}/7 · ${sp.current.valid} validé${sp.current.valid > 1 ? 's' : ''}</span></div>
+        <div class="level">
+          <span class="badge">Niv. ${lv.level}</span><span class="rank">${lv.rank}</span>
+          <div class="xpbar">${tweenBar('xp', (lv.into / lv.span) * 100)}</div>
+          <span class="xp">${lv.into}/${lv.span} XP</span>
+        </div>
+      </div>
     </div>
     ${dots(last7)}
     ${notice ? `<p class="hero-note"><span aria-hidden="true">${notice[0]}</span><span><strong>${notice[1]}</strong> ${notice[2]}</span></p>` : ''}
@@ -464,7 +505,7 @@ function viewToday() {
         <label>Levé à<input type="time" data-field="wake" data-key="${today}" value="${esc(d.wake ?? '')}"></label>
       </div>
       <p class="hint">Cible de la semaine ${week} : couché à <strong>${weeklyBedtime(week, state.settings.bedtimeTarget)}</strong>, levé à heure fixe. On avance de 15 min par semaine jusqu’à ${esc(state.settings.bedtimeTarget)}.</p>`)}
-    ${fold('heat', '📅', 'Régularité', 'Tes 12 semaines d’un coup d’œil', `<span class="pill">${grid.valid}/${grid.elapsed}</span>`, heatmap(grid))}
+    ${fold('heat', '📅', 'Régularité', '12 semaines d’un coup d’œil', `<span class="pill">${grid.valid}/${grid.elapsed}</span>`, heatmap(grid))}
     ${fold('rules', '🧭', 'Mes règles', '« Si… alors… »', `<span class="pill">${state.rules.length}</span>`, `<ul class="rules">${state.rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
       <p class="hint">Modifie-les dans Moi > Réglages.</p>`)}
     ${fold('quote', '💬', 'Pensée du jour', esc(q.author), '<span></span>', `<blockquote class="quote"><p>« ${esc(q.text)} »</p><cite>${esc(q.author)}</cite></blockquote>`)}
@@ -501,50 +542,72 @@ function workoutMinutes(w) {
   return Math.round(buildSteps(w, state.settings.level).reduce((a, x) => a + x.secs, 0) / 60);
 }
 
+// Chaque élément du plan : id, icône, titre, détail, fait ou non, et son
+// bouton (go : texte + action ou lien), affiché petit dans la liste et en
+// grand dans « Maintenant ».
 function planItems(today) {
   const d = state.days[today] ?? {};
   const wo = WORKOUTS.find((w) => w.id === WEEK_PLAN[fromKey(today).getDay()]);
   const done = d.workouts ?? [];
   const items = [];
   items.push({
-    ico: '💪', title: `Séance ${wo.name.split(' · ')[1] ?? wo.name}`, sub: `≈ ${workoutMinutes(wo)} min · niveau ${state.settings.level}`,
+    id: 'seance', ico: '💪', title: `Séance ${wo.name.split(' · ')[1] ?? wo.name}`, sub: `≈ ${workoutMinutes(wo)} min · niveau ${state.settings.level}`,
     done: wo.id === 'M' ? done.length > 0 : done.some((x) => x !== 'M'),
-    go: `<button class="todo-go" data-act="start-workout" data-id="${wo.id}">Lancer</button>`,
+    go: { label: 'Lancer', act: 'start-workout', id: wo.id },
   });
   const nextLesson = ALL_LESSONS.find((l, i) => (i === 0 || state.lessons[ALL_LESSONS[i - 1].id]) && !state.lessons[l.id]);
   const lessonToday = Object.values(state.lessons).some((l) => l.date && todayKey(new Date(l.date)) === today);
   if (nextLesson || lessonToday) {
     items.push({
-      ico: '📘', title: lessonToday ? 'Leçon de finance faite' : `Leçon ${ALL_LESSONS.indexOf(nextLesson) + 1} : ${nextLesson.title}`, sub: '≈ 10-15 min · idée, exemple, exercice, quiz',
+      id: 'lecon', ico: '📘', title: lessonToday ? 'Leçon de finance faite' : `Leçon ${ALL_LESSONS.indexOf(nextLesson) + 1} : ${nextLesson.title}`, sub: '≈ 10-15 min · idée, exemple, exercice, quiz',
       done: lessonToday,
-      go: nextLesson ? `<button class="todo-go" data-act="lesson-open" data-id="${nextLesson.id}">${lessonToday ? 'Suivante' : 'Ouvrir'}</button>` : '',
+      go: nextLesson ? { label: lessonToday ? 'Suivante' : 'Ouvrir', act: 'lesson-open', id: nextLesson.id } : null,
     });
   }
   const all = deck();
   if (all.length) {
     const due = dueCards(all, today).length;
-    items.push({ ico: '🧠', title: due ? `Révisions : ${due} carte${due > 1 ? 's' : ''}` : 'Révisions à jour', sub: '≈ 5 min', done: due === 0, go: `<a class="todo-go" href="#revision">${due ? 'Réviser' : 'Cartes'}</a>` });
+    items.push({ id: 'revision', ico: '🧠', title: due ? `Révisions : ${due} carte${due > 1 ? 's' : ''}` : 'Révisions à jour', sub: '≈ 5 min', done: due === 0, go: { label: due ? 'Réviser' : 'Cartes', href: '#revision' } });
   }
-  items.push({ ico: '🎯', title: '1 session de focus (25 min)', sub: `${d.focus ?? 0} faite${(d.focus ?? 0) > 1 ? 's' : ''} aujourd’hui`, done: (d.focus ?? 0) >= 1, go: '<a class="todo-go" href="#focus">Go</a>' });
-  items.push({ ico: '📖', title: 'Lire 10 pages', sub: 'Moi > Livres pour choisir', done: Boolean(d.read), go: `<button class="todo-go" data-act="read-toggle">${d.read ? 'Annuler' : 'Fait'}</button>` });
+  items.push({ id: 'focus', ico: '🎯', title: '1 session de focus (25 min)', sub: `${d.focus ?? 0} faite${(d.focus ?? 0) > 1 ? 's' : ''} aujourd’hui`, done: (d.focus ?? 0) >= 1, go: { label: 'Go', href: '#focus' } });
+  items.push({ id: 'lecture', ico: '📖', title: 'Lire 10 pages', sub: 'Moi > Livres pour choisir', done: Boolean(d.read), go: { label: d.read ? 'Annuler' : 'Fait', act: 'read-toggle' } });
   const prot = d.protein ?? 0;
-  items.push({ ico: '🍗', title: `Protéines : ${prot}/${PROTEIN_TARGET} portions`, sub: 'œufs, poulet, thon, skyr, lentilles', done: prot >= PROTEIN_TARGET, go: '<button class="todo-go" data-act="protein" data-v="1">+1</button>' });
+  items.push({ id: 'proteines', ico: '🍗', title: `Protéines : ${prot}/${PROTEIN_TARGET} portions`, sub: 'œufs, poulet, thon, skyr, lentilles', done: prot >= PROTEIN_TARGET, go: { label: '+1', act: 'protein', v: 1 } });
   const bed = weeklyBedtime(weekNumber(state, today), state.settings.bedtimeTarget);
   const phoneOut = (d.habits?.sommeil ?? 0) >= 1;
-  items.push({ ico: '📵', title: `Téléphone hors de la chambre à ${bed}`, sub: 'puis coucher', done: phoneOut, go: phoneOut ? '' : '<button class="todo-go" data-act="habit" data-id="sommeil" data-lvl="1">Fait</button>' });
+  items.push({ id: 'coucher', ico: '📵', title: `Téléphone hors de la chambre à ${bed}`, sub: 'puis coucher', done: phoneOut, go: phoneOut ? null : { label: 'Fait', act: 'habit', id: 'sommeil', lvl: 1 }, bed });
   return items;
 }
+
+// Bouton d'un élément du plan (lien ou action).
+function goBtn(go, cls) {
+  if (!go) return '';
+  if (go.href) return `<a class="${cls}" href="${go.href}">${esc(go.label)}</a>`;
+  const data = ['act', 'id', 'lvl', 'v'].filter((k) => go[k] !== undefined).map((k) => ` data-${k}="${esc(go[k])}"`).join('');
+  return `<button class="${cls}"${data}>${esc(go.label)}</button>`;
+}
+
+// Heure actuelle « HH:MM ».
+const nowHHMM = () => new Date().toTimeString().slice(0, 5);
 
 function planCard(today) {
   const items = planItems(today);
   const n = items.filter((x) => x.done).length;
+  const now = nextAction(items, nowHHMM(), items.at(-1).bed);
+  // Le gros bouton dit « Lancer la séance », pas juste « Lancer ».
+  const bigLabel = { seance: 'Lancer la séance', lecon: 'Ouvrir la leçon', focus: 'Aller au focus', lecture: 'J’ai lu 10 pages', proteines: '+1 portion', coucher: 'Téléphone posé' };
   return `<section class="card plan">
     <div class="card-head"><h2>Ton plan du jour</h2><span class="pill">${n}/${items.length}</span></div>
     <div class="bar">${tweenBar('plan', (n / items.length) * 100)}</div>
-    <ul class="todos">${items.map((x) => `<li class="todo ${x.done ? 'done' : ''} ${increased(seen, `todo:${x.ico}`, x.done ? 1 : 0) ? 'just' : ''}">
+    ${now ? `<div class="now-card" data-now="${now.id}">
+      <span class="now-ico" aria-hidden="true">${now.ico}</span>
+      <div class="now-text"><p class="eyebrow">Maintenant</p><strong>${esc(now.title)}</strong><small>${esc(now.sub)}</small></div>
+      ${goBtn(now.go && { ...now.go, label: bigLabel[now.id] ?? now.go.label }, 'btn primary wide now-go')}
+    </div>` : `<div class="now-card all-done"><span class="now-ico" aria-hidden="true">✨</span><div class="now-text"><p class="eyebrow">Maintenant</p><strong>Tout est fait.</strong><small>Repose-toi, et copie ton bilan ce soir.</small></div></div>`}
+    <ul class="todos">${items.map((x) => `<li class="todo ${x.done ? 'done' : ''} ${now && x.id === now.id ? 'is-now' : ''} ${increased(seen, `todo:${x.id}`, x.done ? 1 : 0) ? 'just' : ''}">
       <span class="todo-ico" aria-hidden="true">${x.done ? '✓' : x.ico}</span>
       <div><strong>${esc(x.title)}</strong><small>${esc(x.sub)}</small></div>
-      ${x.go}</li>`).join('')}</ul>
+      ${goBtn(x.go, 'todo-go')}</li>`).join('')}</ul>
     <button class="btn wide copy-btn" data-act="copy-day">📋 Copier mon bilan du jour</button>
     <p class="hint center-hint">Le soir, colle-le dans ta conversation avec Claude.</p>
   </section>`;
@@ -621,17 +684,13 @@ function snackCard(key) {
     })()}`;
 }
 
-// La plante pousse pendant la session (idée reprise de Forest).
-function plantSVG(f) {
-  const g = Math.max(0, Math.min(1, f));
-  const stem = 10 + g * 50;
-  const leaf = (y, side, size) => (g * 60 > 75 - y ? `<ellipse cx="${60 + side * (6 + size)}" cy="${y}" rx="${size}" ry="${size / 2.2}" transform="rotate(${side * -30} ${60 + side * (6 + size)} ${y})" class="leaf"/>` : '');
-  return `<svg viewBox="0 0 120 100" aria-hidden="true">
-    <ellipse cx="60" cy="88" rx="34" ry="6" class="soil"/>
-    <rect x="58" y="${86 - stem}" width="4" height="${stem}" rx="2" class="stem"/>
-    ${leaf(70, -1, 9)}${leaf(62, 1, 10)}${leaf(52, -1, 11)}${leaf(42, 1, 12)}${leaf(34, -1, 12)}
-    ${g >= 0.98 ? '<circle cx="60" cy="24" r="16" class="crown"/>' : ''}
-  </svg>`;
+// Un arbre pousse au centre du minuteur pendant la session (idée reprise de
+// Forest) : chaque session a le sien (graine = date + numéro de session).
+const focusSeed = (key, i) => seedOf(`${key}#${i}`);
+
+function focusTree(f) {
+  const key = todayKey();
+  return treeSVG(f, focusSeed(key, state.days[key]?.focus ?? 0));
 }
 
 function timerRing(id, f) {
@@ -658,7 +717,7 @@ function viewFocus() {
     <div class="card-head"><h2>${p.mode === 'work' ? 'Focus 25 min' : 'Pause 5 min'}</h2><span class="pill">${d.focus ?? 0} aujourd’hui</span></div>
     <input class="task" id="pomo-label" placeholder="Sur quoi tu travailles ? (une seule chose)" value="${esc(p.label)}">
     <div class="timer">${timerRing('pomo-ring', 1 - pomoRemaining() / (p.mode === 'work' ? POMO_WORK : POMO_BREAK))}
-      <div class="timer-in">${p.mode === 'work' ? `<div class="plant" id="plant">${plantSVG(1 - pomoRemaining() / POMO_WORK)}</div>` : '<div class="plant">☕</div>'}
+      <div class="timer-in">${p.mode === 'work' ? `<div class="plant" id="plant">${focusTree(1 - pomoRemaining() / POMO_WORK)}</div>` : '<div class="plant">☕</div>'}
       <div class="clock" id="pomo-clock">${fmtClock(p.remaining)}</div></div></div>
     <div class="row center">
       <button class="btn primary" data-act="pomo-toggle" id="pomo-toggle">${p.endAt ? 'Pause' : 'Démarrer'}</button>
@@ -666,7 +725,7 @@ function viewFocus() {
       <button class="btn" data-act="pomo-skip">${p.mode === 'work' ? 'Passer en pause' : 'Passer la pause'}</button>
     </div>
     <p class="hint">Avant de démarrer : téléphone dans une autre pièce, ou face cachée en mode avion. 1 session valide le minimum « Focus », 4 valident le complet.</p>
-    <div class="garden" aria-label="Sessions terminées aujourd’hui">${'🌳'.repeat(d.focus ?? 0) || '<span class="muted">Ton jardin du jour est vide. Chaque session fait pousser un arbre.</span>'}</div>
+    <div class="garden" role="img" aria-label="${d.focus ?? 0} arbre${(d.focus ?? 0) > 1 ? 's' : ''} : sessions terminées aujourd’hui">${Array.from({ length: d.focus ?? 0 }, (_, i) => treeSVG(1, focusSeed(today, i), { mini: true })).join('') || '<span class="muted">Ton jardin du jour est vide. Chaque session fait pousser un arbre.</span>'}</div>
   </section>
   <section class="card center urge">
     <div class="card-head"><h2>Envie de scroller ?</h2><span class="pill">${d.urges ?? 0} envie${(d.urges ?? 0) > 1 ? 's' : ''} retardée${(d.urges ?? 0) > 1 ? 's' : ''}</span></div>
@@ -728,51 +787,40 @@ function viewSport() {
     <div class="pips big">${Array.from({ length: sw.goal }, (_, i) => `<i class="${i < sw.thisWeek ? 'on' : ''}"></i>`).join('')}</div>
     <p class="hint">${sw.thisWeek}/${sw.goal} séances A, B ou C cette semaine (lundi → dimanche). Une semaine est tenue à ${sw.goal}. La régularité bat l’intensité : 4 séances moyennes valent mieux qu’une séance héroïque.</p>
   </section>
-  ${goalCard()}
-  <section class="card">
-    <div class="card-head"><h2>Ta semaine</h2></div>
-    <div class="week">${[1, 2, 3, 4, 5, 6, 0].map((dow, i) => `<div class="wk-${WEEK_PLAN[dow]} ${i === todayDow ? 'today' : ''}"><small>${dayNames[i]}</small><b>${WEEK_PLAN[dow]}</b></div>`).join('')}</div>
-    <p class="hint">A = abdos et tronc, B = haut du corps et posture, C = cardio sans saut, M = mobilité, posture et mâchoire. Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
-  </section>
-  <section class="card">
-    <div class="card-head"><h2>Niveau</h2></div>
-    <div class="row">${[1, 2, 3].map((n) => `<button class="seg ${lvl === n ? 'on' : ''}" data-act="level" data-lvl="${n}" aria-pressed="${lvl === n}">Niveau ${n}</button>`).join('')}</div>
-    <p class="hint">À la fin de chaque séance, dis si c’était facile, correct ou dur : l’appli te propose de monter ou de descendre. Niveau 1 = 2 tours, efforts plus courts.</p>
-  </section>
-  ${WORKOUTS.map((w) => {
-    const steps = buildSteps(w, lvl);
-    const mins = Math.round(steps.reduce((s, x) => s + x.secs, 0) / 60);
-    return `<section class="card ${w.id === planned ? 'planned' : ''}">
-      <div class="card-head"><h2><span class="wo-badge wo-${w.id}">${w.id}</span>${esc(w.name.split(' · ')[1] ?? w.name)}</h2><span class="pill">${w.id === planned ? 'Aujourd’hui · ' : ''}${mins} min</span></div>
-      <p class="muted">${esc(w.desc)}</p>
-      <details><summary>Voir les exercices</summary><ol class="ex">${w.exercises.map((e) => `<li><span class="ex-fig">${figure(e.name)}</span><div><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="target-tag">🎯 ${esc(e.target)}</span><br><span class="muted">${esc(e.cue)}</span></div></li>`).join('')}</ol></details>
-      <div class="row"><button class="btn primary" data-act="start-workout" data-id="${w.id}">Lancer${done.includes(w.id) ? ' (déjà faite aujourd’hui)' : ''}</button></div>
-    </section>`;
-  }).join('')}
-  ${testsCard()}
-  <section class="card">
-    <div class="card-head"><h2>Sécurité</h2></div>
-    <ul class="tight">
-      <li>Douleur vive ou articulaire : arrête l’exercice. Une brûlure musculaire, c’est normal.</li>
-      <li>Si la technique se dégrade, mets-toi en version genoux ou arrête la série. La qualité passe avant la durée.</li>
-      <li>Rien ici ne vise les fessiers. Les abdos visibles viendront surtout de l’alimentation et des pas, pas de plus de gainage.</li>
-      <li>Chaque exercice a un lien « démo vidéo ». Regarde-le avant ta première séance, pas pendant.</li>
-    </ul>
-  </section>
-  <section class="card">
-    <div class="card-head"><h2>Manger</h2></div>
-    <p class="muted">Pour des abdos visibles, l’alimentation pèse plus lourd que les séances. Six règles, pas de régime :</p>
-    <ol class="tight">${FOOD_RULES.map((r) => `<li>${esc(r)}</li>`).join('')}</ol>
-  </section>
-  <section class="card">
-    <div class="card-head"><h2>Apprendre à cuisiner</h2><span class="pill">${RECIPES.length} recettes</span></div>
-    <p class="hint">Objectif : maîtriser une recette par semaine. Propose à tes parents de cuisiner un repas par semaine : tu apprends, et tu choisis ce qui est dans l’assiette.</p>
-    ${RECIPES.map((r) => `<details><summary><strong>${esc(r.name)}</strong> · ${esc(r.time)}</summary>
-      <p><em>Ingrédients :</em> ${esc(r.items)}</p><p>${esc(r.steps)}</p></details>`).join('')}
-  </section>`;
+  <div class="folds">
+    ${fold('c-goal', '🎯', 'Ton objectif', 'Pourquoi ces séances', '<span></span>', goalBody())}
+    ${fold('c-wo', '💪', 'Les 4 séances', 'Exercices et semaine type', `<span class="pill">Niv. ${lvl}</span>`, `
+      <div class="week">${[1, 2, 3, 4, 5, 6, 0].map((dow, i) => `<div class="wk-${WEEK_PLAN[dow]} ${i === todayDow ? 'today' : ''}"><small>${dayNames[i]}</small><b>${WEEK_PLAN[dow]}</b></div>`).join('')}</div>
+      <p class="hint">A = abdos et tronc, B = haut du corps et posture, C = cardio sans saut, M = mobilité, posture et mâchoire. Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
+      <div class="row">${[1, 2, 3].map((n) => `<button class="seg ${lvl === n ? 'on' : ''}" data-act="level" data-lvl="${n}" aria-pressed="${lvl === n}">Niveau ${n}</button>`).join('')}</div>
+      <p class="hint">À la fin de chaque séance, dis si c’était facile, correct ou dur : l’appli te propose de monter ou de descendre. Niveau 1 = 2 tours, efforts plus courts.</p>
+      ${WORKOUTS.map((w) => {
+        const mins = workoutMinutes(w);
+        return `<details class="wo-fold ${w.id === planned ? 'planned' : ''}" data-fold="wo-${w.id}" ${openFolds.has(`wo-${w.id}`) ? 'open' : ''}>
+          <summary><span class="wo-badge wo-${w.id}">${w.id}</span><strong>${esc(w.name.split(' · ')[1] ?? w.name)}</strong><span class="pill">${w.id === planned ? 'Aujourd’hui' : `${mins} min`}</span><span class="chev" aria-hidden="true"></span></summary>
+          <p class="muted">${esc(w.desc)}</p>
+          <ol class="ex">${w.exercises.map((e) => `<li><span class="ex-fig">${figure(e.name, e.target)}</span><div><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="target-tag">🎯 ${esc(e.target)}</span><br><span class="muted">${esc(e.cue)}</span></div></li>`).join('')}</ol>
+          <div class="row"><button class="btn primary" data-act="start-workout" data-id="${w.id}">Lancer${done.includes(w.id) ? ' (déjà faite aujourd’hui)' : ''}</button></div>
+        </details>`;
+      }).join('')}`)}
+    ${fold('c-tests', '📏', 'Tests de niveau', 'Tous les 4 sprints', `<span class="pill">${state.tests.length} test${state.tests.length > 1 ? 's' : ''}</span>`, testsBody())}
+    ${fold('c-food', '🍽️', 'Manger et cuisiner', `${FOOD_RULES.length} règles · ${RECIPES.length} recettes`, '<span></span>', `
+      <p class="muted">Pour des abdos visibles, l’alimentation pèse plus lourd que les séances. Six règles, pas de régime :</p>
+      <ol class="tight">${FOOD_RULES.map((r) => `<li>${esc(r)}</li>`).join('')}</ol>
+      <p class="hint">Objectif : maîtriser une recette par semaine. Propose à tes parents de cuisiner un repas par semaine : tu apprends, et tu choisis ce qui est dans l’assiette.</p>
+      ${RECIPES.map((r) => `<details><summary><strong>${esc(r.name)}</strong> · ${esc(r.time)}</summary>
+        <p><em>Ingrédients :</em> ${esc(r.items)}</p><p>${esc(r.steps)}</p></details>`).join('')}`)}
+    ${fold('c-safe', '⛑️', 'Sécurité', 'Avant ta première séance', '<span></span>', `
+      <ul class="tight">
+        <li>Douleur vive ou articulaire : arrête l’exercice. Une brûlure musculaire, c’est normal.</li>
+        <li>Si la technique se dégrade, mets-toi en version genoux ou arrête la série. La qualité passe avant la durée.</li>
+        <li>Rien ici ne vise les fessiers. Les abdos visibles viendront surtout de l’alimentation et des pas, pas de plus de gainage.</li>
+        <li>Chaque exercice a un lien « démo vidéo ». Regarde-le avant ta première séance, pas pendant.</li>
+      </ul>`)}
+  </div>`;
 }
 
-function goalCard() {
+function goalBody() {
   const points = [
     ['C', 'Sec avant tout.', 'Abdos et mâchoire se voient quand le taux de gras baisse : protéines, zéro grignotage, 8 000 pas, séance C. C’est l’assiette qui fait le plus gros du travail.'],
     ['A', 'Abdos dessinés.', 'Roue abdominale deux fois par tour, crunch inversé, gainage profond pour une taille fine.'],
@@ -780,12 +828,8 @@ function goalCard() {
     ['M', 'Grand et droit.', 'Tête reculée (chin tucks), hanches ouvertes, dos souple : une posture droite fait paraître plus grand.'],
     ['M', 'Mâchoire nette.', 'Cou renforcé, tête droite, langue au palais. L’os ne change pas à l’âge adulte : ce qui la révèle, c’est surtout un visage sec et une tête bien placée. Évite le chewing-gum dur, mauvais pour l’articulation.'],
   ];
-  return `<section class="card goal">
-    <p class="eyebrow">Ton objectif</p>
-    <h2 class="goal-title">Fin, sec et élancé</h2>
-    <p class="muted">Pas trapu, pas massif : un corps athlétique et léger, une posture droite, des abdos et une mâchoire visibles.</p>
-    <ul class="goal-list">${points.map(([id, title, text]) => `<li><span class="wo-badge wo-${id}">${id}</span><div><strong>${title}</strong> ${text}</div></li>`).join('')}</ul>
-  </section>`;
+  return `<p class="muted">Pas trapu, pas massif : un corps athlétique et léger, une posture droite, des abdos et une mâchoire visibles.</p>
+    <ul class="goal-list">${points.map(([id, title, text]) => `<li><span class="wo-badge wo-${id}">${id}</span><div><strong>${title}</strong> ${text}</div></li>`).join('')}</ul>`;
 }
 
 function renderPlayer() {
@@ -827,7 +871,7 @@ function renderPlayer() {
       <p class="phase">${player.endAt ? { work: 'Effort', rest: 'Repos', warm: 'Échauffement', prep: 'Départ' }[s.kind] : 'Pause'}</p>
       <h2>${esc(s.name)}</h2>
       ${s.target ? `<span class="target-tag">🎯 ${esc(s.target)}</span>` : ''}
-      <div class="player-fig">${figure(s.kind === 'work' || s.kind === 'warm' ? s.name : next?.name)}</div>
+      <div class="player-fig">${s.kind === 'work' || s.kind === 'warm' ? figure(s.name, s.target) : figure(next?.name, next?.target)}</div>
       <div class="clock huge" id="player-clock">${fmtStep(player.remaining)}</div>
       ${s.kind === 'rest' ? '' : `<p class="cue">${esc(s.cue)}</p>`}
       ${s.kind === 'work' ? `<p class="demo"><a href="${demoUrl(s.name)}" target="_blank" rel="noopener">Voir une démo vidéo</a></p>` : ''}
@@ -883,13 +927,11 @@ const TEST_FIELDS = [
   ['hollow', 'Hollow', ' s', 'genoux pliés, dos plaqué'],
 ];
 
-function testsCard() {
+function testsBody() {
   const t = state.tests;
   const first = t[0];
   const last = t.at(-1);
-  return `<section class="card">
-    <div class="card-head"><h2>Tests de niveau</h2><span class="pill">${t.length} test${t.length > 1 ? 's' : ''}</span></div>
-    <p class="hint">Fais-le maintenant, puis aux sprints 4, 8 et 12. Toujours après la séance M (échauffement), en arrêtant dès que la technique casse.</p>
+  return `<p class="hint">Fais-le maintenant, puis aux sprints 4, 8 et 12. Toujours après la séance M (échauffement), en arrêtant dès que la technique casse.</p>
     <div class="grid2">${TEST_FIELDS.map(([f, label, unit, hint]) => `<label>${label}${unit ? ` (${unit.trim()})` : ''}<small class="field-hint">${esc(hint)}</small><input type="number" inputmode="numeric" id="test-${f}"></label>`).join('')}</div>
     <div class="row"><button class="btn primary" data-act="test-save">Enregistrer le test du jour</button></div>
     ${t.length ? `<div class="table-wrap"><table class="tests">
@@ -899,16 +941,16 @@ function testsCard() {
         const a = first[f];
         const b = last[f];
         return `<td>${a !== undefined && b !== undefined ? `${b - a >= 0 ? '+' : ''}${b - a}${u}` : '—'}</td>`;
-      }).join('')}</tr>` : ''}</tbody></table></div>` : ''}
-  </section>`;
+      }).join('')}</tr>` : ''}</tbody></table></div>` : ''}`;
 }
 
-const ME_TABS = [['programme', 'Programme'], ['bilan', 'Bilan'], ['livres', 'Livres'], ['apps', 'Apps'], ['reglages', 'Réglages']];
+// 4 sous-onglets : les outils (anciennement « Apps ») sont rangés dans Programme.
+const ME_TABS = [['programme', 'Programme'], ['bilan', 'Bilan'], ['livres', 'Livres'], ['reglages', 'Réglages']];
 
 function viewMe() {
   const sub = ME_TABS.some(([id]) => id === state.ui.meTab) ? state.ui.meTab : 'programme';
-  const body = { programme: viewProgram, bilan: viewReview, livres: viewBooks, apps: viewApps, reglages: viewSettings }[sub]();
-  return `<nav class="subtabs five">${ME_TABS.map(([id, label]) => `<button class="${sub === id ? 'on' : ''}" data-act="me-tab" data-id="${id}">${label}</button>`).join('')}</nav>${body}`;
+  const body = { programme: viewProgram, bilan: viewReview, livres: viewBooks, reglages: viewSettings }[sub]();
+  return `<nav class="subtabs">${ME_TABS.map(([id, label]) => `<button class="${sub === id ? 'on' : ''}" data-act="me-tab" data-id="${id}">${label}</button>`).join('')}</nav>${body}`;
 }
 
 function avgLast7(field, today, map = (v) => v) {
@@ -938,6 +980,7 @@ function viewProgram() {
     <ul class="tight">${phase.focus.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>
     <p class="hint">Coucher cible cette semaine : <strong>${weeklyBedtime(week, state.settings.bedtimeTarget)}</strong>. Le 3ᵉ jour de chaque sprint est un jour minimum prévu.</p>
   </section>
+  ${appsFold()}
   <section class="card">
     <div class="card-head"><h2>Objectifs de la semaine ${next.week}</h2></div>
     <div class="table-wrap"><table class="tests">
@@ -1029,19 +1072,16 @@ function viewBooks() {
   <p class="hint">Règles : bibliothèque avant achat, version originale si c’est en anglais, et si un livre t’ennuie après 50 pages, passe au suivant. +50 XP par livre terminé.</p></div>`;
 }
 
-function viewApps() {
+// Tes outils (apps et réglages du téléphone), rangés dans Programme.
+function appsFold() {
   const cats = [...new Set(APPS.map((a) => a.cat))];
   const done = APPS.filter((a) => state.setup[a.name]).length;
-  return `
-  <section class="card">
-    <div class="card-head"><h2>🧰 Tes outils</h2><span class="pill">${done}/${APPS.length} configurés</span></div>
-    <div class="bar"><span style="width:${(done / APPS.length) * 100}%"></span></div>
+  return `<div class="folds">${fold('apps', '🧰', 'Tes outils', 'Apps et réglages', `<span class="pill ${done === APPS.length ? 'ok' : ''}">${done}/${APPS.length}</span>`, `
     <p class="hint">Tout est gratuit sauf le réveil (≈ 10 €). Coche chaque outil une fois configuré.</p>
-  </section>
-  ${cats.map((c) => `<section class="card"><div class="card-head"><h2>${esc(c)}</h2></div>
+    ${cats.map((c) => `<h3 class="apps-cat">${esc(c)}</h3>
     <ul class="setup">${APPS.filter((a) => a.cat === c).map((a) => `<li>
       <button class="tick ${state.setup[a.name] ? 'on' : ''} ${increased(seen, `setup:${a.name}`, state.setup[a.name] ? 1 : 0) ? 'just' : ''}" data-act="setup-toggle" data-id="${esc(a.name)}" aria-pressed="${Boolean(state.setup[a.name])}" aria-label="Configuré : ${esc(a.name)}">${state.setup[a.name] ? '✓' : ''}</button>
-      <div><strong>${esc(a.name)}</strong><br><span class="hint">${esc(a.how)}</span></div></li>`).join('')}</ul></section>`).join('')}`;
+      <div><strong>${esc(a.name)}</strong><br><span class="hint">${esc(a.how)}</span></div></li>`).join('')}</ul>`).join('')}`)}</div>`;
 }
 
 function viewReview() {
@@ -1134,10 +1174,10 @@ function tick() {
   setRing('pomo-ring', 1 - pomoRemaining() / (p.mode === 'work' ? POMO_WORK : POMO_BREAK));
   const pl = $('#plant');
   if (pl && p.endAt) {
-    const stage = Math.floor((1 - pomoRemaining() / POMO_WORK) * 50);
+    const stage = Math.floor((1 - pomoRemaining() / POMO_WORK) * 100);
     if (pl.dataset.stage !== String(stage)) {
       pl.dataset.stage = stage;
-      pl.innerHTML = plantSVG(stage / 50);
+      pl.innerHTML = focusTree(stage / 100);
     }
   }
 
@@ -1247,8 +1287,9 @@ const actions = {
   },
   'me-tab'(el) {
     const ids = ME_TABS.map(([id]) => id);
-    const dir = ids.indexOf(el.dataset.id) < ids.indexOf(state.ui.meTab) ? 'back' : 'fwd';
-    const same = el.dataset.id === state.ui.meTab;
+    const cur = ids.includes(state.ui.meTab) ? state.ui.meTab : 'programme'; // sous-onglet affiché
+    const dir = ids.indexOf(el.dataset.id) < ids.indexOf(cur) ? 'back' : 'fwd';
+    const same = el.dataset.id === cur;
     state.ui.meTab = el.dataset.id;
     save();
     if (el.dataset.go && currentTab() !== el.dataset.go) location.hash = el.dataset.go;
@@ -1448,9 +1489,19 @@ const actions = {
   'copy-week'(el) {
     copyText(weekSummary(state, el.dataset.first, todayKey()), el, 'Bilan de la semaine copié : colle-le dans Claude.');
   },
+  avatar() {
+    showAvatar();
+  },
+  help(el) {
+    showHelp(el.dataset.id);
+  },
   'sheet-close'() {
     $('#sheet').hidden = true;
     $('#sheet').innerHTML = '';
+    $('#view').inert = false;
+    $('#tabs').inert = false;
+    if (sheetOpener?.isConnected) sheetOpener.focus();
+    sheetOpener = null;
   },
   export() {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
@@ -1570,10 +1621,21 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !$('#sheet').hidden) actions['sheet-close']();
 });
 
+// « Maintenant » suit l'heure (coucher) et ce qui vient d'être fait : on
+// réaffiche Jour quand la prochaine action change, sauf pendant une saisie.
+function refreshNow() {
+  const card = $('.now-card');
+  if (!card || currentTab() !== 'jour' || document.activeElement?.matches('input, textarea, select')) return;
+  const items = planItems(todayKey());
+  const next = nextAction(items, nowHHMM(), items.at(-1).bed);
+  if ((card.dataset.now ?? '') !== (next?.id ?? '')) render();
+}
+
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     if (player?.endAt || state.timers.pomo.endAt) keepAwake(true);
     tick();
+    refreshNow();
   }
 });
 
@@ -1611,7 +1673,7 @@ setInterval(() => {
   if (todayKey() !== shownDay) {
     shownDay = todayKey();
     render();
-  }
+  } else refreshNow();
 }, 60000);
 
 navigator.storage?.persist?.();

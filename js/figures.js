@@ -112,15 +112,6 @@ export function timeline(fig) {
   return keys;
 }
 
-const pts = (j, names) => names.map((n) => j[n].join(',')).join(' ');
-const CHAINS = [
-  ['armF', ['shoulder', 'elbowF', 'handF']],
-  ['legF', ['hip', 'kneeF', 'footF']],
-  ['torso', ['hip', 'shoulder', 'head']],
-  ['legN', ['hip', 'kneeN', 'footN']],
-  ['armN', ['shoulder', 'elbowN', 'handN']],
-];
-
 // Cadre serré autour de tout le mouvement (pour grossir le bonhomme à
 // l'écran), sol compris, avec une marge.
 export function frameBox(keys, wheel = false, pad = 5) {
@@ -138,22 +129,65 @@ export function frameBox(keys, wheel = false, pad = 5) {
   return [round(x0 - pad), round(top), round(x1 - x0 + 2 * pad), round(bottom - top)];
 }
 
+// Corps « mannequin » : un trait par os, chacun avec son épaisseur (cuisse
+// plus épaisse que le mollet, poitrine plus large que la taille). Le tronc est
+// coupé en deux (taille, poitrine) pour pouvoir allumer l'un ou l'autre.
+// [nom, de, à, épaisseur, côté] — dessinés dans cet ordre (le fond d'abord).
+export const BODY = [
+  ['forearmF', 'elbowF', 'handF', 3.2, 'F'],
+  ['upperArmF', 'shoulder', 'elbowF', 4.1, 'F'],
+  ['shinF', 'kneeF', 'footF', 3.9, 'F'],
+  ['thighF', 'hip', 'kneeF', 5.4, 'F'],
+  ['waist', 'hip', 'mid', 6.6, ''],
+  ['chest', 'mid', 'top', 7.8, ''],
+  ['neck', 'shoulder', 'head', 3.4, ''],
+  ['thighN', 'hip', 'kneeN', 5.4, 'N'],
+  ['shinN', 'kneeN', 'footN', 3.9, 'N'],
+  ['upperArmN', 'shoulder', 'elbowN', 4.1, 'N'],
+  ['forearmN', 'elbowN', 'handN', 3.2, 'N'],
+];
+const HEAD = 4.5; // rayon dessiné (un peu plus petit que BONES.head : le cou reste visible)
+// Points du tronc : 'mid' (taille) et 'top' (haut de la poitrine, un peu sous
+// l'épaule pour laisser voir le cou), en proportion de la hanche à l'épaule.
+const ALONG = { mid: 0.45, top: 0.86 };
+const point = (j, k) => (k in ALONG ? [round(j.hip[0] + (j.shoulder[0] - j.hip[0]) * ALONG[k]), round(j.hip[1] + (j.shoulder[1] - j.hip[1]) * ALONG[k])] : j[k]);
+
+// Muscle travaillé, d'après l'objectif de l'exercice (« Bas des abdos · la
+// tablette » → la taille) : ces os s'allument en or.
+const FOCUS = [
+  [/abdos|grand droit|tablette|gainage|obliques|taille|ventre|muscle profond/i, ['waist']],
+  [/pectoraux|buste|haut du dos|omoplates|poitrine|\bdos\b/i, ['chest']],
+  [/colonne|étirement du dos|détente du dos/i, ['waist', 'chest']],
+  [/épaules|carrure/i, ['upperArmN', 'upperArmF']],
+  [/triceps|\bbras\b/i, ['upperArmN', 'upperArmF', 'forearmN', 'forearmF']],
+  [/\bcou\b|mâchoire|tête/i, ['neck']],
+  [/hanches/i, ['thighN', 'thighF']],
+];
+
+export function focusFor(target = '') {
+  return [...new Set(FOCUS.filter(([re]) => re.test(target)).flatMap(([, bones]) => bones))];
+}
+
 // SVG du bonhomme. animate=false : première pose, immobile (mouvement réduit).
 // fit=true : cadre serré autour du mouvement au lieu du cadre fixe 120 × 80.
-export function figureSVG(fig, { animate = true, mirror = false, fit = false } = {}) {
+// focus : os à allumer (voir focusFor).
+export function figureSVG(fig, { animate = true, mirror = false, fit = false, focus = [] } = {}) {
   const keys = timeline(fig);
   const still = !animate || fig.frames.length === 1;
   const times = keys.map((k) => round(k.t * 1000) / 1000).join(';');
   const anim = (attr, values) => (still ? '' : `<animate attributeName="${attr}" dur="${fig.dur ?? 2}s" repeatCount="indefinite" keyTimes="${times}" values="${values.join(';')}"/>`);
   const first = keys[0].joints;
-  const lines = CHAINS.map(([name, chain]) => {
-    const far = name.endsWith('F') && !fig.front;
-    return `<polyline class="fig-${far ? 'far' : 'near'}" points="${pts(first, chain)}">${anim('points', keys.map((k) => pts(k.joints, chain)))}</polyline>`;
-  });
-  const head = `<circle class="fig-head" cx="${first.head[0]}" cy="${first.head[1]}" r="${BONES.head}">${anim('cx', keys.map((k) => k.joints.head[0]))}${anim('cy', keys.map((k) => k.joints.head[1]))}</circle>`;
+  const bone = ([name, from, to, width]) => {
+    const [a, b] = [point(first, from), point(first, to)];
+    const track = (k, i) => anim(k, keys.map(({ joints }) => point(joints, i ? to : from)[k.endsWith('x1') || k.endsWith('x2') ? 0 : 1]));
+    return `<line class="fig-bone${focus.includes(name) ? ' fig-focus' : ''}" stroke-width="${width}" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}">${track('x1', 0)}${track('y1', 0)}${track('x2', 1)}${track('y2', 1)}</line>`;
+  };
+  const far = fig.front ? [] : BODY.filter((b) => b[4] === 'F');
+  const rest = BODY.filter((b) => !far.includes(b));
+  const head = `<circle class="fig-head" cx="${first.head[0]}" cy="${first.head[1]}" r="${HEAD}">${anim('cx', keys.map((k) => k.joints.head[0]))}${anim('cy', keys.map((k) => k.joints.head[1]))}</circle>`;
   // Roue abdominale : tenue dans les mains (centre de la roue = mains).
   const wheel = fig.wheel ? `<circle class="fig-wheel" cx="${first.handN[0]}" cy="${first.handN[1]}" r="${WHEEL}">${anim('cx', keys.map((k) => k.joints.handN[0]))}${anim('cy', keys.map((k) => k.joints.handN[1]))}</circle>` : '';
-  const body = `${lines.join('')}${head}${wheel}`;
+  const body = `${far.length ? `<g class="fig-far">${far.map(bone).join('')}</g>` : ''}${rest.map(bone).join('')}${head}${wheel}`;
   const [bx, by, bw, bh] = fit ? frameBox(keys, fig.wheel) : [0, 0, VIEW.w, VIEW.h];
   // En miroir, le cadre serré est retourné lui aussi autour de l'axe x = 60.
   const vx = fit && mirror ? round(VIEW.w - bx - bw) : bx;

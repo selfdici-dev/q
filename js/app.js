@@ -873,7 +873,8 @@ function renderPlayer() {
       ${s.target ? `<span class="target-tag">🎯 ${esc(s.target)}</span>` : ''}
       <div class="player-fig">${s.kind === 'work' || s.kind === 'warm' ? figure(s.name, s.target) : figure(next?.name, next?.target)}</div>
       <div class="clock huge" id="player-clock">${fmtStep(player.remaining)}</div>
-      ${s.kind === 'rest' ? '' : `<p class="cue">${esc(s.cue)}</p>`}
+      ${s.kind === 'rest' ? '' : `<p class="cue">${esc(s.cue)}</p>
+      <button class="btn ghost small cue-more" data-act="cue-open">📖 Lire la consigne</button>`}
       ${s.kind === 'work' ? `<p class="demo"><a href="${demoUrl(s.name)}" target="_blank" rel="noopener">Voir une démo vidéo</a></p>` : ''}
       ${next ? `<p class="next">Ensuite <strong>${esc(next.name)}</strong></p>` : ''}
     </div>
@@ -882,7 +883,16 @@ function renderPlayer() {
       <button class="ctrl main" data-act="player-toggle" aria-label="${player.endAt ? 'Pause' : 'Reprendre'}">${player.endAt ? '❚❚' : '▶︎'}</button>
       <button class="ctrl" data-act="player-next" aria-label="Étape suivante">▶︎</button>
     </div>
-    <button class="btn ghost small player-stop" data-act="player-stop">Arrêter la séance</button>`;
+    <button class="btn ghost small player-stop" data-act="player-stop">Arrêter la séance</button>
+    ${player.cueOpen ? `<div class="cue-full" role="dialog" aria-modal="true" aria-labelledby="cue-title">
+      <p class="eyebrow">Consigne · séance en pause</p>
+      <h2 id="cue-title">${esc(s.name)}</h2>
+      ${s.target ? `<span class="target-tag">🎯 ${esc(s.target)}</span>` : ''}
+      <div class="cue-full-fig">${figure(s.name, s.target)}</div>
+      <p class="cue-full-text">${esc(s.cue)}</p>
+      <button class="btn primary wide" data-act="cue-close">${player.cueResume ? 'Compris, on reprend' : 'Fermer'}</button>
+    </div>` : ''}`;
+  if (player.cueOpen) $('.cue-full [data-act="cue-close"]', el)?.focus({ preventScroll: true });
 }
 
 function startWorkout(id) {
@@ -901,6 +911,7 @@ function startWorkout(id) {
 function playerGoto(i) {
   if (i >= player.steps.length) return finishWorkout();
   player.i = Math.max(0, i);
+  player.cueOpen = false;
   player.remaining = player.steps[player.i].secs;
   player.endAt = Date.now() + player.remaining * 1000;
   renderPlayer();
@@ -1269,6 +1280,23 @@ const actions = {
     renderPlayer();
   },
   'player-next'() { if (player && !player.done) playerGoto(player.i + 1); },
+  // Consigne en entier : la séance se met en pause le temps de lire.
+  'cue-open'() {
+    if (!player || player.done) return;
+    player.cueResume = Boolean(player.endAt);
+    if (player.endAt) {
+      player.remaining = Math.ceil((player.endAt - Date.now()) / 1000);
+      player.endAt = null;
+    }
+    player.cueOpen = true;
+    renderPlayer();
+  },
+  'cue-close'() {
+    if (!player) return;
+    player.cueOpen = false;
+    if (player.cueResume && !player.endAt) player.endAt = Date.now() + player.remaining * 1000;
+    renderPlayer();
+  },
   'player-prev'() { if (player && !player.done) playerGoto(player.i - 1); },
   feel(el) {
     state.feels = [...state.feels, { date: todayKey(), id: player.workout.id, v: el.dataset.v }].slice(-60);

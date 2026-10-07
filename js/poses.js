@@ -333,4 +333,32 @@ export const POSES = {
       { at: [60, 41], torso: -76, neck: -70, armN: [72, -118], armF: [-44, 204], legN: [90, 90], legF: [-14, 96] },
     ],
   },
+  // Ronde 7 : anges au sol et étirement des pectoraux (M), burpees sans saut (C)
+  'Anges au sol': {
+    dur: 5, hold: 0.25,
+    frames: [
+      { anchor: 'shoulder', at: [76, 68.5], torso: 0, neck: 0, armN: [178, -2], armF: [180, -1], legN: { to: [40, 70], bend: 1 }, legF: { to: [42, 70], bend: 1 } },
+      { anchor: 'shoulder', at: [76, 68.5], torso: 0, neck: 0, armN: [-6, -6], armF: [-4, -4], legN: { to: [40, 70], bend: 1 }, legF: { to: [42, 70], bend: 1 } },
+    ],
+  },
+  'Étirement des pectoraux au sol': {
+    dur: 6, hold: 0.3,
+    frames: [
+      { at: [49, 68.5], torso: 0, neck: 0, armN: { to: [64, 70], bend: 1 }, armF: [8, -8], legN: { to: [20.1, 69.8], bend: 1 }, legF: [181, 180.5] },
+      { at: [49, 68.5], torso: -8, neck: -20, armN: { to: [66, 70], bend: 1 }, armF: [8, -8], legN: { to: [36, 70], bend: 1 }, legF: [181, 180.5] },
+    ],
+  },
+  // Debout → accroupi, mains au sol → pieds en arrière (bassin haut) → planche,
+  // puis retour par le même chemin (genou toujours plié du bon côté).
+  'Burpees sans saut': {
+    dur: 4, loop: 'cycle', hold: 0.1,
+    frames: [
+      { at: [60, 41], torso: -90, neck: -88, armN: [-25, -25], armF: [-28, -28], legN: { to: [60, 70], bend: -1 }, legF: { to: [61.5, 70], bend: -1 } },
+      { at: [52, 59], torso: -32, neck: -40, armN: [84.3, 102.6], armF: [79.9, 99.4], legN: { to: [60, 70], bend: -1 }, legF: { to: [61.5, 70], bend: -1 } },
+      { at: [48, 44], torso: -50, neck: -58, armN: [81.9, 84.3], armF: [80, 82.2], legN: { to: [32, 70], bend: -1 }, legF: { to: [33.5, 70], bend: -1 } },
+      { at: [45.84, 56.83], torso: -27, neck: -17, armN: [88.1, 91.6], armF: [84.3, 87.9], legN: { to: [20, 70], bend: 1 }, legF: { to: [21.5, 70], bend: 1 } },
+      { at: [48, 44], torso: -50, neck: -58, armN: [81.9, 84.3], armF: [80, 82.2], legN: { to: [32, 70], bend: -1 }, legF: { to: [33.5, 70], bend: -1 } },
+      { at: [52, 59], torso: -32, neck: -40, armN: [84.3, 102.6], armF: [79.9, 99.4], legN: { to: [60, 70], bend: -1 }, legF: { to: [61.5, 70], bend: -1 } },
+    ],
+  },
 };

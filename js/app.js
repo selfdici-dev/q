@@ -3,6 +3,7 @@ import {
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
   dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
+  sessionKcal, lastValue, DEFAULT_WEIGHT,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
@@ -544,6 +545,11 @@ function workoutMinutes(w) {
   return Math.round(buildSteps(w, state.settings.level).reduce((a, x) => a + x.secs, 0) / 60);
 }
 
+// Calories estimées, avec le dernier poids noté (sinon 70 kg).
+function workoutKcal(w) {
+  return sessionKcal(buildSteps(w, state.settings.level), w.met, lastValue(state, 'weight') ?? DEFAULT_WEIGHT);
+}
+
 // Chaque élément du plan : id, icône, titre, détail, fait ou non, et son
 // bouton (go : texte + action ou lien), affiché petit dans la liste et en
 // grand dans « Maintenant ».
@@ -773,7 +779,7 @@ function viewSport() {
     const did = done.includes(planned);
     return `<section class="card today-workout">
       <span class="wo-badge big wo-${pw.id}">${pw.id}</span>
-      <div><p class="eyebrow">Aujourd’hui</p><h2>${esc(pw.name.split(' · ')[1] ?? pw.name)}</h2><p class="muted">≈ ${workoutMinutes(pw)} min · niveau ${lvl}${did ? ' · ✓ faite' : ''}</p></div>
+      <div><p class="eyebrow">Aujourd’hui</p><h2>${esc(pw.name.split(' · ')[1] ?? pw.name)}</h2><p class="muted">≈ ${workoutMinutes(pw)} min · ≈ ${workoutKcal(pw)} kcal · niveau ${lvl}${did ? ' · ✓ faite' : ''}</p></div>
       <button class="btn primary wide" data-act="start-workout" data-id="${pw.id}">${did ? 'Refaire' : 'Lancer la séance'}</button>
       ${pw.id !== 'M' ? `<button class="btn ghost small" data-act="start-workout" data-id="M">Pas la forme ? Juste la mobilité (${workoutMinutes(WORKOUTS.find((w) => w.id === 'M'))} min)</button>` : ''}
     </section>`;
@@ -795,6 +801,7 @@ function viewSport() {
         return `<details class="wo-fold ${w.id === planned ? 'planned' : ''}" data-fold="wo-${w.id}" ${openFolds.has(`wo-${w.id}`) ? 'open' : ''}>
           <summary><span class="wo-badge wo-${w.id}">${w.id}</span><strong>${esc(w.name.split(' · ')[1] ?? w.name)}</strong><span class="pill">${w.id === planned ? 'Aujourd’hui' : `${mins} min`}</span><span class="chev" aria-hidden="true"></span></summary>
           <p class="muted">${esc(w.desc)}</p>
+          <p class="hint">≈ ${mins} min · ≈ ${workoutKcal(w)} kcal brûlées (estimation)</p>
           <ol class="ex">${w.exercises.map((e) => `<li><span class="ex-fig">${figure(e.name, e.target)}</span><div><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="target-tag">🎯 ${esc(e.target)}</span><br><span class="muted">${esc(e.cue)}</span></div></li>`).join('')}</ol>
           <div class="row"><button class="btn primary" data-act="start-workout" data-id="${w.id}">Lancer${done.includes(w.id) ? ' (déjà faite aujourd’hui)' : ''}</button></div>
         </details>`;
@@ -823,6 +830,7 @@ function goalBody() {
     ['B', 'Musclé sans s’élargir.', 'Poids du corps seulement, aucune charge lourde : tu te dessines sans prendre de volume. Rien pour les trapèzes, qui tassent le cou.'],
     ['M', 'Grand et droit.', 'Bassin droit (fentes basses, pont fessier), dos fort et épaules ouvertes (superman, livre ouvert, anges au sol, étirement des pectoraux), tête reculée (chin tucks, extension du cou) : on gagne visuellement quelques centimètres et une démarche plus sûre.'],
     ['M', 'Mâchoire nette.', 'Tête droite et visage sec, sans grossir le cou. L’os ne change pas à l’âge adulte : ce qui la révèle, c’est surtout un visage sec et une tête bien placée. Évite le chewing-gum dur, mauvais pour l’articulation.'],
+    ['C', 'Les calories, à leur juste place.', 'Une séance brûle 70 à 90 kcal, à peu près une banane. Elle donne la forme ; le gras part surtout grâce à l’assiette et aux pas (10 000 pas ≈ 300 kcal).'],
   ];
   return `<p class="muted">Pas trapu, pas massif : un corps athlétique et léger, une posture droite, des abdos et une mâchoire visibles.</p>
     <ul class="goal-list">${points.map(([id, title, text]) => `<li><span class="wo-badge wo-${id}">${id}</span><div><strong>${title}</strong> ${text}</div></li>`).join('')}</ul>`;
@@ -843,6 +851,7 @@ function renderPlayer() {
         <p class="eyebrow">Séance terminée</p>
         <h2>${esc(player.workout.name)}</h2>
         <div class="big-emoji">💪</div>
+        <p class="muted">≈ ${workoutKcal(player.workout)} kcal brûlées (estimation)</p>
         <p class="cue">Comment c’était ? Ta réponse sert à ajuster le niveau.</p>
       </div>
       <div class="feel">

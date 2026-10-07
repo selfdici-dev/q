@@ -302,3 +302,18 @@ test('habitudes retirées : téléphone et focus enlevés une seule fois, histor
   assert.equal(retireHabits(st, '2026-10-07'), false);
   assert.equal(st.habits.length, 4);
 });
+
+test('calories d’une séance : MET × 3,5 × kg / 200 par minute, arrondi à 5', async () => {
+  const { sessionKcal, lastValue, DEFAULT_WEIGHT } = await import('../js/logic.js');
+  // 10 min d'effort à 6 MET pour 70 kg : 6 × 3,5 × 70 / 200 × 10 = 73,5 → 75
+  assert.equal(sessionKcal([{ kind: 'work', secs: 600 }], 6, 70), 75);
+  // les pauses comptent moins que l'effort, et un poids plus lourd brûle plus
+  const steps = [{ kind: 'prep', secs: 10 }, { kind: 'work', secs: 300 }, { kind: 'rest', secs: 300 }];
+  assert.ok(sessionKcal(steps, 6, 70) < sessionKcal([{ kind: 'work', secs: 600 }], 6, 70));
+  assert.ok(sessionKcal(steps, 6, 90) > sessionKcal(steps, 6, 60));
+  assert.equal(sessionKcal(steps, 6), sessionKcal(steps, 6, DEFAULT_WEIGHT));
+  // dernier poids noté, en ignorant les jours vides
+  const st = { days: { '2026-01-01': { weight: 71.5 }, '2026-01-03': { weight: '' }, '2026-01-02': { weight: '70.2' } } };
+  assert.equal(lastValue(st, 'weight'), 70.2);
+  assert.equal(lastValue({ days: {} }, 'weight'), null);
+});

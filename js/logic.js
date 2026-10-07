@@ -200,6 +200,28 @@ export function series(state, field, today, n) {
   return out;
 }
 
+// Dernière valeur notée d'un champ numérique (ex. le poids), ou null.
+export function lastValue(state, field) {
+  for (const k of Object.keys(state.days).sort().reverse()) {
+    const v = Number(state.days[k]?.[field]);
+    if (v > 0) return v;
+  }
+  return null;
+}
+
+// ---------- Calories d'une séance (estimation) ----------
+// Formule standard : kcal par minute = MET × 3,5 × poids (kg) / 200.
+// MET = intensité de l'effort (Compendium des activités physiques, 2024) :
+// celui de la séance pendant les efforts, plus bas pendant l'échauffement et
+// les pauses. Estimation à ±20 % : un ordre de grandeur, pas une mesure.
+export const STEP_MET = { prep: 1.5, warm: 3.5, rest: 2 };
+export const DEFAULT_WEIGHT = 70;
+
+export function sessionKcal(steps, met, kg = DEFAULT_WEIGHT) {
+  const kcal = steps.reduce((t, x) => t + (x.secs / 60) * (x.kind === 'work' ? met : STEP_MET[x.kind] ?? 2) * 3.5 * kg / 200, 0);
+  return Math.round(kcal / 5) * 5;
+}
+
 // ---------- Points (XP) et niveaux ----------
 // L'XP est recalculée à partir des données, jamais stockée : impossible de la
 // compter deux fois, et elle suit automatiquement les corrections.

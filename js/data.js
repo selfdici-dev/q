@@ -23,6 +23,7 @@ export const WORKOUTS = [
   {
     id: 'A',
     name: 'A · Abdos et tronc',
+    met: 3.8,
     desc: 'Abdos visibles, taille fine et V du bas du ventre : crunch vélo (n° 1 des mesures), roue abdominale deux fois par tour, Russian twist, planches et hollow body. Que des exercices qu’on sent. 3 tours.',
     rounds: 3,
     rest: 15,
@@ -41,6 +42,7 @@ export const WORKOUTS = [
   {
     id: 'B',
     name: 'B · Haut du corps et posture',
+    met: 3.8,
     desc: 'Poids du corps seulement : un buste dessiné et un dos droit, sans prendre de volume. Tu te muscles sans t’élargir. 3 tours.',
     rounds: 3,
     rest: 20,
@@ -57,6 +59,7 @@ export const WORKOUTS = [
   {
     id: 'C',
     name: 'C · Cardio sans saut',
+    met: 6,
     desc: 'Brûler des calories dans 2 m², sans bruit pour les voisins : c’est ce qui rend sec et fait apparaître abdos et mâchoire. 3 tours, ça monte vite.',
     rounds: 3,
     rest: 15,
@@ -72,6 +75,7 @@ export const WORKOUTS = [
   {
     id: 'M',
     name: 'M · Posture, cou et mâchoire',
+    met: 2.3,
     desc: 'Tous les jours, même les jours de repos, ≈ 8 min : paraître plus grand (bassin droit, dos et nuque forts, épaules ouvertes), une tête droite qui dégage la mâchoire, une taille fine. Que des exercices qu’on sent, sur le tapis. Dans la journée : tête droite, épaules basses. C’est aussi ton minimum de reprise.',
     rounds: 1,
     rest: 5,

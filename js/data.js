@@ -2,9 +2,7 @@
 // (habitudes) ou ici (séances).
 
 export const DEFAULT_HABITS = [
-  { id: 'sommeil', emoji: '📵', name: 'Téléphone hors du lit', min: 'Téléphone posé hors du lit à l’heure cible', full: 'Téléphone hors de la chambre + couché à l’heure cible' },
   { id: 'sport', emoji: '💪', name: 'Bouger', min: 'Mobilité 8 min OU 5 pompes + 30 s de gainage', full: 'Séance du jour + 8 000 pas' },
-  { id: 'focus', emoji: '🎯', name: 'Focus', min: '1 session de 25 min', full: '4 sessions de 25 min' },
   { id: 'apprendre', emoji: '📚', name: 'Apprendre', min: '1 leçon de finance OU 2 pages', full: '1 leçon de finance + 20 min de lecture' },
   { id: 'manger', emoji: '🍎', name: 'Pas de grignotage', min: 'Pas de grignotage après le dîner', full: 'Zéro grignotage hors des repas' },
 ];

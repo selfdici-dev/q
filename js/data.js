@@ -63,7 +63,7 @@ export const WORKOUTS = [
     roundRest: 60,
     exercises: [
       { name: 'Shadow boxing', work: 40, target: 'Cardio · corps sec', cue: 'Garde haute, enchaîne direct-direct-crochet, pivote sur les pieds. Expire à chaque coup.' },
-      { name: 'Montées de genoux sur place', work: 30, target: 'Cardio · brûle des calories', cue: 'Sans sauter : un genou puis l’autre à hauteur de hanche, bras qui suivent.' },
+      { name: 'Burpees sans saut', work: 30, target: 'Cardio · corps entier, celui qui brûle le plus', cue: '1. Debout, accroupis-toi et pose les mains au sol devant tes pieds. 2. Recule les pieds l’un après l’autre jusqu’en planche, corps gainé. 3. Ramène-les l’un après l’autre près des mains. 4. Relève-toi d’un coup et tends les bras vers le plafond, sur la pointe des pieds. Va vite : c’est le rythme qui fait brûler, pas le saut. Plus dur : recule et ramène les pieds en sautant, ou saute en haut si les voisins ne sont pas gênés.' },
       { name: 'Mountain climbers lents', work: 30, target: 'Cardio + abdos', cue: 'En planche haute, ramène un genou vers la poitrine puis l’autre, bassin stable.' },
       { name: 'Genou-coude croisé debout', work: 30, target: 'Cardio + obliques · le V du bas du ventre', cue: 'Debout, bout des doigts derrière les oreilles. Monte le genou droit vers le coude gauche en tournant le buste, repose, puis le genou gauche vers le coude droit. Rythme rapide, toujours un pied au sol : silencieux. Expire à chaque contact.' },
       { name: 'Shadow boxing rapide', work: 30, target: 'Cardio · dernier effort', cue: 'Coups courts et rapides, reste léger sur les appuis.' },
@@ -72,7 +72,7 @@ export const WORKOUTS = [
   {
     id: 'M',
     name: 'M · Posture, cou et mâchoire',
-    desc: 'Tous les jours, même les jours de repos, ≈ 7 min : paraître plus grand (bassin droit, dos et nuque forts), un cou qui dessine la mâchoire, une taille fine. Que des exercices qu’on sent. Dans la journée : langue collée au palais, tête droite. C’est aussi ton minimum de reprise.',
+    desc: 'Tous les jours, même les jours de repos, ≈ 8 min : paraître plus grand (bassin droit, dos et nuque forts, épaules ouvertes), une tête droite qui dégage la mâchoire, une taille fine. Que des exercices qu’on sent, sur le tapis. Dans la journée : tête droite, épaules basses. C’est aussi ton minimum de reprise.',
     rounds: 1,
     rest: 5,
     roundRest: 0,
@@ -83,11 +83,12 @@ export const WORKOUTS = [
       { name: 'Pont fessier', work: 40, target: 'Fessiers · bassin droit, meilleure démarche', cue: 'Sur le dos, genoux pliés, pieds à plat près des fesses. Pousse dans les talons et monte le bassin jusqu’à aligner genoux, hanches et épaules. Serre fort les fesses 2 s en haut, redescends lentement. Ça raffermit sans faire grossir et ça remet le bassin droit : tu te tiens et tu marches plus grand.' },
       { name: 'Livre ouvert (droite)', work: 40, target: 'Haut du dos · poitrine ouverte', cue: '1. Couché sur le côté gauche, genoux pliés à 90° devant toi, tête posée. 2. Bras tendus devant toi, mains l’une sur l’autre. 3. Ouvre lentement le bras droit vers le plafond puis vers le sol derrière toi, comme un livre qui s’ouvre : le regard suit la main, les genoux restent collés au sol. 4. Expire en ouvrant, tiens 2 s, reviens. Tu sens la poitrine s’étirer et le haut du dos tourner.' },
       { name: 'Livre ouvert (gauche)', work: 40, target: 'Haut du dos · poitrine ouverte', cue: 'Même chose couché sur le côté droit, c’est le bras gauche qui s’ouvre.' },
+      { name: 'Anges au sol', work: 40, target: 'Haut du dos et épaules · se tenir droit, paraître plus grand', cue: '1. Sur le dos, genoux pliés, pieds à plat, bas du dos collé au tapis. 2. Bras au sol en W : coudes près des côtes, dos des mains et coudes touchent le tapis. 3. Fais glisser lentement les bras au-dessus de la tête en Y sans jamais les décoller du sol, puis redescends en W en serrant les omoplates vers le bas. 4. Si les mains ou les coudes décollent, va moins loin. Tu le sens entre les omoplates et à l’avant des épaules.' },
+      { name: 'Étirement des pectoraux au sol (droite)', work: 30, target: 'Pectoraux · épaules en arrière, buste droit', cue: '1. À plat ventre, bras droit tendu sur le côté à hauteur d’épaule, paume au sol. 2. Main gauche posée près de ta poitrine. 3. Pousse avec la main gauche pour rouler doucement sur le côté gauche, plie la jambe droite et pose le pied derrière toi. 4. Arrête-toi dès que ça tire dans la poitrine et l’avant de l’épaule droite, respire, tiens. Jamais de douleur dans l’épaule.' },
+      { name: 'Étirement des pectoraux au sol (gauche)', work: 30, target: 'Pectoraux · épaules en arrière, buste droit', cue: 'Même chose avec le bras gauche tendu sur le côté : tu roules sur le côté droit.' },
       { name: 'Superman', work: 40, target: 'Bas et haut du dos · se tenir droit', cue: '1. À plat ventre, bras tendus devant toi, regard vers le tapis. 2. Serre les fesses et rentre le nombril. 3. Décolle en même temps bras, poitrine et jambes de quelques cm (pas plus haut). 4. Tiens 2 s, repose 1 s. Tu le sens tout le long du dos ; pas de douleur dans le bas du dos.' },
       { name: 'Chin tucks', work: 30, target: 'Cou · tête droite, mâchoire dégagée', cue: 'Assis ou debout, dos droit. Recule la tête à l’horizontale, comme pour faire un double menton, sans baisser le regard. Tiens 5 s en poussant fort, relâche. Tu dois sentir l’arrière du cou travailler.' },
-      { name: 'Renforcement du cou', work: 30, target: 'Cou · ligne de la mâchoire', cue: 'Allongé sur le dos (front vers le plafond), rentre le menton puis soulève la tête de 2-3 cm, tiens 5 s, repose. Tu le sens sous le menton et à l’avant du cou. Tout doucement, sans à-coups.' },
       { name: 'Extension du cou', work: 30, target: 'Nuque · ligne de la mâchoire', cue: 'Allongé sur le ventre, front tourné vers le tapis (« front bas »). Garde le menton rentré et relève doucement la tête jusqu’à regarder un peu devant toi (« front haut »), tiens 3 s, redescends. Une nuque forte tient la tête droite et dégage la mâchoire de profil.' },
-      { name: 'Langue au palais', work: 30, target: 'Posture de la bouche · mâchoire', cue: 'Bouche fermée, dents à peine en contact, toute la langue collée au palais (pas seulement le bout), y compris le fond. Respire par le nez. Tu dois sentir les muscles sous le menton se tendre. Garde cette position aussi dans la journée.' },
     ],
   },
 ];
@@ -177,6 +178,9 @@ const DEMO_QUERIES = {
   'Jumping jacks sans saut': 'step jacks low impact',
   'Renforcement du cou': 'supine neck flexion chin tuck',
   'Langue au palais': 'correct tongue posture',
+  'Anges au sol': 'floor angels exercise',
+  'Étirement des pectoraux au sol': 'prone pec stretch',
+  'Burpees sans saut': 'no jump burpee',
 };
 
 // Nom sans précision entre parenthèses : « Roue abdominale à genoux (1/2) » → « Roue abdominale à genoux ».

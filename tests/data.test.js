@@ -27,17 +27,21 @@ test('matériel : le corps, un tapis et une roue abdominale, rien d’autre', ()
   for (const text of all) assert.doesNotMatch(text, /bouteille|serviette|sac à dos|haltère|élastique|barre|chaise|mur\b/i, text);
 });
 
-test('objectif fin et élancé : roue ×2, pas de burpee, cou et mâchoire', () => {
+test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoire', () => {
   const ex = (id) => WORKOUTS.find((w) => w.id === id).exercises;
   assert.equal(ex('A').filter((e) => baseName(e.name) === 'Roue abdominale à genoux').length, 2);
-  assert.ok(ex('C').every((e) => !/burpee/i.test(e.name)));
+  // C : burpees sans saut (silencieux) à la place des montées de genoux
+  assert.ok(ex('C').some((e) => e.name === 'Burpees sans saut'));
+  assert.ok(ex('C').every((e) => !/montées de genoux/i.test(e.name)));
   assert.ok(ex('M').filter((e) => /mâchoire/.test(e.target)).length >= 2);
   // A : crunch (haut des abdos) et Russian twist (obliques) ; B sans pompes pike ni tirage superman
   // A : ses exercices préférés (planches, hollow, Russian twist) + crunch vélo et roue ×2 à 40 s
   for (const n of ['Crunch vélo', 'Russian twist', 'Planche sur avant-bras', 'Planche latérale (droite)', 'Planche latérale (gauche)', 'Hollow hold genoux pliés']) assert.ok(ex('A').some((e) => e.name === n), n);
   assert.ok(ex('A').filter((e) => /^Roue/.test(e.name)).every((e) => e.work >= 40));
   // M : posture et mâchoire, sans les exercices où l'on ne sent rien
-  assert.ok(['Pont fessier', 'Superman', 'Extension du cou', 'Livre ouvert (droite)', 'Langue au palais'].every((n) => ex('M').some((e) => e.name === n)));
+  assert.ok(['Pont fessier', 'Superman', 'Extension du cou', 'Livre ouvert (droite)', 'Anges au sol', 'Étirement des pectoraux au sol (gauche)'].every((n) => ex('M').some((e) => e.name === n)));
+  // M : plus de langue au palais ni de renforcement du cou (pas de gros cou)
+  assert.ok(ex('M').every((e) => !/langue|renforcement du cou/i.test(e.name)));
   assert.ok(ex('M').every((e) => !/respiration|vacuum|chat-vache|posture de l/i.test(e.name)));
   // C : plus de jumping jacks
   assert.ok(ex('C').every((e) => !/jumping/i.test(e.name)));

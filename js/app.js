@@ -2,7 +2,7 @@ import {
   todayKey, addDays, diffDays, fromKey, dayStatus, chain, lastNDays,
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
-  dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction,
+  dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
@@ -73,6 +73,8 @@ function load() {
     // Données d'avant la v2 : on fige la liste d'habitudes des jours passés.
     const ids = st.habits.map((h) => h.id);
     for (const d of Object.values(st.days)) d.ids ??= ids;
+    // Habitudes retirées (téléphone, focus) : une seule fois, historique intact.
+    if (retireHabits(st, todayKey())) localStorage.setItem(STORE, JSON.stringify(st));
     return st;
   } catch {
     return freshState();
@@ -569,13 +571,7 @@ function planItems(today) {
     const due = dueCards(all, today).length;
     items.push({ id: 'revision', ico: '🧠', title: due ? `Révisions : ${due} carte${due > 1 ? 's' : ''}` : 'Révisions à jour', sub: '≈ 5 min', done: due === 0, go: { label: due ? 'Réviser' : 'Cartes', href: '#revision' } });
   }
-  items.push({ id: 'focus', ico: '🎯', title: '1 session de focus (25 min)', sub: `${d.focus ?? 0} faite${(d.focus ?? 0) > 1 ? 's' : ''} aujourd’hui`, done: (d.focus ?? 0) >= 1, go: { label: 'Go', href: '#focus' } });
   items.push({ id: 'lecture', ico: '📖', title: 'Lire 10 pages', sub: 'Moi > Livres pour choisir', done: Boolean(d.read), go: { label: d.read ? 'Annuler' : 'Fait', act: 'read-toggle' } });
-  const prot = d.protein ?? 0;
-  items.push({ id: 'proteines', ico: '🍗', title: `Protéines : ${prot}/${PROTEIN_TARGET} portions`, sub: 'œufs, poulet, thon, skyr, lentilles', done: prot >= PROTEIN_TARGET, go: { label: '+1', act: 'protein', v: 1 } });
-  const bed = weeklyBedtime(weekNumber(state, today), state.settings.bedtimeTarget);
-  const phoneOut = (d.habits?.sommeil ?? 0) >= 1;
-  items.push({ id: 'coucher', ico: '📵', title: `Téléphone hors de la chambre à ${bed}`, sub: 'puis coucher', done: phoneOut, go: phoneOut ? null : { label: 'Fait', act: 'habit', id: 'sommeil', lvl: 1 }, bed });
   return items;
 }
 
@@ -593,7 +589,7 @@ const nowHHMM = () => new Date().toTimeString().slice(0, 5);
 function planCard(today) {
   const items = planItems(today);
   const n = items.filter((x) => x.done).length;
-  const now = nextAction(items, nowHHMM(), items.at(-1).bed);
+  const now = nextAction(items, nowHHMM(), null);
   // Le gros bouton dit « Lancer la séance », pas juste « Lancer ».
   const bigLabel = { seance: 'Lancer la séance', lecon: 'Ouvrir la leçon', focus: 'Aller au focus', lecture: 'J’ai lu 10 pages', proteines: '+1 portion', coucher: 'Téléphone posé' };
   return `<section class="card plan">
@@ -873,7 +869,8 @@ function renderPlayer() {
       ${s.target ? `<span class="target-tag">🎯 ${esc(s.target)}</span>` : ''}
       <div class="player-fig">${s.kind === 'work' || s.kind === 'warm' ? figure(s.name, s.target) : figure(next?.name, next?.target)}</div>
       <div class="clock huge" id="player-clock">${fmtStep(player.remaining)}</div>
-      ${s.kind === 'rest' ? '' : `<p class="cue">${esc(s.cue)}</p>`}
+      ${s.kind === 'rest' ? '' : `<p class="cue">${esc(s.cue)}</p>
+      <button class="btn ghost small cue-more" data-act="cue-open">📖 Lire la consigne</button>`}
       ${s.kind === 'work' ? `<p class="demo"><a href="${demoUrl(s.name)}" target="_blank" rel="noopener">Voir une démo vidéo</a></p>` : ''}
       ${next ? `<p class="next">Ensuite <strong>${esc(next.name)}</strong></p>` : ''}
     </div>
@@ -882,7 +879,16 @@ function renderPlayer() {
       <button class="ctrl main" data-act="player-toggle" aria-label="${player.endAt ? 'Pause' : 'Reprendre'}">${player.endAt ? '❚❚' : '▶︎'}</button>
       <button class="ctrl" data-act="player-next" aria-label="Étape suivante">▶︎</button>
     </div>
-    <button class="btn ghost small player-stop" data-act="player-stop">Arrêter la séance</button>`;
+    <button class="btn ghost small player-stop" data-act="player-stop">Arrêter la séance</button>
+    ${player.cueOpen ? `<div class="cue-full" role="dialog" aria-modal="true" aria-labelledby="cue-title">
+      <p class="eyebrow">Consigne · séance en pause</p>
+      <h2 id="cue-title">${esc(s.name)}</h2>
+      ${s.target ? `<span class="target-tag">🎯 ${esc(s.target)}</span>` : ''}
+      <div class="cue-full-fig">${figure(s.name, s.target)}</div>
+      <p class="cue-full-text">${esc(s.cue)}</p>
+      <button class="btn primary wide" data-act="cue-close">${player.cueResume ? 'Compris, on reprend' : 'Fermer'}</button>
+    </div>` : ''}`;
+  if (player.cueOpen) $('.cue-full [data-act="cue-close"]', el)?.focus({ preventScroll: true });
 }
 
 function startWorkout(id) {
@@ -901,6 +907,7 @@ function startWorkout(id) {
 function playerGoto(i) {
   if (i >= player.steps.length) return finishWorkout();
   player.i = Math.max(0, i);
+  player.cueOpen = false;
   player.remaining = player.steps[player.i].secs;
   player.endAt = Date.now() + player.remaining * 1000;
   renderPlayer();
@@ -1269,6 +1276,23 @@ const actions = {
     renderPlayer();
   },
   'player-next'() { if (player && !player.done) playerGoto(player.i + 1); },
+  // Consigne en entier : la séance se met en pause le temps de lire.
+  'cue-open'() {
+    if (!player || player.done) return;
+    player.cueResume = Boolean(player.endAt);
+    if (player.endAt) {
+      player.remaining = Math.ceil((player.endAt - Date.now()) / 1000);
+      player.endAt = null;
+    }
+    player.cueOpen = true;
+    renderPlayer();
+  },
+  'cue-close'() {
+    if (!player) return;
+    player.cueOpen = false;
+    if (player.cueResume && !player.endAt) player.endAt = Date.now() + player.remaining * 1000;
+    renderPlayer();
+  },
   'player-prev'() { if (player && !player.done) playerGoto(player.i - 1); },
   feel(el) {
     state.feels = [...state.feels, { date: todayKey(), id: player.workout.id, v: el.dataset.v }].slice(-60);
@@ -1627,7 +1651,7 @@ function refreshNow() {
   const card = $('.now-card');
   if (!card || currentTab() !== 'jour' || document.activeElement?.matches('input, textarea, select')) return;
   const items = planItems(todayKey());
-  const next = nextAction(items, nowHHMM(), items.at(-1).bed);
+  const next = nextAction(items, nowHHMM(), null);
   if ((card.dataset.now ?? '') !== (next?.id ?? '')) render();
 }
 

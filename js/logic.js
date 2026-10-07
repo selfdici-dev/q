@@ -488,3 +488,22 @@ export function nextAction(items, now, bed) {
   }
   return open[0];
 }
+
+// ---------- Habitudes retirées ----------
+// « Téléphone hors du lit » et « Focus » ne comptent plus pour valider la
+// journée (demande de l'utilisateur : physique, apprentissage, lecture).
+// Retrait une seule fois (marqueur settings.habitsRetired) : les jours passés
+// gardent leur liste figée (d.ids), donc la chaîne et l'historique ne bougent
+// pas ; seule la journée en cours suit la nouvelle liste. Renvoie true si la
+// liste a changé.
+export const RETIRED_HABITS = ['sommeil', 'focus'];
+
+export function retireHabits(state, today) {
+  if (state.settings.habitsRetired) return false;
+  state.settings.habitsRetired = true;
+  const before = state.habits.length;
+  for (const [key, d] of Object.entries(state.days)) if (key !== today) d.ids ??= state.habits.map((h) => h.id);
+  state.habits = state.habits.filter((h) => !RETIRED_HABITS.includes(h.id));
+  if (state.days[today]) state.days[today].ids = state.habits.map((h) => h.id);
+  return state.habits.length !== before;
+}

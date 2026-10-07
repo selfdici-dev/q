@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   todayKey, addDays, chain, recoveryMode, sprintInfo, bedtimeMinutes, minutesToHHMM,
-  sleepDuration, rollingAverage, nextAction,
+  sleepDuration, rollingAverage, nextAction, retireHabits, dayStatus,
 } from '../js/logic.js';
 
 const habits = [{ id: 'a' }, { id: 'b' }];
@@ -276,4 +276,29 @@ test('« Maintenant » : la première chose pas faite, le coucher passe devant l
   // jamais au-delà du changement de jour (4 h) : c'est déjà le plan du lendemain
   assert.equal(nextAction(plan(), '03:50', '01:15').id, 'coucher');
   assert.equal(nextAction(plan(), '04:05', '01:15').id, 'seance');
+});
+
+test('habitudes retirées : téléphone et focus enlevés une seule fois, historique intact', () => {
+  const habits = ['sommeil', 'sport', 'focus', 'apprendre', 'manger'].map((id) => ({ id }));
+  const all = { sommeil: 1, sport: 1, focus: 1, apprendre: 1, manger: 1 };
+  const st = {
+    settings: {},
+    habits,
+    days: {
+      '2026-10-05': { habits: { ...all } }, // jour passé sans liste figée
+      '2026-10-06': { habits: { sport: 1, apprendre: 1, manger: 1 }, ids: habits.map((h) => h.id) },
+      '2026-10-07': { habits: { sport: 1, apprendre: 1, manger: 1 }, ids: habits.map((h) => h.id) },
+    },
+  };
+  assert.equal(retireHabits(st, '2026-10-07'), true);
+  assert.deepEqual(st.habits.map((h) => h.id), ['sport', 'apprendre', 'manger']);
+  // les jours passés gardent leur liste : rien ne change pour la chaîne
+  assert.equal(dayStatus(st, '2026-10-05').valid, true);
+  assert.equal(dayStatus(st, '2026-10-06').valid, false);
+  // aujourd'hui suit la nouvelle liste : physique, apprentissage, grignotage suffisent
+  assert.equal(dayStatus(st, '2026-10-07').valid, true);
+  // une seule fois : une habitude rajoutée ensuite n'est plus touchée
+  st.habits.push({ id: 'focus' });
+  assert.equal(retireHabits(st, '2026-10-07'), false);
+  assert.equal(st.habits.length, 4);
 });

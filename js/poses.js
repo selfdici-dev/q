@@ -414,4 +414,19 @@ export const POSES = {
       { at: [60, 41], torso: -90, neck: -90, armN: [70, -95], armF: [74, -70], legN: [90, 90], legF: [88, 92] },
     ],
   },
+  // Ronde 10 : pectoraux fermes (presse des paumes) et avant-bras (bout des doigts)
+  'Presse des paumes': {
+    dur: 3, hold: 0.3,
+    frames: [
+      { at: [60, 41], torso: -90, neck: -90, armN: [70, -78], armF: [74, -82], legN: [90, 90], legF: [88, 92] },
+      { at: [60, 41], torso: -90, neck: -90, armN: [66, -74], armF: [70, -78], legN: [90, 90], legF: [88, 92] },
+    ],
+  },
+  'Planche sur le bout des doigts': {
+    dur: 3, hold: 0.3,
+    frames: [
+      { anchor: 'kneeN', at: [32, 69], torso: -36.4, neck: -30, armN: { to: [61.5, 69.5] }, armF: { to: [63.2, 69.5] }, legN: [143.6, 200], legF: [143.6, 207] },
+      { anchor: 'kneeN', at: [32, 69], torso: -37.2, neck: -31, armN: { to: [61.5, 69.5] }, armF: { to: [63.2, 69.5] }, legN: [142.8, 200], legF: [142.8, 207] },
+    ],
+  },
 };

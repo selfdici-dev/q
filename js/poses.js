@@ -392,4 +392,26 @@ export const POSES = {
       { at: [60, 41], torso: -90, neck: -90, armN: [0, 10], armF: [-4, 6], legN: [90, 90], legF: [88, 92] },
     ],
   },
+  // Ronde 9 : séance B au tapis seulement (curl résisté, planche vers chien, poignets)
+  'Curl résisté': {
+    dur: 4, hold: 0.15,
+    frames: [
+      { at: [60, 41], torso: -90, neck: -90, armN: [84, 86], armF: { to: [62.8, 41.3], bend: 1 }, legN: [90, 90], legF: [88, 92] },
+      { at: [60, 41], torso: -90, neck: -90, armN: [84, -55], armF: { to: [68.4, 21.3], bend: 1 }, legN: [90, 90], legF: [88, 92] },
+    ],
+  },
+  'Planche vers chien tête en bas': {
+    dur: 3.5, hold: 0.2,
+    frames: [
+      { anchor: 'footN', at: [20, 70], torso: -27, neck: -17, armN: { to: [65.5, 70] }, armF: { to: [67, 70] }, legN: [153, 153], legF: [155, 155] },
+      { anchor: 'footN', at: [20, 70], torso: 37.4, neck: 60, armN: { to: [65.5, 70] }, armF: { to: [67, 70] }, legN: [109.6, 109.6], legF: [111.5, 111.5] },
+    ],
+  },
+  'Poignets en bras de fer': {
+    dur: 3, hold: 0.1,
+    frames: [
+      { at: [60, 41], torso: -90, neck: -90, armN: [70, -70], armF: [74, -95], legN: [90, 90], legF: [88, 92] },
+      { at: [60, 41], torso: -90, neck: -90, armN: [70, -95], armF: [74, -70], legN: [90, 90], legF: [88, 92] },
+    ],
+  },
 };

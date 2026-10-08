@@ -51,6 +51,9 @@ test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoi
   for (const muscle of [/biceps/i, /triceps/i, /avant-bras/i, /épaules/i, /dos/i]) assert.ok(ex('B').some((e) => muscle.test(e.target)), String(muscle));
   assert.ok(ex('B').every((e) => !/planche inversée|superman y|posture/i.test(`${e.name} ${e.target}`)));
   assert.ok(WORKOUTS.find((w) => w.id === 'B').rounds <= 2);
+  // B : un objectif chiffré dans chaque consigne, sans les exercices jugés inutiles ou ennuyeux
+  assert.ok(ex('B').every((e) => /^Objectif : \d/.test(e.cue)), 'objectif manquant dans B');
+  assert.ok(ex('B').every((e) => !/cercles de bras|poings serrés|curl contre la cuisse/i.test(e.name)));
   // rien ne vise la largeur : pas d'exercice d'épaules latérales ni de trapèzes
   for (const w of WORKOUTS) for (const e of w.exercises) assert.doesNotMatch(`${e.name} ${e.target}`, /latérales|trapèze|largeur/i);
 });

@@ -61,15 +61,16 @@ export const WORKOUTS = [
   {
     id: 'C',
     name: 'C · Cardio sans saut',
-    met: 6,
-    desc: 'Brûler des calories dans 2 m², sans bruit pour les voisins : c’est ce qui rend sec et fait apparaître abdos et mâchoire. 3 tours, ça monte vite.',
+    met: 7,
+    desc: 'Cardio boxe, dense, dans 2 m² et sans bruit : 3 tours, 10 s de pause seulement, le cœur reste haut du début à la fin. La moitié des exercices, c’est de la boxe : ça passe plus vite. Ça aide à sécher, mais c’est l’assiette qui fait le plus gros.',
     rounds: 3,
-    rest: 15,
-    roundRest: 60,
+    rest: 10,
+    roundRest: 45,
     exercises: [
       { name: 'Shadow boxing', work: 40, target: 'Cardio · corps sec', cue: 'Garde haute, enchaîne direct-direct-crochet, pivote sur les pieds. Expire à chaque coup.' },
       { name: 'Burpees sans saut', work: 30, target: 'Cardio · corps entier, celui qui brûle le plus', cue: '1. Debout, accroupis-toi et pose les mains au sol devant tes pieds. 2. Recule les pieds l’un après l’autre jusqu’en planche, corps gainé. 3. Ramène-les l’un après l’autre près des mains. 4. Relève-toi d’un coup et tends les bras vers le plafond, sur la pointe des pieds. Va vite : c’est le rythme qui fait brûler, pas le saut. Plus dur : recule et ramène les pieds en sautant, ou saute en haut si les voisins ne sont pas gênés.' },
-      { name: 'Mountain climbers lents', work: 30, target: 'Cardio + abdos', cue: 'En planche haute, ramène un genou vers la poitrine puis l’autre, bassin stable.' },
+      { name: 'Shadow boxing (esquives et crochets)', work: 30, target: 'Cardio + obliques · taille dessinée', cue: 'Garde haute. Plie les jambes pour esquiver un coup imaginaire d’un côté, remonte en lançant un crochet du même côté en tournant les hanches, puis l’autre côté. Reste bas et léger sur les appuis : les cuisses et les obliques brûlent.' },
+      { name: 'Mountain climbers rapides', work: 30, target: 'Cardio + abdos · ventre plat', cue: 'En planche haute, mains sous les épaules, ramène vite un genou vers la poitrine puis l’autre, comme si tu courais au sol. Bassin bas et stable, pas les fesses en l’air. Trop dur : ralentis, mais ne t’arrête pas.' },
       { name: 'Genou-coude croisé debout', work: 30, target: 'Cardio + obliques · le V du bas du ventre', cue: 'Debout, bout des doigts derrière les oreilles. Monte le genou droit vers le coude gauche en tournant le buste, repose, puis le genou gauche vers le coude droit. Rythme rapide, toujours un pied au sol : silencieux. Expire à chaque contact.' },
       { name: 'Shadow boxing rapide', work: 30, target: 'Cardio · dernier effort', cue: 'Coups courts et rapides, reste léger sur les appuis.' },
     ],
@@ -99,9 +100,11 @@ export const WORKOUTS = [
   },
 ];
 
-// Semaine type : A lundi/jeudi, B mardi/vendredi, C mercredi/samedi, mobilité le dimanche.
+// Semaine type (choisie par l'utilisateur) : A et B en alternance du lundi au samedi
+// (48 h de repos pour chaque muscle), le cardio C en plus quand il veut, mobilité
+// et repos le dimanche.
 // La mobilité M reste le minimum de reprise n'importe quel jour.
-export const WEEK_PLAN = { 1: 'A', 2: 'B', 3: 'C', 4: 'A', 5: 'B', 6: 'C', 0: 'M' };
+export const WEEK_PLAN = { 1: 'A', 2: 'B', 3: 'A', 4: 'B', 5: 'A', 6: 'B', 0: 'M' };
 
 // Échauffement ajouté avant A, B et C.
 export const WARMUP = [
@@ -196,6 +199,7 @@ const DEMO_QUERIES = {
   'Anges au sol': 'floor angels exercise',
   'Étirement des pectoraux au sol': 'prone pec stretch',
   'Burpees sans saut': 'no jump burpee',
+  'Mountain climbers rapides': 'mountain climbers fast',
 };
 
 // Nom sans précision entre parenthèses : « Roue abdominale à genoux (1/2) » → « Roue abdominale à genoux ».

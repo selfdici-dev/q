@@ -781,6 +781,7 @@ function viewSport() {
       <span class="wo-badge big wo-${pw.id}">${pw.id}</span>
       <div><p class="eyebrow">Aujourd’hui</p><h2>${esc(pw.name.split(' · ')[1] ?? pw.name)}</h2><p class="muted">≈ ${workoutMinutes(pw)} min · ≈ ${workoutKcal(pw)} kcal · niveau ${lvl}${did ? ' · ✓ faite' : ''}</p></div>
       <button class="btn primary wide" data-act="start-workout" data-id="${pw.id}">${did ? 'Refaire' : 'Lancer la séance'}</button>
+      ${pw.id !== 'M' ? `<button class="btn ghost small" data-act="start-workout" data-id="C">${done.includes('C') ? '✓ Cardio boxe fait' : `En plus : cardio boxe C (${workoutMinutes(WORKOUTS.find((w) => w.id === 'C'))} min)`}</button>` : ''}
       ${pw.id !== 'M' ? `<button class="btn ghost small" data-act="start-workout" data-id="M">Pas la forme ? Juste la mobilité (${workoutMinutes(WORKOUTS.find((w) => w.id === 'M'))} min)</button>` : ''}
     </section>`;
   })()}
@@ -793,7 +794,7 @@ function viewSport() {
     ${fold('c-goal', '🎯', 'Ton objectif', 'Pourquoi ces séances', '<span></span>', goalBody())}
     ${fold('c-wo', '💪', 'Les 4 séances', 'Exercices et semaine type', `<span class="pill">Niv. ${lvl}</span>`, `
       <div class="week">${[1, 2, 3, 4, 5, 6, 0].map((dow, i) => `<div class="wk-${WEEK_PLAN[dow]} ${i === todayDow ? 'today' : ''}"><small>${dayNames[i]}</small><b>${WEEK_PLAN[dow]}</b></div>`).join('')}</div>
-      <p class="hint">A = abdos et tronc, B = bras, avant-bras, épaules et dos, C = cardio sans saut, M = mobilité, posture et mâchoire. Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
+      <p class="hint">A = abdos et tronc, B = bras, avant-bras, épaules et dos, en alternance du lundi au samedi : chaque muscle a 48 h pour récupérer. C = cardio boxe, en plus quand tu veux. M = mobilité et posture, le dimanche (repos). Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
       <div class="row">${[1, 2, 3].map((n) => `<button class="seg ${lvl === n ? 'on' : ''}" data-act="level" data-lvl="${n}" aria-pressed="${lvl === n}">Niveau ${n}</button>`).join('')}</div>
       <p class="hint">À la fin de chaque séance, dis si c’était facile, correct ou dur : l’appli te propose de monter ou de descendre. Niveau 1 = 2 tours, efforts plus courts.</p>
       ${WORKOUTS.map((w) => {
@@ -830,7 +831,7 @@ function goalBody() {
     ['B', 'Bras et avant-bras secs.', 'Biceps, triceps, avant-bras, épaules et dos au poids du corps : de la force sans gonfler. Les veines se voient quand le gras baisse : c’est l’assiette qui les fait sortir. Rien pour les trapèzes, qui tassent le cou.'],
     ['M', 'Grand et droit.', 'Bassin droit (fentes basses, pont fessier), dos fort et épaules ouvertes (superman, livre ouvert, anges au sol, étirement des pectoraux), tête reculée (chin tucks, extension du cou) : on gagne visuellement quelques centimètres et une démarche plus sûre.'],
     ['M', 'Mâchoire nette.', 'Tête droite et visage sec, sans grossir le cou. L’os ne change pas à l’âge adulte : ce qui la révèle, c’est surtout un visage sec et une tête bien placée. Évite le chewing-gum dur, mauvais pour l’articulation.'],
-    ['C', 'Les calories, à leur juste place.', 'Une séance brûle 70 à 90 kcal, à peu près une banane. Elle donne la forme ; le gras part surtout grâce à l’assiette et aux pas (10 000 pas ≈ 300 kcal).'],
+    ['C', 'Les calories, à leur juste place.', 'Une séance brûle 55 à 100 kcal (la C boxe en tête), à peu près une banane. Elle donne la forme ; le gras part surtout grâce à l’assiette et aux pas (10 000 pas ≈ 300 kcal).'],
   ];
   return `<p class="muted">Pas trapu, pas massif : un corps athlétique et léger, une posture droite, des abdos et une mâchoire visibles.</p>
     <ul class="goal-list">${points.map(([id, title, text]) => `<li><span class="wo-badge wo-${id}">${id}</span><div><strong>${title}</strong> ${text}</div></li>`).join('')}</ul>`;

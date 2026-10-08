@@ -117,6 +117,20 @@ export const POSES = {
       { at: [42.52, 53.62], torso: -17.5, neck: -5.5, armN: { to: [63.4, 70] }, armF: { to: [64.9, 70] }, legN: { to: [18, 70], bend: -1 }, legF: { to: [21.64, 61.68], bend: -1 } },
     ],
   },
+  // Même mouvement, deux fois plus vite (séance C dense)
+  'Mountain climbers rapides': {
+    dur: 2.4, loop: 'cycle', hold: 0.08,
+    frames: [
+      { at: [43.71, 56.62], torso: -25.93, neck: -13.93, armN: { to: [63.4, 70] }, armF: { to: [64.9, 70] }, legN: { to: [18, 70], bend: -1 }, legF: { to: [16.8, 70], bend: -1 } },
+      { at: [42.52, 53.62], torso: -17.5, neck: -5.5, armN: { to: [63.4, 70] }, armF: { to: [64.9, 70] }, legN: { to: [21.86, 61.82], bend: -1 }, legF: { to: [16.8, 70], bend: -1 } },
+      { at: [42.41, 53.25], torso: -16.5, neck: -4.5, armN: { to: [63.4, 70] }, armF: { to: [64.9, 70] }, legN: { to: [41.26, 63.15], bend: -1 }, legF: { to: [16.8, 70], bend: -1 } },
+      { at: [42.52, 53.62], torso: -17.5, neck: -5.5, armN: { to: [63.4, 70] }, armF: { to: [64.9, 70] }, legN: { to: [21.86, 61.82], bend: -1 }, legF: { to: [16.8, 70], bend: -1 } },
+      { at: [43.71, 56.62], torso: -25.93, neck: -13.93, armN: { to: [63.4, 70] }, armF: { to: [64.9, 70] }, legN: { to: [18, 70], bend: -1 }, legF: { to: [16.8, 70], bend: -1 } },
+      { at: [42.52, 53.62], torso: -17.5, neck: -5.5, armN: { to: [63.4, 70] }, armF: { to: [64.9, 70] }, legN: { to: [18, 70], bend: -1 }, legF: { to: [21.64, 61.68], bend: -1 } },
+      { at: [42.41, 53.25], torso: -16.5, neck: -4.5, armN: { to: [63.4, 70] }, armF: { to: [64.9, 70] }, legN: { to: [18, 70], bend: -1 }, legF: { to: [41.12, 63.37], bend: -1 } },
+      { at: [42.52, 53.62], torso: -17.5, neck: -5.5, armN: { to: [63.4, 70] }, armF: { to: [64.9, 70] }, legN: { to: [18, 70], bend: -1 }, legF: { to: [21.64, 61.68], bend: -1 } },
+    ],
+  },
 
   // Sur le ventre, à quatre pattes, à genoux
   'Tirage superman': {

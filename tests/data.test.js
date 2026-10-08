@@ -43,6 +43,11 @@ test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoi
   // M : plus de langue au palais ni de renforcement du cou (pas de gros cou)
   assert.ok(ex('M').every((e) => !/langue|renforcement du cou/i.test(e.name)));
   assert.ok(ex('M').every((e) => !/respiration|vacuum|chat-vache|posture de l/i.test(e.name)));
+  // C : boxe et dense pour sécher (pauses courtes, pas plus de 3 tours pour rester court), mountain climbers rapides
+  const C = WORKOUTS.find((w) => w.id === 'C');
+  assert.ok(C.rounds <= 3 && C.rest <= 10);
+  assert.ok(ex('C').filter((e) => /^Shadow boxing/.test(e.name)).length >= 3);
+  assert.ok(ex('C').some((e) => e.name === 'Mountain climbers rapides'));
   // C : plus de jumping jacks
   assert.ok(ex('C').every((e) => !/jumping/i.test(e.name)));
   assert.ok(ex('M').reduce((t, e) => t + e.work + 5, 0) <= 11 * 60);

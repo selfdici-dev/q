@@ -54,6 +54,8 @@ test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoi
   // B : un objectif chiffré dans chaque consigne, sans les exercices jugés inutiles ou ennuyeux
   assert.ok(ex('B').every((e) => /^Objectif : \d/.test(e.cue)), 'objectif manquant dans B');
   assert.ok(ex('B').every((e) => !/cercles de bras|poings serrés|curl contre la cuisse/i.test(e.name)));
+  // B : deux exercices pour des pectoraux fermes (pompes et presse des paumes)
+  assert.ok(ex('B').filter((e) => /pectoraux/i.test(e.target)).length >= 2);
   // rien ne vise la largeur : pas d'exercice d'épaules latérales ni de trapèzes
   for (const w of WORKOUTS) for (const e of w.exercises) assert.doesNotMatch(`${e.name} ${e.target}`, /latérales|trapèze|largeur/i);
 });

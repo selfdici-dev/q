@@ -361,4 +361,35 @@ export const POSES = {
       { at: [52, 59], torso: -32, neck: -40, armN: [84.3, 102.6], armF: [79.9, 99.4], legN: { to: [60, 70], bend: -1 }, legF: { to: [61.5, 70], bend: -1 } },
     ],
   },
+  // Ronde 8 : séance B bras, avant-bras et épaules
+  'Pompes sphinx': {
+    dur: 3, hold: 0.2,
+    frames: [
+      { anchor: 'kneeN', at: [32, 69], torso: -5.5, neck: -2, armN: { to: [77, 70], bend: 1 }, armF: { to: [78.5, 70], bend: 1 }, legN: [143.6, 200], legF: [143.6, 207] },
+      { anchor: 'kneeN', at: [32, 69], torso: -24.4, neck: -16.4, armN: { to: [77, 70], bend: 1 }, armF: { to: [78.5, 70], bend: 1 }, legN: [143.6, 200], legF: [143.6, 207] },
+    ],
+  },
+  'Curl contre la cuisse': {
+    dur: 3.5, hold: 0.3,
+    frames: [
+      { at: [48, 68.5], torso: -100, neck: -95, armN: { to: [56, 63.1], bend: 1 }, armF: { to: [57, 63.1], bend: 1 }, legN: { to: [66, 70], bend: -1 }, legF: { to: [67.5, 70], bend: -1 } },
+      { at: [48, 68.5], torso: -106, neck: -101, armN: { to: [51.7, 60.4], bend: 1 }, armF: { to: [52.7, 60.4], bend: 1 }, legN: { to: [63, 64], bend: -1 }, legF: { to: [67.5, 70], bend: -1 } },
+    ],
+  },
+  'Cercles de bras': {
+    dur: 1.2, loop: 'cycle', hold: 0,
+    frames: [
+      { at: [60, 41], torso: -90, neck: -90, armN: [-6, -6], armF: [-10, -10], legN: [90, 90], legF: [88, 92] },
+      { at: [60, 41], torso: -90, neck: -90, armN: [0, 0], armF: [-4, -4], legN: [90, 90], legF: [88, 92] },
+      { at: [60, 41], torso: -90, neck: -90, armN: [6, 6], armF: [2, 2], legN: [90, 90], legF: [88, 92] },
+      { at: [60, 41], torso: -90, neck: -90, armN: [0, 0], armF: [-4, -4], legN: [90, 90], legF: [88, 92] },
+    ],
+  },
+  'Poings serrés-ouverts': {
+    dur: 0.8, hold: 0.1,
+    frames: [
+      { at: [60, 41], torso: -90, neck: -90, armN: [0, -12], armF: [-4, -16], legN: [90, 90], legF: [88, 92] },
+      { at: [60, 41], torso: -90, neck: -90, armN: [0, 10], armF: [-4, 6], legN: [90, 90], legF: [88, 92] },
+    ],
+  },
 };

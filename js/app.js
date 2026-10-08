@@ -793,7 +793,7 @@ function viewSport() {
     ${fold('c-goal', '🎯', 'Ton objectif', 'Pourquoi ces séances', '<span></span>', goalBody())}
     ${fold('c-wo', '💪', 'Les 4 séances', 'Exercices et semaine type', `<span class="pill">Niv. ${lvl}</span>`, `
       <div class="week">${[1, 2, 3, 4, 5, 6, 0].map((dow, i) => `<div class="wk-${WEEK_PLAN[dow]} ${i === todayDow ? 'today' : ''}"><small>${dayNames[i]}</small><b>${WEEK_PLAN[dow]}</b></div>`).join('')}</div>
-      <p class="hint">A = abdos et tronc, B = haut du corps et posture, C = cardio sans saut, M = mobilité, posture et mâchoire. Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
+      <p class="hint">A = abdos et tronc, B = bras, avant-bras, épaules et dos, C = cardio sans saut, M = mobilité, posture et mâchoire. Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
       <div class="row">${[1, 2, 3].map((n) => `<button class="seg ${lvl === n ? 'on' : ''}" data-act="level" data-lvl="${n}" aria-pressed="${lvl === n}">Niveau ${n}</button>`).join('')}</div>
       <p class="hint">À la fin de chaque séance, dis si c’était facile, correct ou dur : l’appli te propose de monter ou de descendre. Niveau 1 = 2 tours, efforts plus courts.</p>
       ${WORKOUTS.map((w) => {
@@ -827,7 +827,7 @@ function goalBody() {
   const points = [
     ['C', 'Sec avant tout.', 'Abdos et mâchoire se voient quand le taux de gras baisse : protéines, zéro grignotage, 8 000 pas, séance C. C’est l’assiette qui fait le plus gros du travail.'],
     ['A', 'Abdos dessinés.', 'Crunch vélo (le n° 1 des mesures), roue ×2, Russian twist pour les obliques et le V du bas du ventre, planche, planches latérales (main sous le torse) et hollow body pour une taille fine.'],
-    ['B', 'Musclé sans s’élargir.', 'Poids du corps seulement, aucune charge lourde : tu te dessines sans prendre de volume. Rien pour les trapèzes, qui tassent le cou.'],
+    ['B', 'Bras et avant-bras secs.', 'Biceps, triceps, avant-bras, épaules et dos au poids du corps : de la force sans gonfler. Les veines se voient quand le gras baisse : c’est l’assiette qui les fait sortir. Rien pour les trapèzes, qui tassent le cou.'],
     ['M', 'Grand et droit.', 'Bassin droit (fentes basses, pont fessier), dos fort et épaules ouvertes (superman, livre ouvert, anges au sol, étirement des pectoraux), tête reculée (chin tucks, extension du cou) : on gagne visuellement quelques centimètres et une démarche plus sûre.'],
     ['M', 'Mâchoire nette.', 'Tête droite et visage sec, sans grossir le cou. L’os ne change pas à l’âge adulte : ce qui la révèle, c’est surtout un visage sec et une tête bien placée. Évite le chewing-gum dur, mauvais pour l’articulation.'],
     ['C', 'Les calories, à leur juste place.', 'Une séance brûle 70 à 90 kcal, à peu près une banane. Elle donne la forme ; le gras part surtout grâce à l’assiette et aux pas (10 000 pas ≈ 300 kcal).'],

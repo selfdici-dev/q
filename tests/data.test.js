@@ -47,6 +47,10 @@ test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoi
   assert.ok(ex('C').every((e) => !/jumping/i.test(e.name)));
   assert.ok(ex('M').reduce((t, e) => t + e.work + 5, 0) <= 11 * 60);
   assert.ok(ex('B').every((e) => !/pike|tirage superman/i.test(e.name)));
+  // B : bras, avant-bras, épaules et dos, sans la posture (déjà dans M), 2 tours faisables
+  for (const muscle of [/biceps/i, /triceps/i, /avant-bras/i, /épaules/i, /dos/i]) assert.ok(ex('B').some((e) => muscle.test(e.target)), String(muscle));
+  assert.ok(ex('B').every((e) => !/planche inversée|superman y|posture/i.test(`${e.name} ${e.target}`)));
+  assert.ok(WORKOUTS.find((w) => w.id === 'B').rounds <= 2);
   // rien ne vise la largeur : pas d'exercice d'épaules latérales ni de trapèzes
   for (const w of WORKOUTS) for (const e of w.exercises) assert.doesNotMatch(`${e.name} ${e.target}`, /latérales|trapèze|largeur/i);
 });

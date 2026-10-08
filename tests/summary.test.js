@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { daySummary, weekSummary } from '../js/summary.js';
 
-// 2026-10-01 est un jeudi (séance A prévue).
+// 2026-10-01 est un jeudi (séance B prévue).
 const S = '2026-10-01';
 const base = () => ({
   settings: { startDate: S, bedtimeTarget: '23:30' },
@@ -34,7 +34,7 @@ test('bilan du jour : habitudes, séance, focus, protéines, grignotages, couche
 test('bilan du jour vide : rien d’inventé, poids absent', () => {
   const text = daySummary(base(), S);
   assert.match(text, /Habitudes : 0\/2 · manque : Lire, Bouger/);
-  assert.match(text, /Séance : pas faite \(prévue : A/);
+  assert.match(text, /Séance : pas faite \(prévue : B/);
   assert.match(text, /Focus : aucune session/);
   assert.match(text, /Grignotages : aucun/);
   assert.doesNotMatch(text, /Poids|Nuit dernière/);
@@ -45,7 +45,7 @@ test('bilan du jour : mobilité seule un jour de séance, journée validée', ()
   st.days[S] = { habits: { a: 1, b: 1 }, workouts: ['M'] };
   const text = daySummary(st, S);
   assert.match(text, /Chaîne : 1 jour · journée validée/);
-  assert.match(text, /Séance : mobilité seulement \(prévue : A/);
+  assert.match(text, /Séance : mobilité seulement \(prévue : B/);
 });
 
 test('bilan de la semaine : sprint terminé, moyennes et réponses du bilan', () => {

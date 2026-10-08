@@ -100,9 +100,11 @@ export const WORKOUTS = [
   },
 ];
 
-// Semaine type : A lundi/jeudi, B mardi/vendredi, C mercredi/samedi, mobilité le dimanche.
+// Semaine type (choisie par l'utilisateur) : A et B en alternance du lundi au samedi
+// (48 h de repos pour chaque muscle), le cardio C en plus quand il veut, mobilité
+// et repos le dimanche.
 // La mobilité M reste le minimum de reprise n'importe quel jour.
-export const WEEK_PLAN = { 1: 'A', 2: 'B', 3: 'C', 4: 'A', 5: 'B', 6: 'C', 0: 'M' };
+export const WEEK_PLAN = { 1: 'A', 2: 'B', 3: 'A', 4: 'B', 5: 'A', 6: 'B', 0: 'M' };
 
 // Échauffement ajouté avant A, B et C.
 export const WARMUP = [

@@ -830,7 +830,7 @@ function goalBody() {
     ['B', 'Bras et avant-bras secs.', 'Biceps, triceps, avant-bras, épaules et dos au poids du corps : de la force sans gonfler. Les veines se voient quand le gras baisse : c’est l’assiette qui les fait sortir. Rien pour les trapèzes, qui tassent le cou.'],
     ['M', 'Grand et droit.', 'Bassin droit (fentes basses, pont fessier), dos fort et épaules ouvertes (superman, livre ouvert, anges au sol, étirement des pectoraux), tête reculée (chin tucks, extension du cou) : on gagne visuellement quelques centimètres et une démarche plus sûre.'],
     ['M', 'Mâchoire nette.', 'Tête droite et visage sec, sans grossir le cou. L’os ne change pas à l’âge adulte : ce qui la révèle, c’est surtout un visage sec et une tête bien placée. Évite le chewing-gum dur, mauvais pour l’articulation.'],
-    ['C', 'Les calories, à leur juste place.', 'Une séance brûle 70 à 90 kcal, à peu près une banane. Elle donne la forme ; le gras part surtout grâce à l’assiette et aux pas (10 000 pas ≈ 300 kcal).'],
+    ['C', 'Les calories, à leur juste place.', 'Une séance brûle 60 à 110 kcal (la C dense en tête), à peu près une banane. Elle donne la forme ; le gras part surtout grâce à l’assiette et aux pas (10 000 pas ≈ 300 kcal).'],
   ];
   return `<p class="muted">Pas trapu, pas massif : un corps athlétique et léger, une posture droite, des abdos et une mâchoire visibles.</p>
     <ul class="goal-list">${points.map(([id, title, text]) => `<li><span class="wo-badge wo-${id}">${id}</span><div><strong>${title}</strong> ${text}</div></li>`).join('')}</ul>`;

@@ -96,3 +96,10 @@ test('aide « ? » : chaque onglet expliqué en 3 phrases courtes', () => {
     for (const l of h.lines) assert.ok(l.length <= 110, `${tab} : phrase trop longue (${l.length})`);
   }
 });
+
+test('B : chaque exercice dit pourquoi il sert le physique fin et sec, en une phrase courte', () => {
+  for (const e of WORKOUTS.find((w) => w.id === 'B').exercises) {
+    assert.ok(e.why && e.why.length <= 110, e.name);
+    assert.ok(!/gonfl(er|é) les|prendre du volume|masse/i.test(e.why), e.name);
+  }
+});

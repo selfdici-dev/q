@@ -751,7 +751,7 @@ function buildSteps(w, level) {
   }
   for (let r = 1; r <= rounds; r++) {
     w.exercises.forEach((ex, i) => {
-      steps.push({ kind: 'work', name: ex.name, secs: Math.max(15, ex.work + delta), cue: ex.cue, target: ex.target, round: r, rounds });
+      steps.push({ kind: 'work', name: ex.name, secs: Math.max(15, ex.work + delta), cue: ex.cue, target: ex.target, why: ex.why, round: r, rounds });
       const lastInRound = i === w.exercises.length - 1;
       if (!lastInRound && w.rest) steps.push({ kind: 'rest', name: 'Récupère', secs: w.rest, cue: `Ensuite : ${w.exercises[i + 1].name}`, round: r, rounds });
       if (lastInRound && r < rounds && w.roundRest) steps.push({ kind: 'rest', name: 'Fin du tour', secs: w.roundRest, cue: `Ensuite : ${w.exercises[0].name}. Bois une gorgée d’eau.`, round: r, rounds });
@@ -803,7 +803,7 @@ function viewSport() {
           <summary><span class="wo-badge wo-${w.id}">${w.id}</span><strong>${esc(w.name.split(' · ')[1] ?? w.name)}</strong><span class="pill">${w.id === planned ? 'Aujourd’hui' : `${mins} min`}</span><span class="chev" aria-hidden="true"></span></summary>
           <p class="muted">${esc(w.desc)}</p>
           <p class="hint">≈ ${mins} min · ≈ ${workoutKcal(w)} kcal brûlées (estimation)</p>
-          <ol class="ex">${w.exercises.map((e) => `<li><span class="ex-fig">${figure(e.name, e.target)}</span><div><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="target-tag">🎯 ${esc(e.target)}</span><br><span class="muted">${esc(e.cue)}</span></div></li>`).join('')}</ol>
+          <ol class="ex">${w.exercises.map((e) => `<li><span class="ex-fig">${figure(e.name, e.target)}</span><div><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="target-tag">🎯 ${esc(e.target)}</span>${e.why ? `<br><span class="why">${esc(e.why)}</span>` : ''}<br><span class="muted">${esc(e.cue)}</span></div></li>`).join('')}</ol>
           <div class="row"><button class="btn primary" data-act="start-workout" data-id="${w.id}">Lancer${done.includes(w.id) ? ' (déjà faite aujourd’hui)' : ''}</button></div>
         </details>`;
       }).join('')}`)}
@@ -877,6 +877,7 @@ function renderPlayer() {
       <p class="phase">${player.endAt ? { work: 'Effort', rest: 'Repos', warm: 'Échauffement', prep: 'Départ' }[s.kind] : 'Pause'}</p>
       <h2>${esc(s.name)}</h2>
       ${s.target ? `<span class="target-tag">🎯 ${esc(s.target)}</span>` : ''}
+      ${s.why && s.kind === 'work' ? `<p class="why">${esc(s.why)}</p>` : ''}
       <div class="player-fig">${s.kind === 'work' || s.kind === 'warm' ? figure(s.name, s.target) : figure(next?.name, next?.target)}</div>
       <div class="clock huge" id="player-clock">${fmtStep(player.remaining)}</div>
       ${s.kind === 'rest' ? '' : `<p class="cue">${esc(s.cue)}</p>
@@ -894,6 +895,7 @@ function renderPlayer() {
       <p class="eyebrow">Consigne · séance en pause</p>
       <h2 id="cue-title">${esc(s.name)}</h2>
       ${s.target ? `<span class="target-tag">🎯 ${esc(s.target)}</span>` : ''}
+      ${s.why ? `<p class="why">${esc(s.why)}</p>` : ''}
       <div class="cue-full-fig">${figure(s.name, s.target)}</div>
       <p class="cue-full-text">${esc(s.cue)}</p>
       <button class="btn primary wide" data-act="cue-close">${player.cueResume ? 'Compris, on reprend' : 'Fermer'}</button>

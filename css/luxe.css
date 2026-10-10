@@ -1093,6 +1093,14 @@ input.task { text-align: center; margin: 4px 0 10px; border-radius: 999px; }
   background: var(--target-bg); color: var(--target);
   border-radius: 10px; font: 600 0.78rem/1.3 var(--sans); padding: 4px 10px;
 }
+/* Pourquoi cet exercice : la phrase du coach, sous l'objectif */
+.why { display: inline-block; margin: 6px 0 0; font: italic 500 0.85rem/1.4 var(--sans); color: var(--muted); }
+.player .why { max-width: 42ch; margin: 6px auto 0; font-size: 0.82rem; line-height: 1.3; color: var(--phase-ink, #f5f5fa); opacity: 0.88; }
+.cue-full .why { display: block; margin: 10px 0 0; font-size: 1rem; }
+/* Petits écrans : la démo reste dans la liste, la place va au « pourquoi » et à « Ensuite » */
+@media (max-height: 800px) { .player .demo { display: none; } }
+.player .player-fig { flex-shrink: 1; min-height: 40px; }
+@media (max-height: 680px) { .player .why { display: none; } }
 
 /* ——— Corps ——— */
 .wo-A { --wo: var(--wo-A); } .wo-B { --wo: var(--wo-B); } .wo-C { --wo: var(--wo-C); } .wo-M { --wo: var(--wo-M); }

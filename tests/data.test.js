@@ -22,7 +22,7 @@ test('chaque exercice a une durée, une consigne et un objectif', () => {
   for (const e of WARMUP) assert.ok(e.work > 0 && e.cue, e.name);
 });
 
-test('matériel : le corps, un tapis, une roue abdominale et un élastique en boucle, rien d’autre', () => {
+test('matériel : le corps, un tapis, une roue abdominale, des parallettes et un élastique en boucle, rien d’autre', () => {
   const all = [...WORKOUTS.flatMap((w) => [w.desc, ...w.exercises.flatMap((e) => [e.name, e.cue])]), ...WARMUP.flatMap((e) => [e.name, e.cue])];
   for (const text of all) assert.doesNotMatch(text, /bouteille|serviette|sac à dos|haltère|barre|chaise|mur\b|\btable\b|\bporte\b/i, text);
 });
@@ -51,7 +51,8 @@ test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoi
   // C : plus de jumping jacks
   assert.ok(ex('C').every((e) => !/jumping/i.test(e.name)));
   assert.ok(ex('M').reduce((t, e) => t + e.work + 5, 0) <= 11 * 60);
-  assert.ok(ex('B').every((e) => !/pike|tirage superman/i.test(e.name)));
+  // Pompes pike de retour : il enchaîne maintenant ~16 pompes, et la consigne garde une version facile
+  assert.ok(ex('B').every((e) => !/tirage superman/i.test(e.name)));
   // B : bras, avant-bras, épaules et dos, sans la posture (déjà dans M), 2 tours faisables
   for (const muscle of [/biceps/i, /triceps/i, /avant-bras/i, /épaules/i, /dos/i]) assert.ok(ex('B').some((e) => muscle.test(e.target)), String(muscle));
   assert.ok(ex('B').every((e) => !/planche inversée|superman y|posture/i.test(`${e.name} ${e.target}`)));
@@ -62,6 +63,10 @@ test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoi
   // B : du tirage pour le dos en V, et une variante sans élastique pour chaque exercice à l'élastique
   assert.ok(ex('B').filter((e) => /dos/i.test(e.target)).length >= 2);
   for (const e of ex('B').filter((x) => /élastique/i.test(x.name))) assert.match(e.cue, /Sans élastique : /, e.name);
+  // B : calisthénie, l'élastique seulement pour les 2 tirages, une version au sol pour chaque exercice sur parallettes
+  assert.equal(ex('B').filter((e) => /élastique/i.test(e.name)).length, 2);
+  for (const e of ex('B').filter((x) => /parallettes/i.test(x.cue))) assert.match(e.cue, /Sans parallettes : /, e.name);
+  assert.ok(ex('B').some((e) => /^Pompes pike/.test(e.name)) && ex('B').some((e) => /^L-sit/.test(e.name)));
   // B : deux exercices pour des pectoraux fermes (pompes et pompes serrées)
   assert.ok(ex('B').filter((e) => /pectoraux/i.test(e.target)).length >= 2);
   // rien ne vise la largeur : pas d'exercice d'épaules latérales ni de trapèzes

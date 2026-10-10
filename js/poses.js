@@ -486,4 +486,19 @@ export const POSES = {
       { at: [60, 41], torso: -90, neck: -90, armN: [-2, -2], armF: [-178, -178], legN: { to: [63, 70], bend: -1 }, legF: { to: [57, 70], bend: 1 } },
     ],
   },
+  // Ronde 12 : séance B calisthénie (planche penchée, L-sit)
+  'Planche penchée': {
+    dur: 4, hold: 0.35,
+    frames: [
+      { anchor: 'footN', at: [20, 70], torso: -27, neck: -17, armN: { to: [65.5, 70] }, armF: { to: [67, 70] }, legN: [153, 153], legF: [155, 155] },
+      { anchor: 'footN', at: [25, 70], torso: -22, neck: -12, armN: { to: [65.5, 70] }, armF: { to: [67, 70] }, legN: [158, 158], legF: [160, 160] },
+    ],
+  },
+  'L-sit': {
+    dur: 3.5, hold: 0.35,
+    frames: [
+      { at: [52, 68.5], torso: -78, neck: -80, armN: { to: [56, 70] }, armF: { to: [57.5, 70] }, legN: { to: [66, 70], bend: -1 }, legF: { to: [67.5, 70], bend: -1 } },
+      { at: [52, 66.5], torso: -70, neck: -75, armN: { to: [57, 69] }, armF: { to: [58.5, 69] }, legN: { to: [68, 63], bend: -1 }, legF: { to: [69.5, 63], bend: -1 } },
+    ],
+  },
 };

@@ -22,9 +22,9 @@ test('chaque exercice a une durée, une consigne et un objectif', () => {
   for (const e of WARMUP) assert.ok(e.work > 0 && e.cue, e.name);
 });
 
-test('matériel : le corps, un tapis et une roue abdominale, rien d’autre', () => {
+test('matériel : le corps, un tapis, une roue abdominale et un élastique en boucle, rien d’autre', () => {
   const all = [...WORKOUTS.flatMap((w) => [w.desc, ...w.exercises.flatMap((e) => [e.name, e.cue])]), ...WARMUP.flatMap((e) => [e.name, e.cue])];
-  for (const text of all) assert.doesNotMatch(text, /bouteille|serviette|sac à dos|haltère|élastique|barre|chaise|mur\b/i, text);
+  for (const text of all) assert.doesNotMatch(text, /bouteille|serviette|sac à dos|haltère|barre|chaise|mur\b|\btable\b|\bporte\b/i, text);
 });
 
 test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoire', () => {
@@ -58,8 +58,11 @@ test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoi
   assert.ok(WORKOUTS.find((w) => w.id === 'B').rounds <= 2);
   // B : un objectif chiffré dans chaque consigne, sans les exercices jugés inutiles ou ennuyeux
   assert.ok(ex('B').every((e) => /^Objectif : \d/.test(e.cue)), 'objectif manquant dans B');
-  assert.ok(ex('B').every((e) => !/cercles de bras|poings serrés|curl contre la cuisse/i.test(e.name)));
-  // B : deux exercices pour des pectoraux fermes (pompes et presse des paumes)
+  assert.ok(ex('B').every((e) => !/cercles de bras|poings serrés|curl contre la cuisse|presse des paumes|bout des doigts|curl résisté|sphinx/i.test(e.name)));
+  // B : du tirage pour le dos en V, et une variante sans élastique pour chaque exercice à l'élastique
+  assert.ok(ex('B').filter((e) => /dos/i.test(e.target)).length >= 2);
+  for (const e of ex('B').filter((x) => /élastique/i.test(x.name))) assert.match(e.cue, /Sans élastique : /, e.name);
+  // B : deux exercices pour des pectoraux fermes (pompes et pompes serrées)
   assert.ok(ex('B').filter((e) => /pectoraux/i.test(e.target)).length >= 2);
   // rien ne vise la largeur : pas d'exercice d'épaules latérales ni de trapèzes
   for (const w of WORKOUTS) for (const e of w.exercises) assert.doesNotMatch(`${e.name} ${e.target}`, /latérales|trapèze|largeur/i);

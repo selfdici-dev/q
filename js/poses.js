@@ -443,4 +443,47 @@ export const POSES = {
       { anchor: 'kneeN', at: [32, 69], torso: -37.2, neck: -31, armN: { to: [61.5, 69.5] }, armF: { to: [63.2, 69.5] }, legN: [142.8, 200], legF: [142.8, 207] },
     ],
   },
+  // Ronde 11 : séance B à l'élastique (rowing, triceps, curls, tirage assis, écarté arrière)
+  'Rowing penché à l’élastique': {
+    dur: 3, hold: 0.25,
+    frames: [
+      { at: [52, 42], torso: -38, neck: -28, armN: [95, 95], armF: [98, 98], legN: { to: [55.5, 70], bend: 1 }, legF: { to: [57, 70], bend: 1 } },
+      { at: [52, 42], torso: -38, neck: -28, armN: [160, 95], armF: [163, 98], legN: { to: [55.5, 70], bend: 1 }, legF: { to: [57, 70], bend: 1 } },
+    ],
+  },
+  'Extension triceps au-dessus de la tête': {
+    dur: 3, hold: 0.25,
+    frames: [
+      { at: [56, 53.5], torso: -90, neck: -90, armN: [-100, 80], armF: [-104, 84], legN: [90, 180], legF: [92, 180.5] },
+      { at: [56, 53.5], torso: -90, neck: -90, armN: [-96, -96], armF: [-100, -100], legN: [90, 180], legF: [92, 180.5] },
+    ],
+  },
+  'Curl biceps à l’élastique': {
+    dur: 3, hold: 0.2,
+    frames: [
+      { at: [60, 41], torso: -90, neck: -90, armN: [86, 86], armF: [88, 88], legN: [90, 90], legF: [88, 92] },
+      { at: [60, 41], torso: -90, neck: -90, armN: [86, -60], armF: [88, -58], legN: [90, 90], legF: [88, 92] },
+    ],
+  },
+  'Curl marteau à l’élastique': {
+    dur: 3, hold: 0.2,
+    frames: [
+      { at: [60, 41], torso: -90, neck: -90, armN: [84, 88], armF: [88, 90], legN: [90, 90], legF: [88, 92] },
+      { at: [60, 41], torso: -90, neck: -90, armN: [84, -64], armF: [88, -62], legN: [90, 90], legF: [88, 92] },
+    ],
+  },
+  'Tirage assis à l’élastique': {
+    dur: 3, hold: 0.25,
+    frames: [
+      { at: [40, 68.5], torso: -88, neck: -88, armN: [42, 42], armF: [45, 45], legN: [-8, 8], legF: [-6, 6] },
+      { at: [40, 68.5], torso: -94, neck: -90, armN: [150, 15], armF: [153, 18], legN: [-8, 8], legF: [-6, 6] },
+    ],
+  },
+  'Écarté arrière à l’élastique': {
+    dur: 2.6, hold: 0.25, front: true,
+    frames: [
+      { at: [60, 41], torso: -90, neck: -90, armN: [70, 150], armF: [110, 30], legN: { to: [63, 70], bend: -1 }, legF: { to: [57, 70], bend: 1 } },
+      { at: [60, 41], torso: -90, neck: -90, armN: [-2, -2], armF: [-178, -178], legN: { to: [63, 70], bend: -1 }, legF: { to: [57, 70], bend: 1 } },
+    ],
+  },
 };

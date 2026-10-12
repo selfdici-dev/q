@@ -103,3 +103,9 @@ test('B : chaque exercice dit pourquoi il sert le physique fin et sec, en une ph
     assert.ok(!/gonfl(er|é) les|prendre du volume|masse/i.test(e.why), e.name);
   }
 });
+
+test('A et C : un minimum chiffré au début de chaque consigne, pour savoir quand l’exercice est validé', () => {
+  for (const id of ['A', 'C']) {
+    for (const e of WORKOUTS.find((w) => w.id === id).exercises) assert.match(e.cue, /^Objectif : \d/, `${id} · ${e.name}`);
+  }
+});

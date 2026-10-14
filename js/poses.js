@@ -501,4 +501,26 @@ export const POSES = {
       { at: [52, 66.5], torso: -70, neck: -75, armN: { to: [57, 69] }, armF: { to: [58.5, 69] }, legN: { to: [68, 63], bend: -1 }, legF: { to: [69.5, 63], bend: -1 } },
     ],
   },
+  // Ronde 13 : séance M en petit espace (rotation à quatre pattes, élastique, pectoraux debout)
+  'Rotation du haut du dos à quatre pattes': {
+    dur: 5, hold: 0.3,
+    frames: [
+      { anchor: 'kneeN', at: [50, 68.5], torso: -17.2, neck: 97, armN: [95, 165], armF: { to: [72.2, 70], bend: 1 }, legN: [90, 178], legF: [93, 177] },
+      { anchor: 'kneeN', at: [50, 68.5], torso: -17.2, neck: -60, armN: [-95, 80], armF: { to: [72.2, 70], bend: 1 }, legN: [90, 178], legF: [93, 177] },
+    ],
+  },
+  'Passage d’épaules à l’élastique': {
+    dur: 4, hold: 0.25, front: true,
+    frames: [
+      { at: [60, 41], torso: -90, neck: -90, armN: [60, 60], armF: [120, 120], legN: { to: [63, 70], bend: -1 }, legF: { to: [57, 70], bend: 1 } },
+      { at: [60, 41], torso: -90, neck: -90, armN: [-35, -35], armF: [-145, -145], legN: { to: [63, 70], bend: -1 }, legF: { to: [57, 70], bend: 1 } },
+    ],
+  },
+  'Étirement des pectoraux mains dans le dos': {
+    dur: 5, hold: 0.35,
+    frames: [
+      { at: [60, 41], torso: -90, neck: -90, armN: [105, 105], armF: [107, 107], legN: [90, 90], legF: [92, 88] },
+      { at: [60, 41], torso: -86, neck: -78, armN: [140, 140], armF: [142, 142], legN: [90, 90], legF: [92, 88] },
+    ],
+  },
 };

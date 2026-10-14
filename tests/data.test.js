@@ -38,8 +38,11 @@ test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoi
   // A : ses exercices préférés (planches, hollow, Russian twist) + crunch vélo et roue ×2 à 40 s
   for (const n of ['Crunch vélo', 'Russian twist', 'Planche sur avant-bras', 'Planche latérale (droite)', 'Planche latérale (gauche)', 'Hollow hold genoux pliés']) assert.ok(ex('A').some((e) => e.name === n), n);
   assert.ok(ex('A').filter((e) => /^Roue/.test(e.name)).every((e) => e.work >= 40));
-  // M : posture et mâchoire, sans les exercices où l'on ne sent rien
-  assert.ok(['Pont fessier', 'Superman', 'Extension du cou', 'Livre ouvert (droite)', 'Anges au sol', 'Étirement des pectoraux au sol (gauche)'].every((n) => ex('M').some((e) => e.name === n)));
+  // M : posture et mâchoire, sans les exercices où l'on ne sent rien ; dans 2 m² (plus de livre ouvert,
+  // d'anges au sol ni d'étirement couché, trop larges ou pas compris), avec l'élastique pour le haut du dos
+  assert.ok(['Pont fessier', 'Superman', 'Extension du cou', 'Rotation du haut du dos à quatre pattes (droite)', 'Écarté arrière à l’élastique', 'Étirement des pectoraux mains dans le dos'].every((n) => ex('M').some((e) => e.name === n)));
+  assert.ok(ex('M').every((e) => !/livre ouvert|anges au sol|pectoraux au sol/i.test(e.name)));
+  assert.ok(ex('M').every((e) => /^Objectif : \d/.test(e.cue)), 'objectif manquant dans M');
   // M : plus de langue au palais ni de renforcement du cou (pas de gros cou)
   assert.ok(ex('M').every((e) => !/langue|renforcement du cou/i.test(e.name)));
   assert.ok(ex('M').every((e) => !/respiration|vacuum|chat-vache|posture de l/i.test(e.name)));

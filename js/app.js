@@ -3,11 +3,11 @@ import {
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
   dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
-  sessionKcal, lastValue, DEFAULT_WEIGHT,
+  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
-  WARMUP, PROTEIN_TARGET, PROTEIN_EXAMPLES, PHASES, MILESTONES, BOOKS, APPS, HELP,
+  WARMUP, PROTEIN_GRAMS, PROTEIN_FOODS, PHASES, MILESTONES, BOOKS, APPS, HELP,
 } from './data.js';
 import { ALL_LESSONS } from './finance-data.js';
 import { createMoney, DEFAULT_CALC, DEFAULT_WEALTH } from './money.js';
@@ -456,7 +456,7 @@ function viewToday() {
   const lv = levelInfo(totalXP(state));
   const q = quoteOfDay(today);
   const toDo = st.total - st.done;
-  const prot = d.protein ?? 0;
+  const prot = proteinGrams(d);
   const snacks = d.snacks?.length ?? 0;
   const week = weekNumber(state, today);
   const grid = regularityGrid(state, today);
@@ -501,7 +501,7 @@ function viewToday() {
       <details class="more"><summary>Ce que valent « Min » et « Complet »</summary>
         <ul class="tight">${state.habits.map((h) => `<li><strong>${esc(h.name)}</strong> · min : ${esc(h.min)} · complet : ${esc(h.full)}</li>`).join('')}</ul>
         <p class="hint">La journée est validée dès que tous les minimums sont faits.</p></details>`)}
-    ${fold('food', '🍽️', 'Alimentation', `Protéines · ${snacks ? `${snacks} grignotage${snacks > 1 ? 's' : ''}` : 'aucun grignotage'}`, `<span class="pill ${prot >= PROTEIN_TARGET ? 'ok' : ''}">🍗 ${prot}/${PROTEIN_TARGET}</span>`, snackCard(today))}
+    ${fold('food', '🍽️', 'Alimentation', `Protéines · ${snacks ? `${snacks} grignotage${snacks > 1 ? 's' : ''}` : 'aucun grignotage'}`, `<span class="pill ${prot >= PROTEIN_GRAMS ? 'ok' : ''}">🍗 ${prot} g</span>`, snackCard(today))}
     ${fold('night', '🌙', 'Nuit dernière', `Ce soir : couché à ${weeklyBedtime(week, state.settings.bedtimeTarget)}`, `<span class="pill">${d.bed && d.wake ? fmtDuration(sleepDuration(d.bed, d.wake)) : 'à noter'}</span>`, `
       <div class="grid2">
         <label>Couché à<input type="time" data-field="bed" data-key="${today}" value="${esc(d.bed ?? '')}"></label>
@@ -664,14 +664,15 @@ function snackCard(key) {
   const snacks = d.snacks ?? [];
   const resisted = d.snackResisted ?? 0;
   const pending = snackCard.pending;
-  const prot = d.protein ?? 0;
+  const prot = proteinGrams(d);
   return `
     <div class="protein">
-      <div><strong>Protéines</strong> <span class="muted">${prot}/${PROTEIN_TARGET} portions</span>
-        <div class="pips">${Array.from({ length: PROTEIN_TARGET }, (_, i) => `<i class="${i < prot ? 'on' : ''}"></i>`).join('')}</div></div>
-      <div class="row tight-row"><button class="btn small" data-act="protein" data-v="-1" aria-label="Retirer une portion">−</button><button class="btn small primary" data-act="protein" data-v="1">+1 portion</button></div>
+      <div class="protein-head"><strong>Protéines</strong> <span class="muted">${prot}/${PROTEIN_GRAMS} g</span></div>
+      <div class="bar">${tweenBar('protein', Math.min(100, (prot / PROTEIN_GRAMS) * 100))}</div>
     </div>
-    <p class="hint">${esc(PROTEIN_EXAMPLES)}</p>
+    <div class="chips protein-chips">${PROTEIN_FOODS.map(([food, g]) => `<button class="chip" data-act="protein-add" data-g="${g}">+ ${esc(food)} <small>${g} g</small></button>`).join('')}</div>
+    ${proteinUndo ? `<div class="row"><button class="btn ghost small" data-act="protein-undo">Annuler le dernier ajout (${proteinUndo} g)</button></div>` : ''}
+    <p class="hint">Vise ${PROTEIN_GRAMS} g par jour : c’est ce qui garde tes muscles pendant que tu sèches.</p>
     <div class="card-head sub"><h3>Grignotage</h3><span class="pill">${snacks.length} grignotage${snacks.length > 1 ? 's' : ''} · ${resisted} envie${resisted > 1 ? 's' : ''} résistée${resisted > 1 ? 's' : ''}</span></div>
     ${pending
       ? `<p class="hint">Qu’est-ce qui t’a donné envie ?</p><div class="chips">${SNACK_TRIGGERS.map((t) => `<button class="chip" data-act="snack-log" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>
@@ -741,6 +742,7 @@ function viewFocus() {
 }
 
 let player = null; // séance en cours
+let proteinUndo = 0; // grammes du dernier bouton protéines (pour « Annuler »)
 
 function buildSteps(w, level) {
   const delta = w.fixed ? 0 : (level - 2) * 10;
@@ -1313,13 +1315,22 @@ const actions = {
     renderPlayer();
     render();
   },
-  protein(el) {
+  'protein-add'(el) {
     const d = day(todayKey());
-    d.protein = Math.max(0, (d.protein ?? 0) + Number(el.dataset.v));
+    const before = proteinGrams(d);
+    proteinUndo = Number(el.dataset.g);
+    d.proteinG = before + proteinUndo;
     navigator.vibrate?.(8);
     save();
     render();
-    if (d.protein === PROTEIN_TARGET && el.dataset.v === '1') celebrate('Objectif protéines atteint 💪');
+    if (before < PROTEIN_GRAMS && d.proteinG >= PROTEIN_GRAMS) celebrate('Objectif protéines atteint 💪');
+  },
+  'protein-undo'() {
+    const d = day(todayKey());
+    d.proteinG = Math.max(0, proteinGrams(d) - proteinUndo);
+    proteinUndo = 0;
+    save();
+    render();
   },
   'me-tab'(el) {
     const ids = ME_TABS.map(([id]) => id);

@@ -201,6 +201,13 @@ export function series(state, field, today, n) {
 }
 
 // Dernière valeur notée d'un champ numérique (ex. le poids), ou null.
+// Protéines du jour en grammes. Les anciens jours comptaient en « portions »
+// (champ protein) : une portion vaut 25 g.
+export const PROTEIN_PORTION_G = 25;
+export function proteinGrams(d) {
+  return Number.isFinite(d?.proteinG) ? d.proteinG : (d?.protein ?? 0) * PROTEIN_PORTION_G;
+}
+
 export function lastValue(state, field) {
   for (const k of Object.keys(state.days).sort().reverse()) {
     const v = Number(state.days[k]?.[field]);

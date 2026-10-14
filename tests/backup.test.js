@@ -50,6 +50,7 @@ test('fichiers invalides : refusés avec une raison', () => {
     { ...good(), days: { '2026-13-01': {} } },
     { ...good(), days: { '2026-02-30': {} } },
     { ...good(), days: { '2026-09-01': { habits: { a: 3 } } } },
+    { ...good(), days: { '2026-09-01': { proteinG: 'beaucoup' } } },
     { ...good(), days: { '2026-09-01': { weight: '74 kg' } } },
     { ...good(), days: { '2026-09-01': { bed: 'tard' } } },
     { ...good(), days: { '2026-09-01': { workouts: 'A' } } },

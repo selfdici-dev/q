@@ -19,7 +19,7 @@ const isTime = (v) => typeof v === 'string' && /^\d{2}:\d{2}(:\d{2})?$/.test(v);
 const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
 const empty = (v) => v === undefined || v === null || v === '';
 
-const DAY_NUMBERS = ['weight', 'waist', 'screen', 'steps', 'protein', 'focus', 'urges', 'snackResisted', 'cardsOk'];
+const DAY_NUMBERS = ['weight', 'waist', 'screen', 'steps', 'protein', 'proteinG', 'focus', 'urges', 'snackResisted', 'cardsOk'];
 const LISTS = ['rules', 'tests', 'trades', 'feels', 'myCards'];
 const OBJECTS = ['reviews', 'lessons', 'books', 'setup', 'srs', 'calc', 'wealth', 'timers', 'ui'];
 

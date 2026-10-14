@@ -117,6 +117,9 @@ export const WARMUP = [
 
 // Repères nutrition (pour un homme de ~75 kg qui veut perdre du gras en gardant son muscle).
 export const PROTEIN_TARGET = 4; // portions par jour, ≈ 25-30 g de protéines chacune
+// Protéines en grammes (depuis la v53) : objectif du jour et boutons rapides [aliment, g].
+export const PROTEIN_GRAMS = 120; // ≈ 1,7 g par kg pour ~70 kg
+export const PROTEIN_FOODS = [['2 œufs', 13], ['Skyr', 15], ['Fromage blanc', 15], ['Steak haché', 25], ['Thon', 25], ['Poulet', 30], ['Jambon', 10], ['Lentilles', 15]];
 export const PROTEIN_EXAMPLES = '1 portion ≈ 3 œufs, 1 filet de poulet, 1 boîte de thon, 200 g de skyr ou 1 boîte de lentilles + 1 yaourt.';
 
 // Déclencheurs de grignotage : les repérer compte plus que de les compter.

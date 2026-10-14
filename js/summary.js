@@ -2,9 +2,9 @@
 // de la semaine (Moi > Bilan). Logique pure, testée par tests/summary.test.js.
 import {
   addDays, diffDays, fromKey, dayStatus, chain, weekNumber, weeklyBedtime,
-  sleepDuration, bedtimeMinutes, minutesToHHMM, SPRINT_LENGTH, SPRINT_PASS, SPRINT_COUNT,
+  sleepDuration, bedtimeMinutes, minutesToHHMM, SPRINT_LENGTH, SPRINT_PASS, SPRINT_COUNT, proteinGrams,
 } from './logic.js';
-import { WORKOUTS, WEEK_PLAN, PROTEIN_TARGET } from './data.js';
+import { WORKOUTS, WEEK_PLAN, PROTEIN_GRAMS } from './data.js';
 
 const plural = (n, word) => `${n} ${word}${n > 1 ? 's' : ''}`;
 const num = (v) => Number(v).toLocaleString('fr-FR', { maximumFractionDigits: 1 });
@@ -36,7 +36,7 @@ export function daySummary(state, key) {
     `Habitudes : ${st.done}/${st.total}${full ? ` (${full} en complet)` : ''}${missing.length ? ` · manque : ${missing.join(', ')}` : ''}`,
     sessionLine(WEEK_PLAN[fromKey(key).getDay()], d.workouts ?? []),
     `Focus : ${focus ? `${plural(focus, 'session')} de 25 min` : 'aucune session'}`,
-    `Protéines : ${d.protein ?? 0}/${PROTEIN_TARGET} portions`,
+    `Protéines : ${proteinGrams(d)}/${PROTEIN_GRAMS} g`,
     `Grignotages : ${snacks.length ? `${snacks.length} (${snacks.map((s) => `${s.time} ${s.trigger}`).join(', ')})` : 'aucun'}${resisted ? ` · ${plural(resisted, 'envie')} résistée${resisted > 1 ? 's' : ''}` : ''}`,
     `Coucher visé ce soir : ${weeklyBedtime(weekNumber(state, key), state.settings.bedtimeTarget)}`,
   ];
@@ -75,8 +75,8 @@ export function weekSummary(state, first, today) {
   const mobility = workouts.length - real.length;
   const planned = days.filter((x) => WEEK_PLAN[fromKey(x.key).getDay()] !== 'M').length;
   const focus = days.reduce((s, x) => s + (x.d.focus ?? 0), 0);
-  const protein = days.reduce((s, x) => s + (x.d.protein ?? 0), 0) / n;
-  const proteinDays = days.filter((x) => (x.d.protein ?? 0) >= PROTEIN_TARGET).length;
+  const protein = days.reduce((s, x) => s + proteinGrams(x.d), 0) / n;
+  const proteinDays = days.filter((x) => proteinGrams(x.d) >= PROTEIN_GRAMS).length;
 
   const snacks = days.flatMap((x) => x.d.snacks ?? []);
   const resisted = days.reduce((s, x) => s + (x.d.snackResisted ?? 0), 0);
@@ -96,7 +96,7 @@ export function weekSummary(state, first, today) {
     `Habitudes : ${perHabit.join(' · ')}`,
     `Séances : ${real.length}${planned ? ` sur ${planned} prévues` : ''}${real.length ? ` (${real.join(', ')})` : ''}${mobility ? ` + ${mobility} mobilité` : ''}`,
     `Focus : ${focus ? `${plural(focus, 'session')} de 25 min` : 'aucune session'}`,
-    `Protéines : ${num(protein)} portion${protein >= 2 ? 's' : ''}/jour en moyenne · objectif (${PROTEIN_TARGET}) atteint ${proteinDays} jour${proteinDays > 1 ? 's' : ''} sur ${n}`,
+    `Protéines : ${Math.round(protein)} g/jour en moyenne · objectif (${PROTEIN_GRAMS} g) atteint ${proteinDays} jour${proteinDays > 1 ? 's' : ''} sur ${n}`,
     `Grignotages : ${snacks.length || 'aucun'}${top ? ` · déclencheur n° 1 : ${top[0]} (${top[1]} fois)` : ''}${resisted ? ` · ${plural(resisted, 'envie')} résistée${resisted > 1 ? 's' : ''}` : ''}`,
     `Coucher : visé ${weeklyBedtime(week, state.settings.bedtimeTarget)}${beds.length ? ` · réel en moyenne ${minutesToHHMM(avg(beds))} (${plural(beds.length, 'nuit')} notée${beds.length > 1 ? 's' : ''})` : ''}${sleeps.length ? ` · sommeil moyen ${hours(avg(sleeps))}` : ''}`,
   ];

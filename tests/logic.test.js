@@ -317,3 +317,12 @@ test('calories d’une séance : MET × 3,5 × kg / 200 par minute, arrondi à 5
   assert.equal(lastValue(st, 'weight'), 70.2);
   assert.equal(lastValue({ days: {} }, 'weight'), null);
 });
+
+test('protéines en grammes : les anciennes portions valent 25 g, les grammes priment', async () => {
+  const { proteinGrams } = await import('../js/logic.js');
+  assert.equal(proteinGrams(undefined), 0);
+  assert.equal(proteinGrams({}), 0);
+  assert.equal(proteinGrams({ protein: 3 }), 75);
+  assert.equal(proteinGrams({ protein: 3, proteinG: 48 }), 48);
+  assert.equal(proteinGrams({ proteinG: 0, protein: 2 }), 0);
+});

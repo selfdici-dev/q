@@ -21,7 +21,7 @@ const empty = (v) => v === undefined || v === null || v === '';
 
 const DAY_NUMBERS = ['weight', 'waist', 'screen', 'steps', 'protein', 'proteinG', 'focus', 'urges', 'snackResisted', 'cardsOk'];
 const LISTS = ['rules', 'tests', 'trades', 'feels', 'myCards'];
-const OBJECTS = ['reviews', 'lessons', 'books', 'setup', 'srs', 'calc', 'wealth', 'timers', 'ui'];
+const OBJECTS = ['reviews', 'lessons', 'books', 'setup', 'srs', 'calc', 'wealth', 'timers', 'ui', 'records'];
 
 function checkDay(key, d) {
   if (!isKey(key)) return `date impossible « ${key} »`;

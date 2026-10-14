@@ -326,3 +326,26 @@ test('protéines en grammes : les anciennes portions valent 25 g, les grammes pr
   assert.equal(proteinGrams({ protein: 3, proteinG: 48 }), 48);
   assert.equal(proteinGrams({ proteinG: 0, protein: 2 }), 0);
 });
+
+test('objectifs qui montent : objectif lu dans la consigne, record + 1, pas pour les tenues', async () => {
+  const { goalOf, nextTarget, logRecord, recordKey } = await import('../js/logic.js');
+  const { WORKOUTS } = await import('../js/data.js');
+  assert.deepEqual(goalOf('Objectif : 10 à 13 pompes. 1. Parallettes…'), { min: 10, max: 13, unit: 'pompes' });
+  assert.deepEqual(goalOf('Objectif : 6 à 10. 1. Fesses en l’air'), { min: 6, max: 10, unit: 'répétitions' });
+  assert.deepEqual(goalOf('Objectif : 20 touches (10 par côté), lentes.'), { min: 20, max: 20, unit: 'touches' });
+  assert.equal(goalOf('Objectif : 4 tenues de 6 s. 1. Planche'), null);
+  assert.equal(goalOf('Objectif : 1 seule tenue jusqu’au bip.'), null);
+  assert.equal(goalOf('Sur le dos, genoux pliés.'), null);
+  // Sans record : l'objectif de départ ; avec : record + 1
+  const g = goalOf('Objectif : 10 à 13 pompes.');
+  assert.deepEqual(nextTarget(g, undefined), { target: 10, best: null });
+  let rec = logRecord({}, recordKey('Pompes (sur parallettes)', 1), 12, '2026-10-15');
+  assert.deepEqual(rec, { 'Pompes (sur parallettes)#1': { best: 12, last: 12, date: '2026-10-15' } });
+  assert.deepEqual(nextTarget(g, rec['Pompes (sur parallettes)#1']), { target: 13, best: 12 });
+  // Une moins bonne série garde le record
+  rec = logRecord(rec, 'Pompes (sur parallettes)#1', 9, '2026-10-17');
+  assert.deepEqual(rec['Pompes (sur parallettes)#1'], { best: 12, last: 9, date: '2026-10-17' });
+  assert.equal(nextTarget(null, rec['x']), null);
+  // Les exercices en répétitions de B ont un objectif lisible
+  for (const e of WORKOUTS.find((w) => w.id === 'B').exercises.filter((x) => !/Planche|L-sit/.test(x.name))) assert.ok(goalOf(e.cue), e.name);
+});

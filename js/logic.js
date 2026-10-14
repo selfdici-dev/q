@@ -201,6 +201,29 @@ export function series(state, field, today, n) {
 }
 
 // Dernière valeur notée d'un champ numérique (ex. le poids), ou null.
+// Objectifs qui montent : l'objectif chiffré d'une consigne (« Objectif : 10 à
+// 13 pompes. … »), null pour les tenues (planches, L-sit : on suit le chrono).
+export function goalOf(cue = '') {
+  const m = /^Objectif : (\d+)(?: à (\d+))?(?: ([^.(,]+))?/.exec(cue);
+  if (!m || /tenue/.test(m[3] ?? '')) return null;
+  return { min: Number(m[1]), max: Number(m[2] ?? m[1]), unit: (m[3] ?? 'répétitions').trim() };
+}
+
+// Un record par exercice et par tour (au 2e tour, la fatigue change tout).
+export const recordKey = (name, round = 1) => `${name}#${round}`;
+
+// Sans record : l'objectif de la consigne. Avec : record + 1.
+export function nextTarget(goal, rec) {
+  if (!goal) return null;
+  if (!Number.isFinite(rec?.best)) return { target: goal.min, best: null };
+  return { target: rec.best + 1, best: rec.best };
+}
+
+export function logRecord(records, key, n, date) {
+  const prev = records?.[key];
+  return { ...records, [key]: { best: Math.max(prev?.best ?? 0, n), last: n, date } };
+}
+
 // Protéines du jour en grammes. Les anciens jours comptaient en « portions »
 // (champ protein) : une portion vaut 25 g.
 export const PROTEIN_PORTION_G = 25;

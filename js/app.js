@@ -3,7 +3,7 @@ import {
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
   dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
-  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams,
+  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, recordKey,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
@@ -50,6 +50,7 @@ function freshState() {
     books: {},
     setup: {},
     feels: [],
+    records: {},
     srs: {},
     myCards: [],
     ui: { moneyTab: 'parcours', meTab: 'programme', lesson: null, lastLevel: 1 },
@@ -839,6 +840,37 @@ function goalBody() {
     <ul class="goal-list">${points.map(([id, title, text]) => `<li><span class="wo-badge wo-${id}">${id}</span><div><strong>${title}</strong> ${text}</div></li>`).join('')}</ul>`;
 }
 
+// Objectifs qui montent : pendant l'effort, l'objectif est ton record + 1.
+function stepTarget(s) {
+  if (s?.kind !== 'work') return null;
+  return nextTarget(goalOf(s.cue), state.records?.[recordKey(s.name, s.round)]);
+}
+
+// L'effort qu'on peut noter maintenant : celui qui vient de finir (pendant le
+// repos, ou le dernier à la fin de la séance). Pas pour les tenues.
+function loggable() {
+  if (!player?.steps) return null;
+  const idx = player.done ? player.lastWork : player.steps[player.i]?.kind === 'rest' ? player.i - 1 : -1;
+  const s = player.steps[idx];
+  if (s?.kind !== 'work' || player.logged?.has(idx)) return null;
+  const goal = goalOf(s.cue);
+  return goal ? { idx, s, goal, value: player.logVal?.[idx] ?? stepTarget(s).target } : null;
+}
+
+function logRow() {
+  const l = loggable();
+  if (!l) return '';
+  return `<div class="log-reps">
+    <p>${esc(l.s.name)} : combien de ${esc(l.goal.unit)} ?</p>
+    <div class="log-row">
+      <button class="ctrl small" data-act="reps" data-v="-1" aria-label="Une de moins">−</button>
+      <strong class="log-val" aria-live="polite">${l.value}</strong>
+      <button class="ctrl small" data-act="reps" data-v="1" aria-label="Une de plus">+</button>
+      <button class="btn primary small" data-act="reps-save">Noter</button>
+    </div>
+  </div>`;
+}
+
 function renderPlayer() {
   const el = $('#player');
   if (!player) {
@@ -855,6 +887,7 @@ function renderPlayer() {
         <h2>${esc(player.workout.name)}</h2>
         <div class="big-emoji">💪</div>
         <p class="muted">≈ ${workoutKcal(player.workout)} kcal brûlées (estimation)</p>
+        ${logRow()}
         <p class="cue">Comment c’était ? Ta réponse sert à ajuster le niveau.</p>
       </div>
       <div class="feel">
@@ -879,7 +912,9 @@ function renderPlayer() {
       <p class="phase">${player.endAt ? { work: 'Effort', rest: 'Repos', warm: 'Échauffement', prep: 'Départ' }[s.kind] : 'Pause'}</p>
       <h2>${esc(s.name)}</h2>
       ${s.target ? `<span class="target-tag">🎯 ${esc(s.target)}</span>` : ''}
+      ${(() => { const t = stepTarget(s); return t?.best != null ? `<span class="rec-tag">🏆 Record ${t.best} · vise ${t.target}</span>` : ''; })()}
       ${s.why && s.kind === 'work' ? `<p class="why">${esc(s.why)}</p>` : ''}
+      ${s.kind === 'rest' ? logRow() : ''}
       <div class="player-fig">${s.kind === 'work' || s.kind === 'warm' ? figure(s.name, s.target) : figure(next?.name, next?.target)}</div>
       <div class="clock huge" id="player-clock">${fmtStep(player.remaining)}</div>
       ${s.kind === 'rest' ? '' : `<p class="cue">${esc(s.cue)}</p>
@@ -933,7 +968,7 @@ function finishWorkout() {
   d.workouts = [...(d.workouts ?? []), player.workout.id];
   raiseHabit(today, 'sport', player.workout.id === 'M' ? 1 : 2);
   save();
-  player = { workout: player.workout, done: true };
+  player = { workout: player.workout, done: true, steps: player.steps, lastWork: player.steps.findLastIndex((x) => x.kind === 'work'), logged: player.logged, logVal: player.logVal };
   keepAwake(false);
   beep(3);
   renderPlayer();
@@ -1308,6 +1343,23 @@ const actions = {
     renderPlayer();
   },
   'player-prev'() { if (player && !player.done) playerGoto(player.i - 1); },
+  reps(el) {
+    const l = loggable();
+    if (!l) return;
+    player.logVal = { ...player.logVal, [l.idx]: Math.max(0, l.value + Number(el.dataset.v)) };
+    renderPlayer();
+  },
+  'reps-save'() {
+    const l = loggable();
+    if (!l) return;
+    const key = recordKey(l.s.name, l.s.round);
+    const prev = state.records?.[key]?.best;
+    state.records = logRecord(state.records, key, l.value, todayKey());
+    player.logged = new Set([...(player.logged ?? []), l.idx]);
+    save();
+    renderPlayer();
+    toast(prev != null && l.value > prev ? `Nouveau record : ${l.value} 🏆` : `Noté : ${l.value}. La prochaine fois, vise ${state.records[key].best + 1}.`, 2000);
+  },
   feel(el) {
     state.feels = [...state.feels, { date: todayKey(), id: player.workout.id, v: el.dataset.v }].slice(-60);
     save();

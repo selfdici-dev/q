@@ -109,3 +109,10 @@ test('A et C : un minimum chiffré au début de chaque consigne, pour savoir qua
     for (const e of WORKOUTS.find((w) => w.id === id).exercises) assert.match(e.cue, /^Objectif : \d/, `${id} · ${e.name}`);
   }
 });
+
+test('B : des consignes courtes et en étapes, lisibles pendant l’effort', () => {
+  for (const e of WORKOUTS.find((w) => w.id === 'B').exercises) {
+    assert.ok(e.cue.length <= 330, `${e.name} : ${e.cue.length} caractères`);
+    assert.match(e.cue, /1\. |Étape 1 : /, e.name);
+  }
+});

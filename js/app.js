@@ -827,7 +827,7 @@ function viewSport() {
 function goalBody() {
   const points = [
     ['C', 'Sec avant tout.', 'Abdos et mâchoire se voient quand le taux de gras baisse : protéines, zéro grignotage, 8 000 pas, séance C. C’est l’assiette qui fait le plus gros du travail.'],
-    ['A', 'Abdos dessinés.', 'Crunch vélo (le n° 1 des mesures), roue ×2, Russian twist pour les obliques et le V du bas du ventre, planche, planches latérales (main sous le torse) et hollow body pour une taille fine.'],
+    ['A', 'Abdos dessinés.', 'Crunch vélo (le n° 1 des mesures), roue ×2, crunch inversé pour le V du bas du ventre, Russian twist pieds décollés pour les obliques, planches latérales (main sous le torse) et hollow body pour une taille fine.'],
     ['B', 'Calisthénie : pectoraux, épaules et dos en V.', 'Ton corps est l’outil : pompes sur parallettes, pike, diamant, planche penchée et L-sit, plus 2 tirages à l’élastique pour le dos en V. De la force sans gonfler, chaque série finie dure. Les veines se voient quand le gras baisse : c’est l’assiette qui les fait sortir. Rien pour les trapèzes, qui tassent le cou.'],
     ['M', 'Grand et droit.', 'Bassin droit (fentes basses, pont fessier), dos fort et épaules ouvertes (superman, rotation à quatre pattes, écarté et passage d’épaules à l’élastique, étirement des pectoraux debout), tête reculée (chin tucks, extension du cou) : on gagne visuellement quelques centimètres et une démarche plus sûre.'],
     ['M', 'Mâchoire nette.', 'Tête droite et visage sec, sans grossir le cou. L’os ne change pas à l’âge adulte : ce qui la révèle, c’est surtout un visage sec et une tête bien placée. Évite le chewing-gum dur, mauvais pour l’articulation.'],

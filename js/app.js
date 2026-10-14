@@ -3,7 +3,7 @@ import {
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
   dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
-  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, recordKey,
+  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, recordKey, spokenStep,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
@@ -37,6 +37,8 @@ function freshState() {
       level: 1,
       lastExport: null,
       theme: 'dark',
+      voice: false, // coach vocal pendant la séance
+      voiceURI: 'auto',
     },
     habits: structuredClone(DEFAULT_HABITS),
     rules: [...DEFAULT_RULES],
@@ -232,6 +234,25 @@ function showAvatar() {
 }
 
 let audioCtx;
+
+// Coach vocal (désactivé par défaut) : les voix du téléphone, sans internet,
+// rien n'est envoyé. L'iPhone n'accepte de parler qu'après un appui : le
+// premier mot part du bouton « Lancer la séance ».
+const synth = typeof speechSynthesis === 'undefined' ? null : speechSynthesis;
+const frVoices = () => (synth?.getVoices() ?? []).filter((v) => v.lang?.toLowerCase().startsWith('fr'));
+function say(text, force = false) {
+  if (!synth || !text || (!force && !state.settings.voice)) return;
+  try {
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'fr-FR';
+    const v = frVoices().find((x) => x.voiceURI === state.settings.voiceURI);
+    if (v) u.voice = v;
+    synth.speak(u);
+  } catch { /* la voix ne doit jamais bloquer la séance */ }
+}
+const hush = () => synth?.cancel();
+synth?.addEventListener?.('voiceschanged', () => { if (document.querySelector('[data-setting="voiceURI"]')) render(); });
 function tone(freq, secs, vol = 0.18) {
   try {
     audioCtx ??= new AudioContext();
@@ -846,6 +867,12 @@ function stepTarget(s) {
   return nextTarget(goalOf(s.cue), state.records?.[recordKey(s.name, s.round)]);
 }
 
+function speakStep() {
+  if (!player || player.done) return;
+  const s = player.steps[player.i];
+  say(spokenStep(s, player.steps[player.i + 1], stepTarget(s)));
+}
+
 // L'effort qu'on peut noter maintenant : celui qui vient de finir (pendant le
 // repos, ou le dernier à la fin de la séance). Pas pour les tenues.
 function loggable() {
@@ -906,7 +933,7 @@ function renderPlayer() {
   // (or = effort, bleu = repos), chronomètre géant, gros boutons.
   el.innerHTML = `
     <div class="player-fill" id="player-fill" style="transform:scaleY(${1 - player.remaining / s.secs})"></div>
-    <div class="player-top"><span>${esc(player.workout.name)}</span><span>${s.round ? `Tour ${s.round}/${s.rounds}` : ''}</span></div>
+    <div class="player-top"><span>${esc(player.workout.name)}</span><span>${s.round ? `Tour ${s.round}/${s.rounds}` : ''}${synth ? `<button class="voice-btn" data-act="voice-toggle" aria-pressed="${state.settings.voice}" aria-label="${state.settings.voice ? 'Couper le coach vocal' : 'Activer le coach vocal'}">${state.settings.voice ? '🔊' : '🔇'}</button>` : ''}</span></div>
     <div class="progress"><span style="width:${(player.i / player.steps.length) * 100}%"></span></div>
     <div class="player-main ${fresh ? 'enter' : ''}">
       <p class="phase">${player.endAt ? { work: 'Effort', rest: 'Repos', warm: 'Échauffement', prep: 'Départ' }[s.kind] : 'Pause'}</p>
@@ -951,6 +978,7 @@ function startWorkout(id) {
   } catch { /* son indisponible */ }
   keepAwake(true);
   renderPlayer();
+  speakStep();
 }
 
 function playerGoto(i) {
@@ -960,6 +988,7 @@ function playerGoto(i) {
   player.remaining = player.steps[player.i].secs;
   player.endAt = Date.now() + player.remaining * 1000;
   renderPlayer();
+  speakStep();
 }
 
 function finishWorkout() {
@@ -971,6 +1000,7 @@ function finishWorkout() {
   player = { workout: player.workout, done: true, steps: player.steps, lastWork: player.steps.findLastIndex((x) => x.kind === 'work'), logged: player.logged, logVal: player.logVal };
   keepAwake(false);
   beep(3);
+  say('Séance terminée. Bien joué.');
   renderPlayer();
   render();
   celebrate(`Séance terminée · +30 XP`);
@@ -1180,6 +1210,18 @@ function viewSettings() {
     <div class="row">${[['dark', '🌑 Noir'], ['light', '☀️ Clair'], ['auto', '⚙️ Auto']].map(([v, l]) => `<button class="seg ${s.theme === v ? 'on' : ''}" data-act="theme" data-v="${v}" aria-pressed="${s.theme === v}">${l}</button>`).join('')}</div>
   </section>
   <section class="card">
+    <div class="card-head"><h2>Coach vocal</h2></div>
+    <p class="hint">Pendant la séance, une voix annonce chaque exercice et ton objectif. Ce sont les voix de ton téléphone : rien à télécharger, rien n’est envoyé, presque rien pour la batterie. Coupe-la à tout moment avec 🔊 en haut de la séance.</p>
+    ${synth ? `<div class="row">${[['0', '🔇 Désactivé'], ['1', '🔊 Activé']].map(([v, l]) => `<button class="seg ${String(Number(s.voice)) === v ? 'on' : ''}" data-act="voice" data-v="${v}" aria-pressed="${String(Number(s.voice)) === v}">${l}</button>`).join('')}</div>
+    ${s.voice ? `<label>Voix<select data-setting="voiceURI">
+      <option value="auto" ${s.voiceURI === 'auto' ? 'selected' : ''}>Voix française par défaut</option>
+      ${frVoices().map((v) => `<option value="${esc(v.voiceURI)}" ${v.voiceURI === s.voiceURI ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}
+    </select></label>
+    <div class="row"><button class="btn small" data-act="voice-test">▶︎ Écouter un exemple</button></div>
+    <p class="hint">Sur iPhone, d’autres voix (plus naturelles) s’ajoutent dans Réglages › Accessibilité › Contenu énoncé › Voix › Français.</p>` : ''}`
+    : '<p class="hint">Ce navigateur ne sait pas lire à voix haute.</p>'}
+  </section>
+  <section class="card">
     <div class="card-head"><h2>Habitudes</h2></div>
     <p class="hint">5 au maximum. Un minimum doit être faisable en 2 minutes, même un mauvais jour. Les changements s’appliquent à partir d’aujourd’hui, les jours passés ne bougent pas.</p>
     ${state.habits.map((h, i) => `
@@ -1319,6 +1361,7 @@ const actions = {
     if (player.endAt) {
       player.remaining = Math.ceil((player.endAt - Date.now()) / 1000);
       player.endAt = null;
+      hush();
     } else {
       player.endAt = Date.now() + player.remaining * 1000;
     }
@@ -1477,6 +1520,21 @@ const actions = {
     save();
     render();
   },
+  voice(el) {
+    state.settings.voice = el.dataset.v === '1';
+    save();
+    render();
+    if (state.settings.voice) say('Coach vocal activé.');
+    else hush();
+  },
+  'voice-test'() { say('Pompes sur parallettes. Objectif : 10 à 13 pompes.', true); },
+  'voice-toggle'() {
+    state.settings.voice = !state.settings.voice;
+    save();
+    if (state.settings.voice) speakStep();
+    else hush();
+    renderPlayer();
+  },
   theme(el) {
     state.settings.theme = el.dataset.v;
     save();
@@ -1486,6 +1544,7 @@ const actions = {
   'player-stop'() {
     if (!confirm('Arrêter la séance ? Elle ne sera pas enregistrée.')) return;
     player = null;
+    hush();
     keepAwake(false);
     renderPlayer();
   },

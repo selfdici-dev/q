@@ -224,6 +224,21 @@ export function logRecord(records, key, n, date) {
   return { ...records, [key]: { best: Math.max(prev?.best ?? 0, n), last: n, date } };
 }
 
+// Coach vocal : la phrase dite au début de chaque étape de la séance. Courte,
+// sans parenthèses ni « (1/2) », avec ton record quand tu en as un.
+const sayName = (name = '') => name.replace(/\s*\(\d\/\d\)/, '').replace(/[()]/g, '').trim();
+export function spokenStep(step, next, target) {
+  if (!step) return '';
+  const after = next ? sayName(next.name) : '';
+  if (step.kind === 'prep') return `Prépare-toi.${after ? ` On commence par ${after}.` : ''}`;
+  if (step.kind === 'warm') return `${sayName(step.name)}.`;
+  if (step.kind === 'rest') return `${step.name === 'Fin du tour' ? 'Fin du tour' : 'Repos'}.${after ? ` Ensuite : ${after}.` : ''}`;
+  const goal = target?.best != null
+    ? `Vise ${target.target}, ton record est ${target.best}.`
+    : (/^Objectif : [^.]+\./.exec(step.cue ?? '')?.[0] ?? '').replace(/[()]/g, '');
+  return `${sayName(step.name)}. ${goal}`.trim();
+}
+
 // Protéines du jour en grammes. Les anciens jours comptaient en « portions »
 // (champ protein) : une portion vaut 25 g.
 export const PROTEIN_PORTION_G = 25;

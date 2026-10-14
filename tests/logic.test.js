@@ -349,3 +349,16 @@ test('objectifs qui montent : objectif lu dans la consigne, record + 1, pas pour
   // Les exercices en répétitions de B ont un objectif lisible
   for (const e of WORKOUTS.find((w) => w.id === 'B').exercises.filter((x) => !/Planche|L-sit/.test(x.name))) assert.ok(goalOf(e.cue), e.name);
 });
+
+test('coach vocal : une phrase courte par étape, avec le record quand il existe', async () => {
+  const { spokenStep } = await import('../js/logic.js');
+  const work = { kind: 'work', name: 'Roue abdominale à genoux (1/2)', cue: 'Objectif : 8 allers-retours. 1. À genoux…' };
+  assert.equal(spokenStep(work), 'Roue abdominale à genoux. Objectif : 8 allers-retours.');
+  assert.equal(spokenStep(work, null, { target: 10, best: 9 }), 'Roue abdominale à genoux. Vise 10, ton record est 9.');
+  assert.equal(spokenStep({ kind: 'work', name: 'Pompes (sur parallettes)', cue: 'Objectif : 20 touches (10 par côté), lentes.' }), 'Pompes sur parallettes. Objectif : 20 touches 10 par côté, lentes.');
+  assert.equal(spokenStep({ kind: 'work', name: 'Planche penchée', cue: 'Tiens bien.' }), 'Planche penchée.');
+  assert.equal(spokenStep({ kind: 'rest', name: 'Récupère' }, { name: 'Pompes pike' }), 'Repos. Ensuite : Pompes pike.');
+  assert.equal(spokenStep({ kind: 'rest', name: 'Fin du tour' }, { name: 'Crunch vélo' }), 'Fin du tour. Ensuite : Crunch vélo.');
+  assert.equal(spokenStep({ kind: 'prep', name: 'Prépare-toi' }, { name: 'Rotations des épaules et des bras' }), 'Prépare-toi. On commence par Rotations des épaules et des bras.');
+  assert.equal(spokenStep(undefined), '');
+});

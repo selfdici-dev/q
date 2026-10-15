@@ -317,3 +317,48 @@ test('calories d’une séance : MET × 3,5 × kg / 200 par minute, arrondi à 5
   assert.equal(lastValue(st, 'weight'), 70.2);
   assert.equal(lastValue({ days: {} }, 'weight'), null);
 });
+
+test('protéines en grammes : les anciennes portions valent 25 g, les grammes priment', async () => {
+  const { proteinGrams } = await import('../js/logic.js');
+  assert.equal(proteinGrams(undefined), 0);
+  assert.equal(proteinGrams({}), 0);
+  assert.equal(proteinGrams({ protein: 3 }), 75);
+  assert.equal(proteinGrams({ protein: 3, proteinG: 48 }), 48);
+  assert.equal(proteinGrams({ proteinG: 0, protein: 2 }), 0);
+});
+
+test('objectifs qui montent : objectif lu dans la consigne, record + 1, pas pour les tenues', async () => {
+  const { goalOf, nextTarget, logRecord, recordKey } = await import('../js/logic.js');
+  const { WORKOUTS } = await import('../js/data.js');
+  assert.deepEqual(goalOf('Objectif : 10 à 13 pompes. 1. Parallettes…'), { min: 10, max: 13, unit: 'pompes' });
+  assert.deepEqual(goalOf('Objectif : 6 à 10. 1. Fesses en l’air'), { min: 6, max: 10, unit: 'répétitions' });
+  assert.deepEqual(goalOf('Objectif : 20 touches (10 par côté), lentes.'), { min: 20, max: 20, unit: 'touches' });
+  assert.equal(goalOf('Objectif : 4 tenues de 6 s. 1. Planche'), null);
+  assert.equal(goalOf('Objectif : 1 seule tenue jusqu’au bip.'), null);
+  assert.equal(goalOf('Sur le dos, genoux pliés.'), null);
+  // Sans record : l'objectif de départ ; avec : record + 1
+  const g = goalOf('Objectif : 10 à 13 pompes.');
+  assert.deepEqual(nextTarget(g, undefined), { target: 10, best: null });
+  let rec = logRecord({}, recordKey('Pompes (sur parallettes)', 1), 12, '2026-10-15');
+  assert.deepEqual(rec, { 'Pompes (sur parallettes)#1': { best: 12, last: 12, date: '2026-10-15' } });
+  assert.deepEqual(nextTarget(g, rec['Pompes (sur parallettes)#1']), { target: 13, best: 12 });
+  // Une moins bonne série garde le record
+  rec = logRecord(rec, 'Pompes (sur parallettes)#1', 9, '2026-10-17');
+  assert.deepEqual(rec['Pompes (sur parallettes)#1'], { best: 12, last: 9, date: '2026-10-17' });
+  assert.equal(nextTarget(null, rec['x']), null);
+  // Les exercices en répétitions de B ont un objectif lisible
+  for (const e of WORKOUTS.find((w) => w.id === 'B').exercises.filter((x) => !/Planche|L-sit/.test(x.name))) assert.ok(goalOf(e.cue), e.name);
+});
+
+test('coach vocal : une phrase courte par étape, avec le record quand il existe', async () => {
+  const { spokenStep } = await import('../js/logic.js');
+  const work = { kind: 'work', name: 'Roue abdominale à genoux (1/2)', cue: 'Objectif : 8 allers-retours. 1. À genoux…' };
+  assert.equal(spokenStep(work), 'Roue abdominale à genoux. Objectif : 8 allers-retours.');
+  assert.equal(spokenStep(work, null, { target: 10, best: 9 }), 'Roue abdominale à genoux. Vise 10, ton record est 9.');
+  assert.equal(spokenStep({ kind: 'work', name: 'Pompes (sur parallettes)', cue: 'Objectif : 20 touches (10 par côté), lentes.' }), 'Pompes sur parallettes. Objectif : 20 touches 10 par côté, lentes.');
+  assert.equal(spokenStep({ kind: 'work', name: 'Planche penchée', cue: 'Tiens bien.' }), 'Planche penchée.');
+  assert.equal(spokenStep({ kind: 'rest', name: 'Récupère' }, { name: 'Pompes pike' }), 'Repos. Ensuite : Pompes pike.');
+  assert.equal(spokenStep({ kind: 'rest', name: 'Fin du tour' }, { name: 'Crunch vélo' }), 'Fin du tour. Ensuite : Crunch vélo.');
+  assert.equal(spokenStep({ kind: 'prep', name: 'Prépare-toi' }, { name: 'Rotations des épaules et des bras' }), 'Prépare-toi. On commence par Rotations des épaules et des bras.');
+  assert.equal(spokenStep(undefined), '');
+});

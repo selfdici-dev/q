@@ -36,7 +36,9 @@ test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoi
   assert.ok(ex('M').filter((e) => /mâchoire/.test(e.target)).length >= 2);
   // A : crunch (haut des abdos) et Russian twist (obliques) ; B sans pompes pike ni tirage superman
   // A : ses exercices préférés (planches, hollow, Russian twist) + crunch vélo et roue ×2 à 40 s
-  for (const n of ['Crunch vélo', 'Russian twist', 'Planche sur avant-bras', 'Planche latérale (droite)', 'Planche latérale (gauche)', 'Hollow hold genoux pliés']) assert.ok(ex('A').some((e) => e.name === n), n);
+  // A v2 : la planche (devenue trop facile) laisse la place au crunch inversé, pour le bas du ventre
+  for (const n of ['Crunch vélo', 'Russian twist', 'Crunch inversé', 'Planche latérale (droite)', 'Planche latérale (gauche)', 'Hollow hold genoux pliés']) assert.ok(ex('A').some((e) => e.name === n), n);
+  assert.ok(ex('A').every((e) => e.name !== 'Planche sur avant-bras'));
   assert.ok(ex('A').filter((e) => /^Roue/.test(e.name)).every((e) => e.work >= 40));
   // M : posture et mâchoire, sans les exercices où l'on ne sent rien ; dans 2 m² (plus de livre ouvert,
   // d'anges au sol ni d'étirement couché, trop larges ou pas compris), avec l'élastique pour le haut du dos

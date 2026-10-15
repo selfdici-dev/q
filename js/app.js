@@ -3,11 +3,11 @@ import {
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
   dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
-  sessionKcal, lastValue, DEFAULT_WEIGHT,
+  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, recordKey, spokenStep,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
-  WARMUP, PROTEIN_TARGET, PROTEIN_EXAMPLES, PHASES, MILESTONES, BOOKS, APPS, HELP,
+  WARMUP, PROTEIN_GRAMS, PROTEIN_FOODS, PHASES, MILESTONES, BOOKS, APPS, HELP,
 } from './data.js';
 import { ALL_LESSONS } from './finance-data.js';
 import { createMoney, DEFAULT_CALC, DEFAULT_WEALTH } from './money.js';
@@ -37,6 +37,8 @@ function freshState() {
       level: 1,
       lastExport: null,
       theme: 'dark',
+      voice: false, // coach vocal pendant la séance
+      voiceURI: 'auto',
     },
     habits: structuredClone(DEFAULT_HABITS),
     rules: [...DEFAULT_RULES],
@@ -50,6 +52,7 @@ function freshState() {
     books: {},
     setup: {},
     feels: [],
+    records: {},
     srs: {},
     myCards: [],
     ui: { moneyTab: 'parcours', meTab: 'programme', lesson: null, lastLevel: 1 },
@@ -231,6 +234,25 @@ function showAvatar() {
 }
 
 let audioCtx;
+
+// Coach vocal (désactivé par défaut) : les voix du téléphone, sans internet,
+// rien n'est envoyé. L'iPhone n'accepte de parler qu'après un appui : le
+// premier mot part du bouton « Lancer la séance ».
+const synth = typeof speechSynthesis === 'undefined' ? null : speechSynthesis;
+const frVoices = () => (synth?.getVoices() ?? []).filter((v) => v.lang?.toLowerCase().startsWith('fr'));
+function say(text, force = false) {
+  if (!synth || !text || (!force && !state.settings.voice)) return;
+  try {
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'fr-FR';
+    const v = frVoices().find((x) => x.voiceURI === state.settings.voiceURI);
+    if (v) u.voice = v;
+    synth.speak(u);
+  } catch { /* la voix ne doit jamais bloquer la séance */ }
+}
+const hush = () => synth?.cancel();
+synth?.addEventListener?.('voiceschanged', () => { if (document.querySelector('[data-setting="voiceURI"]')) render(); });
 function tone(freq, secs, vol = 0.18) {
   try {
     audioCtx ??= new AudioContext();
@@ -456,7 +478,7 @@ function viewToday() {
   const lv = levelInfo(totalXP(state));
   const q = quoteOfDay(today);
   const toDo = st.total - st.done;
-  const prot = d.protein ?? 0;
+  const prot = proteinGrams(d);
   const snacks = d.snacks?.length ?? 0;
   const week = weekNumber(state, today);
   const grid = regularityGrid(state, today);
@@ -501,7 +523,7 @@ function viewToday() {
       <details class="more"><summary>Ce que valent « Min » et « Complet »</summary>
         <ul class="tight">${state.habits.map((h) => `<li><strong>${esc(h.name)}</strong> · min : ${esc(h.min)} · complet : ${esc(h.full)}</li>`).join('')}</ul>
         <p class="hint">La journée est validée dès que tous les minimums sont faits.</p></details>`)}
-    ${fold('food', '🍽️', 'Alimentation', `Protéines · ${snacks ? `${snacks} grignotage${snacks > 1 ? 's' : ''}` : 'aucun grignotage'}`, `<span class="pill ${prot >= PROTEIN_TARGET ? 'ok' : ''}">🍗 ${prot}/${PROTEIN_TARGET}</span>`, snackCard(today))}
+    ${fold('food', '🍽️', 'Alimentation', `Protéines · ${snacks ? `${snacks} grignotage${snacks > 1 ? 's' : ''}` : 'aucun grignotage'}`, `<span class="pill ${prot >= PROTEIN_GRAMS ? 'ok' : ''}">🍗 ${prot} g</span>`, snackCard(today))}
     ${fold('night', '🌙', 'Nuit dernière', `Ce soir : couché à ${weeklyBedtime(week, state.settings.bedtimeTarget)}`, `<span class="pill">${d.bed && d.wake ? fmtDuration(sleepDuration(d.bed, d.wake)) : 'à noter'}</span>`, `
       <div class="grid2">
         <label>Couché à<input type="time" data-field="bed" data-key="${today}" value="${esc(d.bed ?? '')}"></label>
@@ -664,14 +686,15 @@ function snackCard(key) {
   const snacks = d.snacks ?? [];
   const resisted = d.snackResisted ?? 0;
   const pending = snackCard.pending;
-  const prot = d.protein ?? 0;
+  const prot = proteinGrams(d);
   return `
     <div class="protein">
-      <div><strong>Protéines</strong> <span class="muted">${prot}/${PROTEIN_TARGET} portions</span>
-        <div class="pips">${Array.from({ length: PROTEIN_TARGET }, (_, i) => `<i class="${i < prot ? 'on' : ''}"></i>`).join('')}</div></div>
-      <div class="row tight-row"><button class="btn small" data-act="protein" data-v="-1" aria-label="Retirer une portion">−</button><button class="btn small primary" data-act="protein" data-v="1">+1 portion</button></div>
+      <div class="protein-head"><strong>Protéines</strong> <span class="muted">${prot}/${PROTEIN_GRAMS} g</span></div>
+      <div class="bar">${tweenBar('protein', Math.min(100, (prot / PROTEIN_GRAMS) * 100))}</div>
     </div>
-    <p class="hint">${esc(PROTEIN_EXAMPLES)}</p>
+    <div class="chips protein-chips">${PROTEIN_FOODS.map(([food, g]) => `<button class="chip" data-act="protein-add" data-g="${g}">+ ${esc(food)} <small>${g} g</small></button>`).join('')}</div>
+    ${proteinUndo ? `<div class="row"><button class="btn ghost small" data-act="protein-undo">Annuler le dernier ajout (${proteinUndo} g)</button></div>` : ''}
+    <p class="hint">Vise ${PROTEIN_GRAMS} g par jour : c’est ce qui garde tes muscles pendant que tu sèches.</p>
     <div class="card-head sub"><h3>Grignotage</h3><span class="pill">${snacks.length} grignotage${snacks.length > 1 ? 's' : ''} · ${resisted} envie${resisted > 1 ? 's' : ''} résistée${resisted > 1 ? 's' : ''}</span></div>
     ${pending
       ? `<p class="hint">Qu’est-ce qui t’a donné envie ?</p><div class="chips">${SNACK_TRIGGERS.map((t) => `<button class="chip" data-act="snack-log" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>
@@ -741,6 +764,7 @@ function viewFocus() {
 }
 
 let player = null; // séance en cours
+let proteinUndo = 0; // grammes du dernier bouton protéines (pour « Annuler »)
 
 function buildSteps(w, level) {
   const delta = w.fixed ? 0 : (level - 2) * 10;
@@ -827,7 +851,7 @@ function viewSport() {
 function goalBody() {
   const points = [
     ['C', 'Sec avant tout.', 'Abdos et mâchoire se voient quand le taux de gras baisse : protéines, zéro grignotage, 8 000 pas, séance C. C’est l’assiette qui fait le plus gros du travail.'],
-    ['A', 'Abdos dessinés.', 'Crunch vélo (le n° 1 des mesures), roue ×2, Russian twist pour les obliques et le V du bas du ventre, planche, planches latérales (main sous le torse) et hollow body pour une taille fine.'],
+    ['A', 'Abdos dessinés.', 'Crunch vélo (le n° 1 des mesures), roue ×2, crunch inversé pour le V du bas du ventre, Russian twist pieds décollés pour les obliques, planches latérales (main sous le torse) et hollow body pour une taille fine.'],
     ['B', 'Calisthénie : pectoraux, épaules et dos en V.', 'Ton corps est l’outil : pompes sur parallettes, pike, diamant, planche penchée et L-sit, plus 2 tirages à l’élastique pour le dos en V. De la force sans gonfler, chaque série finie dure. Les veines se voient quand le gras baisse : c’est l’assiette qui les fait sortir. Rien pour les trapèzes, qui tassent le cou.'],
     ['M', 'Grand et droit.', 'Bassin droit (fentes basses, pont fessier), dos fort et épaules ouvertes (superman, rotation à quatre pattes, écarté et passage d’épaules à l’élastique, étirement des pectoraux debout), tête reculée (chin tucks, extension du cou) : on gagne visuellement quelques centimètres et une démarche plus sûre.'],
     ['M', 'Mâchoire nette.', 'Tête droite et visage sec, sans grossir le cou. L’os ne change pas à l’âge adulte : ce qui la révèle, c’est surtout un visage sec et une tête bien placée. Évite le chewing-gum dur, mauvais pour l’articulation.'],
@@ -835,6 +859,43 @@ function goalBody() {
   ];
   return `<p class="muted">Pas trapu, pas massif : un corps athlétique et léger, une posture droite, des abdos et une mâchoire visibles.</p>
     <ul class="goal-list">${points.map(([id, title, text]) => `<li><span class="wo-badge wo-${id}">${id}</span><div><strong>${title}</strong> ${text}</div></li>`).join('')}</ul>`;
+}
+
+// Objectifs qui montent : pendant l'effort, l'objectif est ton record + 1.
+function stepTarget(s) {
+  if (s?.kind !== 'work') return null;
+  return nextTarget(goalOf(s.cue), state.records?.[recordKey(s.name, s.round)]);
+}
+
+function speakStep() {
+  if (!player || player.done) return;
+  const s = player.steps[player.i];
+  say(spokenStep(s, player.steps[player.i + 1], stepTarget(s)));
+}
+
+// L'effort qu'on peut noter maintenant : celui qui vient de finir (pendant le
+// repos, ou le dernier à la fin de la séance). Pas pour les tenues.
+function loggable() {
+  if (!player?.steps) return null;
+  const idx = player.done ? player.lastWork : player.steps[player.i]?.kind === 'rest' ? player.i - 1 : -1;
+  const s = player.steps[idx];
+  if (s?.kind !== 'work' || player.logged?.has(idx)) return null;
+  const goal = goalOf(s.cue);
+  return goal ? { idx, s, goal, value: player.logVal?.[idx] ?? stepTarget(s).target } : null;
+}
+
+function logRow() {
+  const l = loggable();
+  if (!l) return '';
+  return `<div class="log-reps">
+    <p>${esc(l.s.name)} : combien de ${esc(l.goal.unit)} ?</p>
+    <div class="log-row">
+      <button class="ctrl small" data-act="reps" data-v="-1" aria-label="Une de moins">−</button>
+      <strong class="log-val" aria-live="polite">${l.value}</strong>
+      <button class="ctrl small" data-act="reps" data-v="1" aria-label="Une de plus">+</button>
+      <button class="btn primary small" data-act="reps-save">Noter</button>
+    </div>
+  </div>`;
 }
 
 function renderPlayer() {
@@ -853,6 +914,7 @@ function renderPlayer() {
         <h2>${esc(player.workout.name)}</h2>
         <div class="big-emoji">💪</div>
         <p class="muted">≈ ${workoutKcal(player.workout)} kcal brûlées (estimation)</p>
+        ${logRow()}
         <p class="cue">Comment c’était ? Ta réponse sert à ajuster le niveau.</p>
       </div>
       <div class="feel">
@@ -871,13 +933,15 @@ function renderPlayer() {
   // (or = effort, bleu = repos), chronomètre géant, gros boutons.
   el.innerHTML = `
     <div class="player-fill" id="player-fill" style="transform:scaleY(${1 - player.remaining / s.secs})"></div>
-    <div class="player-top"><span>${esc(player.workout.name)}</span><span>${s.round ? `Tour ${s.round}/${s.rounds}` : ''}</span></div>
+    <div class="player-top"><span>${esc(player.workout.name)}</span><span>${s.round ? `Tour ${s.round}/${s.rounds}` : ''}${synth ? `<button class="voice-btn" data-act="voice-toggle" aria-pressed="${state.settings.voice}" aria-label="${state.settings.voice ? 'Couper le coach vocal' : 'Activer le coach vocal'}">${state.settings.voice ? '🔊' : '🔇'}</button>` : ''}</span></div>
     <div class="progress"><span style="width:${(player.i / player.steps.length) * 100}%"></span></div>
     <div class="player-main ${fresh ? 'enter' : ''}">
       <p class="phase">${player.endAt ? { work: 'Effort', rest: 'Repos', warm: 'Échauffement', prep: 'Départ' }[s.kind] : 'Pause'}</p>
       <h2>${esc(s.name)}</h2>
       ${s.target ? `<span class="target-tag">🎯 ${esc(s.target)}</span>` : ''}
+      ${(() => { const t = stepTarget(s); return t?.best != null ? `<span class="rec-tag">🏆 Record ${t.best} · vise ${t.target}</span>` : ''; })()}
       ${s.why && s.kind === 'work' ? `<p class="why">${esc(s.why)}</p>` : ''}
+      ${s.kind === 'rest' ? logRow() : ''}
       <div class="player-fig">${s.kind === 'work' || s.kind === 'warm' ? figure(s.name, s.target) : figure(next?.name, next?.target)}</div>
       <div class="clock huge" id="player-clock">${fmtStep(player.remaining)}</div>
       ${s.kind === 'rest' ? '' : `<p class="cue">${esc(s.cue)}</p>
@@ -914,6 +978,7 @@ function startWorkout(id) {
   } catch { /* son indisponible */ }
   keepAwake(true);
   renderPlayer();
+  speakStep();
 }
 
 function playerGoto(i) {
@@ -923,6 +988,7 @@ function playerGoto(i) {
   player.remaining = player.steps[player.i].secs;
   player.endAt = Date.now() + player.remaining * 1000;
   renderPlayer();
+  speakStep();
 }
 
 function finishWorkout() {
@@ -931,9 +997,10 @@ function finishWorkout() {
   d.workouts = [...(d.workouts ?? []), player.workout.id];
   raiseHabit(today, 'sport', player.workout.id === 'M' ? 1 : 2);
   save();
-  player = { workout: player.workout, done: true };
+  player = { workout: player.workout, done: true, steps: player.steps, lastWork: player.steps.findLastIndex((x) => x.kind === 'work'), logged: player.logged, logVal: player.logVal };
   keepAwake(false);
   beep(3);
+  say('Séance terminée. Bien joué.');
   renderPlayer();
   render();
   celebrate(`Séance terminée · +30 XP`);
@@ -1143,6 +1210,18 @@ function viewSettings() {
     <div class="row">${[['dark', '🌑 Noir'], ['light', '☀️ Clair'], ['auto', '⚙️ Auto']].map(([v, l]) => `<button class="seg ${s.theme === v ? 'on' : ''}" data-act="theme" data-v="${v}" aria-pressed="${s.theme === v}">${l}</button>`).join('')}</div>
   </section>
   <section class="card">
+    <div class="card-head"><h2>Coach vocal</h2></div>
+    <p class="hint">Pendant la séance, une voix annonce chaque exercice et ton objectif. Ce sont les voix de ton téléphone : rien à télécharger, rien n’est envoyé, presque rien pour la batterie. Coupe-la à tout moment avec 🔊 en haut de la séance.</p>
+    ${synth ? `<div class="row">${[['0', '🔇 Désactivé'], ['1', '🔊 Activé']].map(([v, l]) => `<button class="seg ${String(Number(s.voice)) === v ? 'on' : ''}" data-act="voice" data-v="${v}" aria-pressed="${String(Number(s.voice)) === v}">${l}</button>`).join('')}</div>
+    ${s.voice ? `<label>Voix<select data-setting="voiceURI">
+      <option value="auto" ${s.voiceURI === 'auto' ? 'selected' : ''}>Voix française par défaut</option>
+      ${frVoices().map((v) => `<option value="${esc(v.voiceURI)}" ${v.voiceURI === s.voiceURI ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}
+    </select></label>
+    <div class="row"><button class="btn small" data-act="voice-test">▶︎ Écouter un exemple</button></div>
+    <p class="hint">Sur iPhone, d’autres voix (plus naturelles) s’ajoutent dans Réglages › Accessibilité › Contenu énoncé › Voix › Français.</p>` : ''}`
+    : '<p class="hint">Ce navigateur ne sait pas lire à voix haute.</p>'}
+  </section>
+  <section class="card">
     <div class="card-head"><h2>Habitudes</h2></div>
     <p class="hint">5 au maximum. Un minimum doit être faisable en 2 minutes, même un mauvais jour. Les changements s’appliquent à partir d’aujourd’hui, les jours passés ne bougent pas.</p>
     ${state.habits.map((h, i) => `
@@ -1282,6 +1361,7 @@ const actions = {
     if (player.endAt) {
       player.remaining = Math.ceil((player.endAt - Date.now()) / 1000);
       player.endAt = null;
+      hush();
     } else {
       player.endAt = Date.now() + player.remaining * 1000;
     }
@@ -1306,6 +1386,23 @@ const actions = {
     renderPlayer();
   },
   'player-prev'() { if (player && !player.done) playerGoto(player.i - 1); },
+  reps(el) {
+    const l = loggable();
+    if (!l) return;
+    player.logVal = { ...player.logVal, [l.idx]: Math.max(0, l.value + Number(el.dataset.v)) };
+    renderPlayer();
+  },
+  'reps-save'() {
+    const l = loggable();
+    if (!l) return;
+    const key = recordKey(l.s.name, l.s.round);
+    const prev = state.records?.[key]?.best;
+    state.records = logRecord(state.records, key, l.value, todayKey());
+    player.logged = new Set([...(player.logged ?? []), l.idx]);
+    save();
+    renderPlayer();
+    toast(prev != null && l.value > prev ? `Nouveau record : ${l.value} 🏆` : `Noté : ${l.value}. La prochaine fois, vise ${state.records[key].best + 1}.`, 2000);
+  },
   feel(el) {
     state.feels = [...state.feels, { date: todayKey(), id: player.workout.id, v: el.dataset.v }].slice(-60);
     save();
@@ -1313,13 +1410,22 @@ const actions = {
     renderPlayer();
     render();
   },
-  protein(el) {
+  'protein-add'(el) {
     const d = day(todayKey());
-    d.protein = Math.max(0, (d.protein ?? 0) + Number(el.dataset.v));
+    const before = proteinGrams(d);
+    proteinUndo = Number(el.dataset.g);
+    d.proteinG = before + proteinUndo;
     navigator.vibrate?.(8);
     save();
     render();
-    if (d.protein === PROTEIN_TARGET && el.dataset.v === '1') celebrate('Objectif protéines atteint 💪');
+    if (before < PROTEIN_GRAMS && d.proteinG >= PROTEIN_GRAMS) celebrate('Objectif protéines atteint 💪');
+  },
+  'protein-undo'() {
+    const d = day(todayKey());
+    d.proteinG = Math.max(0, proteinGrams(d) - proteinUndo);
+    proteinUndo = 0;
+    save();
+    render();
   },
   'me-tab'(el) {
     const ids = ME_TABS.map(([id]) => id);
@@ -1414,6 +1520,21 @@ const actions = {
     save();
     render();
   },
+  voice(el) {
+    state.settings.voice = el.dataset.v === '1';
+    save();
+    render();
+    if (state.settings.voice) say('Coach vocal activé.');
+    else hush();
+  },
+  'voice-test'() { say('Pompes sur parallettes. Objectif : 10 à 13 pompes.', true); },
+  'voice-toggle'() {
+    state.settings.voice = !state.settings.voice;
+    save();
+    if (state.settings.voice) speakStep();
+    else hush();
+    renderPlayer();
+  },
   theme(el) {
     state.settings.theme = el.dataset.v;
     save();
@@ -1423,6 +1544,7 @@ const actions = {
   'player-stop'() {
     if (!confirm('Arrêter la séance ? Elle ne sera pas enregistrée.')) return;
     player = null;
+    hush();
     keepAwake(false);
     renderPlayer();
   },

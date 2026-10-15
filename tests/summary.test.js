@@ -24,7 +24,8 @@ test('bilan du jour : habitudes, séance, focus, protéines, grignotages, couche
   assert.equal(lines[2], 'Habitudes : 1/2 (1 en complet) · manque : Bouger');
   assert.ok(lines[3].startsWith('Séance : faite ✓ (B'));
   assert.ok(lines.includes('Focus : 2 sessions de 25 min'));
-  assert.ok(lines.includes('Protéines : 3/4 portions'));
+  // 3 anciennes portions = 75 g (les protéines se comptent en grammes depuis la v53)
+  assert.ok(lines.includes('Protéines : 75/120 g'));
   assert.ok(lines.includes('Grignotages : 1 (16:10 Ennui) · 1 envie résistée'));
   assert.ok(lines.includes('Coucher visé ce soir : 01:15'));
   assert.ok(lines.includes('Nuit dernière : couché à 01:10, levé à 08:30 (7 h 20 de sommeil)'));
@@ -65,7 +66,7 @@ test('bilan de la semaine : sprint terminé, moyennes et réponses du bilan', ()
   assert.equal(lines[2], 'Habitudes : Lire 5/7 · Bouger 5/7');
   assert.equal(lines[3], 'Séances : 2 sur 6 prévues (A, B) + 2 mobilité');
   assert.equal(lines[4], 'Focus : 3 sessions de 25 min');
-  assert.equal(lines[5], 'Protéines : 0,9 portion/jour en moyenne · objectif (4) atteint 1 jour sur 7');
+  assert.equal(lines[5], 'Protéines : 21 g/jour en moyenne · objectif (120 g) atteint 0 jour sur 7');
   assert.equal(lines[6], 'Grignotages : 3 · déclencheur n° 1 : Ennui (2 fois) · 2 envies résistées');
   assert.equal(lines[7], 'Coucher : visé 01:15 · réel en moyenne 00:00 (2 nuits notées) · sommeil moyen 8 h 00');
   assert.equal(lines[8], 'Poids : 75 → 74 kg (moyenne 74,5, 3 pesées)');

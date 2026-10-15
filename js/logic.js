@@ -201,6 +201,51 @@ export function series(state, field, today, n) {
 }
 
 // Dernière valeur notée d'un champ numérique (ex. le poids), ou null.
+// Objectifs qui montent : l'objectif chiffré d'une consigne (« Objectif : 10 à
+// 13 pompes. … »), null pour les tenues (planches, L-sit : on suit le chrono).
+export function goalOf(cue = '') {
+  const m = /^Objectif : (\d+)(?: à (\d+))?(?: ([^.(,]+))?/.exec(cue);
+  if (!m || /tenue/.test(m[3] ?? '')) return null;
+  return { min: Number(m[1]), max: Number(m[2] ?? m[1]), unit: (m[3] ?? 'répétitions').trim() };
+}
+
+// Un record par exercice et par tour (au 2e tour, la fatigue change tout).
+export const recordKey = (name, round = 1) => `${name}#${round}`;
+
+// Sans record : l'objectif de la consigne. Avec : record + 1.
+export function nextTarget(goal, rec) {
+  if (!goal) return null;
+  if (!Number.isFinite(rec?.best)) return { target: goal.min, best: null };
+  return { target: rec.best + 1, best: rec.best };
+}
+
+export function logRecord(records, key, n, date) {
+  const prev = records?.[key];
+  return { ...records, [key]: { best: Math.max(prev?.best ?? 0, n), last: n, date } };
+}
+
+// Coach vocal : la phrase dite au début de chaque étape de la séance. Courte,
+// sans parenthèses ni « (1/2) », avec ton record quand tu en as un.
+const sayName = (name = '') => name.replace(/\s*\(\d\/\d\)/, '').replace(/[()]/g, '').trim();
+export function spokenStep(step, next, target) {
+  if (!step) return '';
+  const after = next ? sayName(next.name) : '';
+  if (step.kind === 'prep') return `Prépare-toi.${after ? ` On commence par ${after}.` : ''}`;
+  if (step.kind === 'warm') return `${sayName(step.name)}.`;
+  if (step.kind === 'rest') return `${step.name === 'Fin du tour' ? 'Fin du tour' : 'Repos'}.${after ? ` Ensuite : ${after}.` : ''}`;
+  const goal = target?.best != null
+    ? `Vise ${target.target}, ton record est ${target.best}.`
+    : (/^Objectif : [^.]+\./.exec(step.cue ?? '')?.[0] ?? '').replace(/[()]/g, '');
+  return `${sayName(step.name)}. ${goal}`.trim();
+}
+
+// Protéines du jour en grammes. Les anciens jours comptaient en « portions »
+// (champ protein) : une portion vaut 25 g.
+export const PROTEIN_PORTION_G = 25;
+export function proteinGrams(d) {
+  return Number.isFinite(d?.proteinG) ? d.proteinG : (d?.protein ?? 0) * PROTEIN_PORTION_G;
+}
+
 export function lastValue(state, field) {
   for (const k of Object.keys(state.days).sort().reverse()) {
     const v = Number(state.days[k]?.[field]);

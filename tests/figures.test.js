@@ -79,7 +79,9 @@ test('toutes les poses : sur le tapis, dans le cadre, sans membre étiré', () =
     }
     for (const f of fig.frames) {
       const j = solve(f);
-      assert.ok(Math.max(...JOINTS.map((k) => j[k][1])) >= VIEW.floor - 1.5, `${name} : flotte au-dessus du tapis`);
+      // Sur parallettes, les mains posées sur les poignées (≈ 4,5 au-dessus du sol) suffisent.
+      const support = fig.parallettes ? Math.max(j.handN[1], j.handF[1]) + 4.5 : -Infinity;
+      assert.ok(Math.max(support, ...JOINTS.map((k) => j[k][1])) >= VIEW.floor - 1.5, `${name} : flotte au-dessus du tapis`);
     }
   }
 });
@@ -103,8 +105,15 @@ test('cadre serré : tout le mouvement et le sol, sans couper la tête', () => {
 test('chaque exercice des séances et de l’échauffement a son bonhomme', () => {
   const names = [...WORKOUTS.flatMap((w) => w.exercises.map((e) => e.name)), ...WARMUP.map((e) => e.name)];
   for (const name of names) assert.ok(figureFor(name), `bonhomme manquant : ${name}`);
-  assert.equal(figureFor('Planche latérale (gauche)').mirror, true);
-  assert.equal(figureFor('Planche latérale (droite)').mirror, false);
+  // Planche latérale de face : couché sur le côté gauche et tourné vers toi, il a la tête à droite de
+  // l'écran ; la version (droite) est donc en miroir. Les poses de profil gardent le miroir sur (gauche).
+  assert.equal(figureFor('Planche latérale (gauche)').mirror, false);
+  assert.equal(figureFor('Planche latérale (droite)').mirror, true);
+  assert.equal(figureFor('Fente basse (gauche)').mirror, true);
+  // Nom complet d'abord, puis nom de base
+  assert.equal(figureFor('Pompes (sur parallettes)').fig, POSES['Pompes (sur parallettes)']);
+  assert.equal(figureFor('Shadow boxing (esquives et crochets)').fig, POSES['Shadow boxing (esquives et crochets)']);
+  assert.equal(figureFor('Écarté arrière à l’élastique (léger)').fig, POSES['Écarté arrière à l’élastique']);
   assert.equal(figureFor('Roue abdominale à genoux (2/2)').fig, POSES['Roue abdominale à genoux']);
 });
 
@@ -121,4 +130,26 @@ test('muscle travaillé allumé d’après l’objectif', () => {
   for (const w of WORKOUTS) for (const e of w.exercises) {
     if (!/cardio|corps entier|récupération|calme/i.test(e.target)) assert.ok(focusFor(e.target).length, `rien d’allumé : ${e.name} (${e.target})`);
   }
+});
+
+test('yeux : un de profil, deux de face, du côté du visage ; jamais en trait d’os', () => {
+  const eyes = (svg) => [...svg.matchAll(/<circle class="fig-eye" cx="([\d.]+)" cy="([\d.]+)"/g)].map((m) => [Number(m[1]), Number(m[2])]);
+  const head = (svg) => svg.match(/<circle class="fig-head" cx="([\d.]+)" cy="([\d.]+)"/).slice(1).map(Number);
+  const svg = (n) => figureSVG(POSES[n], { animate: false });
+  assert.equal(eyes(svg('Pompes')).length, 1);
+  assert.equal(eyes(svg('Planche latérale')).length, 2);
+  for (const n of ['Pompes', 'Planche latérale']) assert.equal((svg(n).match(/<line /g) ?? []).length, BODY.length, n);
+  // Couché sur le dos : l'œil regarde le plafond ; à plat ventre : le tapis ; debout en garde : la droite
+  for (const n of ['Dead bug', 'Pont fessier', 'Crunch inversé']) assert.ok(eyes(svg(n))[0][1] < head(svg(n))[1], n);
+  for (const n of ['Tirage superman', 'Superman', 'Pompes']) assert.ok(eyes(svg(n))[0][1] > head(svg(n))[1], n);
+  assert.ok(eyes(svg('Shadow boxing'))[0][0] > head(svg('Shadow boxing'))[0]);
+});
+
+test('parallettes, élastique et repère fixe dessinés quand la pose le demande', () => {
+  const svg = (n) => figureSVG(POSES[n], { animate: false });
+  assert.equal((svg('Pompes (sur parallettes)').match(/class="fig-par"/g) ?? []).length, 2);
+  assert.match(svg('L-sit'), /class="fig-par"/);
+  assert.match(svg('Écarté arrière à l’élastique'), /class="fig-band"/);
+  assert.match(svg('Chin tucks'), /class="fig-guide"/);
+  assert.doesNotMatch(svg('Pompes'), /fig-par|fig-band|fig-guide/);
 });

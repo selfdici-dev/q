@@ -909,6 +909,11 @@ details.card.more .rules { margin-top: 10px; }
 .fig-head { fill: var(--figure, #d9b46a); }
 .fig-mat { fill: color-mix(in srgb, var(--figure, #d9b46a) 22%, transparent); }
 .fig-wheel { fill: none; stroke: var(--figure, #d9b46a); stroke-width: 2.2; }
+/* Yeux (sens du regard), parallettes, élastique et repère fixe des bonshommes */
+.fig-eye { fill: var(--fig-eye, #0d0c16); }
+.fig-par { fill: color-mix(in srgb, var(--figure, #d9b46a) 30%, transparent); stroke: var(--figure, #d9b46a); stroke-width: 0.8; }
+.fig-band { fill: none; stroke: var(--fig-band, #8b5cf6); stroke-width: 1.3; stroke-linecap: round; }
+.fig-guide { fill: none; stroke: var(--figure, #d9b46a); stroke-width: 0.7; stroke-dasharray: 2 2; opacity: 0.6; }
 .player-fig { width: min(80vw, 340px); height: clamp(70px, 15vh, 150px); margin: 2px 0; --figure: #f5f1e8; --figure-focus: #f0c46a; }
 .player.rest .player-fig { opacity: 0.85; }
 .ex { list-style: none; padding-left: 0; counter-reset: ex; }

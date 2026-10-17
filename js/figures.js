@@ -182,20 +182,55 @@ export function figureSVG(fig, { animate = true, mirror = false, fit = false, fo
     const track = (k, i) => anim(k, keys.map(({ joints }) => point(joints, i ? to : from)[k.endsWith('x1') || k.endsWith('x2') ? 0 : 1]));
     return `<line class="fig-bone${focus.includes(name) ? ' fig-focus' : ''}" stroke-width="${width}" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}">${track('x1', 0)}${track('y1', 0)}${track('x2', 1)}${track('y2', 1)}</line>`;
   };
+  // Yeux : de profil, un œil du côté du visage (perpendiculaire au cou, côté
+  // « face » : 1 par défaut, -1 pour un bonhomme couché sur le dos) ; de face,
+  // deux yeux. Recalculés à chaque image depuis l'épaule et la tête.
+  const eyeAt = (j, side) => {
+    const [dx, dy] = [j.head[0] - j.shoulder[0], j.head[1] - j.shoulder[1]];
+    const len = Math.hypot(dx, dy) || 1;
+    const [ux, uy] = [dx / len, dy / len];
+    const f = fig.face ?? 1;
+    const [nx, ny] = [-uy * f, ux * f];
+    return fig.front
+      ? [round(j.head[0] + 0.8 * ux + side * 1.7 * nx), round(j.head[1] + 0.8 * uy + side * 1.7 * ny)]
+      : [round(j.head[0] + 0.9 * ux + 2.4 * nx), round(j.head[1] + 0.9 * uy + 2.4 * ny)];
+  };
+  const eye = (side) => {
+    const [x, y] = eyeAt(first, side);
+    return `<circle class="fig-eye" cx="${x}" cy="${y}" r="0.9">${anim('cx', keys.map((k) => eyeAt(k.joints, side)[0]))}${anim('cy', keys.map((k) => eyeAt(k.joints, side)[1]))}</circle>`;
+  };
+  const eyes = fig.front ? `${eye(1)}${eye(-1)}` : eye(1);
+  // Élastique tendu entre deux articulations (ex. des pieds aux mains).
+  const band = (fig.band ?? []).map(([a, b]) => {
+    const d = (j) => `M${j[a][0]} ${j[a][1]}L${j[b][0]} ${j[b][1]}`;
+    return `<path class="fig-band" d="${d(first)}">${anim('d', keys.map((k) => d(k.joints)))}</path>`;
+  }).join('');
+  // Parallettes : une poignée sous chaque main (posées là où sont les mains au départ).
+  const par = fig.parallettes ? ['handN', 'handF'].map((k) => {
+    const [x, y] = first[k];
+    const top = round(y + 1.2);
+    return `<rect class="fig-par" x="${round(x - 3.5)}" y="${top}" width="7" height="${round(Math.max(0.5, VIEW.floor - top))}" rx="1"/>`;
+  }).join('') : '';
+  // Repère fixe (ex. la ligne que la nuque vient toucher aux chin tucks).
+  const guide = fig.guide ? `<path class="fig-guide" d="M${fig.guide[0]} ${fig.guide[1]}L${fig.guide[2]} ${fig.guide[3]}"/>` : '';
   const far = fig.front ? [] : BODY.filter((b) => b[4] === 'F');
   const rest = BODY.filter((b) => !far.includes(b));
   const head = `<circle class="fig-head" cx="${first.head[0]}" cy="${first.head[1]}" r="${HEAD}">${anim('cx', keys.map((k) => k.joints.head[0]))}${anim('cy', keys.map((k) => k.joints.head[1]))}</circle>`;
   // Roue abdominale : tenue dans les mains (centre de la roue = mains).
   const wheel = fig.wheel ? `<circle class="fig-wheel" cx="${first.handN[0]}" cy="${first.handN[1]}" r="${WHEEL}">${anim('cx', keys.map((k) => k.joints.handN[0]))}${anim('cy', keys.map((k) => k.joints.handN[1]))}</circle>` : '';
-  const body = `${far.length ? `<g class="fig-far">${far.map(bone).join('')}</g>` : ''}${rest.map(bone).join('')}${head}${wheel}`;
+  const body = `${guide}${par}${far.length ? `<g class="fig-far">${far.map(bone).join('')}</g>` : ''}${band}${rest.map(bone).join('')}${head}${eyes}${wheel}`;
   const [bx, by, bw, bh] = fit ? frameBox(keys, fig.wheel) : [0, 0, VIEW.w, VIEW.h];
   // En miroir, le cadre serré est retourné lui aussi autour de l'axe x = 60.
   const vx = fit && mirror ? round(VIEW.w - bx - bw) : bx;
   return `<svg class="fig" viewBox="${vx} ${by} ${bw} ${bh}" aria-hidden="true"><rect class="fig-mat" x="${vx + 2}" y="${VIEW.floor + 2.5}" width="${bw - 4}" height="3" rx="1.5"/>${mirror ? `<g transform="translate(${VIEW.w} 0) scale(-1 1)">${body}</g>` : body}</svg>`;
 }
 
-// Bonhomme d'un exercice d'après son nom ; « (gauche) » = image en miroir.
+// Bonhomme d'un exercice d'après son nom complet, sinon son nom de base.
+// Miroir : « (gauche) » pour une pose de profil (tête à droite) ; « (droite) »
+// pour une pose de face (couché sur le côté gauche et tourné vers toi, il a la
+// tête à droite de l'écran).
 export function figureFor(name) {
-  const fig = POSES[baseName(name)];
-  return fig ? { fig, mirror: /\(gauche\)\s*$/.test(name) } : null;
+  const fig = POSES[name] ?? POSES[baseName(name)];
+  if (!fig) return null;
+  return { fig, mirror: (fig.front ? /\(droite\)\s*$/ : /\(gauche\)\s*$/).test(name) };
 }

@@ -14,9 +14,10 @@ export const DEFAULT_RULES = [
 ];
 
 // Séances sur tapis, sans mur, petit espace, mouvements contrôlés.
-// Matériel : le corps, un tapis, une roue abdominale, des parallettes et un élastique
-// en boucle (≈ 25 kg, seulement pour les 2 tirages de la B). Chaque exercice garde une
-// version au sol, sans matériel.
+// Matériel : le corps, un tapis, une roue abdominale, des parallettes et 4 élastiques
+// en boucle (noir, violet, vert, orange, du plus léger au plus dur) : ils servent dans
+// la B (2 tirages et le curl), la M (écarté et passage d’épaules) et l’échauffement.
+// Chaque exercice à l’élastique ou sur parallettes garde une version sans matériel.
 // work = secondes d'effort au niveau 2 ; le niveau 1 fait -10 s, le niveau 3 +10 s.
 // target = à quoi sert l'exercice (objectif : fin, sec et élancé, abdos
 // visibles, mâchoire nette, pas de volume). Les IDs A, B, C, M sont stockés :
@@ -26,36 +27,36 @@ export const WORKOUTS = [
     id: 'A',
     name: 'A · Abdos et tronc',
     met: 3.8,
-    desc: 'Abdos visibles, taille fine et V du bas du ventre : crunch vélo (n° 1 des mesures), roue abdominale deux fois par tour, crunch inversé pour le bas du ventre, Russian twist pieds décollés, planches latérales et hollow body qui progresse par étapes. Que des exercices qu’on sent. 3 tours.',
+    desc: 'Abdos visibles, taille fine et V du bas du ventre : crunch vélo et roue abdominale (les deux en tête des mesures, la roue deux fois par tour), crunch inversé pour le bas du ventre, Russian twist pieds décollés, planches latérales et hollow body qui progresse par étapes. Que des exercices qu’on sent. 3 tours.',
     rounds: 3,
     rest: 15,
     roundRest: 60,
     exercises: [
-      { name: 'Crunch vélo', work: 30, target: 'Abdos et obliques · le n° 1 des études', cue: 'Objectif : 20 touches (10 par côté), lentes. Sur le dos, bout des doigts derrière les oreilles (sans tirer sur la nuque), omoplates décollées. Amène un coude vers le genou opposé pendant que l’autre jambe s’allonge au ras du sol, puis change de côté, lentement, comme si tu pédalais. Expire à chaque rotation.' },
-      { name: 'Roue abdominale à genoux (1/2)', work: 40, target: 'Abdos complets · le plus efficace', cue: 'Objectif : 8 allers-retours. 1. À genoux, mains sur la roue sous les épaules, dos un peu rond, fesses serrées. 2. Roule devant toi en 3 s, reviens en 2 s en tirant avec le ventre. Bon mouvement : tu le sens dans le ventre. Mauvais : tu le sens dans le bas du dos → roule moins loin.' },
+      { name: 'Crunch vélo', work: 30, target: 'Abdos et obliques · l’un des deux plus efficaces', cue: 'Objectif : 20 touches (10 par côté), lentes. 1. Sur le dos, doigts derrière les oreilles sans tirer la nuque, omoplates décollées. 2. Un coude vers le genou opposé, pendant que l’autre jambe s’allonge au ras du sol. 3. Change de côté lentement, comme si tu pédalais. Expire à chaque touche.' },
+      { name: 'Roue abdominale à genoux (1/2)', work: 40, target: 'Abdos complets · l’un des deux plus efficaces', cue: 'Objectif : 8 à 10 allers-retours. 1. À genoux, mains sur la roue sous les épaules, dos un peu rond, fesses serrées. 2. Roule devant toi en 3 s, reviens en 2 s en tirant avec le ventre. 3. Ça tire dans le bas du dos : roule moins loin. Plus de 10 faciles : marque 1 s de pause tout au bout.' },
       { name: 'Russian twist', work: 30, target: 'Obliques · taille dessinée', cue: 'Objectif : 20 rotations (10 par côté), pieds décollés. 1. Assis, buste penché en arrière, dos droit, pieds en l’air. 2. Mains jointes : tourne les épaules d’un côté puis de l’autre, le regard suit les mains. 3. Les pieds retombent : pose les talons et finis la série.' },
-      { name: 'Crunch inversé', work: 30, target: 'Bas des abdos · le V du ventre', cue: 'Objectif : 12 crunchs inversés. 1. Sur le dos, mains au sol le long du corps, genoux pliés en l’air. 2. Ramène les genoux vers la poitrine en décollant le bas du dos : le bassin s’enroule. 3. Redescends en 3 s sans poser les pieds. Ça tire dans le dos : va moins loin.' },
-      { name: 'Planche latérale (droite)', work: 30, target: 'Obliques · taille gainée', cue: 'Objectif : 1 seule tenue jusqu’au bip, bassin haut. Couché sur le côté, coude sous l’épaule, soulève le bassin : le corps forme une ligne droite. Version plus dure (celle que tu aimes) : passe la main libre sous ton torse le plus loin possible en tournant le buste, puis rouvre le bras vers le plafond, le regard suit la main. Le bassin ne descend jamais. Genou au sol si besoin.' },
-      { name: 'Planche latérale (gauche)', work: 30, target: 'Obliques · taille gainée', cue: 'Objectif : 1 seule tenue jusqu’au bip, bassin haut. Même chose de l’autre côté, avec ou sans la main qui passe sous le torse.' },
+      { name: 'Crunch inversé', work: 30, target: 'Bas des abdos · le V du ventre', cue: 'Objectif : 10 crunchs inversés. 1. Sur le dos, mains au sol le long du corps, genoux pliés en l’air. 2. Ramène les genoux vers la poitrine en décollant le bas du dos : le bassin s’enroule. 3. Redescends en 3 s sans poser les pieds. Ça tire dans le dos : va moins loin.' },
+      { name: 'Planche latérale (droite)', work: 30, target: 'Obliques · taille gainée', cue: 'Objectif : 1 seule tenue jusqu’au bip, bassin haut. 1. Couché sur le côté droit, coude sous l’épaule, pieds l’un sur l’autre. 2. Monte le bassin en ligne droite, bras libre vers le plafond. 3. Plus dur : main libre sous le torse puis vers le plafond, en boucle jusqu’au bip. Genou au sol si besoin.' },
+      { name: 'Planche latérale (gauche)', work: 30, target: 'Obliques · taille gainée', cue: 'Objectif : 1 seule tenue jusqu’au bip, bassin haut. 1. Couché sur le côté gauche, coude sous l’épaule, pieds l’un sur l’autre. 2. Monte le bassin en ligne droite, bras libre vers le plafond. 3. Plus dur : main libre sous le torse puis vers le plafond, en boucle jusqu’au bip. Genou au sol si besoin.' },
       { name: 'Hollow hold genoux pliés', work: 30, target: 'Grand droit · la tablette', cue: 'Objectif : 1 tenue jusqu’au bip. Bas du dos collé au tapis, épaules décollées, bras vers les pieds. Étape 1 : genoux pliés. Étape 2 : une jambe tendue. Étape 3 : les deux jambes tendues, bras au-dessus de la tête. Le dos décolle : reviens à l’étape d’avant.' },
-      { name: 'Roue abdominale à genoux (2/2)', work: 40, target: 'Abdos complets · deuxième passage', cue: 'Objectif : 6 allers-retours. Même chose, tu es fatigué : roule moins loin plutôt que de creuser le bas du dos. Ça tire dans le bas du dos : arrête 5 s et reprends plus court.' },
+      { name: 'Roue abdominale à genoux (2/2)', work: 40, target: 'Abdos complets · deuxième passage', cue: 'Objectif : 6 allers-retours. 1. Même position qu’au premier passage : dos un peu rond, fesses serrées. 2. Tu es fatigué : roule moins loin plutôt que de creuser le bas du dos. 3. Ça tire dans le bas du dos : arrête 5 s et reprends plus court.' },
     ],
   },
   {
     id: 'B',
-    name: 'B · Pectoraux, épaules et dos',
+    name: 'B · Pectoraux, dos et bras',
     met: 4,
-    desc: 'Calisthénie : ton corps est l’outil. Pompes profondes, pompes pike, diamant, planche penchée et L-sit sur parallettes, plus 2 tirages à l’élastique pour le dos en V. ≈ 16 min. Chaque série va jusqu’au bip, quitte à finir sur les genoux. 2 tours.',
+    desc: 'Calisthénie : ton corps est l’outil. Pompes profondes et L-sit sur parallettes, pompes pike et diamant, plus 2 tirages et un curl à l’élastique pour un dos en V et des bras dessinés. Poussée et tirage alternés : chaque muscle souffle avant de repartir. ≈ 16 min. Chaque série va jusqu’au bip, quitte à finir sur les genoux. 2 tours.',
     rounds: 2,
     rest: 15,
     roundRest: 60,
     exercises: [
-      { name: 'Pompes (sur parallettes)', work: 40, why: 'Descendre plus bas que les mains étire le pectoral : un torse ferme et dessiné, pas gonflé.', target: 'Pectoraux et triceps · torse ferme', cue: 'Objectif : 10 à 13 pompes. 1. Parallettes parallèles, poignées vers l’avant, sous tes épaules. 2. Corps droit, fesses serrées. 3. Descends en 2 s plus bas que les mains, remonte en 1 s. Tu cales : finis sur les genoux jusqu’au bip. Sans parallettes : mains au sol.' },
-      { name: 'Rowing penché à l’élastique', work: 40, why: 'Le grand dorsal élargit le haut du dos : la taille paraît plus fine, c’est ça le V.', target: 'Dos et arrière des épaules · dos en V', cue: 'Objectif : 10 rowings. 1. Debout sur le milieu de l’élastique, une main de chaque côté. 2. Genoux pliés, buste penché, dos plat. 3. Tire les coudes vers les hanches, serre le dos 1 s, redescends en 2 s. Trop facile : croise l’élastique en X. Sans élastique : Superman W au sol (vise 10).' },
-      { name: 'Pompes pike', work: 35, why: 'Le haut des épaules s’arrondit : des épaules nettes font paraître la taille plus fine.', target: 'Épaules · dessinées, sans gonfler', cue: 'Objectif : 6 à 10. 1. Fesses en l’air, le corps fait un V à l’envers. 2. Plie les coudes : le haut de la tête descend vers le tapis, devant les mains. 3. Repousse. Trop dur : genoux au sol.' },
-      { name: 'Pompes serrées (diamant)', work: 35, why: 'Le triceps fait les deux tiers du bras : c’est lui qui dessine un bras sec, sans gros biceps.', target: 'Triceps et pectoraux · arrière des bras dessiné', cue: 'Objectif : 8 à 10. 1. Mains au sol sous la poitrine, pouces et index qui se touchent. 2. Coudes collés aux côtes, descends en 2 s, remonte en 1 s. Tu cales : finis sur les genoux.' },
-      { name: 'Tirage assis à l’élastique', work: 40, why: 'Les omoplates se serrent et les épaules s’ouvrent : tu te tiens droit, tu parais plus grand.', target: 'Dos et biceps · dos en V', cue: 'Objectif : 10 tirages. 1. Assis, jambes tendues, élastique sous les pieds. 2. Dos droit : tire les coudes en arrière jusqu’aux côtes, serre le dos 1 s. 3. Reviens en 2 s. Trop facile : attrape l’élastique plus près des pieds. Sans élastique : roue abdominale à genoux, 8 allers-retours.' },
-      { name: 'Planche penchée', work: 35, why: 'Épaules, avant-bras et abdos tiennent ensemble : la force fine et dense des gymnastes.', target: 'Épaules et avant-bras · gainage d’acier', cue: 'Objectif : 4 tenues de 6 s. 1. Planche bras tendus, mains sur les parallettes. 2. Avance sur la pointe des pieds : les épaules passent devant les mains. 3. Tiens 6 s, recule, souffle 2 s. Sans parallettes : mains au sol, doigts vers l’extérieur.' },
+      { name: 'Pompes (sur parallettes)', work: 40, why: 'Descendre plus bas que les mains étire le pectoral : un torse ferme et dessiné, pas gonflé.', target: 'Pectoraux et triceps · torse ferme', cue: 'Objectif : 10 à 13 pompes. 1. Parallettes sous les épaules, poignées vers l’avant. 2. Corps droit, fesses serrées : descends en 2 s plus bas que les mains, remonte en 1 s. 3. Tu cales : finis sur les genoux. Plus de 13 aux 2 tours : descends en 3 s, tiens 1 s en bas. Sans parallettes : mains au sol.' },
+      { name: 'Rowing penché à l’élastique', work: 40, why: 'Le grand dorsal élargit le haut du dos : la taille paraît plus fine, c’est ça le V.', target: 'Dos et arrière des épaules · dos en V', cue: 'Objectif : 10 à 12 rowings. 1. Debout en chaussures, pieds à plat sur le milieu de l’élastique vert, une boucle dans chaque main. 2. Genoux pliés, buste penché, dos plat. 3. Tire les coudes vers les hanches, serre 1 s, redescends en 2 s. Plus de 12 faciles : orange. Sans élastique : tirage superman de la séance M (vise 8).' },
+      { name: 'Pompes pike', work: 35, why: 'Le haut des épaules s’arrondit : des épaules nettes font paraître la taille plus fine.', target: 'Épaules · dessinées, sans gonfler', cue: 'Objectif : 6 à 10. 1. Mains au sol écartées comme les épaules, marche les pieds vers elles : fesses en l’air, le corps fait un V à l’envers. 2. Plie les coudes : le haut de la tête descend vers le tapis, devant les mains. 3. Repousse. Trop dur : genoux au sol. Plus de 10 : rapproche les pieds des mains.' },
+      { name: 'Tirage assis à l’élastique', work: 40, why: 'Les omoplates se serrent et les épaules s’ouvrent : tu te tiens droit, tu parais plus grand.', target: 'Dos et biceps · dos en V', cue: 'Objectif : 10 à 12 tirages. 1. Assis, genoux un peu pliés, élastique vert autour du milieu des pieds. 2. Attrape chaque côté assez près des pieds pour qu’il soit tendu bras tendus. 3. Tire les coudes jusqu’aux côtes, serre 1 s, reviens en 2 s. Plus de 12 faciles : orange. Sans élastique : tirage superman de la séance M (vise 8).' },
+      { name: 'Pompes serrées (diamant)', work: 35, why: 'Le triceps fait les deux tiers du bras : c’est lui qui dessine un bras sec, sans gros biceps.', target: 'Triceps et pectoraux · arrière des bras dessiné', cue: 'Objectif : 6 à 10. 1. Mains au sol sous la poitrine, pouces et index qui se touchent. 2. Coudes collés aux côtes, descends en 2 s, remonte en 1 s. 3. Tu cales : finis sur les genoux. Plus de 10 : descends en 3 s.' },
+      { name: 'Curl biceps à l’élastique', work: 35, why: 'Le biceps donne le relief du bras vu de face : avec le triceps, un bras sec et veiné, pas massif.', target: 'Biceps et avant-bras · bras dessinés', cue: 'Objectif : 10 à 12 curls. 1. Debout en chaussures sur le milieu de l’élastique noir, une boucle dans chaque main, sans l’enrouler. 2. Coudes collés aux côtes, monte les mains aux épaules en 1 s. 3. Redescends en 2 s, buste immobile. Plus de 12 faciles : violet. Sans élastique : tirage superman de la séance M (vise 8).' },
       { name: 'L-sit (genoux groupés)', work: 35, why: 'Les abdos serrent fort en tenue : ils deviennent durs. C’est la sèche qui les rend visibles.', target: 'Abdos, triceps et avant-bras · abdos taillés', cue: 'Objectif : 4 tenues de 5 s. Parallettes parallèles, de chaque côté des hanches. Étape 1 : talons au sol, bras tendus, décolle les fesses. Étape 2 : décolle aussi un pied. Étape 3 : les deux pieds, genoux vers la poitrine. Sans parallettes : poings au sol.' },
     ],
   },
@@ -63,40 +64,38 @@ export const WORKOUTS = [
     id: 'C',
     name: 'C · Cardio sans saut',
     met: 7,
-    desc: 'Cardio boxe, dense, dans 2 m² et sans bruit : 3 tours, 10 s de pause seulement, le cœur reste haut du début à la fin. La moitié des exercices, c’est de la boxe : ça passe plus vite. Ça aide à sécher, mais c’est l’assiette qui fait le plus gros.',
+    desc: 'Cardio boxe, dense, dans 2 m² et sans bruit : 3 tours, 10 s de pause seulement, le cœur reste haut du début à la fin. La moitié des exercices, c’est de la boxe : ça passe plus vite. Les fentes font travailler les jambes, les plus gros muscles, ceux qui dépensent le plus. Ça aide à sécher, mais ce sont l’assiette et les pas qui font le plus gros.',
     rounds: 3,
     rest: 10,
     roundRest: 45,
     exercises: [
-      { name: 'Shadow boxing', work: 40, target: 'Cardio · corps sec', cue: 'Objectif : 40 coups, garde haute jusqu’au bip. Garde haute, enchaîne direct-direct-crochet, pivote sur les pieds. Expire à chaque coup.' },
-      { name: 'Burpees sans saut', work: 30, target: 'Cardio · corps entier, celui qui brûle le plus', cue: 'Objectif : 8 burpees. 1. Debout, accroupis-toi et pose les mains au sol devant tes pieds. 2. Recule les pieds l’un après l’autre jusqu’en planche, corps gainé. 3. Ramène-les l’un après l’autre près des mains. 4. Relève-toi d’un coup et tends les bras vers le plafond, sur la pointe des pieds. Va vite : c’est le rythme qui fait brûler, pas le saut. Plus dur : recule et ramène les pieds en sautant, ou saute en haut si les voisins ne sont pas gênés.' },
-      { name: 'Shadow boxing (esquives et crochets)', work: 30, target: 'Cardio + obliques · taille dessinée', cue: 'Objectif : 16 esquives, chacune avec son crochet. Garde haute. Plie les jambes pour esquiver un coup imaginaire d’un côté, remonte en lançant un crochet du même côté en tournant les hanches, puis l’autre côté. Reste bas et léger sur les appuis : les cuisses et les obliques brûlent.' },
-      { name: 'Mountain climbers rapides', work: 30, target: 'Cardio + abdos · ventre plat', cue: 'Objectif : 40 genoux (20 par jambe). En planche haute, mains sous les épaules, ramène vite un genou vers la poitrine puis l’autre, comme si tu courais au sol. Bassin bas et stable, pas les fesses en l’air. Trop dur : ralentis, mais ne t’arrête pas.' },
-      { name: 'Genou-coude croisé debout', work: 30, target: 'Cardio + obliques · le V du bas du ventre', cue: 'Objectif : 30 touches (15 par côté). Debout, bout des doigts derrière les oreilles. Monte le genou droit vers le coude gauche en tournant le buste, repose, puis le genou gauche vers le coude droit. Rythme rapide, toujours un pied au sol : silencieux. Expire à chaque contact.' },
-      { name: 'Shadow boxing rapide', work: 30, target: 'Cardio · dernier effort', cue: 'Objectif : 60 coups, le plus vite possible. Coups courts et rapides, reste léger sur les appuis.' },
+      { name: 'Shadow boxing', work: 40, target: 'Cardio et épaules · corps sec', cue: 'Objectif : 40 coups, garde haute jusqu’au bip. 1. Un pied devant, genoux souples, poings au menton. 2. Enchaîne : direct du bras avant, puis direct du bras arrière, en pivotant le pied arrière. 3. Expire à chaque coup et ramène vite le poing en garde.' },
+      { name: 'Burpees sans saut', work: 30, target: 'Cardio et gainage · corps entier, celui qui brûle le plus', cue: 'Objectif : 8 burpees. 1. Accroupis-toi, mains au sol devant les pieds. 2. Recule les pieds l’un après l’autre jusqu’en planche, puis ramène-les près des mains. 3. Relève-toi d’un coup, bras tendus devant toi. Va vite : c’est le rythme qui brûle, pas le saut.' },
+      { name: 'Shadow boxing (esquives et crochets)', work: 30, target: 'Cardio + obliques · taille dessinée', cue: 'Objectif : 16 esquives, chacune avec son crochet. 1. Garde haute, plie les jambes et penche le buste à gauche, comme pour éviter un coup. 2. Remonte avec un crochet du bras gauche, en tournant les hanches. 3. Puis pareil à droite. Reste bas et léger : cuisses et obliques brûlent.' },
+      { name: 'Mountain climbers rapides', work: 30, target: 'Cardio + abdos · gainage en mouvement', cue: 'Objectif : 40 genoux (20 par jambe). 1. En planche, mains sous les épaules, bassin bas. 2. Ramène vite un genou vers la poitrine, puis l’autre, comme si tu courais au sol. 3. Trop dur : ralentis, mais ne t’arrête pas.' },
+      { name: 'Fentes arrière alternées', work: 30, target: 'Fessiers et cuisses · cardio, jambes fortes', cue: 'Objectif : 14 fentes (7 par jambe). 1. Debout, pieds sous les hanches, bras le long du corps. 2. Recule un pied d’un grand pas et descends jusqu’à ce que le genou arrière frôle le tapis. 3. Pousse dans le talon de devant pour revenir, puis change de jambe. Buste droit. Trop dur : descends moins bas.' },
+      { name: 'Shadow boxing rapide', work: 30, target: 'Cardio et épaules · dernier effort', cue: 'Objectif : 60 coups, le plus vite possible. 1. Garde haute, léger sur les appuis. 2. Directs courts gauche-droite, sans t’arrêter. 3. Ramène le poing en garde à chaque coup : la vitesse, pas la force.' },
     ],
   },
   {
     id: 'M',
-    name: 'M · Posture, cou et mâchoire',
+    name: 'M · Posture et dos droit',
     met: 2.3,
-    desc: 'Tous les jours, même les jours de repos, ≈ 8 min : paraître plus grand (bassin droit, dos et nuque forts, épaules ouvertes), une tête droite qui dégage la mâchoire, une taille fine. Que des exercices qu’on sent, dans 2 m² : sur le tapis et debout avec l’élastique fin. Dans la journée : tête droite, épaules basses. C’est aussi ton minimum de reprise.',
+    desc: 'Tous les jours, même les jours de repos, ≈ 7 min dans 2 m² : renforcer le dos (c’est ce qui redresse le mieux, plus que s’étirer), ouvrir les épaules et l’avant des hanches, garder la tête droite. La mâchoire, c’est surtout la perte de gras, plus une tête qui ne part pas en avant. C’est aussi ton minimum de reprise.',
     rounds: 1,
     rest: 5,
     roundRest: 0,
     fixed: true,
     exercises: [
-      { name: 'Fente basse (droite)', work: 40, target: 'Hanches · bassin droit, paraître plus grand', cue: 'Objectif : 1 tenue jusqu’au bip, fesse serrée. Un pied devant, genou arrière posé au sol. Serre la fesse du côté du genou au sol et avance doucement le bassin : tu sens l’étirement à l’avant de la hanche. Contre le ventre poussé en avant et le dos cambré après la journée assise.' },
-      { name: 'Fente basse (gauche)', work: 40, target: 'Hanches · bassin droit, paraître plus grand', cue: 'Objectif : 1 tenue jusqu’au bip, fesse serrée. Même chose de l’autre côté, fesse serrée.' },
-      { name: 'Pont fessier', work: 40, target: 'Fessiers · bassin droit, meilleure démarche', cue: 'Objectif : 12 ponts, 2 s serrés en haut. Sur le dos, genoux pliés, pieds à plat près des fesses. Pousse dans les talons et monte le bassin jusqu’à aligner genoux, hanches et épaules. Serre fort les fesses 2 s en haut, redescends lentement. Ça raffermit sans faire grossir et ça remet le bassin droit : tu te tiens et tu marches plus grand.' },
-      { name: 'Rotation du haut du dos à quatre pattes (droite)', work: 40, target: 'Haut du dos · poitrine ouverte, buste droit', cue: 'Objectif : 8 rotations lentes. 1. À quatre pattes, main droite derrière la tête. 2. Coude droit vers le coude gauche, puis ouvre-le vers le plafond, le regard suit. 3. Expire en ouvrant, tiens 2 s. Les hanches ne bougent pas.' },
-      { name: 'Rotation du haut du dos à quatre pattes (gauche)', work: 40, target: 'Haut du dos · poitrine ouverte, buste droit', cue: 'Objectif : 8 rotations lentes. Même chose avec la main gauche derrière la tête.' },
-      { name: 'Écarté arrière à l’élastique', work: 40, target: 'Haut du dos et épaules · épaules en arrière', cue: 'Objectif : 15 écartés. 1. Debout, élastique le plus fin (noir ou violet) tenu bras tendus devant toi, mains écartées comme les épaules. 2. Écarte les bras jusqu’à toucher la poitrine avec l’élastique, serre les omoplates 1 s. 3. Reviens en 2 s. Épaules basses.' },
-      { name: 'Passage d’épaules à l’élastique', work: 30, target: 'Épaules · ouvertes et mobiles', cue: 'Objectif : 10 passages lents. 1. Debout, élastique fin tenu bras tendus devant toi, mains très écartées. 2. Monte les bras tendus au-dessus de la tête, puis descends-les derrière toi, et reviens. 3. Ça coince : écarte encore les mains. Jamais de douleur.' },
+      { name: 'Fente basse (droite)', work: 40, target: 'Hanches · avant des hanches libéré après la journée assise', cue: 'Objectif : 1 tenue jusqu’au bip, fesse serrée. 1. Pied droit devant, genou gauche posé au sol, buste droit. 2. Serre la fesse gauche et avance doucement le bassin. 3. Tu sens l’étirement devant la hanche gauche : respire et tiens.' },
+      { name: 'Fente basse (gauche)', work: 40, target: 'Hanches · avant des hanches libéré après la journée assise', cue: 'Objectif : 1 tenue jusqu’au bip, fesse serrée. 1. Pied gauche devant, genou droit posé au sol, buste droit. 2. Serre la fesse droite et avance doucement le bassin. 3. Tu sens l’étirement devant la hanche droite : respire et tiens.' },
+      { name: 'Superman', work: 40, target: 'Bas et haut du dos · se tenir droit', cue: 'Objectif : 8 montées, 2 s en haut. 1. À plat ventre, bras tendus devant toi, regard vers le tapis, fesses serrées. 2. Décolle en même temps bras, poitrine et jambes de quelques cm, pas plus. 3. Tiens 2 s, repose 1 s. Tu le sens tout le long du dos, sans douleur dans le bas du dos.' },
+      { name: 'Pont fessier', work: 45, target: 'Fessiers · bassin stable, meilleure démarche', cue: 'Objectif : 8 ponts, 2 s serrés en haut. 1. Sur le dos, genoux pliés, pieds à plat près des fesses. 2. Pousse dans les talons et monte le bassin jusqu’à aligner genoux, hanches et épaules. 3. Serre fort les fesses 2 s, redescends lentement.' },
+      { name: 'Tirage superman', work: 45, target: 'Haut du dos · dos droit, épaules en arrière', cue: 'Objectif : 8 tirages, 2 s serrés. 1. À plat ventre, bras tendus devant toi, pouces vers le plafond, regard vers le tapis. 2. Décolle bras et poitrine de quelques cm. 3. Tire les coudes vers les côtes comme pour une traction, serre les omoplates 2 s, retends les bras sans les poser.' },
+      { name: 'Chin tucks', work: 30, target: 'Cou · tête droite, mâchoire dégagée', cue: 'Objectif : 5 tenues de 5 s. 1. Assis sur le tapis, dos droit, regard droit devant. 2. Recule la tête à l’horizontale, comme pour faire un double menton, sans baisser les yeux. 3. Tiens 5 s en poussant fort, relâche. Tu sens l’arrière du cou travailler.' },
+      { name: 'Passage d’épaules à l’élastique', work: 35, target: 'Épaules · ouvertes et mobiles', cue: 'Objectif : 6 passages lents. 1. À genoux, fesses serrées, élastique noir tenu bras tendus devant toi, mains très écartées. 2. Bras toujours tendus, monte-les au-dessus de la tête puis descends-les derrière toi, et reviens. 3. Ça coince : écarte encore les mains. Sans élastique : même geste à vide.' },
+      { name: 'Écarté arrière à l’élastique', work: 45, target: 'Haut du dos et épaules · épaules en arrière', cue: 'Objectif : 10 écartés. 1. Debout, élastique noir bras tendus devant toi, mains un peu plus écartées que les épaules. 2. Ouvre les bras en T : l’élastique touche la poitrine. Serre les omoplates 1 s. 3. Reviens en 2 s. Plus dur : violet. Sans élastique : à plat ventre, bras en T, décolle-les 2 s.' },
       { name: 'Étirement des pectoraux mains dans le dos', work: 30, target: 'Pectoraux · épaules en arrière, buste droit', cue: 'Objectif : 2 tenues de 12 s. 1. Debout, doigts croisés dans le dos, bras tendus. 2. Ouvre la poitrine, épaules en arrière et basses. 3. Monte doucement les mains jusqu’à sentir l’étirement devant les épaules, respire.' },
-      { name: 'Superman', work: 40, target: 'Bas et haut du dos · se tenir droit', cue: 'Objectif : 8 montées, 2 s en haut. 1. À plat ventre, bras tendus devant toi, regard vers le tapis. 2. Serre les fesses et rentre le nombril. 3. Décolle en même temps bras, poitrine et jambes de quelques cm (pas plus haut). 4. Tiens 2 s, repose 1 s. Tu le sens tout le long du dos ; pas de douleur dans le bas du dos.' },
-      { name: 'Chin tucks', work: 30, target: 'Cou · tête droite, mâchoire dégagée', cue: 'Objectif : 5 tenues de 5 s. Assis ou debout, dos droit. Recule la tête à l’horizontale, comme pour faire un double menton, sans baisser le regard. Tiens 5 s en poussant fort, relâche. Tu dois sentir l’arrière du cou travailler.' },
-      { name: 'Extension du cou', work: 30, target: 'Nuque · ligne de la mâchoire', cue: 'Objectif : 8 relevés lents. Allongé sur le ventre, front tourné vers le tapis (« front bas »). Garde le menton rentré et relève doucement la tête jusqu’à regarder un peu devant toi (« front haut »), tiens 3 s, redescends. Une nuque forte tient la tête droite et dégage la mâchoire de profil.' },
     ],
   },
 ];
@@ -109,7 +108,7 @@ export const WEEK_PLAN = { 1: 'A', 2: 'B', 3: 'A', 4: 'B', 5: 'A', 6: 'B', 0: 'M
 
 // Échauffement ajouté avant A, B et C.
 export const WARMUP = [
-  { name: 'Rotations des épaules et des bras', work: 30, cue: 'Grands cercles vers l’avant puis vers l’arrière.' },
+  { name: 'Écarté arrière à l’élastique (léger)', work: 30, cue: 'Élastique noir, mains un peu plus écartées que les épaules : 15 écartés tranquilles pour réveiller le haut du dos et les épaules. Sans élastique : même geste à vide.' },
   { name: 'Chat-vache', work: 30, cue: 'À quatre pattes, enroule puis creuse le dos lentement.' },
   { name: 'Montées de genoux lentes', work: 30, cue: 'Sur place, sans sauter, pour monter le cardio doucement.' },
   { name: 'Pompes sur les genoux', work: 20, cue: 'Amplitude complète, tranquille : on prépare les épaules.' },
@@ -178,12 +177,12 @@ export const RECIPES = [
 // Certains exercices se trouvent mieux avec leur nom anglais.
 const DEMO_QUERIES = {
   'Genou-coude croisé debout': 'standing cross body crunch',
-  'Crunch vélo': 'bicycle crunch bonne technique',
+  'Crunch vélo': 'bicycle crunch proper form',
   'Pont fessier': 'glute bridge technique',
-  Superman: 'superman exercise technique',
+  'Superman': 'superman exercise technique',
   'Extension du cou': 'prone neck extension chin tuck',
   Crunch: 'crunch abdominal bonne technique',
-  'Russian twist': 'russian twist débutant',
+  'Russian twist': 'russian twist feet off ground',
   'Planche inversée': 'reverse tabletop exercise',
   'Curl contre la cuisse': 'self resisted bicep curl leg',
   'Pompes sphinx': 'sphinx push up',
@@ -204,7 +203,7 @@ const DEMO_QUERIES = {
   'L-sit': 'tuck l-sit parallettes tutorial',
   'Pompes pike': 'pike push up tutorial',
   'Toucher d’épaules en planche': 'plank shoulder taps',
-  'Crunch inversé': 'reverse crunch',
+  'Crunch inversé': 'reverse crunch proper form',
   'Vacuum abdominal': 'stomach vacuum exercise',
   'Jumping jacks sans saut': 'step jacks low impact',
   'Renforcement du cou': 'supine neck flexion chin tuck',
@@ -216,6 +215,18 @@ const DEMO_QUERIES = {
   'Étirement des pectoraux mains dans le dos': 'standing chest stretch hands behind back',
   'Burpees sans saut': 'no jump burpee',
   'Mountain climbers rapides': 'mountain climbers fast',
+  'Roue abdominale à genoux': 'ab wheel rollout from knees',
+  'Planche latérale': 'side plank reach through',
+  'Hollow hold genoux pliés': 'hollow body hold progression',
+  'Pompes (sur parallettes)': 'deep push ups on parallettes',
+  'Pompes serrées': 'diamond push up proper form',
+  'Shadow boxing': 'shadow boxing jab cross beginner',
+  'Shadow boxing (esquives et crochets)': 'slip and hook shadow boxing drill',
+  'Fentes arrière alternées': 'reverse lunge technique',
+  'Shadow boxing rapide': 'speed shadow boxing punches',
+  'Fente basse': 'half kneeling hip flexor stretch',
+  'Tirage superman': 'prone Y to W raise',
+  'Chin tucks': 'chin tuck exercise',
 };
 
 // Nom sans précision entre parenthèses : « Roue abdominale à genoux (1/2) » → « Roue abdominale à genoux ».
@@ -225,7 +236,7 @@ export function baseName(name) {
 
 export function demoUrl(name) {
   const base = baseName(name);
-  const q = DEMO_QUERIES[base] ?? `${base.replace(/^Superman /, 'prone ')} exercice technique`;
+  const q = DEMO_QUERIES[name] ?? DEMO_QUERIES[base] ?? `${base.replace(/^Superman /, 'prone ')} exercice technique`;
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`;
 }
 

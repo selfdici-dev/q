@@ -3,7 +3,7 @@ import {
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
   dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
-  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, recordKey, spokenStep,
+  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, recordKey, spokenStep, dropRecords,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
@@ -842,7 +842,8 @@ function viewSport() {
       <ul class="tight">
         <li>Douleur vive ou articulaire : arrête l’exercice. Une brûlure musculaire, c’est normal.</li>
         <li>Si la technique se dégrade, mets-toi en version genoux ou arrête la série. La qualité passe avant la durée.</li>
-        <li>Aucun exercice ne fait fondre la graisse d’une zone précise : le ventre, la taille et la mâchoire se dessinent quand le gras baisse partout (assiette, pas, séance C). Les fessiers ne sont travaillés que pour la posture (pont fessier).</li>
+        <li>Aucun exercice ne fait fondre la graisse d’une zone précise : le ventre, la taille et la mâchoire se dessinent quand le gras baisse partout (assiette, pas, séance C). Les jambes travaillent dans la C (fentes arrière) et en marchant.</li>
+        <li>Élastiques : regarde-les avant chaque séance (une fissure ou une entaille : à la poubelle). En chaussures, pieds bien à plat dessus, et jamais le visage dans l’axe de l’élastique tendu.</li>
         <li>Chaque exercice a un lien « démo vidéo ». Regarde-le avant ta première séance, pas pendant.</li>
       </ul>`)}
   </div>`;
@@ -851,11 +852,11 @@ function viewSport() {
 function goalBody() {
   const points = [
     ['C', 'Sec avant tout.', 'Abdos et mâchoire se voient quand le taux de gras baisse : protéines, zéro grignotage, 8 000 pas, séance C. C’est l’assiette qui fait le plus gros du travail.'],
-    ['A', 'Abdos dessinés.', 'Crunch vélo (le n° 1 des mesures), roue ×2, crunch inversé pour le V du bas du ventre, Russian twist pieds décollés pour les obliques, planches latérales (main sous le torse) et hollow body pour une taille fine.'],
-    ['B', 'Calisthénie : pectoraux, épaules et dos en V.', 'Ton corps est l’outil : pompes sur parallettes, pike, diamant, planche penchée et L-sit, plus 2 tirages à l’élastique pour le dos en V. De la force sans gonfler, chaque série finie dure. Les veines se voient quand le gras baisse : c’est l’assiette qui les fait sortir. Rien pour les trapèzes, qui tassent le cou.'],
-    ['M', 'Grand et droit.', 'Bassin droit (fentes basses, pont fessier), dos fort et épaules ouvertes (superman, rotation à quatre pattes, écarté et passage d’épaules à l’élastique, étirement des pectoraux debout), tête reculée (chin tucks, extension du cou) : on gagne visuellement quelques centimètres et une démarche plus sûre.'],
+    ['A', 'Abdos dessinés.', 'Crunch vélo et roue ×2 (les deux en tête des mesures), crunch inversé pour le V du bas du ventre, Russian twist pieds décollés pour les obliques, planches latérales (main sous le torse) et hollow body pour une taille fine.'],
+    ['B', 'Calisthénie : pectoraux, dos en V et bras.', 'Ton corps est l’outil : pompes sur parallettes, pike, diamant et L-sit, plus 2 tirages et un curl à l’élastique pour le dos en V et des bras dessinés. De la force sans gonfler, chaque série finie dure. Les veines se voient quand le gras baisse : c’est l’assiette qui les fait sortir. Rien pour les trapèzes, qui tassent le cou.'],
+    ['M', 'Grand et droit.', 'Bassin droit (fentes basses, pont fessier), dos fort et épaules ouvertes (superman, tirage superman, écarté et passage d’épaules à l’élastique, étirement des pectoraux debout), tête reculée (chin tucks) : on gagne visuellement quelques centimètres et une démarche plus sûre.'],
     ['M', 'Mâchoire nette.', 'Tête droite et visage sec, sans grossir le cou. L’os ne change pas à l’âge adulte : ce qui la révèle, c’est surtout un visage sec et une tête bien placée. Évite le chewing-gum dur, mauvais pour l’articulation.'],
-    ['C', 'Les calories, à leur juste place.', 'Une séance brûle 55 à 100 kcal (la C boxe en tête), à peu près une banane. Elle donne la forme ; le gras part surtout grâce à l’assiette et aux pas (10 000 pas ≈ 300 kcal).'],
+    ['C', 'Les calories, à leur juste place.', 'Une séance brûle 55 à 100 kcal (la C boxe en tête), à peu près une banane. Elle donne la forme ; le gras part surtout grâce à l’assiette et aux pas (10 000 pas ≈ 250 kcal).'],
   ];
   return `<p class="muted">Pas trapu, pas massif : un corps athlétique et léger, une posture droite, des abdos et une mâchoire visibles.</p>
     <ul class="goal-list">${points.map(([id, title, text]) => `<li><span class="wo-badge wo-${id}">${id}</span><div><strong>${title}</strong> ${text}</div></li>`).join('')}</ul>`;
@@ -939,7 +940,12 @@ function renderPlayer() {
       <p class="phase">${player.endAt ? { work: 'Effort', rest: 'Repos', warm: 'Échauffement', prep: 'Départ' }[s.kind] : 'Pause'}</p>
       <h2>${esc(s.name)}</h2>
       ${s.target ? `<span class="target-tag">🎯 ${esc(s.target)}</span>` : ''}
-      ${(() => { const t = stepTarget(s); return t?.best != null ? `<span class="rec-tag">🏆 Record ${t.best} · vise ${t.target}</span>` : ''; })()}
+      ${(() => {
+        const t = stepTarget(s);
+        if (t?.harder) return `<span class="rec-tag">🏆 Record ${t.best} · haut de la fourchette : passe à la version plus dure (voir la consigne)</span>
+          <button class="btn ghost small rec-reset" data-act="reps-reset">Version plus dure : record à zéro</button>`;
+        return t?.best != null ? `<span class="rec-tag">🏆 Record ${t.best} · vise ${t.target}</span>` : '';
+      })()}
       ${s.why && s.kind === 'work' ? `<p class="why">${esc(s.why)}</p>` : ''}
       ${s.kind === 'rest' ? logRow() : ''}
       <div class="player-fig">${s.kind === 'work' || s.kind === 'warm' ? figure(s.name, s.target) : figure(next?.name, next?.target)}</div>
@@ -1386,6 +1392,14 @@ const actions = {
     renderPlayer();
   },
   'player-prev'() { if (player && !player.done) playerGoto(player.i - 1); },
+  'reps-reset'() {
+    const s = player?.steps?.[player.i];
+    if (!s || !confirm(`Passer à la version plus dure de « ${s.name} » ? Ton record repart de zéro.`)) return;
+    state.records = dropRecords(state.records, s.name);
+    save();
+    renderPlayer();
+    toast('Record remis à zéro : note ton nouveau chiffre au repos.', 2500);
+  },
   reps(el) {
     const l = loggable();
     if (!l) return;

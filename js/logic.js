@@ -212,11 +212,18 @@ export function goalOf(cue = '') {
 // Un record par exercice et par tour (au 2e tour, la fatigue change tout).
 export const recordKey = (name, round = 1) => `${name}#${round}`;
 
-// Sans record : l'objectif de la consigne. Avec : record + 1.
+// Sans record : l'objectif de la consigne. Avec : record + 1. Une fourchette
+// (« 10 à 13 ») atteinte en haut : passe à la version plus dure de la consigne.
 export function nextTarget(goal, rec) {
   if (!goal) return null;
   if (!Number.isFinite(rec?.best)) return { target: goal.min, best: null };
+  if (goal.max > goal.min && rec.best >= goal.max) return { target: goal.max, best: rec.best, harder: true };
   return { target: rec.best + 1, best: rec.best };
+}
+
+// Version plus dure : on repart de zéro pour cet exercice, à tous les tours.
+export function dropRecords(records, name) {
+  return Object.fromEntries(Object.entries(records ?? {}).filter(([k]) => !k.startsWith(`${name}#`)));
 }
 
 export function logRecord(records, key, n, date) {
@@ -233,7 +240,9 @@ export function spokenStep(step, next, target) {
   if (step.kind === 'prep') return `Prépare-toi.${after ? ` On commence par ${after}.` : ''}`;
   if (step.kind === 'warm') return `${sayName(step.name)}.`;
   if (step.kind === 'rest') return `${step.name === 'Fin du tour' ? 'Fin du tour' : 'Repos'}.${after ? ` Ensuite : ${after}.` : ''}`;
-  const goal = target?.best != null
+  const goal = target?.harder
+    ? 'Passe à la version plus dure.'
+    : target?.best != null
     ? `Vise ${target.target}, ton record est ${target.best}.`
     : (/^Objectif : [^.]+\./.exec(step.cue ?? '')?.[0] ?? '').replace(/[()]/g, '');
   return `${sayName(step.name)}. ${goal}`.trim();

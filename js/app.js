@@ -3,7 +3,7 @@ import {
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
   dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
-  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, recordKey, spokenStep,
+  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, recordKey, spokenStep, dropRecords,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
@@ -940,7 +940,12 @@ function renderPlayer() {
       <p class="phase">${player.endAt ? { work: 'Effort', rest: 'Repos', warm: 'Échauffement', prep: 'Départ' }[s.kind] : 'Pause'}</p>
       <h2>${esc(s.name)}</h2>
       ${s.target ? `<span class="target-tag">🎯 ${esc(s.target)}</span>` : ''}
-      ${(() => { const t = stepTarget(s); return t?.best != null ? `<span class="rec-tag">🏆 Record ${t.best} · vise ${t.target}</span>` : ''; })()}
+      ${(() => {
+        const t = stepTarget(s);
+        if (t?.harder) return `<span class="rec-tag">🏆 Record ${t.best} · haut de la fourchette : passe à la version plus dure (voir la consigne)</span>
+          <button class="btn ghost small rec-reset" data-act="reps-reset">Version plus dure : record à zéro</button>`;
+        return t?.best != null ? `<span class="rec-tag">🏆 Record ${t.best} · vise ${t.target}</span>` : '';
+      })()}
       ${s.why && s.kind === 'work' ? `<p class="why">${esc(s.why)}</p>` : ''}
       ${s.kind === 'rest' ? logRow() : ''}
       <div class="player-fig">${s.kind === 'work' || s.kind === 'warm' ? figure(s.name, s.target) : figure(next?.name, next?.target)}</div>
@@ -1387,6 +1392,14 @@ const actions = {
     renderPlayer();
   },
   'player-prev'() { if (player && !player.done) playerGoto(player.i - 1); },
+  'reps-reset'() {
+    const s = player?.steps?.[player.i];
+    if (!s || !confirm(`Passer à la version plus dure de « ${s.name} » ? Ton record repart de zéro.`)) return;
+    state.records = dropRecords(state.records, s.name);
+    save();
+    renderPlayer();
+    toast('Record remis à zéro : note ton nouveau chiffre au repos.', 2500);
+  },
   reps(el) {
     const l = loggable();
     if (!l) return;

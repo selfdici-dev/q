@@ -362,3 +362,14 @@ test('coach vocal : une phrase courte par étape, avec le record quand il existe
   assert.equal(spokenStep({ kind: 'prep', name: 'Prépare-toi' }, { name: 'Rotations des épaules et des bras' }), 'Prépare-toi. On commence par Rotations des épaules et des bras.');
   assert.equal(spokenStep(undefined), '');
 });
+
+test('objectifs : en haut de la fourchette, passer à la version plus dure ; record à zéro par exercice', async () => {
+  const { nextTarget, dropRecords, spokenStep } = await import('../js/logic.js');
+  assert.deepEqual(nextTarget({ min: 10, max: 13 }, { best: 13 }), { target: 13, best: 13, harder: true });
+  assert.deepEqual(nextTarget({ min: 10, max: 13 }, { best: 12 }), { target: 13, best: 12 });
+  assert.deepEqual(nextTarget({ min: 8, max: 8 }, { best: 9 }), { target: 10, best: 9 });
+  const rec = { 'Pompes (sur parallettes)#1': { best: 13 }, 'Pompes (sur parallettes)#2': { best: 11 }, 'Pompes pike#1': { best: 7 } };
+  assert.deepEqual(dropRecords(rec, 'Pompes (sur parallettes)'), { 'Pompes pike#1': { best: 7 } });
+  assert.deepEqual(dropRecords(undefined, 'x'), {});
+  assert.equal(spokenStep({ kind: 'work', name: 'Pompes (sur parallettes)', cue: 'Objectif : 10 à 13 pompes.' }, null, { target: 13, best: 13, harder: true }), 'Pompes sur parallettes. Passe à la version plus dure.');
+});

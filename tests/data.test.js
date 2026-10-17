@@ -33,7 +33,8 @@ test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoi
   // C : burpees sans saut (silencieux) à la place des montées de genoux
   assert.ok(ex('C').some((e) => e.name === 'Burpees sans saut'));
   assert.ok(ex('C').every((e) => !/montées de genoux/i.test(e.name)));
-  assert.ok(ex('M').filter((e) => /mâchoire/.test(e.target)).length >= 2);
+  // M v3 : l'extension du cou retirée à sa demande ; seuls les chin tucks visent honnêtement la tête droite
+  assert.ok(ex('M').filter((e) => /mâchoire/.test(e.target)).length >= 1);
   // A : crunch (haut des abdos) et Russian twist (obliques) ; B sans pompes pike ni tirage superman
   // A : ses exercices préférés (planches, hollow, Russian twist) + crunch vélo et roue ×2 à 40 s
   // A v2 : la planche (devenue trop facile) laisse la place au crunch inversé, pour le bas du ventre
@@ -42,7 +43,10 @@ test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoi
   assert.ok(ex('A').filter((e) => /^Roue/.test(e.name)).every((e) => e.work >= 40));
   // M : posture et mâchoire, sans les exercices où l'on ne sent rien ; dans 2 m² (plus de livre ouvert,
   // d'anges au sol ni d'étirement couché, trop larges ou pas compris), avec l'élastique pour le haut du dos
-  assert.ok(['Pont fessier', 'Superman', 'Extension du cou', 'Rotation du haut du dos à quatre pattes (droite)', 'Écarté arrière à l’élastique', 'Étirement des pectoraux mains dans le dos'].every((n) => ex('M').some((e) => e.name === n)));
+  // M v3 : sans la rotation à quatre pattes (pas comprise, illisible en 2D) ni l'extension du cou (pas faite),
+  // le tirage superman redresse le haut du dos
+  assert.ok(['Pont fessier', 'Superman', 'Tirage superman', 'Chin tucks', 'Écarté arrière à l’élastique', 'Étirement des pectoraux mains dans le dos'].every((n) => ex('M').some((e) => e.name === n)));
+  assert.ok(ex('M').every((e) => !/extension du cou|rotation du haut du dos|chien tête en bas/i.test(e.name)));
   assert.ok(ex('M').every((e) => !/livre ouvert|anges au sol|pectoraux au sol/i.test(e.name)));
   assert.ok(ex('M').every((e) => /^Objectif : \d/.test(e.cue)), 'objectif manquant dans M');
   // M : plus de langue au palais ni de renforcement du cou (pas de gros cou)
@@ -53,8 +57,11 @@ test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoi
   assert.ok(C.rounds <= 3 && C.rest <= 10);
   assert.ok(ex('C').filter((e) => /^Shadow boxing/.test(e.name)).length >= 3);
   assert.ok(ex('C').some((e) => e.name === 'Mountain climbers rapides'));
-  // C : plus de jumping jacks
+  // C : plus de jumping jacks ; les jambes (les plus gros muscles) travaillent avec les fentes arrière
   assert.ok(ex('C').every((e) => !/jumping/i.test(e.name)));
+  assert.ok(ex('C').some((e) => e.name === 'Fentes arrière alternées'));
+  // Échauffement sans cercles de bras (rejetés)
+  assert.ok(WARMUP.every((e) => !/rotations des épaules|cercles/i.test(e.name)));
   assert.ok(ex('M').reduce((t, e) => t + e.work + 5, 0) <= 11 * 60);
   // Pompes pike de retour : il enchaîne maintenant ~16 pompes, et la consigne garde une version facile
   assert.ok(ex('B').every((e) => !/tirage superman/i.test(e.name)));
@@ -68,8 +75,9 @@ test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoi
   // B : du tirage pour le dos en V, et une variante sans élastique pour chaque exercice à l'élastique
   assert.ok(ex('B').filter((e) => /dos/i.test(e.target)).length >= 2);
   for (const e of ex('B').filter((x) => /élastique/i.test(x.name))) assert.match(e.cue, /Sans élastique : /, e.name);
-  // B : calisthénie, l'élastique seulement pour les 2 tirages, une version au sol pour chaque exercice sur parallettes
-  assert.equal(ex('B').filter((e) => /élastique/i.test(e.name)).length, 2);
+  // B v3 : l'élastique pour les 2 tirages et un curl biceps (il aime les curls, les biceps n'avaient rien de direct)
+  assert.equal(ex('B').filter((e) => /élastique/i.test(e.name)).length, 3);
+  assert.ok(ex('B').some((e) => e.name === 'Curl biceps à l’élastique'));
   for (const e of ex('B').filter((x) => /parallettes/i.test(x.cue))) assert.match(e.cue, /Sans parallettes : /, e.name);
   assert.ok(ex('B').some((e) => /^Pompes pike/.test(e.name)) && ex('B').some((e) => /^L-sit/.test(e.name)));
   // B : deux exercices pour des pectoraux fermes (pompes et pompes serrées)
@@ -86,7 +94,11 @@ test('nom de base sans précision entre parenthèses', () => {
 
 test('liens de démo vidéo', () => {
   const q = (name) => decodeURIComponent(new URL(demoUrl(name)).searchParams.get('search_query'));
-  assert.equal(q('Planche latérale (droite)'), 'Planche latérale exercice technique');
+  assert.equal(q('Exercice inconnu (droite)'), 'Exercice inconnu exercice technique');
+  // Nom complet d'abord, puis nom de base : la vidéo montre la bonne version
+  assert.equal(q('Planche latérale (droite)'), 'side plank reach through');
+  assert.equal(q('Shadow boxing (esquives et crochets)'), 'slip and hook shadow boxing drill');
+  assert.equal(q('Shadow boxing'), 'shadow boxing jab cross beginner');
   assert.equal(q('Superman W'), 'prone W exercice technique');
   assert.equal(q('Superman Y (allongé sur le ventre)'), 'prone Y exercice technique');
   assert.equal(q('Toucher d’épaules en planche'), 'plank shoulder taps');

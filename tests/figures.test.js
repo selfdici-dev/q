@@ -388,3 +388,17 @@ test('Russian twist pieds décollés, regard vers les mains ; chat-vache : la po
   const [cat, cow] = POSES['Chat-vache'].frames.map(solve);
   assert.ok(cow.shoulder[1] - cat.shoulder[1] >= 1, 'vache : la poitrine ne descend pas');
 });
+
+test('tête : angle propre facultatif (tilt) ; chin tucks : la tête recule sans tourner', () => {
+  assert.equal(solve(standing).tilt, undefined); // sans tilt : la tête suit le cou, rien ne change
+  assert.equal(solve({ ...standing, tilt: -80 }).tilt, -80);
+  assert.equal(between({ ...standing, neck: -60, tilt: -90 }, { ...standing, neck: -60 }, 0.5).tilt, -75);
+  const chin = POSES['Chin tucks'];
+  const eye = (i) => figureSVG(chin, { pose: i, help: false }).match(/class="fig-eye" cx="([\d.]+)" cy="([\d.]+)"/).slice(1).map(Number);
+  const [h0, h1] = [solve(chin.frames[0]).head, solve(chin.frames[1]).head];
+  assert.ok(h0[0] - h1[0] >= 3, 'la tête recule');
+  // même écart œil-crâne dans les deux poses : le regard reste droit devant
+  const [e0, e1] = [eye(0), eye(1)];
+  assert.ok(Math.abs((e0[0] - h0[0]) - (e1[0] - h1[0])) < 0.15 && Math.abs((e0[1] - h0[1]) - (e1[1] - h1[1])) < 0.15);
+  assert.ok(Math.abs(e0[0] - h0[0] - 2.6) < 0.15); // œil droit devant le crâne : regard horizontal
+});

@@ -37,6 +37,8 @@ function reach(base, target, l1, l2, bend = 1) {
 
 // Pose → coordonnées des 11 articulations.
 // - torso / neck : angles hanche → épaule, épaule → tête.
+// - tilt (facultatif) : angle propre de la tête (sens du regard), par défaut
+//   celui du cou ; sert quand la tête recule sans tourner (chin tucks).
 // - armN, armF, legN, legF : [angle os 1, angle os 2], ou { to: [x, y], bend }
 //   pour poser la main ou le pied à un point précis (N = côté caméra).
 // - anchor (par défaut 'hip') est placé en `at` ; ce ne peut pas être un
@@ -62,6 +64,7 @@ export function solve(p) {
   }
   const out = {};
   for (const k of JOINTS) out[k] = [round(j[k][0]), round(j[k][1])];
+  if (p.tilt !== undefined) out.tilt = p.tilt;
   return out;
 }
 
@@ -74,6 +77,7 @@ const lerpPoint = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
 export function between(a, b, t) {
   const p = { ...a, torso: lerpAngle(a.torso, b.torso, t), neck: lerpAngle(a.neck ?? a.torso, b.neck ?? b.torso, t) };
   if (a.at && b.at) p.at = lerpPoint(a.at, b.at, t);
+  if (a.tilt !== undefined || b.tilt !== undefined) p.tilt = lerpAngle(a.tilt ?? a.neck ?? a.torso, b.tilt ?? b.neck ?? b.torso, t);
   for (const [key] of LIMBS) {
     p[key] = Array.isArray(a[key])
       ? [lerpAngle(a[key][0], b[key][0], t), lerpAngle(a[key][1], b[key][1], t)]
@@ -522,6 +526,8 @@ function rig(fig, keys) {
     torso: unwrap(frames.map((j) => angleOf(j.hip, j.shoulder))),
     shoulder: frames.map((j) => j.shoulder),
     neck: unwrap(frames.map((j) => angleOf(j.shoulder, j.head))),
+    // tête tournée à part (tilt) : sinon elle suit le cou
+    tilt: frames.some((j) => j.tilt !== undefined) ? unwrap(frames.map((j) => j.tilt ?? angleOf(j.shoulder, j.head))) : null,
     armN: limb('shoulderN', 'elbowN', 'handN', hands('N')),
     armF: limb('shoulderF', 'elbowF', 'handF', hands('F')),
     legN: limb('hipN', 'kneeN', 'footN', feet('N')),
@@ -531,7 +537,7 @@ function rig(fig, keys) {
 
 // Œil : de profil, un œil du côté du visage ; de face, deux yeux.
 function eyeAt(j, side, face, front) {
-  const [dx, dy] = [j.head[0] - j.shoulder[0], j.head[1] - j.shoulder[1]];
+  const [dx, dy] = j.tilt !== undefined ? [Math.cos(rad(j.tilt)), Math.sin(rad(j.tilt))] : [j.head[0] - j.shoulder[0], j.head[1] - j.shoulder[1]];
   const len = Math.hypot(dx, dy) || 1;
   const [ux, uy] = [dx / len, dy / len];
   const [nx, ny] = [-uy * face, ux * face];
@@ -651,6 +657,7 @@ function draw(fig, { animate = true, mirror = false, fit = false, focus = [], he
     const h = HEADS[front ? 'front' : 'side'];
     const flip = bodyFlip ? flipY : (p) => p;
     const inner = `${use(form('head', flip(h.head)), ghost ? '' : 'fig-head', ghost ? '' : `url(#§-sk)`)}${ghost ? '' : use(form('hair', flip(h.hair)), 'fig-hair')}`;
+    if (R0.tilt) return node(sel.map((i) => R0.frames[i].head), pick2(R0.tilt, sel), inner);
     return node(pick2(R0.shoulder, sel), pick2(R0.neck, sel), `<g transform="translate(${BONES.neck} 0)">${inner}</g>`);
   };
   const eyes = (sel) => (front ? [1, -1] : [1]).map((s) => {

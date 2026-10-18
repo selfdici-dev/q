@@ -263,13 +263,14 @@ export const POSES = {
     ],
   },
   'Chin tucks': {
+    // la tête recule à l'horizontale sans tourner (tilt fixe) : regard droit devant
     dur: 6, loop: 'cycle', hold: 0.2, guide: [44, 31, 44, 47],
     frames: [
-      { at: [50, 68.5], torso: -90, neck: -69, armN: [78, 32], armF: [82, 34], legN: [-15, 168], legF: [-19, 164] },
-      { at: [50, 68.5], torso: -90, neck: -96, armN: [78, 32], armF: [82, 34], legN: [-15, 168], legF: [-19, 164] },
-      { at: [50, 68.5], torso: -90, neck: -96.5, armN: [78, 32], armF: [82, 34], legN: [-15, 168], legF: [-19, 164] },
-      { at: [50, 68.5], torso: -90, neck: -96, armN: [78, 32], armF: [82, 34], legN: [-15, 168], legF: [-19, 164] },
-      { at: [50, 68.5], torso: -90, neck: -70, armN: [78, 32], armF: [82, 34], legN: [-15, 168], legF: [-19, 164] },
+      { at: [50, 68.5], torso: -90, neck: -69, tilt: -90, armN: [78, 32], armF: [82, 34], legN: [-15, 168], legF: [-19, 164] },
+      { at: [50, 68.5], torso: -90, neck: -96, tilt: -90, armN: [78, 32], armF: [82, 34], legN: [-15, 168], legF: [-19, 164] },
+      { at: [50, 68.5], torso: -90, neck: -96.5, tilt: -90, armN: [78, 32], armF: [82, 34], legN: [-15, 168], legF: [-19, 164] },
+      { at: [50, 68.5], torso: -90, neck: -96, tilt: -90, armN: [78, 32], armF: [82, 34], legN: [-15, 168], legF: [-19, 164] },
+      { at: [50, 68.5], torso: -90, neck: -70, tilt: -90, armN: [78, 32], armF: [82, 34], legN: [-15, 168], legF: [-19, 164] },
     ],
   },
   'Langue au palais': {

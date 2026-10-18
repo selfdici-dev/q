@@ -320,9 +320,11 @@ const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matche
 
 // Bonhomme animé d'un exercice, cadré sur son mouvement, muscle travaillé en
 // or (immobile si le téléphone demande de réduire les animations).
-function figure(name, target) {
+// help=false (vignettes de la liste) : sans contour d'arrivée ni flèche, trop
+// petits pour être lus et plus longs à calculer.
+function figure(name, target, help = true) {
   const f = name && figureFor(name);
-  return f ? figureSVG(f.fig, { mirror: f.mirror, fit: true, animate: !reduceMotion(), focus: focusFor(target) }) : '';
+  return f ? figureSVG(f.fig, { mirror: f.mirror, fit: true, animate: !reduceMotion(), focus: focusFor(target), help }) : '';
 }
 
 // Barre qui glisse de sa valeur précédente (%) vers la nouvelle.
@@ -827,7 +829,7 @@ function viewSport() {
           <summary><span class="wo-badge wo-${w.id}">${w.id}</span><strong>${esc(w.name.split(' · ')[1] ?? w.name)}</strong><span class="pill">${w.id === planned ? 'Aujourd’hui' : `${mins} min`}</span><span class="chev" aria-hidden="true"></span></summary>
           <p class="muted">${esc(w.desc)}</p>
           <p class="hint">≈ ${mins} min · ≈ ${workoutKcal(w)} kcal brûlées (estimation)</p>
-          <ol class="ex">${w.exercises.map((e) => `<li><span class="ex-fig">${figure(e.name, e.target)}</span><div><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="target-tag">🎯 ${esc(e.target)}</span>${e.why ? `<br><span class="why">${esc(e.why)}</span>` : ''}<br><span class="muted">${esc(e.cue)}</span></div></li>`).join('')}</ol>
+          <ol class="ex">${w.exercises.map((e) => `<li><span class="ex-fig">${figure(e.name, e.target, false)}</span><div><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="target-tag">🎯 ${esc(e.target)}</span>${e.why ? `<br><span class="why">${esc(e.why)}</span>` : ''}<br><span class="muted">${esc(e.cue)}</span></div></li>`).join('')}</ol>
           <div class="row"><button class="btn primary" data-act="start-workout" data-id="${w.id}">Lancer${done.includes(w.id) ? ' (déjà faite aujourd’hui)' : ''}</button></div>
         </details>`;
       }).join('')}`)}

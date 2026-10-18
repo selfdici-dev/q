@@ -364,3 +364,16 @@ test('burpees : mains posées qui ne bougent plus, pieds l’un après l’autre
     assert.ok(Math.max(joints.kneeN[1], joints.kneeF[1]) <= VIEW.floor - 2, 'genou dans le tapis');
   });
 });
+
+test('poses fidèles à la consigne : trajet des mains, dos au tapis, profondeur', () => {
+  const path = (n, k) => timeline(POSES[n]).map(({ joints }) => joints[k]);
+  // tirage assis : les mains reculent à hauteur de poitrine (pas le long des cuisses)
+  for (const p of path('Tirage assis à l’élastique', 'handN')) assert.ok(p[1] <= 60.5, `tirage : main trop basse (${p})`);
+  // écarté arrière : l'élastique reste à hauteur de poitrine pendant tout le geste
+  for (const p of path('Écarté arrière à l’élastique', 'handN')) assert.ok(p[1] <= 25.5, `écarté : main qui tombe (${p})`);
+  // hollow hold : seules les épaules décollent, le bas du dos reste au tapis
+  for (const f of POSES['Hollow hold genoux pliés'].frames) assert.ok(solve(f).shoulder[1] >= 64, 'hollow : le dos décolle');
+  // pompes sur parallettes : en bas, la poitrine descend au niveau des poignées
+  const low = solve(POSES['Pompes (sur parallettes)'].frames[1]);
+  assert.ok(low.shoulder[1] >= low.handN[1] - 5, 'parallettes : pas assez bas');
+});

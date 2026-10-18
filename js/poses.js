@@ -31,11 +31,12 @@ export const POSES = {
     ],
   },
   'Hollow hold genoux pliés': {
+    // seules les épaules et la tête décollent : le bas du dos reste sur le tapis
     face: -1,
     dur: 3.5, hold: 0.3,
     frames: [
-      { at: [52, 68.5], torso: -16, neck: -24, armN: [192, 192], armF: [188, 188], legN: [-128, 172], legF: [-132, 168] },
-      { at: [52, 68.5], torso: -17.5, neck: -26, armN: [193, 193], armF: [189, 189], legN: [-129, 171], legF: [-133, 167] },
+      { at: [52, 68.5], torso: -10, neck: -26, armN: [192, 192], armF: [188, 188], legN: [-128, 172], legF: [-132, 168] },
+      { at: [52, 68.5], torso: -11, neck: -27.5, armN: [193, 193], armF: [189, 189], legN: [-129, 171], legF: [-133, 167] },
     ],
   },
   'Renforcement du cou': {
@@ -499,17 +500,21 @@ export const POSES = {
     ],
   },
   'Tirage assis à l’élastique': {
+    // mains visées (et non angles) : elles reculent en ligne droite, à hauteur de
+    // poitrine, jusqu'aux côtes (pas de trajet en cuillère le long des cuisses)
     dur: 4, hold: 0.25, band: [['footN', 'handN']],
     frames: [
-      { at: [40, 68.5], torso: -88, neck: -88, armN: [36, 36], armF: [39, 39], legN: [-14, 12], legF: [-12, 10] },
-      { at: [40, 68.5], torso: -94, neck: -90, armN: [150, 15], armF: [153, 18], legN: [-14, 12], legF: [-12, 10] },
+      { at: [40, 68.5], torso: -88, neck: -88, armN: { to: [59.4, 60], bend: 1 }, armF: { to: [58.6, 61], bend: 1 }, legN: [-14, 12], legF: [-12, 10] },
+      { at: [40, 68.5], torso: -94, neck: -90, armN: { to: [42, 56], bend: 1 }, armF: { to: [41.5, 56], bend: 1 }, legN: [-14, 12], legF: [-12, 10] },
     ],
   },
   'Écarté arrière à l’élastique': {
+    // mains visées (et non angles) : elles s'écartent en ligne droite à hauteur
+    // de poitrine, l'élastique ne descend plus vers le nombril
     dur: 4, hold: 0.25, front: true, band: [['handN', 'handF']],
     frames: [
-      { at: [60, 41], torso: -90, neck: -90, armN: [15, 165], armF: [165, 15], legN: { to: [63, 70], bend: -1 }, legF: { to: [57, 70], bend: 1 } },
-      { at: [60, 41], torso: -90, neck: -90, armN: [-2, -2], armF: [-178, -178], legN: { to: [63, 70], bend: -1 }, legF: { to: [57, 70], bend: 1 } },
+      { at: [60, 41], torso: -90, neck: -90, armN: { to: [61, 25], bend: -1 }, armF: { to: [59, 25], bend: 1 }, legN: { to: [63, 70], bend: -1 }, legF: { to: [57, 70], bend: 1 } },
+      { at: [60, 41], torso: -90, neck: -90, armN: { to: [83, 19.5], bend: -1 }, armF: { to: [37, 19.5], bend: 1 }, legN: { to: [63, 70], bend: -1 }, legF: { to: [57, 70], bend: 1 } },
     ],
   },
   // Ronde 12 : séance B calisthénie (planche penchée, L-sit)
@@ -554,10 +559,11 @@ export const POSES = {
   },
   // Ronde 14 : programme v3 (pompes sur parallettes, esquives de face, fentes arrière)
   'Pompes (sur parallettes)': {
+    // en bas, la poitrine descend au niveau des poignées (plus bas que les mains)
     dur: 3, parallettes: true,
     frames: [
       { anchor: 'footN', at: [23, 67], torso: -28, neck: -20, armN: { to: [65.5, 65.5] }, armF: { to: [67, 65.5] }, legN: [152, 152], legF: [154, 154] },
-      { anchor: 'footN', at: [23, 67], torso: -11, neck: -10, armN: { to: [65.5, 65.5] }, armF: { to: [67, 65.5] }, legN: [169, 169], legF: [171, 171] },
+      { anchor: 'footN', at: [23, 67], torso: -7, neck: -6, armN: { to: [65.5, 65.5] }, armF: { to: [67, 65.5] }, legN: [173, 173], legF: [175, 175] },
     ],
   },
   'Shadow boxing (esquives et crochets)': {

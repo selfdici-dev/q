@@ -83,10 +83,12 @@ export const POSES = {
     ],
   },
   'Planche latérale': {
+    // la tenue de la consigne (bras libre vers le plafond) ; la variante « plus
+    // dur » (main sous le torse) reste dans le texte
     dur: 4, hold: 0.3, front: true,
     frames: [
       { anchor: 'footN', at: [16, 70], torso: -15.4, armN: { to: [76.5, 68.5] }, armF: [-90, -90], legN: [164.6, 164.6], legF: [167.4, 167.4] },
-      { anchor: 'footN', at: [16, 70], torso: -16, armN: { to: [76.5, 68.5] }, armF: [125, 170], legN: [164, 164], legF: [166.8, 166.8] },
+      { anchor: 'footN', at: [16, 70], torso: -16, armN: { to: [76.5, 68.5] }, armF: [-90, -90], legN: [164, 164], legF: [166.8, 166.8] },
     ],
   },
   'Pompes pike': {
@@ -208,6 +210,8 @@ export const POSES = {
   },
   'Shadow boxing rapide': {
     dur: 1.2, loop: 'cycle', hold: 0.08,
+    // aide : le direct du bras proche, puis celui du bras éloigné
+    explain: [{ from: 0, to: 1, joint: 'handN' }, { from: 1, to: 2, joint: 'handF' }],
     frames: [
       { anchor: 'footN', at: [66, 70], torso: -84, neck: -78, armN: { to: [69.5, 18], bend: 1 }, armF: { to: [67.5, 18.5], bend: 1 }, legN: [67, 89], legF: { to: [52, 70], bend: -1 } },
       { anchor: 'footN', at: [66, 70], torso: -82, neck: -78, armN: { to: [80, 19.5], bend: 1 }, armF: { to: [68.5, 18.5], bend: 1 }, legN: [65, 88], legF: { to: [52, 70], bend: -1 } },
@@ -333,11 +337,12 @@ export const POSES = {
     ],
   },
   'Pont fessier': {
+    // bras tendus, posés le long du corps
     face: -1,
     dur: 5, hold: 0.4,
     frames: [
-      { anchor: 'shoulder', at: [76, 68.5], torso: 0, neck: 0, armN: { to: [58, 70], bend: 1 }, armF: { to: [58.5, 70], bend: 1 }, legN: { to: [40, 70], bend: 1 }, legF: { to: [42, 70], bend: 1 } },
-      { anchor: 'shoulder', at: [76, 68.5], torso: 27, neck: 0, armN: { to: [58, 70], bend: 1 }, armF: { to: [58.5, 70], bend: 1 }, legN: { to: [40, 70], bend: 1 }, legF: { to: [42, 70], bend: 1 } },
+      { anchor: 'shoulder', at: [76, 68.5], torso: 0, neck: 0, armN: { to: [53, 70], bend: 1 }, armF: { to: [53.5, 70], bend: 1 }, legN: { to: [40, 70], bend: 1 }, legF: { to: [42, 70], bend: 1 } },
+      { anchor: 'shoulder', at: [76, 68.5], torso: 27, neck: 0, armN: { to: [53, 70], bend: 1 }, armF: { to: [53.5, 70], bend: 1 }, legN: { to: [40, 70], bend: 1 }, legF: { to: [42, 70], bend: 1 } },
     ],
   },
   Superman: {
@@ -532,6 +537,8 @@ export const POSES = {
   },
   'L-sit': {
     dur: 3.5, hold: 0.35, parallettes: true,
+    // aide : le bassin qui décolle (pousse dans les mains), pas les coudes
+    explain: [{ from: 0, to: 1, joint: 'hip' }],
     frames: [
       { at: [52, 68.5], torso: -78, neck: -80, armN: { to: [57, 65.5] }, armF: { to: [58.5, 65.5] }, legN: { to: [66, 70], bend: -1 }, legF: { to: [67.5, 70], bend: -1 } },
       // Étape 1 (son niveau) : bras tendus sur les poignées, fesses décollées, talons au sol.

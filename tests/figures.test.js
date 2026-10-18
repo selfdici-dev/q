@@ -236,7 +236,7 @@ test('mains : poing en l’air, paume à plat au sol, doigts vers l’avant', ()
   const inline = Math.atan2(up.handN[1] - up.elbowN[1], up.handN[0] - up.elbowN[0]) * 180 / Math.PI;
   assert.equal(handAngle(up.elbowN, up.handN, 1), inline); // en l'air : dans l'axe de l'avant-bras
   const bridge = solve(POSES['Pont fessier'].frames[0]);
-  assert.equal(Math.abs(handAngle(bridge.elbowN, bridge.handN, 1)), 180); // bras le long du corps : paume au sol vers les pieds
+  assert.ok(Math.abs(Math.abs(handAngle(bridge.elbowN, bridge.handN, 1)) - 180) < 8); // bras tendu le long du corps : main vers les pieds
 });
 
 test('tête par-dessus le corps, zones allumées, côté éloigné à part', () => {
@@ -401,4 +401,16 @@ test('tête : angle propre facultatif (tilt) ; chin tucks : la tête recule sans
   const [e0, e1] = [eye(0), eye(1)];
   assert.ok(Math.abs((e0[0] - h0[0]) - (e1[0] - h1[0])) < 0.15 && Math.abs((e0[1] - h0[1]) - (e1[1] - h1[1])) < 0.15);
   assert.ok(Math.abs(e0[0] - h0[0] - 2.6) < 0.15); // œil droit devant le crâne : regard horizontal
+});
+
+test('aides des tenues et des coups ; bras du pont fessier posés le long du corps', () => {
+  assert.deepEqual(explain(POSES['Planche latérale']), []); // la tenue de la consigne, sans aller-retour du bras
+  assert.equal(solve(POSES['Planche latérale'].frames[1]).handF[1] < solve(POSES['Planche latérale'].frames[1]).shoulder[1] - 15, true); // bras libre vers le plafond
+  assert.deepEqual(explain(POSES['Shadow boxing rapide']).map((s) => s.joint), ['handN', 'handF']); // un direct, puis l'autre
+  assert.equal(explain(POSES['L-sit'])[0].joint, 'hip'); // le bassin décolle (pas « avance les coudes »)
+  for (const f of POSES['Pont fessier'].frames) {
+    const j = solve(f);
+    const bend = Math.abs(Math.atan2(j.elbowN[1] - j.shoulder[1], j.elbowN[0] - j.shoulder[0]) - Math.atan2(j.handN[1] - j.elbowN[1], j.handN[0] - j.elbowN[0])) * 180 / Math.PI;
+    assert.ok(bend < 15, `pont fessier : coude plié (${bend.toFixed(0)}°)`);
+  }
 });

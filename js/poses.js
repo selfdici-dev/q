@@ -39,6 +39,7 @@ export const POSES = {
     ],
   },
   'Renforcement du cou': {
+    face: -1,
     dur: 6, loop: 'cycle',
     frames: [
       { at: [54, 68.5], torso: 0, neck: 0, armN: { to: [53, 70], bend: 1 }, armF: { to: [53.5, 70], bend: 1 }, legN: { to: [33, 70], bend: 1 }, legF: { to: [35.5, 70], bend: 1 } },
@@ -48,6 +49,7 @@ export const POSES = {
     ],
   },
   'Respiration 4-6': {
+    face: -1,
     dur: 6, loop: 'cycle', hold: 0.05,
     frames: [
       { at: [54, 68.5], torso: 0, neck: 0, armN: { to: [53, 70], bend: 1 }, armF: { to: [53.5, 70], bend: 1 }, legN: { to: [33, 70], bend: 1 }, legF: { to: [35.5, 70], bend: 1 } },
@@ -273,6 +275,7 @@ export const POSES = {
 
   // Ronde 4 : crunch et Russian twist (A), planche inversée et touchers d’épaules (B)
   Crunch: {
+    face: -1,
     dur: 3, loop: 'cycle', hold: 0.1,
     frames: [
       { at: [52, 68.5], torso: 0, neck: -2, armN: [201, -12], armF: [197, -8], legN: { to: [31, 70], bend: 1 }, legF: { to: [33.5, 70], bend: 1 } },
@@ -291,6 +294,7 @@ export const POSES = {
     ],
   },
   'Planche inversée': {
+    face: -1,
     dur: 3.5, hold: 0.3,
     frames: [
       { anchor: 'handN', at: [90, 70], torso: -61.83, neck: -74, armN: [65.29, 65.29], armF: { to: [91.5, 70] }, legN: { to: [51.7, 70], bend: 1 }, legF: { to: [53.7, 70], bend: 1 } },
@@ -312,8 +316,8 @@ export const POSES = {
     face: -1,
     dur: 3, loop: 'cycle', hold: 0.05,
     frames: [
-      { at: [52, 68.5], torso: -24, neck: -32, armN: { to: [78.5, 55], bend: -1 }, armF: { to: [79.5, 56], bend: -1 }, legN: [-118, 168], legF: [186, 184] },
-      { at: [52, 68.5], torso: -24, neck: -32, armN: { to: [78.5, 55], bend: -1 }, armF: { to: [79.5, 56], bend: -1 }, legN: [186, 184], legF: [-118, 168] },
+      { at: [52, 68.5], torso: -28, neck: -38, armN: { to: [77.1, 53.6], bend: -1 }, armF: { to: [78.1, 54.4], bend: -1 }, legN: [-80, 170], legF: [186, 184] },
+      { at: [52, 68.5], torso: -28, neck: -38, armN: { to: [77.1, 53.6], bend: -1 }, armF: { to: [78.1, 54.4], bend: -1 }, legN: [186, 184], legF: [-80, 170] },
     ],
   },
   'Pont fessier': {
@@ -355,6 +359,7 @@ export const POSES = {
   },
   // Ronde 7 : anges au sol et étirement des pectoraux (M), burpees sans saut (C)
   'Anges au sol': {
+    face: -1,
     dur: 5, hold: 0.25,
     frames: [
       { anchor: 'shoulder', at: [76, 68.5], torso: 0, neck: 0, armN: [178, -2], armF: [180, -1], legN: { to: [40, 70], bend: 1 }, legF: { to: [42, 70], bend: 1 } },
@@ -453,8 +458,8 @@ export const POSES = {
   'Rowing penché à l’élastique': {
     dur: 4, hold: 0.25, band: [['footN', 'handN']],
     frames: [
-      { at: [52, 42], torso: -38, neck: -28, armN: [95, 95], armF: [98, 98], legN: { to: [55.5, 70], bend: 1 }, legF: { to: [57, 70], bend: 1 } },
-      { at: [52, 42], torso: -38, neck: -28, armN: [160, 95], armF: [163, 98], legN: { to: [55.5, 70], bend: 1 }, legF: { to: [57, 70], bend: 1 } },
+      { at: [52, 42], torso: -38, neck: -28, armN: [95, 95], armF: [98, 98], legN: { to: [55.5, 70], bend: -1 }, legF: { to: [57, 70], bend: -1 } },
+      { at: [52, 42], torso: -38, neck: -28, armN: [160, 95], armF: [163, 98], legN: { to: [55.5, 70], bend: -1 }, legF: { to: [57, 70], bend: -1 } },
     ],
   },
   'Extension triceps au-dessus de la tête': {
@@ -536,8 +541,8 @@ export const POSES = {
   'Pompes (sur parallettes)': {
     dur: 3, parallettes: true,
     frames: [
-      { anchor: 'footN', at: [22, 70], torso: -32.5, neck: -24, armN: { to: [65.5, 65.5] }, armF: { to: [67, 65.5] }, legN: [147.5, 147.5], legF: [149.5, 149.5] },
-      { anchor: 'footN', at: [22, 70], torso: -3.4, neck: -14, armN: { to: [65.5, 65.5] }, armF: { to: [67, 65.5] }, legN: [176.6, 176.6], legF: [178.6, 178.6] },
+      { anchor: 'footN', at: [23, 67], torso: -28, neck: -20, armN: { to: [65.5, 65.5] }, armF: { to: [67, 65.5] }, legN: [152, 152], legF: [154, 154] },
+      { anchor: 'footN', at: [23, 67], torso: -11, neck: -10, armN: { to: [65.5, 65.5] }, armF: { to: [67, 65.5] }, legN: [169, 169], legF: [171, 171] },
     ],
   },
   'Shadow boxing (esquives et crochets)': {
@@ -546,24 +551,26 @@ export const POSES = {
     frames: [
       { at: [60, 43], torso: -90, neck: -90, armN: { to: [64.5, 19], bend: 1 }, armF: { to: [55.5, 19], bend: -1 }, legN: { to: [66, 70], bend: -1 }, legF: { to: [54, 70], bend: 1 } },
       { at: [62, 48.5], torso: -73, neck: -76, armN: { to: [74.9, 25.7], bend: 1 }, armF: { to: [65.9, 25.7], bend: -1 }, legN: { to: [66, 70], bend: -1 }, legF: { to: [54, 70], bend: 1 } },
-      { at: [60.5, 44], torso: -84, neck: -86, armN: { to: [62.9, 20.1], bend: 1 }, armF: { to: [58.9, 20.1], bend: -1 }, legN: { to: [66, 70], bend: -1 }, legF: { to: [54, 70], bend: 1 } },
+      { at: [60.5, 44], torso: -84, neck: -86, armN: { to: [64.2, 19.4], bend: 1 }, armF: { to: [58.3, 19.4], bend: -1 }, legN: { to: [66, 70], bend: -1 }, legF: { to: [54, 70], bend: 1 } },
       { at: [60, 43], torso: -90, neck: -90, armN: { to: [64.5, 19], bend: 1 }, armF: { to: [55.5, 19], bend: -1 }, legN: { to: [66, 70], bend: -1 }, legF: { to: [54, 70], bend: 1 } },
       { at: [58, 48.5], torso: -107, neck: -104, armN: { to: [54.1, 25.7], bend: 1 }, armF: { to: [45.1, 25.7], bend: -1 }, legN: { to: [66, 70], bend: -1 }, legF: { to: [54, 70], bend: 1 } },
-      { at: [59.5, 44], torso: -96, neck: -94, armN: { to: [61.1, 20.1], bend: 1 }, armF: { to: [57.1, 20.1], bend: -1 }, legN: { to: [66, 70], bend: -1 }, legF: { to: [54, 70], bend: 1 } },
+      { at: [59.5, 44], torso: -96, neck: -94, armN: { to: [61.7, 19.4], bend: 1 }, armF: { to: [55.8, 19.4], bend: -1 }, legN: { to: [66, 70], bend: -1 }, legF: { to: [54, 70], bend: 1 } },
     ],
   },
   'Fentes arrière alternées': {
     // Le pied arrière se lève et se pose (il ne glisse pas), une jambe puis l'autre.
+    // Le pied d'appui reste à sa place ; en bas, le pied arrière est sur la pointe
+    // (cheville à 3 du sol) et le genou arrière reste au-dessus du tapis.
     dur: 5, loop: 'cycle', hold: 0.1,
     frames: [
-      { at: [59, 41.2], torso: -89, neck: -86, armN: { to: [62, 42], bend: -1 }, armF: { to: [61, 42], bend: -1 }, legN: { to: [60, 70], bend: -1 }, legF: { to: [58.5, 70], bend: -1 } },
-      { at: [56, 44], torso: -89, neck: -86, armN: { to: [59, 45], bend: -1 }, armF: { to: [58, 45], bend: -1 }, legN: { to: [44, 64], bend: -1 }, legF: { to: [59, 70], bend: -1 } },
-      { at: [50, 54], torso: -88, neck: -86, armN: { to: [53, 55], bend: -1 }, armF: { to: [52, 55], bend: -1 }, legN: { to: [31, 70], bend: -1 }, legF: { to: [62, 70], bend: -1 } },
-      { at: [56, 44], torso: -89, neck: -86, armN: { to: [59, 45], bend: -1 }, armF: { to: [58, 45], bend: -1 }, legN: { to: [44, 64], bend: -1 }, legF: { to: [59, 70], bend: -1 } },
-      { at: [59, 41.2], torso: -89, neck: -86, armN: { to: [62, 42], bend: -1 }, armF: { to: [61, 42], bend: -1 }, legN: { to: [60, 70], bend: -1 }, legF: { to: [58.5, 70], bend: -1 } },
-      { at: [56, 44], torso: -89, neck: -86, armN: { to: [59, 45], bend: -1 }, armF: { to: [58, 45], bend: -1 }, legN: { to: [59, 70], bend: -1 }, legF: { to: [44, 64], bend: -1 } },
-      { at: [50, 54], torso: -88, neck: -86, armN: { to: [53, 55], bend: -1 }, armF: { to: [52, 55], bend: -1 }, legN: { to: [62, 70], bend: -1 }, legF: { to: [31, 70], bend: -1 } },
-      { at: [56, 44], torso: -89, neck: -86, armN: { to: [59, 45], bend: -1 }, armF: { to: [58, 45], bend: -1 }, legN: { to: [59, 70], bend: -1 }, legF: { to: [44, 64], bend: -1 } },
+      { at: [60.2, 41.2], torso: -89, neck: -86, armN: { to: [63.2, 42], bend: -1 }, armF: { to: [62.2, 42], bend: -1 }, legN: { to: [61, 70], bend: -1 }, legF: { to: [59.5, 70], bend: -1 } },
+      { at: [56.5, 44.5], torso: -89, neck: -86, armN: { to: [59.5, 45.5], bend: -1 }, armF: { to: [58.5, 45.5], bend: -1 }, legN: { to: [43.5, 63.5], bend: -1 }, legF: { to: [59.5, 70], bend: -1 } },
+      { at: [48, 55.5], torso: -88, neck: -86, armN: { to: [51, 56.5], bend: -1 }, armF: { to: [50, 56.5], bend: -1 }, legN: { to: [25, 67], bend: -1 }, legF: { to: [59.5, 70], bend: -1 } },
+      { at: [56.5, 44.5], torso: -89, neck: -86, armN: { to: [59.5, 45.5], bend: -1 }, armF: { to: [58.5, 45.5], bend: -1 }, legN: { to: [43.5, 63.5], bend: -1 }, legF: { to: [59.5, 70], bend: -1 } },
+      { at: [60.2, 41.2], torso: -89, neck: -86, armN: { to: [63.2, 42], bend: -1 }, armF: { to: [62.2, 42], bend: -1 }, legN: { to: [61, 70], bend: -1 }, legF: { to: [59.5, 70], bend: -1 } },
+      { at: [58, 44.5], torso: -89, neck: -86, armN: { to: [61, 45.5], bend: -1 }, armF: { to: [60, 45.5], bend: -1 }, legN: { to: [61, 70], bend: -1 }, legF: { to: [45, 63.5], bend: -1 } },
+      { at: [49.5, 55.5], torso: -88, neck: -86, armN: { to: [52.5, 56.5], bend: -1 }, armF: { to: [51.5, 56.5], bend: -1 }, legN: { to: [61, 70], bend: -1 }, legF: { to: [26.5, 67], bend: -1 } },
+      { at: [58, 44.5], torso: -89, neck: -86, armN: { to: [61, 45.5], bend: -1 }, armF: { to: [60, 45.5], bend: -1 }, legN: { to: [61, 70], bend: -1 }, legF: { to: [45, 63.5], bend: -1 } },
     ],
   },
 };

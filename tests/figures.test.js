@@ -140,7 +140,7 @@ test('yeux : un de profil, deux de face, du côté du visage ; jamais en trait d
   assert.equal(eyes(svg('Planche latérale')).length, 2);
   for (const n of ['Pompes', 'Planche latérale']) assert.equal((svg(n).match(/<line /g) ?? []).length, BODY.length, n);
   // Couché sur le dos : l'œil regarde le plafond ; à plat ventre : le tapis ; debout en garde : la droite
-  for (const n of ['Dead bug', 'Pont fessier', 'Crunch inversé']) assert.ok(eyes(svg(n))[0][1] < head(svg(n))[1], n);
+  for (const n of ['Dead bug', 'Pont fessier', 'Crunch inversé', 'Crunch', 'Anges au sol']) assert.ok(eyes(svg(n))[0][1] < head(svg(n))[1], n);
   for (const n of ['Tirage superman', 'Superman', 'Pompes']) assert.ok(eyes(svg(n))[0][1] > head(svg(n))[1], n);
   assert.ok(eyes(svg('Shadow boxing'))[0][0] > head(svg('Shadow boxing'))[0]);
 });
@@ -152,4 +152,18 @@ test('parallettes, élastique et repère fixe dessinés quand la pose le demande
   assert.match(svg('Écarté arrière à l’élastique'), /class="fig-band"/);
   assert.match(svg('Chin tucks'), /class="fig-guide"/);
   assert.doesNotMatch(svg('Pompes'), /fig-par|fig-band|fig-guide/);
+});
+
+test('données : sur le dos, le regard est au plafond (face: -1 écrit dans la pose)', () => {
+  for (const [name, fig] of Object.entries(POSES)) {
+    if (fig.front) continue;
+    const j = solve(fig.frames[0]);
+    const lying = Math.abs(j.shoulder[1] - j.hip[1]) < 0.55 * BONES.torso && j.hip[1] > VIEW.floor - 6;
+    const kneesUp = Math.min(j.kneeN[1], j.kneeF[1]) < j.hip[1] - 4;
+    if (lying && kneesUp) assert.equal(fig.face, -1, `${name} : sur le dos, il faut face: -1`);
+  }
+  // fentes : le pied d'appui ne glisse pas pendant sa moitié
+  const lunge = POSES['Fentes arrière alternées'].frames.map(solve);
+  for (const i of [1, 2, 3]) assert.deepEqual(lunge[i].footF, lunge[0].footF);
+  for (const i of [5, 6, 7]) assert.deepEqual(lunge[i].footN, lunge[4].footN);
 });

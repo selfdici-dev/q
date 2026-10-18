@@ -379,19 +379,26 @@ export const POSES = {
       { at: [49, 68.5], torso: -8, neck: -20, armN: { to: [66, 70], bend: 1 }, armF: [8, -8], legN: { to: [36, 70], bend: 1 }, legF: [181, 180.5] },
     ],
   },
-  // Debout → accroupi, mains au sol → pieds en arrière (bassin haut) → planche,
-  // puis retour par le même chemin (genou toujours plié du bon côté).
+  // Debout → accroupi, mains au sol → un pied puis l'autre en arrière → planche,
+  // puis un pied puis l'autre ramenés près des mains (genou toujours plié du bon côté).
   'Burpees sans saut': {
-    dur: 4, loop: 'cycle', hold: 0.1,
-    // aide en trois temps : mains au sol, pieds en arrière, retour debout
-    explain: [{ from: 0, to: 1, joint: 'handN' }, { from: 1, to: 3, joint: 'footN' }, { from: 3, to: 0, joint: 'head' }],
+    dur: 4.4, loop: 'cycle', hold: 0.1,
+    // aide en quatre temps : mains au sol, pieds en arrière, pieds ramenés, debout
+    explain: [{ from: 0, to: 1, joint: 'handN' }, { from: 1, to: 5, joint: 'footN' }, { from: 5, to: 9, joint: 'footN' }, { from: 9, to: 0, joint: 'head' }],
+    // Une fois posées (#1 à #9), les mains ne bougent plus ; chaque pied se lève
+    // en route (bassin un peu plus haut) : il ne glisse pas et le genou ne touche
+    // pas le tapis.
     frames: [
       { at: [60, 41], torso: -90, neck: -88, armN: [-25, -25], armF: [-28, -28], legN: { to: [60, 70], bend: -1 }, legF: { to: [61.5, 70], bend: -1 } },
-      { at: [52, 59], torso: -32, neck: -40, armN: [84.3, 102.6], armF: [79.9, 99.4], legN: { to: [60, 70], bend: -1 }, legF: { to: [61.5, 70], bend: -1 } },
-      { at: [48, 44], torso: -50, neck: -58, armN: [81.9, 84.3], armF: [80, 82.2], legN: { to: [32, 70], bend: -1 }, legF: { to: [33.5, 70], bend: -1 } },
-      { at: [45.84, 56.83], torso: -27, neck: -17, armN: [88.1, 91.6], armF: [84.3, 87.9], legN: { to: [20, 70], bend: 1 }, legF: { to: [21.5, 70], bend: 1 } },
-      { at: [48, 44], torso: -50, neck: -58, armN: [81.9, 84.3], armF: [80, 82.2], legN: { to: [32, 70], bend: -1 }, legF: { to: [33.5, 70], bend: -1 } },
-      { at: [52, 59], torso: -32, neck: -40, armN: [84.3, 102.6], armF: [79.9, 99.4], legN: { to: [60, 70], bend: -1 }, legF: { to: [61.5, 70], bend: -1 } },
+      { at: [52, 59], torso: -32, neck: -40, armN: [102.1, 83.2], armF: [98.7, 79], legN: { to: [60, 70], bend: -1 }, legF: { to: [61.5, 70], bend: -1 } },
+      { at: [50, 49.5], torso: -3, neck: -12, armN: [114.4, 77.2], armF: [111.4, 72.3], legN: { to: [31, 61], bend: -1 }, legF: { to: [61.5, 70], bend: -1 } },
+      { at: [48.5, 55], torso: -20, neck: -16, armN: [100.4, 77.1], armF: [95.8, 74.2], legN: { to: [24, 70], bend: -1 }, legF: { to: [61.5, 70], bend: -1 } },
+      { at: [46.5, 51.5], torso: -5, neck: -12, armN: [113.1, 58.5], armF: [108.3, 55.1], legN: { to: [24, 70], bend: -1 }, legF: { to: [31.5, 61], bend: -1 } },
+      { at: [49.84, 56.83], torso: -27, neck: -17, armN: [91.6, 88.2], armF: [87.9, 84.5], legN: { to: [24, 70], bend: -1 }, legF: { to: [24.5, 70], bend: -1 } },
+      { at: [46.5, 51.5], torso: -5, neck: -12, armN: [113.1, 58.5], armF: [108.3, 55.1], legN: { to: [31, 61], bend: -1 }, legF: { to: [24.5, 70], bend: -1 } },
+      { at: [48.5, 55], torso: -20, neck: -16, armN: [100.4, 77.1], armF: [95.8, 74.2], legN: { to: [60, 70], bend: -1 }, legF: { to: [24.5, 70], bend: -1 } },
+      { at: [50, 49.5], torso: -3, neck: -12, armN: [114.4, 77.2], armF: [111.4, 72.3], legN: { to: [60, 70], bend: -1 }, legF: { to: [31.5, 61], bend: -1 } },
+      { at: [52, 59], torso: -32, neck: -40, armN: [102.1, 83.2], armF: [98.7, 79], legN: { to: [60, 70], bend: -1 }, legF: { to: [61.5, 70], bend: -1 } },
     ],
   },
   // Ronde 8 : séance B bras, avant-bras et épaules

@@ -343,3 +343,24 @@ test('couleurs : secours sans color-mix, vignettes allégées', () => {
   assert.match(luxe, /\.ex-fig \.fig-ghost, \.ex-fig \.fig-move/);
   for (const token of ['--fig-shoe', '--fig-hair', '--figure-move', '--fig-line']) assert.match(luxe, new RegExp(`${token}:`));
 });
+
+test('burpees : mains posées qui ne bougent plus, pieds l’un après l’autre, genou au-dessus du tapis', () => {
+  const fig = POSES['Burpees sans saut'];
+  const J = fig.frames.map(solve);
+  const last = J.length - 1;
+  for (let i = 1; i <= last; i++) {
+    assert.ok(dist(J[i].handN, J[1].handN) < 0.5 && dist(J[i].handF, J[1].handF) < 0.5, `mains qui glissent (#${i})`);
+    assert.ok(J[i].handN[1] >= VIEW.floor - 0.5, `main en l'air (#${i})`);
+  }
+  // un seul pied bouge à la fois entre deux poses, une fois les mains au sol
+  for (let i = 1; i < last; i++) {
+    const moved = ['footN', 'footF'].filter((k) => dist(J[i][k], J[i + 1][k]) > 0.5);
+    assert.ok(moved.length <= 1, `les deux pieds bougent ensemble (#${i} → #${i + 1})`);
+  }
+  // pendant tout ce temps, le genou reste au-dessus du tapis
+  const keys = timeline(fig);
+  const per = (keys.length - 1) / (last + 1); // images par étape (boucle)
+  keys.slice(per, per * last + 1).forEach(({ joints }) => {
+    assert.ok(Math.max(joints.kneeN[1], joints.kneeF[1]) <= VIEW.floor - 2, 'genou dans le tapis');
+  });
+});

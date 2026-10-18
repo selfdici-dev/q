@@ -336,6 +336,10 @@ test('couleurs : secours sans color-mix, vignettes allégées', () => {
   const css = readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
   const luxe = readFileSync(new URL('../css/luxe.css', import.meta.url), 'utf8');
   assert.match(css, /@supports not \(color: color-mix\(/);
+  // le secours couvre aussi tapis, parallettes et roue, avec des sélecteurs plus forts que les
+  // règles color-mix écrites après lui (sinon ces formes deviendraient noires)
+  const fallback = css.slice(css.indexOf('@supports not (color: color-mix('));
+  for (const sel of ['.fig rect.fig-mat', '.fig .fig-par rect', '.fig .fig-wheel circle:not(.fig-hub)']) assert.ok(fallback.slice(0, fallback.indexOf('\n}')).includes(sel), sel);
   assert.match(luxe, /\.ex-fig \.fig-ghost, \.ex-fig \.fig-move/);
   for (const token of ['--fig-shoe', '--fig-hair', '--figure-move', '--fig-line']) assert.match(luxe, new RegExp(`${token}:`));
 });

@@ -933,7 +933,11 @@ details.card.more .rules { margin-top: 10px; }
   .fig-tone.fig-back .fig-s1, .fig-tone.fig-back .fig-s2, .fig-tone.fig-back .fig-s4 { stop-color: var(--figure-far, #b4b0cc); }
   .fig-tone.fig-hot .fig-s1, .fig-tone.fig-hot .fig-s2, .fig-tone.fig-hot .fig-s4 { stop-color: var(--figure-focus, #e8336a); }
   .fig-tone.fig-hot.fig-back .fig-s1, .fig-tone.fig-hot.fig-back .fig-s2, .fig-tone.fig-hot.fig-back .fig-s4 { stop-color: var(--figure-focus-far, #ad2453); }
-  .fig-mat { fill: rgb(241 240 247 / 0.16); }
+  /* sélecteurs plus forts : les règles color-mix écrites plus bas (et dans luxe.css)
+     contiennent var() et rendraient ces formes noires */
+  .fig rect.fig-mat { fill: rgb(241 240 247 / 0.16); }
+  .fig .fig-par rect { fill: #8d89a4; }
+  .fig .fig-wheel circle:not(.fig-hub) { fill: rgb(241 240 247 / 0.22); }
 }
 .fig .fig-hair { fill: var(--fig-hair, #5b4636); }
 .fig .fig-shoe { fill: var(--fig-shoe, #8f84d8); }

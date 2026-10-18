@@ -1135,6 +1135,13 @@ input.task { text-align: center; margin: 4px 0 10px; border-radius: 999px; }
 /* téléphones moins hauts (360 × 740, 414 × 736…) : rien ne déborde ; le
    « pourquoi » reste dans « Lire la consigne » (seul celui du lecteur est caché) */
 @media (max-height: 800px) { .player .player-main .why { display: none; } .player .player-main > .player-fig { min-height: 80px; } }
+/* record en haut de la fourchette : l'étiquette et « Version plus dure » prennent
+   la place de la consigne courte (elle reste dans « Lire la consigne ») */
+.player .player-main:has(.rec-reset) > .cue { display: none; }
+@media (max-height: 800px) {
+  .player .player-main:has(.rec-reset) > .player-fig { min-height: 56px; }
+  .player .player-main:has(.rec-reset) > .clock.huge { font-size: min(28vw, 9vh, 9rem); }
+}
 .cue-full-fig { width: min(88vw, 380px); } /* consigne (séance en pause) : le geste en grand */
 /* … sans pousser la consigne hors de l'écran : un bonhomme debout (cadre haut) est
    limité en hauteur et reste centré */

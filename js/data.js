@@ -109,7 +109,7 @@ export const WEEK_PLAN = { 1: 'A', 2: 'B', 3: 'A', 4: 'B', 5: 'A', 6: 'B', 0: 'M
 // Échauffement ajouté avant A, B et C.
 export const WARMUP = [
   { name: 'Écarté arrière à l’élastique (léger)', work: 30, cue: 'Élastique noir, mains un peu plus écartées que les épaules : 15 écartés tranquilles pour réveiller le haut du dos et les épaules. Sans élastique : même geste à vide.' },
-  { name: 'Chat-vache', work: 30, cue: 'À quatre pattes, enroule puis creuse le dos lentement.' },
+  { name: 'Chat-vache', work: 30, cue: 'À quatre pattes, lentement : enroule le dos vers le plafond en rentrant le menton (chat), puis creuse-le vers le tapis en levant la tête (vache). C’est le dos qui bouge, pas seulement la tête.' },
   { name: 'Montées de genoux lentes', work: 30, cue: 'Sur place, sans sauter, pour monter le cardio doucement.' },
   { name: 'Pompes sur les genoux', work: 20, cue: 'Amplitude complète, tranquille : on prépare les épaules.' },
 ];

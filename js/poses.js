@@ -166,10 +166,12 @@ export const POSES = {
     ],
   },
   'Chat-vache': {
+    // le buste est d'une pièce : le dos arrondi (chat) garde les épaules hautes ;
+    // creusé (vache), la poitrine descend vers le tapis et la tête se lève
     dur: 6, hold: 0.25,
     frames: [
       { anchor: 'kneeN', at: [50, 68.5], torso: -17.2, neck: 97, armN: { to: [71, 70], bend: 1 }, armF: { to: [72.2, 70], bend: 1 }, legN: [90, 178], legF: [93, 177] },
-      { anchor: 'kneeN', at: [50, 68.5], torso: -17.2, neck: -38, armN: { to: [71, 70], bend: 1 }, armF: { to: [72.2, 70], bend: 1 }, legN: [90, 178], legF: [93, 177] },
+      { anchor: 'kneeN', at: [50, 68.5], torso: -13.5, neck: -45, armN: { to: [71, 70], bend: 1 }, armF: { to: [72.2, 70], bend: 1 }, legN: [90, 178], legF: [93, 177] },
     ],
   },
   'Vacuum abdominal': {
@@ -289,13 +291,15 @@ export const POSES = {
     ],
   },
   'Russian twist': {
+    // pieds décollés pendant toute la série ; tête un peu fléchie, le regard
+    // va vers les mains
     face: -1,
     dur: 3, loop: 'cycle', hold: 0.1,
     frames: [
-      { at: [58, 68.5], torso: -48, neck: -55, armN: { to: [50.6, 53], bend: 1 }, armF: { to: [52.1, 53], bend: -1 }, legN: { to: [38, 70], bend: 1 }, legF: { to: [40.5, 70], bend: 1 } },
-      { at: [58, 68.5], torso: -46, neck: -58, armN: { to: [53, 62.5], bend: 1 }, armF: { to: [54.5, 62.5], bend: -1 }, legN: { to: [38, 70], bend: 1 }, legF: { to: [40.5, 70], bend: 1 } },
-      { at: [58, 68.5], torso: -48, neck: -55, armN: { to: [50.6, 53], bend: 1 }, armF: { to: [52.1, 53], bend: -1 }, legN: { to: [38, 70], bend: 1 }, legF: { to: [40.5, 70], bend: 1 } },
-      { at: [58, 68.5], torso: -46, neck: -52, armN: { to: [59, 67.5], bend: 1 }, armF: { to: [65.5, 68], bend: -1 }, legN: { to: [38, 70], bend: 1 }, legF: { to: [40.5, 70], bend: 1 } },
+      { at: [58, 68.5], torso: -48, neck: -72, armN: { to: [50.6, 53], bend: 1 }, armF: { to: [52.1, 53], bend: -1 }, legN: { to: [40, 60], bend: 1 }, legF: { to: [42.5, 60.5], bend: 1 } },
+      { at: [58, 68.5], torso: -46, neck: -78, armN: { to: [53, 62.5], bend: 1 }, armF: { to: [54.5, 62.5], bend: -1 }, legN: { to: [40, 60], bend: 1 }, legF: { to: [42.5, 60.5], bend: 1 } },
+      { at: [58, 68.5], torso: -48, neck: -72, armN: { to: [50.6, 53], bend: 1 }, armF: { to: [52.1, 53], bend: -1 }, legN: { to: [40, 60], bend: 1 }, legF: { to: [42.5, 60.5], bend: 1 } },
+      { at: [58, 68.5], torso: -46, neck: -70, armN: { to: [59, 67.5], bend: 1 }, armF: { to: [65.5, 68], bend: -1 }, legN: { to: [40, 60], bend: 1 }, legF: { to: [42.5, 60.5], bend: 1 } },
     ],
   },
   'Planche inversée': {

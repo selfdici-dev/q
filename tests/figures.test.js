@@ -377,3 +377,14 @@ test('poses fidèles à la consigne : trajet des mains, dos au tapis, profondeur
   const low = solve(POSES['Pompes (sur parallettes)'].frames[1]);
   assert.ok(low.shoulder[1] >= low.handN[1] - 5, 'parallettes : pas assez bas');
 });
+
+test('Russian twist pieds décollés, regard vers les mains ; chat-vache : la poitrine descend', () => {
+  const eye = (n, i) => Number(figureSVG(POSES[n], { pose: i, help: false }).match(/class="fig-eye" cx="([\d.]+)"/)[1]);
+  POSES['Russian twist'].frames.forEach((f, i) => {
+    const j = solve(f);
+    assert.ok(Math.max(j.footN[1], j.footF[1]) <= VIEW.floor - 6, `pieds au sol (#${i})`);
+    assert.ok(eye('Russian twist', i) < j.head[0], `regard vers le plafond (#${i})`); // les mains sont devant (à gauche)
+  });
+  const [cat, cow] = POSES['Chat-vache'].frames.map(solve);
+  assert.ok(cow.shoulder[1] - cat.shoulder[1] >= 1, 'vache : la poitrine ne descend pas');
+});

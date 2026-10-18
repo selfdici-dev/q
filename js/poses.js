@@ -213,6 +213,8 @@ export const POSES = {
   },
   'Montées de genoux sur place': {
     dur: 1.4, loop: 'cycle', hold: 0.05,
+    // aide : depuis la position debout, le genou qui monte (un côté puis l'autre)
+    explain: [{ from: 3, to: 0, joint: 'kneeN' }, { from: 1, to: 2, joint: 'kneeF' }],
     frames: [
       { at: [60, 41], torso: -89, neck: -88, armN: [128, 60], armF: [45, -45], legN: [-2, 100], legF: [90, 90] },
       { at: [60, 41], torso: -89, neck: -88, armN: [88, 8], armF: [92, 12], legN: [90, 90], legF: [88, 92] },
@@ -222,6 +224,8 @@ export const POSES = {
   },
   'Montées de genoux lentes': {
     dur: 3.2, loop: 'cycle', hold: 0.12,
+    // aide : depuis la position debout, le genou qui monte (un côté puis l'autre)
+    explain: [{ from: 3, to: 0, joint: 'kneeN' }, { from: 1, to: 2, joint: 'kneeF' }],
     frames: [
       { at: [60, 41], torso: -89, neck: -88, armN: [118, 70], armF: [55, -25], legN: [8, 100], legF: [90, 90] },
       { at: [60, 41], torso: -89, neck: -88, armN: [88, 20], armF: [92, 24], legN: [90, 90], legF: [88, 92] },
@@ -315,6 +319,8 @@ export const POSES = {
   'Crunch vélo': {
     face: -1,
     dur: 3, loop: 'cycle', hold: 0.05,
+    // aide : flèche du coude vers le genou opposé, à chaque côté
+    explain: [{ at: 0, joint: 'elbowF', toward: 'kneeN' }, { at: 1, joint: 'elbowN', toward: 'kneeF' }],
     frames: [
       { at: [52, 68.5], torso: -28, neck: -38, armN: { to: [77.1, 53.6], bend: -1 }, armF: { to: [78.1, 54.4], bend: -1 }, legN: [-80, 170], legF: [186, 184] },
       { at: [52, 68.5], torso: -28, neck: -38, armN: { to: [77.1, 53.6], bend: -1 }, armF: { to: [78.1, 54.4], bend: -1 }, legN: [186, 184], legF: [-80, 170] },
@@ -377,6 +383,8 @@ export const POSES = {
   // puis retour par le même chemin (genou toujours plié du bon côté).
   'Burpees sans saut': {
     dur: 4, loop: 'cycle', hold: 0.1,
+    // aide en trois temps : mains au sol, pieds en arrière, retour debout
+    explain: [{ from: 0, to: 1, joint: 'handN' }, { from: 1, to: 3, joint: 'footN' }, { from: 3, to: 0, joint: 'head' }],
     frames: [
       { at: [60, 41], torso: -90, neck: -88, armN: [-25, -25], armF: [-28, -28], legN: { to: [60, 70], bend: -1 }, legF: { to: [61.5, 70], bend: -1 } },
       { at: [52, 59], torso: -32, neck: -40, armN: [84.3, 102.6], armF: [79.9, 99.4], legN: { to: [60, 70], bend: -1 }, legF: { to: [61.5, 70], bend: -1 } },
@@ -548,6 +556,8 @@ export const POSES = {
   'Shadow boxing (esquives et crochets)': {
     // De face : son côté gauche (bras et jambe N) est à droite de l'écran.
     dur: 5, loop: 'cycle', hold: 0.12, front: true,
+    // aide : l'esquive (la tête passe d'un côté, puis de l'autre) ; pas de fantôme de face
+    explain: [{ from: 0, to: 1, joint: 'head' }, { from: 3, to: 4, joint: 'head' }],
     frames: [
       { at: [60, 43], torso: -90, neck: -90, armN: { to: [64.5, 19], bend: 1 }, armF: { to: [55.5, 19], bend: -1 }, legN: { to: [66, 70], bend: -1 }, legF: { to: [54, 70], bend: 1 } },
       { at: [62, 48.5], torso: -73, neck: -76, armN: { to: [74.9, 25.7], bend: 1 }, armF: { to: [65.9, 25.7], bend: -1 }, legN: { to: [66, 70], bend: -1 }, legF: { to: [54, 70], bend: 1 } },

@@ -1125,6 +1125,17 @@ input.task { text-align: center; margin: 4px 0 10px; border-radius: 999px; }
 @media (max-height: 800px) { .player .demo { display: none; } }
 .player .player-fig { flex-shrink: 1; min-height: 40px; }
 @media (max-height: 680px) { .player .why { display: none; } .player.rest:has(.log-reps) .player-fig { display: none; } }
+/* Lecteur : le bonhomme passe au premier plan (c'est lui qui montre le geste) ;
+   le chrono reste très grand mais lui cède un peu de hauteur */
+.player .player-main > * { flex-shrink: 0; }
+.player .player-main > .player-fig { flex-shrink: 1; width: min(94vw, 460px); height: clamp(120px, 31vh, 300px); min-height: 96px; margin: 4px 0; }
+.player .clock.huge { font-size: min(28vw, 11.5vh, 9rem); margin: 0; }
+.player .cue { -webkit-line-clamp: 2; line-clamp: 2; }
+@media (max-height: 900px) { .player .demo { display: none; } }
+/* téléphones moins hauts (360 × 740, 414 × 736…) : rien ne déborde ; le
+   « pourquoi » reste dans « Lire la consigne » */
+@media (max-height: 800px) { .player .why { display: none; } .player .player-main > .player-fig { min-height: 80px; } }
+.cue-full-fig { width: min(88vw, 380px); } /* consigne (séance en pause) : le geste en grand */
 
 /* ——— Corps ——— */
 .wo-A { --wo: var(--wo-A); } .wo-B { --wo: var(--wo-B); } .wo-C { --wo: var(--wo-C); } .wo-M { --wo: var(--wo-M); }

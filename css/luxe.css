@@ -58,8 +58,13 @@
   --rest: #14b8a6;
   --figure: #f1f0f7;
   --figure-focus: #e8336a;
-  --figure-far: #c3c1d4;
-  --figure-focus-far: #c42a5e;
+  --figure-far: #b4b0cc;
+  --figure-focus-far: #ad2453;
+  --fig-hair: #5b4636;
+  --fig-shoe: #8f84d8;
+  --fig-shoe-far: #5f5799;
+  --fig-line: #0b0916;
+  --figure-move: #7dd3fc;
   --av-body: #f5f5fa;
   --av-ink: #0b0816;
   --av-aura: #8b5cf6;
@@ -223,8 +228,13 @@
     --rest: #14b8a6;
     --figure: #f1f0f7;
     --figure-focus: #e8336a;
-    --figure-far: #c3c1d4;
-    --figure-focus-far: #c42a5e;
+    --figure-far: #b4b0cc;
+    --figure-focus-far: #ad2453;
+    --fig-hair: #5b4636;
+    --fig-shoe: #8f84d8;
+    --fig-shoe-far: #5f5799;
+    --fig-line: #0b0916;
+    --figure-move: #7dd3fc;
     --av-body: #f5f5fa;
     --av-ink: #0b0816;
     --av-aura: #8b5cf6;
@@ -389,8 +399,13 @@
   --rest: #14b8a6;
   --figure: #f1f0f7;
   --figure-focus: #e8336a;
-  --figure-far: #c3c1d4;
-  --figure-focus-far: #c42a5e;
+  --figure-far: #b4b0cc;
+  --figure-focus-far: #ad2453;
+  --fig-hair: #5b4636;
+  --fig-shoe: #8f84d8;
+  --fig-shoe-far: #5f5799;
+  --fig-line: #0b0916;
+  --figure-move: #7dd3fc;
   --av-body: #f5f5fa;
   --av-ink: #0b0816;
   --av-aura: #8b5cf6;
@@ -1062,8 +1077,8 @@ input.task { text-align: center; margin: 4px 0 10px; border-radius: 999px; }
 .player .target-tag { font-size: 0.8125rem; margin-top: 8px; background: var(--phase-tint, rgb(255 255 255 / 0.1)); color: var(--phase-ink); }
 /* bonshommes du lecteur : corps blanc, le muscle travaillé s'allume
    à la couleur de la phase (rose = effort, sarcelle = repos, ambre = échauffement) */
-.player-fig { opacity: 1; --figure: #f1f0f7; --figure-focus: #e8336a; --figure-far: #c3c1d4; --figure-focus-far: #c42a5e; }
-.player.rest .player-fig { opacity: 1; --figure: #e4ecef; --figure-focus: #0b8fa0; --figure-far: #b8c6cb; --figure-focus-far: #08707e; }
+.player-fig { opacity: 1; --figure: #f1f0f7; --figure-focus: #e8336a; --figure-far: #b4b0cc; --figure-focus-far: #ad2453; --fig-line: #07050c; }
+.player.rest .player-fig { opacity: 1; --figure: #e4ecef; --figure-focus: #0b8fa0; --figure-far: #a6b5ba; --figure-focus-far: #08707e; }
 .player.warm .player-fig { --figure-focus: #c2610c; --figure-focus-far: #a14f08; }
 .player-fig .fig-mat { fill: color-mix(in srgb, var(--phase-ink, #fff) 16%, transparent); }
 /* le temps qui passe : la lumière de la phase monte doucement, sans bord net */
@@ -1109,7 +1124,28 @@ input.task { text-align: center; margin: 4px 0 10px; border-radius: 999px; }
 /* Petits écrans : la démo reste dans la liste, la place va au « pourquoi » et à « Ensuite » */
 @media (max-height: 800px) { .player .demo { display: none; } }
 .player .player-fig { flex-shrink: 1; min-height: 40px; }
-@media (max-height: 680px) { .player .why { display: none; } .player.rest:has(.log-reps) .player-fig { display: none; } }
+@media (max-height: 680px) { .player .player-main .why { display: none; } .player.rest:has(.log-reps) .player-fig { display: none; } }
+/* Lecteur : le bonhomme passe au premier plan (c'est lui qui montre le geste) ;
+   le chrono reste très grand mais lui cède un peu de hauteur */
+.player .player-main > * { flex-shrink: 0; }
+.player .player-main > .player-fig { flex-shrink: 1; width: min(94vw, 460px); height: clamp(120px, 31vh, 300px); min-height: 96px; margin: 4px 0; }
+.player .clock.huge { font-size: min(28vw, 11.5vh, 9rem); margin: 0; }
+.player .cue { -webkit-line-clamp: 2; line-clamp: 2; }
+@media (max-height: 900px) { .player .demo { display: none; } }
+/* téléphones moins hauts (360 × 740, 414 × 736…) : rien ne déborde ; le
+   « pourquoi » reste dans « Lire la consigne » (seul celui du lecteur est caché) */
+@media (max-height: 800px) { .player .player-main .why { display: none; } .player .player-main > .player-fig { min-height: 80px; } }
+/* record en haut de la fourchette : l'étiquette et « Version plus dure » prennent
+   la place de la consigne courte (elle reste dans « Lire la consigne ») */
+.player .player-main:has(.rec-reset) > .cue { display: none; }
+@media (max-height: 800px) {
+  .player .player-main:has(.rec-reset) > .player-fig { min-height: 56px; }
+  .player .player-main:has(.rec-reset) > .clock.huge { font-size: min(28vw, 9vh, 9rem); }
+}
+.cue-full-fig { width: min(88vw, 380px); } /* consigne (séance en pause) : le geste en grand */
+/* … sans pousser la consigne hors de l'écran : un bonhomme debout (cadre haut) est
+   limité en hauteur et reste centré */
+.cue-full-fig .fig { max-height: min(34vh, 300px); }
 
 /* ——— Corps ——— */
 .wo-A { --wo: var(--wo-A); } .wo-B { --wo: var(--wo-B); } .wo-C { --wo: var(--wo-C); } .wo-M { --wo: var(--wo-M); }
@@ -1148,11 +1184,12 @@ input.task { text-align: center; margin: 4px 0 10px; border-radius: 999px; }
 /* bonshommes : sur une petite tuile de nuit */
 .ex li { border-top: 1px solid var(--divider); }
 .ex-fig { border-radius: 14px; border: 1px solid var(--divider); background: var(--fig-tile); }
-/* membres du côté éloigné : teinte propre au lieu d'une opacité,
-   pour qu'un muscle travaillé de ce côté reste net */
+/* membres du côté éloigné : teinte propre (dégradés fig-back) au lieu d'une
+   opacité, pour qu'un muscle travaillé de ce côté reste net */
 .fig .fig-far { opacity: 1; }
-.fig .fig-far .fig-bone { stroke: var(--figure-far, var(--figure)); }
-.fig .fig-far .fig-focus { stroke: var(--figure-focus-far, var(--figure-focus)); }
+/* vignettes de la liste (84 × 56) : le bonhomme seul, trait plus fin */
+.ex-fig .fig-ghost, .ex-fig .fig-move, .ex-fig .fig-joint, .ex-fig .fig-shadow { display: none; }
+.ex-fig .fig .fig-skin, .ex-fig .fig .fig-hand, .ex-fig .fig .fig-head, .ex-fig .fig .fig-hair, .ex-fig .fig .fig-shoe { stroke-width: 0.35; }
 
 /* ——— Bilan, sprints, tableaux ——— */
 .sprints li.current { background: var(--seg-on); box-shadow: inset 0 0 0 1px var(--seg-on-line); border-radius: 12px; }

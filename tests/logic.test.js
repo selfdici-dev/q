@@ -373,3 +373,17 @@ test('objectifs : en haut de la fourchette, passer à la version plus dure ; rec
   assert.deepEqual(dropRecords(undefined, 'x'), {});
   assert.equal(spokenStep({ kind: 'work', name: 'Pompes (sur parallettes)', cue: 'Objectif : 10 à 13 pompes.' }, null, { target: 13, best: 13, harder: true }), 'Pompes sur parallettes. Passe à la version plus dure.');
 });
+
+test('créatine : jours cochés sur les 7 derniers, aujourd’hui compris', async () => {
+  const { creatineWeek } = await import('../js/logic.js');
+  const st = { days: {
+    '2026-10-20': { creatine: true },
+    '2026-10-18': { creatine: true },
+    '2026-10-14': { creatine: true }, // 7e jour en arrière : compte
+    '2026-10-13': { creatine: true }, // 8e jour : ne compte plus
+    '2026-10-19': { creatine: false },
+    '2026-10-17': { creatine: 'oui' }, // seul « true » compte
+  } };
+  assert.equal(creatineWeek(st, '2026-10-20'), 3);
+  assert.equal(creatineWeek({ days: {} }, '2026-10-20'), 0);
+});

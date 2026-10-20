@@ -83,3 +83,15 @@ test('bilan de la semaine en cours : seuls les jours écoulés comptent', () => 
   assert.match(text, /Grignotages : aucun/);
   assert.doesNotMatch(text, /Poids/);
 });
+
+test('bilans : la ligne créatine n’apparaît que si la case est affichée', () => {
+  const st = base();
+  st.days[S] = { habits: { a: 1 }, creatine: true };
+  assert.ok(!daySummary(st, S).includes('Créatine'));
+  st.settings.creatine = true;
+  assert.ok(daySummary(st, S).split('\n').includes('Créatine : prise ✓'));
+  st.days['2026-10-02'] = { habits: {} };
+  assert.ok(daySummary(st, '2026-10-02').split('\n').includes('Créatine : pas encore prise'));
+  st.days['2026-10-03'] = { creatine: true };
+  assert.ok(weekSummary(st, S, '2026-10-08').split('\n').includes('Créatine : 2/7 jours'));
+});

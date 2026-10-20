@@ -3,7 +3,7 @@ import {
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
   dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
-  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, recordKey, spokenStep, dropRecords,
+  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, recordKey, spokenStep, dropRecords, creatineWeek,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
@@ -39,6 +39,7 @@ function freshState() {
       theme: 'dark',
       voice: false, // coach vocal pendant la séance
       voiceURI: 'auto',
+      creatine: true, // case « Créatine » sous les habitudes, hors chaîne
     },
     habits: structuredClone(DEFAULT_HABITS),
     rules: [...DEFAULT_RULES],
@@ -521,6 +522,7 @@ function viewToday() {
               <button class="seg ${lvl === 2 ? 'on' : ''}" data-act="habit" data-id="${h.id}" data-lvl="2" aria-pressed="${lvl === 2}">Complet</button>
             </div></li>`;
         }).join('')}
+        ${state.settings.creatine ? creatineRow(today, d) : ''}
       </ul>
       <details class="more"><summary>Ce que valent « Min » et « Complet »</summary>
         <ul class="tight">${state.habits.map((h) => `<li><strong>${esc(h.name)}</strong> · min : ${esc(h.min)} · complet : ${esc(h.full)}</li>`).join('')}</ul>
@@ -681,6 +683,16 @@ function viewRevision() {
     ${counts.length ? `<p class="hint">Tes cartes : ${counts.map(([k, n]) => `${k} ${n}`).join(' · ')}</p>` : ''}
     ${state.myCards.length ? `<details><summary>Gérer mes cartes</summary><ul class="cardlist">${state.myCards.map((x, i) => `<li><span><strong>${esc(x.front)}</strong><br><span class="muted">${esc(x.back)}</span></span><button class="btn ghost small" data-act="card-del" data-i="${i}">Suppr.</button></li>`).join('')}</ul></details>` : ''}
   </section>`;
+}
+
+// Une case à part : elle ne compte ni dans la chaîne ni dans les habitudes du jour.
+function creatineRow(today, d) {
+  const on = d.creatine === true;
+  return `<li class="habit lvl-${on ? 1 : 0}">
+    <span class="habit-ico" aria-hidden="true">${on ? '✓' : '💊'}</span>
+    <div class="habit-text"><strong>Créatine</strong>
+      <span>1 dose de 3 g · ${creatineWeek(state, today)}/7 cette semaine · hors chaîne</span></div>
+    <div class="habit-btns"><button class="seg ${on ? 'on' : ''}" data-act="creatine" aria-pressed="${on}">${on ? 'Prise' : 'À prendre'}</button></div></li>`;
 }
 
 function snackCard(key) {
@@ -1243,6 +1255,11 @@ function viewSettings() {
     <button class="btn" data-act="habit-add" ${state.habits.length >= 6 ? 'disabled' : ''}>Ajouter une habitude</button>
   </section>
   <section class="card">
+    <div class="card-head"><h2>Créatine</h2></div>
+    <p class="hint">Une case par jour sous tes habitudes, pour ne pas oublier ta dose. Elle ne compte pas dans la chaîne : un oubli ne fait pas rater ta journée.</p>
+    <div class="row">${[['0', 'Masquée'], ['1', 'Affichée']].map(([v, l]) => `<button class="seg ${String(Number(s.creatine)) === v ? 'on' : ''}" data-act="creatine-show" data-v="${v}" aria-pressed="${String(Number(s.creatine)) === v}">${l}</button>`).join('')}</div>
+  </section>
+  <section class="card">
     <div class="card-head"><h2>Règles « Si… alors… »</h2></div>
     <label>Une règle par ligne<textarea id="rules" rows="4">${esc(state.rules.join('\n'))}</textarea></label>
   </section>
@@ -1435,6 +1452,18 @@ const actions = {
     save();
     render();
     if (before < PROTEIN_GRAMS && d.proteinG >= PROTEIN_GRAMS) celebrate('Objectif protéines atteint 💪');
+  },
+  creatine() {
+    const d = day(todayKey());
+    d.creatine = !d.creatine;
+    navigator.vibrate?.(8);
+    save();
+    render();
+  },
+  'creatine-show'(el) {
+    state.settings.creatine = el.dataset.v === '1';
+    save();
+    render();
   },
   'protein-undo'() {
     const d = day(todayKey());

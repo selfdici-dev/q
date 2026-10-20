@@ -34,6 +34,7 @@ function checkDay(key, d) {
   for (const f of DAY_NUMBERS) if (!empty(d[f]) && !isNum(d[f])) return `valeur « ${f} » invalide le ${key}`;
   for (const f of ['bed', 'wake']) if (!empty(d[f]) && !isTime(d[f])) return `heure « ${f} » invalide le ${key}`;
   for (const f of ['workouts', 'snacks']) if (d[f] !== undefined && !Array.isArray(d[f])) return `liste « ${f} » illisible le ${key}`;
+  if (d.creatine !== undefined && typeof d.creatine !== 'boolean') return `valeur « creatine » invalide le ${key}`;
   return null;
 }
 

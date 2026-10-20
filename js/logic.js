@@ -255,6 +255,14 @@ export function proteinGrams(d) {
   return Number.isFinite(d?.proteinG) ? d.proteinG : (d?.protein ?? 0) * PROTEIN_PORTION_G;
 }
 
+// Créatine : une case par jour, à part des habitudes (un oubli ne rate pas la
+// journée). Jours cochés sur les 7 derniers, aujourd'hui compris.
+export function creatineWeek(state, today) {
+  let n = 0;
+  for (let i = 0; i < 7; i++) if (state.days[addDays(today, -i)]?.creatine === true) n++;
+  return n;
+}
+
 export function lastValue(state, field) {
   for (const k of Object.keys(state.days).sort().reverse()) {
     const v = Number(state.days[k]?.[field]);

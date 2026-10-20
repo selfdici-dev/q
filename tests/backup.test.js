@@ -72,3 +72,15 @@ test('la vérification ne modifie pas le fichier', () => {
   validateBackup(data);
   assert.deepEqual(data, copy);
 });
+
+test('créatine : une case vraie ou fausse, rien d’autre', () => {
+  const ok = good();
+  ok.days['2026-09-02'].creatine = true;
+  ok.days['2026-09-01'].creatine = false;
+  assert.equal(validateBackup(ok).ok, true);
+  const bad = good();
+  bad.days['2026-09-02'].creatine = 'oui';
+  const r = validateBackup(bad);
+  assert.equal(r.ok, false);
+  assert.match(r.error, /creatine/);
+});

@@ -37,6 +37,7 @@ export function daySummary(state, key) {
     sessionLine(WEEK_PLAN[fromKey(key).getDay()], d.workouts ?? []),
     `Focus : ${focus ? `${plural(focus, 'session')} de 25 min` : 'aucune session'}`,
     `Protéines : ${proteinGrams(d)}/${PROTEIN_GRAMS} g`,
+    ...(state.settings?.creatine ? [`Créatine : ${d.creatine ? 'prise ✓' : 'pas encore prise'}`] : []),
     `Grignotages : ${snacks.length ? `${snacks.length} (${snacks.map((s) => `${s.time} ${s.trigger}`).join(', ')})` : 'aucun'}${resisted ? ` · ${plural(resisted, 'envie')} résistée${resisted > 1 ? 's' : ''}` : ''}`,
     `Coucher visé ce soir : ${weeklyBedtime(weekNumber(state, key), state.settings.bedtimeTarget)}`,
   ];
@@ -97,6 +98,7 @@ export function weekSummary(state, first, today) {
     `Séances : ${real.length}${planned ? ` sur ${planned} prévues` : ''}${real.length ? ` (${real.join(', ')})` : ''}${mobility ? ` + ${mobility} mobilité` : ''}`,
     `Focus : ${focus ? `${plural(focus, 'session')} de 25 min` : 'aucune session'}`,
     `Protéines : ${Math.round(protein)} g/jour en moyenne · objectif (${PROTEIN_GRAMS} g) atteint ${proteinDays} jour${proteinDays > 1 ? 's' : ''} sur ${n}`,
+    ...(state.settings?.creatine ? [`Créatine : ${days.filter((x) => x.d.creatine === true).length}/${n} jours`] : []),
     `Grignotages : ${snacks.length || 'aucun'}${top ? ` · déclencheur n° 1 : ${top[0]} (${top[1]} fois)` : ''}${resisted ? ` · ${plural(resisted, 'envie')} résistée${resisted > 1 ? 's' : ''}` : ''}`,
     `Coucher : visé ${weeklyBedtime(week, state.settings.bedtimeTarget)}${beds.length ? ` · réel en moyenne ${minutesToHHMM(avg(beds))} (${plural(beds.length, 'nuit')} notée${beds.length > 1 ? 's' : ''})` : ''}${sleeps.length ? ` · sommeil moyen ${hours(avg(sleeps))}` : ''}`,
   ];

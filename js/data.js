@@ -145,10 +145,52 @@ export const SNACK_TRIGGERS = ['Faim', 'Ennui', 'Devant un écran', 'Fatigue', '
 export const FOOD_RULES = [
   'Une source de protéines à chaque repas (œufs, viande, poisson, skyr, lentilles, tofu) : ça cale et ça protège les muscles.',
   'La moitié de l’assiette en légumes (les surgelés comptent, c’est pareil).',
-  'Petit-déjeuner avec des protéines : c’est lui qui évite le grignotage de 11 h et de 16 h.',
+  'Un premier repas avec des protéines, au petit-déjeuner ou vers 11 h : c’est lui qui évite le grignotage de l’après-midi.',
   'Une collation prévue (fruit + skyr, ou une poignée d’amandes) vaut mieux que 5 grignotages imprévus.',
   'Ne pas manger devant TikTok ou Netflix : on mange sans s’en rendre compte.',
   'Les grignotages sucrés ou salés ne sont pas dans ta chambre. Ce qui n’est pas à portée de main ne se mange pas.',
+];
+
+// Journée type (≈ 2 200 kcal) : [moment, quoi]. Pas de petit-déjeuner obligatoire :
+// le 1er repas peut glisser vers 11 h, c'est le total du jour qui compte (le
+// petit-déjeuner n'aide pas à maigrir : méta-analyse Sievert 2019). Café : 400 mg
+// de caféine par jour au plus (EFSA), le dernier à 15 h pour dormir.
+export const DAY_PLAN = [
+  ['Au réveil', 'Un grand verre d’eau, un café sans sucre, ta créatine.'],
+  ['Le matin', 'Ta séance, si tu peux.'],
+  ['1er repas', 'Au petit-déjeuner, ou vers 11 h si tu le sautes : 250 g de skyr, 40 g de flocons d’avoine, 1 banane.'],
+  ['Midi', 'L’assiette : une protéine grande comme ta paume, un féculent gros comme ton poing, des légumes sur la moitié.'],
+  ['15 h', 'Dernier café de la journée (4 au plus par jour).'],
+  ['16 h', '2 œufs durs et un fruit, ou un skyr.'],
+  ['Le soir', 'La même assiette, ou le repas en famille avec la même règle.'],
+  ['Après dîner', 'Plus rien à manger : de l’eau ou une tisane.'],
+  ['23 h', 'Téléphone dans une autre pièce.'],
+];
+
+// Ce qu'il peut manger, en 3 couleurs. Rien n'est interdit : le rouge veut dire
+// « prévu », pas « jamais » (s'interdire des aliments fait plus craquer :
+// Westenhoefer 1999). FOOD_TREATS : comment prendre le rouge.
+export const FOOD_COLORS = [
+  { id: 'vert', ico: '🟢', title: 'Tous les jours', items: [
+    'Légumes, et 2 ou 3 fruits',
+    'Poulet, poisson, thon, œufs, steak haché 5 %, skyr, fromage blanc, lentilles, pois chiches',
+    'Aux repas : riz, pâtes, pommes de terre, pain complet, flocons d’avoine',
+    'Eau, café et thé sans sucre, boissons zéro',
+  ] },
+  { id: 'jaune', ico: '🟡', title: 'Un peu chaque jour', items: [
+    'Une portion de fromage, 2 carrés de chocolat',
+    'Pain blanc, beurre, mayonnaise, ketchup, charcuterie',
+  ] },
+  { id: 'rouge', ico: '🔴', title: 'Prévu, 2 ou 3 fois par semaine', items: [
+    'Gâteaux, glaces, viennoiseries, biscuits, Nutella, chips',
+    'Fast-food, sodas sucrés, jus de fruits, alcool',
+  ] },
+];
+export const FOOD_TREATS = [
+  'Choisis tes 2 ou 3 plaisirs à l’avance. Un dessert prévu à la fin d’un repas n’est pas un grignotage.',
+  'Mange-le à table, sans écran, une portion : un cornet ou une part, pas un pot d’un litre.',
+  'Au fast-food, garde la protéine et enlève un extra (frites, sauce ou soda). De l’eau pour boire.',
+  'Un craquage ? Le repas suivant redevient normal : jamais deux fois de suite.',
 ];
 
 // Recettes de débutant : peu d’ustensiles, ingrédients de supermarché, riches en protéines.

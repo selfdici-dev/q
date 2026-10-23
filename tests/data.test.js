@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { WORKOUTS, WEEK_PLAN, WARMUP, HELP, demoUrl, baseName } from '../js/data.js';
+import { WORKOUTS, WEEK_PLAN, WARMUP, HELP, demoUrl, baseName, DAY_PLAN, FOOD_COLORS, FOOD_TREATS, FOOD_RULES, DEFAULT_RULES, PROTEIN_FOODS } from '../js/data.js';
 import { goalOf } from '../js/logic.js';
 
 test('séances : les IDs stockés dans l’historique ne changent pas', () => {
@@ -182,4 +182,35 @@ test('B : des consignes courtes et en étapes, lisibles pendant l’effort', () 
     assert.ok(e.cue.length <= 330, `${e.name} : ${e.cue.length} caractères`);
     assert.match(e.cue, /1\. |Étape 1 : /, e.name);
   }
+});
+
+test('manger : journée type du réveil au coucher, et 3 couleurs où rien n’est interdit', () => {
+  // journée type : des lignes courtes, lisibles d'un coup d'œil
+  assert.ok(DAY_PLAN.length >= 6);
+  for (const [when, what] of DAY_PLAN) assert.ok(when.length <= 12 && what.length > 10 && what.length <= 120, when);
+  const plan = Object.fromEntries(DAY_PLAN);
+  assert.match(plan['Au réveil'], /créatine/);
+  // pas de petit-déjeuner obligatoire : le 1er repas peut glisser vers 11 h (la règle dit pareil)
+  assert.match(plan['1er repas'], /11 h/);
+  assert.ok(FOOD_RULES.some((r) => /premier repas avec des protéines.*11 h/.test(r)));
+  assert.ok(FOOD_RULES.every((r) => !/^Petit-déjeuner/.test(r)));
+  // café : le dernier à 15 h, 4 au plus (400 mg) ; plus rien à manger après le dîner ;
+  // téléphone loin à 23 h, comme la règle si-alors
+  assert.match(plan['15 h'], /Dernier café.*4 au plus/);
+  assert.match(plan['Après dîner'], /Plus rien à manger/);
+  assert.ok(DEFAULT_RULES.some((r) => r.includes('23 h')) && /Téléphone/.test(plan['23 h']));
+  // 3 couleurs : vert tous les jours (toutes les protéines des boutons, sauf le jambon), jaune un peu, rouge prévu
+  assert.deepEqual(FOOD_COLORS.map((c) => c.id), ['vert', 'jaune', 'rouge']);
+  const green = FOOD_COLORS[0].items.join(' ').toLowerCase();
+  for (const [food] of PROTEIN_FOODS.filter(([f]) => f !== 'Jambon')) assert.ok(green.includes(food.replace(/^\d+ /, '').toLowerCase()), food);
+  const red = FOOD_COLORS[2];
+  assert.match(red.title, /^Prévu, 2 ou 3 fois par semaine/);
+  assert.ok(/Gâteaux/.test(red.items.join(' ')) && /Fast-food/.test(red.items.join(' ')));
+  // rien d'interdit, aucune couleur n'est un « jamais » ; le rouge se prévoit, à table, sans écran
+  for (const c of FOOD_COLORS) assert.doesNotMatch(`${c.title} ${c.items.join(' ')}`, /interdit|jamais/i, c.id);
+  const treats = FOOD_TREATS.join(' ');
+  assert.match(treats, /pas un grignotage/);
+  assert.match(treats, /sans écran/);
+  assert.match(treats, /jamais deux fois de suite/);
+  for (const t of FOOD_TREATS) assert.ok(t.length <= 110, t);
 });

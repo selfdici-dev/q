@@ -608,4 +608,44 @@ export const POSES = {
       { at: [58, 44.5], torso: -89, neck: -86, armN: { to: [61, 45.5], bend: -1 }, armF: { to: [60, 45.5], bend: -1 }, legN: { to: [61, 70], bend: -1 }, legF: { to: [45, 63.5], bend: -1 } },
     ],
   },
+  // Ronde 15 : séance P au parc, à la barre de traction (bar: true). Mains fixes
+  // sur la barre ; le poing du fond est un peu en haut à gauche (barre vue de
+  // biais). Suspendu, le cadre est petit pour un corps tendu : genoux pliés,
+  // pieds derrière, comme on le fait souvent aux tractions.
+  'Suspension à la barre': {
+    dur: 4, hold: 0.4, bar: true,
+    frames: [
+      { at: [62.5, 53.85], torso: -94, neck: -73, armN: { to: [62, 9], bend: 1 }, armF: { to: [60.3, 8.4], bend: 1 }, legN: [52, 192], legF: [56, 195] },
+      { at: [62.5, 53.85], torso: -94.5, neck: -74, armN: { to: [62, 9], bend: 1 }, armF: { to: [60.3, 8.4], bend: 1 }, legN: [53, 193], legF: [57, 196] },
+    ],
+  },
+  Tractions: {
+    // en haut, le menton passe au-dessus de la barre, les coudes descendent devant
+    dur: 3, hold: 0.2, bar: true,
+    explain: [{ from: 0, to: 1, joint: 'head' }],
+    frames: [
+      { at: [62.5, 53.85], torso: -94, neck: -73, armN: { to: [62, 9], bend: 1 }, armF: { to: [60.3, 8.4], bend: 1 }, legN: [52, 192], legF: [56, 195] },
+      { at: [58.8, 32.7], torso: -100, neck: -100, armN: { to: [62, 9], bend: 1 }, armF: { to: [60.3, 8.4], bend: 1 }, legN: [58, 190], legF: [62, 193] },
+    ],
+  },
+  'Relevés de genoux suspendu': {
+    // les genoux montent jusqu'aux hanches, pieds rentrés, le bassin s'enroule
+    dur: 3.5, hold: 0.2, bar: true,
+    explain: [{ from: 0, to: 1, joint: 'kneeN' }],
+    frames: [
+      { at: [62.5, 53.85], torso: -94, neck: -73, armN: { to: [62, 9], bend: 1 }, armF: { to: [60.3, 8.4], bend: 1 }, legN: [52, 192], legF: [56, 195] },
+      { at: [65, 53], torso: -100, neck: -80, armN: { to: [62, 9], bend: 1 }, armF: { to: [60.3, 8.4], bend: 1 }, legN: [-12, 128], legF: [-8, 132] },
+    ],
+  },
+  'Tractions australiennes': {
+    // version débutant (sa première étape) : sous une barre basse, pieds à plat et
+    // genoux pliés ; le corps reste gainé et pivote autour des genoux jusqu'à ce
+    // que la poitrine touche la barre, les coudes partent vers le sol
+    face: -1,
+    dur: 3, hold: 0.2, bar: true,
+    frames: [
+      { anchor: 'footN', at: [30, 70], torso: -12, neck: -18, armN: { to: [54.9, 30.1], bend: -1 }, armF: { to: [53.7, 29.7], bend: -1 }, legN: [168, 100], legF: [170, 102] },
+      { anchor: 'footN', at: [30, 70], torso: -40, neck: -50, armN: { to: [54.9, 30.1], bend: -1 }, armF: { to: [53.7, 29.7], bend: -1 }, legN: [140, 100], legF: [142, 102] },
+    ],
+  },
 };

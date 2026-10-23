@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { solve, between, timeline, figureSVG, figureFor, frameBox, focusFor, explain, arrowPath, footPose, smoothFeet, handAngle, BODY, VIEW, BONES, LIMBS, JOINTS, MOVE_MIN, FLOOR_LIMIT } from '../js/figures.js';
+import { solve, between, timeline, figureSVG, figureFor, frameBox, focusFor, explain, arrowPath, footPose, smoothFeet, handAngle, barAt, BODY, VIEW, BONES, LIMBS, JOINTS, MOVE_MIN, FLOOR_LIMIT, BAR_DIR } from '../js/figures.js';
 import { POSES } from '../js/poses.js';
 import { WORKOUTS, WARMUP } from '../js/data.js';
 
@@ -85,8 +85,9 @@ test('toutes les poses : sur le tapis, dans le cadre, sans membre étiré', () =
     }
     for (const f of fig.frames) {
       const j = solve(f);
-      // Sur parallettes, les mains posées sur les poignées (≈ 4,5 au-dessus du sol) suffisent.
-      const support = fig.parallettes ? Math.max(j.handN[1], j.handF[1]) + 4.5 : -Infinity;
+      // Sur parallettes, les mains posées sur les poignées (≈ 4,5 au-dessus du sol) suffisent ;
+      // à la barre, les mains tiennent la barre (voir le test de la barre).
+      const support = fig.bar ? VIEW.floor : fig.parallettes ? Math.max(j.handN[1], j.handF[1]) + 4.5 : -Infinity;
       assert.ok(Math.max(support, ...JOINTS.map((k) => j[k][1])) >= VIEW.floor - 1.5, `${name} : flotte au-dessus du tapis`);
     }
   }
@@ -158,7 +159,8 @@ test('parallettes, élastique et repère fixe dessinés quand la pose le demande
   assert.match(svg('L-sit'), /class="fig-par"/);
   assert.match(svg('Écarté arrière à l’élastique'), /class="fig-band"/);
   assert.match(svg('Chin tucks'), /class="fig-guide"/);
-  assert.doesNotMatch(svg('Pompes'), /fig-par|fig-band|fig-guide/);
+  assert.match(svg('Tractions'), /class="fig-bar"/);
+  assert.doesNotMatch(svg('Pompes'), /fig-par|fig-band|fig-guide|fig-bar/);
   // de face, l'élastique passe devant les bras (sinon il est caché)
   const front = svg('Écarté arrière à l’élastique');
   assert.ok(front.indexOf('class="fig-band"') > front.lastIndexOf('class="fig-hand"'));
@@ -339,9 +341,50 @@ test('couleurs : secours sans color-mix, vignettes allégées', () => {
   // le secours couvre aussi tapis, parallettes et roue, avec des sélecteurs plus forts que les
   // règles color-mix écrites après lui (sinon ces formes deviendraient noires)
   const fallback = css.slice(css.indexOf('@supports not (color: color-mix('));
-  for (const sel of ['.fig rect.fig-mat', '.fig .fig-par rect', '.fig .fig-wheel circle:not(.fig-hub)']) assert.ok(fallback.slice(0, fallback.indexOf('\n}')).includes(sel), sel);
+  for (const sel of ['.fig rect.fig-mat', '.fig .fig-par rect', '.fig .fig-bar rect', '.fig .fig-wheel circle:not(.fig-hub)']) assert.ok(fallback.slice(0, fallback.indexOf('\n}')).includes(sel), sel);
   assert.match(luxe, /\.ex-fig \.fig-ghost, \.ex-fig \.fig-move/);
   for (const token of ['--fig-shoe', '--fig-hair', '--figure-move', '--fig-line']) assert.match(luxe, new RegExp(`${token}:`));
+});
+
+test('barre : les mains ne la lâchent pas ; suspendu, ni sol ni tapis ; australiennes, pieds au sol', () => {
+  const bar = Object.entries(POSES).filter(([, fig]) => fig.bar);
+  assert.deepEqual(bar.map(([n]) => n).sort(), ['Relevés de genoux suspendu', 'Suspension à la barre', 'Tractions', 'Tractions australiennes']);
+  for (const [name, fig] of bar) {
+    const keys = timeline(fig);
+    const j0 = keys[0].joints;
+    for (const { joints } of keys) {
+      assert.ok(dist(joints.handN, j0.handN) < 0.3, `${name} : la main proche glisse`);
+      assert.ok(dist(joints.handF, j0.handF) < 1.2, `${name} : la main du fond glisse`);
+    }
+    // la barre passe dans le poing proche (un peu au-delà du poignet), vue de biais
+    const [p, q] = barAt(j0);
+    const len = dist(p, q);
+    assert.ok(Math.abs((q[0] - p[0]) / len - BAR_DIR[0]) < 0.02 && Math.abs((q[1] - p[1]) / len - BAR_DIR[1]) < 0.02, name);
+    const d = Math.abs((j0.handN[0] - p[0]) * BAR_DIR[1] - (j0.handN[1] - p[1]) * BAR_DIR[0]);
+    assert.ok(d < 1.6, `${name} : barre loin de la main (${d})`);
+    // les poings serrent la barre : main dans l'axe de l'avant-bras
+    const inline = Math.atan2(j0.handN[1] - j0.elbowN[1], j0.handN[0] - j0.elbowN[0]) * 180 / Math.PI;
+    assert.equal(handAngle(j0.elbowN, j0.handN, 1, true), inline);
+  }
+  // suspendu : tout le corps reste en l'air, pieds compris ; pas de tapis, cadre arrêté sous le corps
+  for (const name of ['Suspension à la barre', 'Tractions', 'Relevés de genoux suspendu']) {
+    const keys = timeline(POSES[name]);
+    for (const { joints } of keys) assert.ok(JOINTS.every((k) => joints[k][1] < VIEW.floor - 3), `${name} : touche le sol`);
+    const svg = figureSVG(POSES[name], { fit: true });
+    assert.doesNotMatch(svg, /fig-mat|fig-shadow/, name);
+    const [, y, , h] = svg.match(/viewBox="([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+)"/).slice(1).map(Number);
+    const lowest = Math.max(...keys.flatMap(({ joints }) => JOINTS.map((k) => joints[k][1])));
+    assert.ok(y + h <= lowest + 7.1 && y + h < VIEW.floor + 7, `${name} : cadre jusqu'au sol`);
+  }
+  // tractions : en haut, la tête passe au-dessus de la barre
+  const top = solve(POSES.Tractions.frames[1]);
+  assert.ok(top.head[1] < barAt(solve(POSES.Tractions.frames[0]))[0][1] - 3, 'menton sous la barre');
+  // australiennes : pieds à plat au sol (le tapis reste), la poitrine monte jusqu'à la barre
+  const row = POSES['Tractions australiennes'];
+  assert.match(figureSVG(row, { fit: true }), /class="fig-mat"/);
+  for (const f of row.frames) assert.equal(solve(f).footN[1], VIEW.floor);
+  const [low, high] = row.frames.map(solve);
+  assert.ok(dist(high.shoulder, high.handN) < dist(low.shoulder, low.handN) - 12, 'australiennes : la poitrine ne monte pas');
 });
 
 test('burpees : mains posées qui ne bougent plus, pieds l’un après l’autre, genou au-dessus du tapis', () => {

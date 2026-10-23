@@ -7,6 +7,7 @@ import {
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
+  DAY_PLAN, FOOD_COLORS, FOOD_TREATS,
   WARMUP, PROTEIN_GRAMS, PROTEIN_FOODS, PHASES, MILESTONES, BOOKS, APPS, HELP,
 } from './data.js';
 import { ALL_LESSONS } from './finance-data.js';
@@ -848,7 +849,15 @@ function viewSport() {
         </details>`;
       }).join('')}`)}
     ${fold('c-tests', '📏', 'Tests de niveau', 'Tous les 4 sprints', `<span class="pill">${state.tests.length} test${state.tests.length > 1 ? 's' : ''}</span>`, testsBody())}
-    ${fold('c-food', '🍽️', 'Manger et cuisiner', `${FOOD_RULES.length} règles · ${RECIPES.length} recettes`, '<span></span>', `
+    ${fold('c-food', '🍽️', 'Manger et cuisiner', `Journée type · ${FOOD_RULES.length} règles · ${RECIPES.length} recettes`, '<span></span>', `
+      <h3 class="apps-cat">Ta journée type</h3>
+      <p class="hint">≈ 2 200 kcal et ${PROTEIN_GRAMS} g de protéines. Pas faim le matin ? Le 1er repas glisse vers 11 h : c’est le total du jour qui compte.</p>
+      <ol class="day-plan">${DAY_PLAN.map(([when, what]) => `<li><b>${esc(when)}</b><span>${esc(what)}</span></li>`).join('')}</ol>
+      <h3 class="apps-cat">Ce que tu peux manger</h3>
+      ${FOOD_COLORS.map((c) => `<div class="food-color fc-${c.id}"><p><strong>${c.ico} ${esc(c.title)}</strong></p><ul class="tight">${c.items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul></div>`).join('')}
+      <p class="hint">Rien n’est interdit : le rouge veut dire « prévu », pas « jamais ».</p>
+      <ul class="tight">${FOOD_TREATS.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+      <h3 class="apps-cat">Les règles et les recettes</h3>
       <p class="muted">Pour des abdos visibles, l’alimentation pèse plus lourd que les séances. Six règles, pas de régime :</p>
       <ol class="tight">${FOOD_RULES.map((r) => `<li>${esc(r)}</li>`).join('')}</ol>
       <p class="hint">Objectif : maîtriser une recette par semaine. Propose à tes parents de cuisiner un repas par semaine : tu apprends, et tu choisis ce qui est dans l’assiette.</p>

@@ -1031,6 +1031,13 @@ details.card.more .rules { margin-top: 10px; }
 .fold-body .goal-list { margin-top: 8px; }
 .fold-body > .week { margin-bottom: 4px; }
 .apps-cat { margin: 14px 0 4px; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+/* Manger : journée type (moment, quoi) et aliments en 3 couleurs */
+.day-plan { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; }
+.day-plan li { display: grid; grid-template-columns: 6.6em 1fr; gap: 10px; align-items: baseline; }
+.day-plan b { font-weight: 650; color: var(--muted); }
+.food-color { margin: 8px 0 0; padding: 8px 10px 8px 12px; border-left: 3px solid var(--fc, var(--line)); border-radius: 8px; background: color-mix(in srgb, var(--fc, transparent) 8%, transparent); }
+.food-color p { margin: 0 0 4px; }
+.fc-vert { --fc: var(--pos); } .fc-jaune { --fc: var(--warn); } .fc-rouge { --fc: var(--neg); }
 .subtabs button { white-space: nowrap; }
 
 /* ---------- v26 : consigne en entier pendant la séance ---------- */

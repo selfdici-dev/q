@@ -783,7 +783,7 @@ let proteinUndo = 0; // grammes du dernier bouton protéines (pour « Annuler »
 function buildSteps(w, level) {
   const delta = w.fixed ? 0 : (level - 2) * 10;
   const rounds = w.fixed ? w.rounds : level === 1 ? Math.max(2, w.rounds - 1) : w.rounds;
-  const steps = [{ kind: 'prep', name: 'Prépare-toi', secs: 10, cue: 'Tapis au sol, téléphone posé à côté, une gorgée d’eau.' }];
+  const steps = [{ kind: 'prep', name: 'Prépare-toi', secs: 10, cue: w.prep ?? 'Tapis au sol, téléphone posé à côté, une gorgée d’eau.' }];
   if (!w.fixed) {
     WARMUP.forEach((ex) => steps.push({ kind: 'warm', name: ex.name, secs: ex.work, cue: ex.cue }));
   }
@@ -803,7 +803,8 @@ function viewSport() {
   const planned = WEEK_PLAN[fromKey(today).getDay()];
   const lvl = state.settings.level;
   const done = state.days[today]?.workouts ?? [];
-  const recent = state.feels.filter((f) => f.id !== 'M').slice(-2);
+  // les séances fixes (M, P) ne changent pas avec le niveau : leur ressenti ne compte pas
+  const recent = state.feels.filter((f) => !WORKOUTS.find((w) => w.id === f.id)?.fixed).slice(-2);
   const suggestUp = lvl < 3 && recent.length === 2 && recent.every((f) => f.v === 'facile');
   const suggestDown = lvl > 1 && recent.length === 2 && recent.every((f) => f.v === 'dur');
   const dayNames = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
@@ -820,19 +821,20 @@ function viewSport() {
       <div><p class="eyebrow">Aujourd’hui</p><h2>${esc(pw.name.split(' · ')[1] ?? pw.name)}</h2><p class="muted">≈ ${workoutMinutes(pw)} min · ≈ ${workoutKcal(pw)} kcal · niveau ${lvl}${did ? ' · ✓ faite' : ''}</p></div>
       <button class="btn primary wide" data-act="start-workout" data-id="${pw.id}">${did ? 'Refaire' : 'Lancer la séance'}</button>
       ${pw.id !== 'M' ? `<button class="btn ghost small" data-act="start-workout" data-id="C">${done.includes('C') ? '✓ Cardio boxe fait' : `En plus : cardio boxe C (${workoutMinutes(WORKOUTS.find((w) => w.id === 'C'))} min)`}</button>` : ''}
+      ${pw.id !== 'M' ? `<button class="btn ghost small" data-act="start-workout" data-id="P">${done.includes('P') ? '✓ Tractions au parc faites' : `Au parc : tractions P (${workoutMinutes(WORKOUTS.find((w) => w.id === 'P'))} min)`}</button>` : ''}
       ${pw.id !== 'M' ? `<button class="btn ghost small" data-act="start-workout" data-id="M">Pas la forme ? Juste la mobilité (${workoutMinutes(WORKOUTS.find((w) => w.id === 'M'))} min)</button>` : ''}
     </section>`;
   })()}
   <section class="card program-hero">
     <div class="card-head"><h2>🔥 Régularité</h2><span class="pill">${sw.streak} semaine${sw.streak > 1 ? 's' : ''} tenue${sw.streak > 1 ? 's' : ''}</span></div>
     <div class="pips big">${Array.from({ length: sw.goal }, (_, i) => `<i class="${i < sw.thisWeek ? 'on' : ''}"></i>`).join('')}</div>
-    <p class="hint">${sw.thisWeek}/${sw.goal} séances A, B ou C cette semaine (lundi → dimanche). Une semaine est tenue à ${sw.goal}. La régularité bat l’intensité : 4 séances moyennes valent mieux qu’une séance héroïque.</p>
+    <p class="hint">${sw.thisWeek}/${sw.goal} séances A, B, C ou P cette semaine (lundi → dimanche). Une semaine est tenue à ${sw.goal}. La régularité bat l’intensité : 4 séances moyennes valent mieux qu’une séance héroïque.</p>
   </section>
   <div class="folds">
     ${fold('c-goal', '🎯', 'Ton objectif', 'Pourquoi ces séances', '<span></span>', goalBody())}
-    ${fold('c-wo', '💪', 'Les 4 séances', 'Exercices et semaine type', `<span class="pill">Niv. ${lvl}</span>`, `
+    ${fold('c-wo', '💪', 'Les 5 séances', 'Exercices et semaine type', `<span class="pill">Niv. ${lvl}</span>`, `
       <div class="week">${[1, 2, 3, 4, 5, 6, 0].map((dow, i) => `<div class="wk-${WEEK_PLAN[dow]} ${i === todayDow ? 'today' : ''}"><small>${dayNames[i]}</small><b>${WEEK_PLAN[dow]}</b></div>`).join('')}</div>
-      <p class="hint">A = abdos et tronc, B = bras, avant-bras, épaules et dos, en alternance du lundi au samedi : chaque muscle a 48 h pour récupérer. C = cardio boxe, en plus quand tu veux. M = mobilité et posture, le dimanche (repos). Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
+      <p class="hint">A = abdos et tronc, B = bras, avant-bras, épaules et dos, en alternance du lundi au samedi : chaque muscle a 48 h pour récupérer. C = cardio boxe, en plus quand tu veux. P = tractions au parc, pendant ta marche, à la place d’une C. M = mobilité et posture, le dimanche (repos). Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
       <div class="row">${[1, 2, 3].map((n) => `<button class="seg ${lvl === n ? 'on' : ''}" data-act="level" data-lvl="${n}" aria-pressed="${lvl === n}">Niveau ${n}</button>`).join('')}</div>
       <p class="hint">À la fin de chaque séance, dis si c’était facile, correct ou dur : l’appli te propose de monter ou de descendre. Niveau 1 = 2 tours, efforts plus courts.</p>
       ${WORKOUTS.map((w) => {
@@ -857,6 +859,7 @@ function viewSport() {
         <li>Douleur vive ou articulaire : arrête l’exercice. Une brûlure musculaire, c’est normal.</li>
         <li>Si la technique se dégrade, mets-toi en version genoux ou arrête la série. La qualité passe avant la durée.</li>
         <li>Aucun exercice ne fait fondre la graisse d’une zone précise : le ventre, la taille et la mâchoire se dessinent quand le gras baisse partout (assiette, pas, séance C). Les jambes travaillent dans la C (fentes arrière) et en marchant.</li>
+        <li>Au parc : une barre sèche et solide. En bas d’une traction, ne te laisse jamais tomber bras tendus : descends en contrôlant.</li>
         <li>Élastiques : regarde-les avant chaque séance (une fissure ou une entaille : à la poubelle). En chaussures, pieds bien à plat dessus, et jamais le visage dans l’axe de l’élastique tendu.</li>
         <li>Chaque exercice a un lien « démo vidéo ». Regarde-le avant ta première séance, pas pendant.</li>
       </ul>`)}
@@ -866,8 +869,9 @@ function viewSport() {
 function goalBody() {
   const points = [
     ['C', 'Sec avant tout.', 'Abdos et mâchoire se voient quand le taux de gras baisse : protéines, zéro grignotage, 8 000 pas, séance C. C’est l’assiette qui fait le plus gros du travail.'],
-    ['A', 'Abdos dessinés.', 'Crunch vélo et roue ×2 (les deux en tête des mesures), crunch inversé pour le V du bas du ventre, Russian twist pieds décollés pour les obliques, planches latérales (main sous le torse) et hollow body pour une taille fine.'],
+    ['A', 'Abdos dessinés.', 'Crunch vélo et roue ×2 (les deux en tête des mesures), crunch inversé pour le V du bas du ventre, Russian twist pieds décollés pour les obliques, planches latérales (main sous le torse) et hollow body pour une taille fine. Deux tours durs valent mieux que trois tours mous.'],
     ['B', 'Calisthénie : pectoraux, dos en V et bras.', 'Ton corps est l’outil : pompes sur parallettes, pike, diamant et L-sit, plus 2 tirages et un curl à l’élastique pour le dos en V et des bras dessinés. De la force sans gonfler, chaque série finie dure. Les veines se voient quand le gras baisse : c’est l’assiette qui les fait sortir. Rien pour les trapèzes, qui tassent le cou.'],
+    ['P', 'Tractions au parc.', 'Une barre de street workout pendant ta marche, à la place d’une C. Tractions par étapes (négatives, élastique, puis vraies), australiennes pour le milieu du dos, relevés de genoux pour le bas du ventre, suspension pour la poigne et les avant-bras. 10 tractions propres, c’est solide ; 15 à 20, c’est très fort.'],
     ['M', 'Grand et droit.', 'Bassin droit (fentes basses, pont fessier), dos fort et épaules ouvertes (superman, tirage superman, écarté et passage d’épaules à l’élastique, étirement des pectoraux debout), tête reculée (chin tucks) : on gagne visuellement quelques centimètres et une démarche plus sûre.'],
     ['M', 'Mâchoire nette.', 'Tête droite et visage sec, sans grossir le cou. L’os ne change pas à l’âge adulte : ce qui la révèle, c’est surtout un visage sec et une tête bien placée. Évite le chewing-gum dur, mauvais pour l’articulation.'],
     ['C', 'Les calories, à leur juste place.', 'Une séance brûle 55 à 100 kcal (la C boxe en tête), à peu près une banane. Elle donne la forme ; le gras part surtout grâce à l’assiette et aux pas (10 000 pas ≈ 250 kcal).'],

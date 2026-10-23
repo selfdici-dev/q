@@ -543,7 +543,7 @@ main { padding-top: calc(16px + env(safe-area-inset-top)); }
 .cardlist li { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
 
 /* ---------- v6 : design ---------- */
-:root { --wo-A: #22c55e; --wo-B: #3b82f6; --wo-C: #f97316; --wo-M: #a855f7; }
+:root { --wo-A: #22c55e; --wo-B: #3b82f6; --wo-C: #f97316; --wo-M: #a855f7; --wo-P: #eab308; }
 
 body { letter-spacing: -0.005em; padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 main { gap: 16px; }
@@ -630,6 +630,7 @@ details.card.more .rules { margin-top: 10px; }
 .wo-badge.wo-B, .today-workout .wo-badge.wo-B { background: var(--wo-B); }
 .wo-badge.wo-C, .today-workout .wo-badge.wo-C { background: var(--wo-C); }
 .wo-badge.wo-M, .today-workout .wo-badge.wo-M { background: var(--wo-M); }
+.wo-badge.wo-P, .today-workout .wo-badge.wo-P { background: var(--wo-P); }
 .week .wk-A b { color: var(--wo-A); } .week .wk-B b { color: var(--wo-B); } .week .wk-C b { color: var(--wo-C); } .week .wk-M b { color: var(--wo-M); }
 .week .today b { color: var(--accent-ink); }
 .timer-in { position: relative; display: flex; flex-direction: column; align-items: center; }
@@ -936,7 +937,7 @@ details.card.more .rules { margin-top: 10px; }
   /* sélecteurs plus forts : les règles color-mix écrites plus bas (et dans luxe.css)
      contiennent var() et rendraient ces formes noires */
   .fig rect.fig-mat { fill: rgb(241 240 247 / 0.16); }
-  .fig .fig-par rect { fill: #8d89a4; }
+  .fig .fig-par rect, .fig .fig-bar rect { fill: #8d89a4; }
   .fig .fig-wheel circle:not(.fig-hub) { fill: rgb(241 240 247 / 0.22); }
 }
 .fig .fig-hair { fill: var(--fig-hair, #5b4636); }
@@ -949,7 +950,7 @@ details.card.more .rules { margin-top: 10px; }
 .fig-wheel .fig-hub { fill: var(--figure, #f1f0f7); stroke: var(--fig-line, #0b0916); stroke-width: 0.4; }
 /* Yeux (sens du regard), parallettes, élastique et repère fixe des bonshommes */
 .fig-eye { fill: var(--fig-eye, #0d0c16); }
-.fig-par rect { fill: color-mix(in srgb, var(--figure, #f1f0f7) 45%, #3b3560); stroke: var(--fig-line, #0b0916); stroke-width: 0.4; }
+.fig-par rect, .fig-bar rect { fill: color-mix(in srgb, var(--figure, #f1f0f7) 45%, #3b3560); stroke: var(--fig-line, #0b0916); stroke-width: 0.4; }
 .fig-band { fill: none; stroke: var(--fig-band, #8b5cf6); stroke-width: 1.3; stroke-linecap: round; }
 .fig-guide { fill: none; stroke: var(--figure, #f1f0f7); stroke-width: 0.7; stroke-dasharray: 2 2; opacity: 0.6; }
 /* Aides : contour de la position d'arrivée (fantôme) et flèche du trajet */

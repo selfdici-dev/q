@@ -1,9 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { WORKOUTS, WEEK_PLAN, WARMUP, HELP, demoUrl, baseName } from '../js/data.js';
+import { goalOf } from '../js/logic.js';
 
 test('séances : les IDs stockés dans l’historique ne changent pas', () => {
-  assert.deepEqual(WORKOUTS.map((w) => w.id), ['A', 'B', 'C', 'M']);
+  // P (tractions au parc) s'ajoute ; A, B, C et M restent tels quels
+  assert.deepEqual(WORKOUTS.map((w) => w.id), ['A', 'B', 'C', 'P', 'M']);
   for (const id of Object.values(WEEK_PLAN)) assert.ok(WORKOUTS.some((w) => w.id === id), id);
   assert.deepEqual(Object.keys(WEEK_PLAN).map(Number).sort(), [0, 1, 2, 3, 4, 5, 6]);
 });
@@ -23,8 +25,13 @@ test('chaque exercice a une durée, une consigne et un objectif', () => {
 });
 
 test('matériel : le corps, un tapis, une roue abdominale, des parallettes et un élastique en boucle, rien d’autre', () => {
-  const all = [...WORKOUTS.flatMap((w) => [w.desc, ...w.exercises.flatMap((e) => [e.name, e.cue])]), ...WARMUP.flatMap((e) => [e.name, e.cue])];
-  for (const text of all) assert.doesNotMatch(text, /bouteille|serviette|sac à dos|haltère|barre|chaise|mur\b|\btable\b|\bporte\b/i, text);
+  // à la maison ; la P se fait au parc, à la barre (test plus bas)
+  const home = WORKOUTS.filter((w) => w.id !== 'P');
+  const all = [...home.flatMap((w) => [w.desc, ...w.exercises.flatMap((e) => [e.name, e.cue])]), ...WARMUP.flatMap((e) => [e.name, e.cue])];
+  for (const text of all) assert.doesNotMatch(text, /serviette|sac à dos|haltère|barre|chaise|mur\b|\btable\b|\bporte\b/i, text);
+  // A v4 : une bouteille d’eau pleine rend le Russian twist plus dur, et ne sert nulle part ailleurs
+  const twist = WORKOUTS.find((w) => w.id === 'A').exercises.find((e) => e.name === 'Russian twist');
+  assert.deepEqual(all.filter((text) => /bouteille/i.test(text)), [twist.cue]);
 });
 
 test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoire', () => {
@@ -86,6 +93,48 @@ test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoi
   for (const w of WORKOUTS) for (const e of w.exercises) assert.doesNotMatch(`${e.name} ${e.target}`, /latérales|trapèze|largeur/i);
 });
 
+test('A v4 : 2 tours durs plutôt que 3 mous, et une version plus dure quand la fourchette est atteinte', () => {
+  const A = WORKOUTS.find((w) => w.id === 'A');
+  assert.equal(A.rounds, 2);
+  assert.match(A.desc, /2 à 3 s/);
+  assert.match(A.desc, /1 ou 2 répétitions en réserve/);
+  // En haut de la fourchette, Cap propose la version plus dure : elle est écrite dans la consigne
+  const counted = A.exercises.filter((e) => goalOf(e.cue) && !e.name.endsWith('(2/2)'));
+  assert.deepEqual(counted.map((e) => e.name), ['Crunch vélo', 'Roue abdominale à genoux (1/2)', 'Russian twist', 'Crunch inversé']);
+  for (const e of counted) {
+    const g = goalOf(e.cue);
+    assert.ok(g.max > g.min, `${e.name} : pas de fourchette`);
+    assert.match(e.cue, new RegExp(`Plus de ${g.max} faciles : `), e.name);
+  }
+});
+
+test('P : au parc, à la barre, à la place d’une C ; tractions par étapes', () => {
+  const P = WORKOUTS.find((w) => w.id === 'P');
+  // séance fixe (ni échauffement sur tapis ni niveau), en plus de la semaine type, comme la C
+  assert.equal(P.fixed, true);
+  assert.ok(!Object.values(WEEK_PLAN).includes('P'));
+  assert.doesNotMatch(P.prep, /tapis/i);
+  assert.match(P.desc, /à la place d’une C/);
+  // ≈ 15 min (départ, efforts, pauses, fins de tour), avec des pauses longues : c'est la force qui compte
+  const secs = 10 + P.rounds * P.exercises.reduce((t, e) => t + e.work, 0) + P.rounds * (P.exercises.length - 1) * P.rest + (P.rounds - 1) * P.roundRest;
+  assert.ok(secs >= 12 * 60 && secs <= 16 * 60, `${secs} s`);
+  assert.ok(P.rest >= 30);
+  // tout se fait aux barres du parc : ni tapis, ni roue, ni parallettes ; l'élastique pour l'étape 2 seulement
+  for (const e of P.exercises) assert.doesNotMatch(`${e.name} ${e.cue}`, /tapis|roue|parallettes/i, e.name);
+  assert.deepEqual(P.exercises.filter((e) => /élastique/i.test(e.cue)).map((e) => e.name), ['Tractions (selon ton niveau)']);
+  // tractions par étapes : négatives, élastique, puis vraies ; en haut de chaque fourchette, la version plus dure est écrite
+  const pull = P.exercises.find((e) => e.name === 'Tractions (selon ton niveau)');
+  assert.match(pull.cue, /Étape 1 : négatives.*Étape 2 : élastique.*Étape 3 : vraies tractions/);
+  for (const e of P.exercises.filter((x) => goalOf(x.cue))) {
+    const g = goalOf(e.cue);
+    assert.ok(g.max > g.min, e.name);
+    assert.match(e.cue, new RegExp(`Plus de ${g.max} faciles : `), e.name);
+  }
+  // la suspension ouvre chaque tour (échauffement au 1er) ; chaque exercice dit pourquoi, en une phrase courte
+  assert.equal(P.exercises[0].name, 'Suspension à la barre');
+  for (const e of P.exercises) assert.ok(e.why && e.why.length <= 110 && !/gonfl|masse/i.test(e.why), e.name);
+});
+
 test('nom de base sans précision entre parenthèses', () => {
   assert.equal(baseName('Roue abdominale à genoux (1/2)'), 'Roue abdominale à genoux');
   assert.equal(baseName('Planche latérale (gauche)'), 'Planche latérale');
@@ -102,6 +151,7 @@ test('liens de démo vidéo', () => {
   assert.equal(q('Superman W'), 'prone W exercice technique');
   assert.equal(q('Superman Y (allongé sur le ventre)'), 'prone Y exercice technique');
   assert.equal(q('Toucher d’épaules en planche'), 'plank shoulder taps');
+  assert.equal(q('Tractions (selon ton niveau)'), 'pull up progression beginner negatives band');
   assert.ok(demoUrl('Crunch inversé').startsWith('https://www.youtube.com/results?search_query='));
 });
 
@@ -121,8 +171,8 @@ test('B : chaque exercice dit pourquoi il sert le physique fin et sec, en une ph
   }
 });
 
-test('A et C : un minimum chiffré au début de chaque consigne, pour savoir quand l’exercice est validé', () => {
-  for (const id of ['A', 'C']) {
+test('A, C et P : un minimum chiffré au début de chaque consigne, pour savoir quand l’exercice est validé', () => {
+  for (const id of ['A', 'C', 'P']) {
     for (const e of WORKOUTS.find((w) => w.id === id).exercises) assert.match(e.cue, /^Objectif : \d/, `${id} · ${e.name}`);
   }
 });

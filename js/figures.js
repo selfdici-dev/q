@@ -117,18 +117,20 @@ export function timeline(fig) {
 }
 
 // Cadre serré autour de tout le mouvement (pour grossir le bonhomme à
-// l'écran), sol compris, avec une marge.
-export function frameBox(keys, wheel = false, pad = 5) {
-  let [x0, y0, x1] = [Infinity, Infinity, -Infinity];
+// l'écran), sol compris, avec une marge. Sans sol (suspendu à la barre) : le
+// cadre s'arrête sous le corps.
+export function frameBox(keys, wheel = false, pad = 5, ground = true) {
+  let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
   for (const { joints } of keys) {
     for (const k of JOINTS) {
       const r = k === 'head' ? BONES.head : k === 'handN' && wheel ? WHEEL : 2;
       x0 = Math.min(x0, joints[k][0] - r);
       x1 = Math.max(x1, joints[k][0] + r);
       y0 = Math.min(y0, joints[k][1] - r);
+      y1 = Math.max(y1, joints[k][1] + r);
     }
   }
-  const bottom = VIEW.floor + 7;
+  const bottom = ground ? VIEW.floor + 7 : Math.min(VIEW.floor + 7, y1 + pad);
   const top = Math.min(y0 - pad, bottom - 30); // au moins 30 de haut : un bonhomme couché ne devient pas géant
   return [round(x0 - pad), round(top), round(x1 - x0 + 2 * pad), round(bottom - top)];
 }
@@ -483,6 +485,25 @@ export function arrowPath(points, center, { off = 3.4, avoid = [], trim = 1.4 } 
   return { d, head, pts: [...pts, end] };
 }
 
+// ——— Barre de traction ———
+// Les poings la serrent : son axe passe par le milieu du poing proche (un peu
+// au-delà du poignet, dans l'axe de l'avant-bras). Vue de biais, elle monte un
+// peu vers le fond (BAR_DIR), jusqu'au poing éloigné, et dépasse de BAR_OUT de
+// chaque côté. Le poing du fond se place donc un peu en haut à gauche du proche.
+export const BAR = 2.6; // épaisseur de la barre
+export const BAR_DIR = [-0.94, -0.34];
+const BAR_OUT = 5;
+const fist = (j, side) => {
+  const [e, h] = [j[`elbow${side}`], j[`hand${side}`]];
+  const l = dist(e, h) || 1;
+  return [h[0] + ((h[0] - e[0]) * 1.4) / l, h[1] + ((h[1] - e[1]) * 1.4) / l];
+};
+export function barAt(j) {
+  const [n, f] = [fist(j, 'N'), fist(j, 'F')];
+  const far = Math.max(0, (f[0] - n[0]) * BAR_DIR[0] + (f[1] - n[1]) * BAR_DIR[1]) + BAR_OUT;
+  return [[round(n[0] - BAR_DIR[0] * BAR_OUT), round(n[1] - BAR_DIR[1] * BAR_OUT)], [round(n[0] + BAR_DIR[0] * far), round(n[1] + BAR_DIR[1] * far)]];
+}
+
 // ——— Squelette de dessin, image par image ———
 // Pour chaque image clé : positions (vue de face : épaules et hanches
 // écartées du milieu), angles des os, du pied et de la main.
@@ -515,7 +536,7 @@ function rig(fig, keys) {
     const r3s = unwrap(tip.map((p, i) => norm(p.phi - a2[i])));
     return { root: frames.map((j) => j[root]), a1, r2: r2s, r3: r3s, t: tip.map((p) => p.t ?? 0) };
   };
-  const grip = !!(fig.parallettes || fig.wheel);
+  const grip = !!(fig.parallettes || fig.wheel || fig.bar);
   const hands = (side) => frames.map((j) => ({ phi: fig.front ? angleOf(j[`elbow${side}`], j[`hand${side}`]) : handAngle(j[`elbow${side}`], j[`hand${side}`], Math.sign(j.shoulder[0] - j.hip[0]) || 1, grip) }));
   const feet = (side) => (fig.front
     ? frames.map(() => ({ phi: out[side] > 0 ? 0 : 180, t: 0 }))
@@ -571,6 +592,9 @@ function draw(fig, { animate = true, mirror = false, fit = false, focus = [], he
   const R0 = rig(fig, keys);
   const { face, wide } = R0;
   const front = !!fig.front;
+  // Suspendu à la barre, sans appui au sol : ni tapis ni ombre, et le cadre
+  // s'arrête sous le corps.
+  const air = !!fig.bar && keys.every(({ joints }) => JOINTS.every((k) => joints[k][1] < VIEW.floor - 3));
   const steps = help && pose === undefined ? explain(fig) : [];
   const still = !animate || fig.frames.length === 1 || pose !== undefined;
   const shown = pose !== undefined ? pose : steps[0]?.posFrom ?? steps[0]?.posAt ?? 0;
@@ -679,6 +703,14 @@ function draw(fig, { animate = true, mirror = false, fit = false, focus = [], he
     const h = round(Math.max(0.5, VIEW.floor + 1.5 - top));
     return `<g class="fig-par"><rect x="${round(x - 3.2)}" y="${round(top + 1)}" width="1.1" height="${h}" rx="0.4"/><rect x="${round(x + 2.1)}" y="${round(top + 1)}" width="1.1" height="${h}" rx="0.4"/><rect x="${round(x - 4.2)}" y="${round(top + h)}" width="8.4" height="1.2" rx="0.6"/><rect x="${round(x - 3.6)}" y="${top}" width="7.2" height="1.7" rx="0.85"/></g>`;
   };
+  // Barre de traction, vue un peu de biais : elle passe dans les deux poings
+  // (là où ils sont au départ) et dépasse de chaque côté.
+  const barEnds = fig.bar ? barAt(R0.frames[0]) : null;
+  const bar = barEnds ? (() => {
+    const [p, q] = barEnds;
+    const len = dist(p, q);
+    return `<g class="fig-bar" transform="translate(${xy(p)}) rotate(${round(angleOf(p, q))})"><rect x="-${BAR / 2}" y="-${BAR / 2}" width="${round(len + BAR)}" height="${BAR}" rx="${BAR / 2}"/></g>`;
+  })() : '';
   // Repère fixe (ex. la ligne que la nuque vient toucher aux chin tucks).
   const guide = fig.guide ? `<path class="fig-guide" d="M${fig.guide[0]} ${fig.guide[1]}L${fig.guide[2]} ${fig.guide[3]}"/>` : '';
   // Roue abdominale : tenue dans les mains (centre de la roue = mains).
@@ -705,7 +737,8 @@ function draw(fig, { animate = true, mirror = false, fit = false, focus = [], he
     const extra = (s) => (ghost ? '' : s);
     if (front) return `${t}${L('legF')}${L('legN')}${head(sel, ghost)}${L('armF')}${L('armN')}${extra(band)}`;
     const far = `${L('armF')}${L('legF')}`;
-    return `${ghost ? far : `<g class="fig-far">${far}</g>`}${t}${L('legN')}${extra(band + parAt('handN') + wheel)}${L('armN')}${head(sel, ghost)}`;
+    const near = fig.bar ? `${head(sel, ghost)}${L('armN')}` : `${L('armN')}${head(sel, ghost)}`;
+    return `${ghost ? far : `<g class="fig-far">${far}</g>`}${t}${L('legN')}${extra(band + parAt('handN') + wheel + bar)}${near}`;
   };
 
   // Aides : fantôme (contour de la position d'arrivée) et flèche du trajet,
@@ -752,15 +785,22 @@ function draw(fig, { animate = true, mirror = false, fit = false, focus = [], he
   });
 
   const pars = front ? parAt('handF') + parAt('handN') : parAt('handF');
-  const scene = `${shadow}${ghostLayer}${guide}${pars}${body(sel)}${eyes(sel)}${moveLayer}`;
+  const scene = `${air ? '' : shadow}${ghostLayer}${guide}${pars}${body(sel)}${eyes(sel)}${moveLayer}`;
 
   // Dégradés : en travers de chaque pièce (relief), crâne en boule, ombre douce.
   const lin = (name, cls) => `<linearGradient id="§-${name}" class="${cls}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="fig-s1"/><stop offset="0.32" class="fig-s2"/><stop offset="0.68" class="fig-s3"/><stop offset="1" class="fig-s4"/></linearGradient>`;
   const defs = `<defs>${lin('tn', 'fig-tone')}${focus.length ? lin('hn', 'fig-tone fig-hot') : ''}${front ? '' : `${lin('tf', 'fig-tone fig-back')}${focus.length ? lin('hf', 'fig-tone fig-hot fig-back') : ''}`}<radialGradient id="§-sk" class="fig-tone" cx="0.42" cy="0.38" r="0.62"><stop offset="0" class="fig-s2"/><stop offset="0.55" class="fig-s3"/><stop offset="1" class="fig-s4"/></radialGradient><radialGradient id="§-sh" class="fig-shade"><stop offset="0" class="fig-s1"/><stop offset="1" class="fig-s2"/></radialGradient>${Object.values(forms).join('')}${ghosts.join('')}</defs>`;
-  const [bx, by, bw, bh] = fit ? frameBox(keys, fig.wheel) : [0, 0, VIEW.w, VIEW.h];
+  let [bx, by, bw, bh] = fit ? frameBox(keys, fig.wheel, 5, !air) : [0, 0, VIEW.w, VIEW.h];
+  if (fit && barEnds) {
+    const xs = barEnds.map((p) => p[0]);
+    const top = Math.min(by, ...barEnds.map((p) => round(p[1] - BAR)));
+    const [x0, x1] = [Math.min(bx, round(Math.min(...xs) - BAR)), Math.max(bx + bw, round(Math.max(...xs) + BAR))];
+    [bx, by, bw, bh] = [x0, top, round(x1 - x0), round(by + bh - top)];
+  }
   // En miroir, le cadre serré est retourné lui aussi autour de l'axe x = 60.
   const vx = fit && mirror ? round(VIEW.w - bx - bw) : bx;
-  return `<svg class="fig" viewBox="${vx} ${by} ${bw} ${bh}" aria-hidden="true">${defs}<rect class="fig-mat" x="${vx + 2}" y="${VIEW.floor + 2.5}" width="${bw - 4}" height="3" rx="1.5"/>${mirror ? `<g transform="translate(${VIEW.w} 0) scale(-1 1)">${scene}</g>` : scene}</svg>`;
+  const mat = air ? '' : `<rect class="fig-mat" x="${vx + 2}" y="${VIEW.floor + 2.5}" width="${bw - 4}" height="3" rx="1.5"/>`;
+  return `<svg class="fig" viewBox="${vx} ${by} ${bw} ${bh}" aria-hidden="true">${defs}${mat}${mirror ? `<g transform="translate(${VIEW.w} 0) scale(-1 1)">${scene}</g>` : scene}</svg>`;
 }
 
 // Bonhomme d'un exercice d'après son nom complet, sinon son nom de base.

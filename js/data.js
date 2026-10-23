@@ -18,24 +18,25 @@ export const DEFAULT_RULES = [
 // en boucle (noir, violet, vert, orange, du plus léger au plus dur) : ils servent dans
 // la B (2 tirages et le curl), la M (écarté et passage d’épaules) et l’échauffement.
 // Chaque exercice à l’élastique ou sur parallettes garde une version sans matériel.
+// Seule exception : la P, au parc, à la barre de traction.
 // work = secondes d'effort au niveau 2 ; le niveau 1 fait -10 s, le niveau 3 +10 s.
 // target = à quoi sert l'exercice (objectif : fin, sec et élancé, abdos
-// visibles, mâchoire nette, pas de volume). Les IDs A, B, C, M sont stockés :
-// ne pas les changer.
+// visibles, mâchoire nette, pas de volume). Les IDs A, B, C, P, M sont stockés :
+// ne pas les changer. prep (facultatif) : la consigne du départ.
 export const WORKOUTS = [
   {
     id: 'A',
     name: 'A · Abdos et tronc',
     met: 3.8,
-    desc: 'Abdos visibles, taille fine et V du bas du ventre : crunch vélo et roue abdominale (les deux en tête des mesures, la roue deux fois par tour), crunch inversé pour le bas du ventre, Russian twist pieds décollés, planches latérales et hollow body qui progresse par étapes. Que des exercices qu’on sent. 3 tours.',
-    rounds: 3,
+    desc: 'Abdos visibles, taille fine et V du bas du ventre : crunch vélo et roue abdominale (les deux en tête des mesures, la roue deux fois par tour), crunch inversé pour le bas du ventre, Russian twist pieds décollés, planches latérales et hollow body qui progresse par étapes. 2 tours, mais durs : descentes en 2 à 3 s, et au bip il ne doit te rester que 1 ou 2 répétitions en réserve. Encore de la marge ? Passe à la version plus dure de la consigne.',
+    rounds: 2,
     rest: 15,
     roundRest: 60,
     exercises: [
-      { name: 'Crunch vélo', work: 30, target: 'Abdos et obliques · l’un des deux plus efficaces', cue: 'Objectif : 20 touches (10 par côté), lentes. 1. Sur le dos, doigts derrière les oreilles sans tirer la nuque, omoplates décollées. 2. Un coude vers le genou opposé, pendant que l’autre jambe s’allonge au ras du sol. 3. Change de côté lentement, comme si tu pédalais. Expire à chaque touche.' },
-      { name: 'Roue abdominale à genoux (1/2)', work: 40, target: 'Abdos complets · l’un des deux plus efficaces', cue: 'Objectif : 8 à 10 allers-retours. 1. À genoux, mains sur la roue sous les épaules, dos un peu rond, fesses serrées. 2. Roule devant toi en 3 s, reviens en 2 s en tirant avec le ventre. 3. Ça tire dans le bas du dos : roule moins loin. Plus de 10 faciles : marque 1 s de pause tout au bout.' },
-      { name: 'Russian twist', work: 30, target: 'Obliques · taille dessinée', cue: 'Objectif : 20 rotations (10 par côté), pieds décollés. 1. Assis, buste penché en arrière, dos droit, pieds en l’air. 2. Mains jointes : tourne les épaules d’un côté puis de l’autre, le regard suit les mains. 3. Les pieds retombent : pose les talons et finis la série.' },
-      { name: 'Crunch inversé', work: 30, target: 'Bas des abdos · le V du ventre', cue: 'Objectif : 10 crunchs inversés. 1. Sur le dos, mains au sol le long du corps, genoux pliés en l’air. 2. Ramène les genoux vers la poitrine en décollant le bas du dos : le bassin s’enroule. 3. Redescends en 3 s sans poser les pieds. Ça tire dans le dos : va moins loin.' },
+      { name: 'Crunch vélo', work: 30, target: 'Abdos et obliques · l’un des deux plus efficaces', cue: 'Objectif : 20 à 24 touches (10 à 12 par côté), lentes. 1. Sur le dos, doigts derrière les oreilles sans tirer la nuque, omoplates décollées. 2. Un coude vers le genou opposé, pendant que l’autre jambe s’allonge au ras du sol. 3. Change de côté lentement, comme si tu pédalais. Expire à chaque touche. Plus de 24 faciles : serre 1 s coude contre genou à chaque touche.' },
+      { name: 'Roue abdominale à genoux (1/2)', work: 40, target: 'Abdos complets · l’un des deux plus efficaces', cue: 'Objectif : 8 à 10 allers-retours. 1. À genoux, mains sur la roue sous les épaules, dos un peu rond, fesses serrées. 2. Roule devant toi en 3 s, reviens en 2 s en tirant avec le ventre. 3. Ça tire dans le bas du dos : roule moins loin. Plus de 10 faciles : roule plus loin et marque 1 s de pause tout au bout.' },
+      { name: 'Russian twist', work: 30, target: 'Obliques · taille dessinée', cue: 'Objectif : 20 à 24 rotations (10 à 12 par côté), pieds décollés. 1. Assis, buste penché en arrière, dos droit, pieds en l’air. 2. Mains jointes : tourne les épaules d’un côté puis de l’autre, le regard suit les mains. 3. Les pieds retombent : pose les talons et finis la série. Plus de 24 faciles : une bouteille d’eau pleine dans les mains.' },
+      { name: 'Crunch inversé', work: 30, target: 'Bas des abdos · le V du ventre', cue: 'Objectif : 8 à 10 crunchs inversés. 1. Sur le dos, mains au sol le long du corps, genoux pliés en l’air. 2. Ramène les genoux vers la poitrine en décollant le bas du dos : le bassin s’enroule. 3. Redescends en 3 s sans poser les pieds. Ça tire dans le dos : va moins loin. Plus de 10 faciles : jambes presque tendues, monte le bassin plus haut.' },
       { name: 'Planche latérale (droite)', work: 30, target: 'Obliques · taille gainée', cue: 'Objectif : 1 seule tenue jusqu’au bip, bassin haut. 1. Couché sur le côté droit, coude sous l’épaule, pieds l’un sur l’autre. 2. Monte le bassin en ligne droite, bras libre vers le plafond. 3. Plus dur : main libre sous le torse puis vers le plafond, en boucle jusqu’au bip. Genou au sol si besoin.' },
       { name: 'Planche latérale (gauche)', work: 30, target: 'Obliques · taille gainée', cue: 'Objectif : 1 seule tenue jusqu’au bip, bassin haut. 1. Couché sur le côté gauche, coude sous l’épaule, pieds l’un sur l’autre. 2. Monte le bassin en ligne droite, bras libre vers le plafond. 3. Plus dur : main libre sous le torse puis vers le plafond, en boucle jusqu’au bip. Genou au sol si besoin.' },
       { name: 'Hollow hold genoux pliés', work: 30, target: 'Grand droit · la tablette', cue: 'Objectif : 1 tenue jusqu’au bip. Bas du dos collé au tapis, épaules décollées, bras vers les pieds. Étape 1 : genoux pliés. Étape 2 : une jambe tendue. Étape 3 : les deux jambes tendues, bras au-dessus de la tête. Le dos décolle : reviens à l’étape d’avant.' },
@@ -78,6 +79,23 @@ export const WORKOUTS = [
     ],
   },
   {
+    id: 'P',
+    name: 'P · Tractions au parc',
+    met: 3.8,
+    desc: 'À faire pendant ta marche, à la barre d’un parc de street workout, à la place d’une C : ≈ 15 min. La marche te chauffe, et la suspension du 1er tour finit l’échauffement. Tractions à ton étape (négatives, élastique, puis vraies), tractions australiennes pour le milieu du dos, relevés de genoux pour le bas du ventre. Les barres du parc suffisent ; l’élastique orange sert seulement à l’étape 2. 3 tours.',
+    rounds: 3,
+    rest: 30,
+    roundRest: 90,
+    fixed: true,
+    prep: 'Sous la barre, téléphone posé à côté, mains sèches.',
+    exercises: [
+      { name: 'Suspension à la barre', work: 30, why: 'La poigne lâche souvent avant le dos : plus tu tiens la barre, plus tu enchaînes de tractions.', target: 'Avant-bras et poigne · tenir plus longtemps à chaque traction', cue: 'Objectif : 1 tenue jusqu’au bip. 1. Mains sur la barre, un peu plus écartées que les épaules, paumes vers l’avant. 2. Bras tendus, épaules loin des oreilles, jambes immobiles. 3. Au 1er tour, sans forcer : c’est ton échauffement. Tu lâches avant le bip : souffle 5 s et raccroche-toi.' },
+      { name: 'Tractions (selon ton niveau)', work: 40, why: 'Le geste roi du dos en V et des bras. Chaque kilo de gras perdu rend la suivante plus facile.', target: 'Dos et biceps · dos en V, bras dessinés', cue: 'Objectif : 3 à 6 tractions, à ton étape. Étape 1 : négatives : monte menton au-dessus de la barre (saute, ou un pied sur un banc), puis redescends en 5 s. Étape 2 : élastique orange autour de la barre, un genou dedans. Étape 3 : vraies tractions, de bras tendus à menton au-dessus de la barre. Étape 4 : 1 s de pause en haut. Plus de 6 faciles : étape suivante.' },
+      { name: 'Tractions australiennes', work: 40, why: 'Le milieu du dos tire les épaules en arrière : posture droite, et la force de base des tractions.', target: 'Dos et biceps · dos en V, épaules en arrière', cue: 'Objectif : 6 à 10 tractions australiennes. 1. Sous une barre à hauteur de taille, mains un peu plus écartées que les épaules. 2. Pieds à plat, genoux pliés, corps gainé : tire la poitrine jusqu’à la barre, coudes vers le sol. 3. Redescends en 2 s. Plus de 10 faciles : jambes tendues, talons au sol. Pas de barre basse : suspension bras pliés, 5 à 10 s.' },
+      { name: 'Relevés de genoux suspendu', work: 35, why: 'Le bassin qui s’enroule, c’est le bas du ventre qui travaille ; la poigne travaille en plus.', target: 'Bas des abdos et avant-bras · le V du ventre', cue: 'Objectif : 6 à 10 relevés. 1. Suspendu bras tendus, épaules loin des oreilles. 2. Monte les genoux jusqu’aux hanches en enroulant le bassin, sans te balancer. 3. Redescends en 2 s. Plus de 10 faciles : genoux jusqu’à la poitrine.' },
+    ],
+  },
+  {
     id: 'M',
     name: 'M · Posture et dos droit',
     met: 2.3,
@@ -101,8 +119,8 @@ export const WORKOUTS = [
 ];
 
 // Semaine type (choisie par l'utilisateur) : A et B en alternance du lundi au samedi
-// (48 h de repos pour chaque muscle), le cardio C en plus quand il veut, mobilité
-// et repos le dimanche.
+// (48 h de repos pour chaque muscle), le cardio C en plus quand il veut (ou les
+// tractions P au parc à la place), mobilité et repos le dimanche.
 // La mobilité M reste le minimum de reprise n'importe quel jour.
 export const WEEK_PLAN = { 1: 'A', 2: 'B', 3: 'A', 4: 'B', 5: 'A', 6: 'B', 0: 'M' };
 
@@ -227,6 +245,10 @@ const DEMO_QUERIES = {
   'Fente basse': 'half kneeling hip flexor stretch',
   'Tirage superman': 'prone Y to W raise',
   'Chin tucks': 'chin tuck exercise',
+  'Suspension à la barre': 'dead hang pull up bar',
+  Tractions: 'pull up progression beginner negatives band',
+  'Tractions australiennes': 'bent knee inverted row beginner',
+  'Relevés de genoux suspendu': 'hanging knee raise proper form',
 };
 
 // Nom sans précision entre parenthèses : « Roue abdominale à genoux (1/2) » → « Roue abdominale à genoux ».
@@ -345,7 +367,7 @@ export const HELP = {
     title: 'Comment marche Corps',
     lines: [
       'Touche « Lancer la séance » et pose le téléphone au sol : l’appli te guide, bips compris.',
-      'Chaque jour a sa séance (A, B, C ou M). Pas la forme ? La mobilité suffit pour valider.',
+      'Chaque jour a sa séance (A, B ou M), plus C ou P si tu veux. Pas la forme ? La mobilité suffit.',
       'À la fin, note la séance : après 2 « Facile » ou 2 « Dur » de suite, l’appli te propose un autre niveau.',
     ],
   },

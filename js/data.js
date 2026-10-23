@@ -18,10 +18,11 @@ export const DEFAULT_RULES = [
 // en boucle (noir, violet, vert, orange, du plus léger au plus dur) : ils servent dans
 // la B (2 tirages et le curl), la M (écarté et passage d’épaules) et l’échauffement.
 // Chaque exercice à l’élastique ou sur parallettes garde une version sans matériel.
+// Seule exception : la P, au parc, à la barre de traction.
 // work = secondes d'effort au niveau 2 ; le niveau 1 fait -10 s, le niveau 3 +10 s.
 // target = à quoi sert l'exercice (objectif : fin, sec et élancé, abdos
-// visibles, mâchoire nette, pas de volume). Les IDs A, B, C, M sont stockés :
-// ne pas les changer.
+// visibles, mâchoire nette, pas de volume). Les IDs A, B, C, P, M sont stockés :
+// ne pas les changer. prep (facultatif) : la consigne du départ.
 export const WORKOUTS = [
   {
     id: 'A',
@@ -78,6 +79,23 @@ export const WORKOUTS = [
     ],
   },
   {
+    id: 'P',
+    name: 'P · Tractions au parc',
+    met: 3.8,
+    desc: 'À faire pendant ta marche, à la barre d’un parc de street workout, à la place d’une C : ≈ 15 min. La marche te chauffe, et la suspension du 1er tour finit l’échauffement. Tractions à ton étape (négatives, élastique, puis vraies), tractions australiennes pour le milieu du dos, relevés de genoux pour le bas du ventre. Les barres du parc suffisent ; l’élastique orange sert seulement à l’étape 2. 3 tours.',
+    rounds: 3,
+    rest: 30,
+    roundRest: 90,
+    fixed: true,
+    prep: 'Sous la barre, téléphone posé à côté, mains sèches.',
+    exercises: [
+      { name: 'Suspension à la barre', work: 30, why: 'La poigne lâche souvent avant le dos : plus tu tiens la barre, plus tu enchaînes de tractions.', target: 'Avant-bras et poigne · tenir plus longtemps à chaque traction', cue: 'Objectif : 1 tenue jusqu’au bip. 1. Mains sur la barre, un peu plus écartées que les épaules, paumes vers l’avant. 2. Bras tendus, épaules loin des oreilles, jambes immobiles. 3. Au 1er tour, sans forcer : c’est ton échauffement. Tu lâches avant le bip : souffle 5 s et raccroche-toi.' },
+      { name: 'Tractions (selon ton niveau)', work: 40, why: 'Le geste roi du dos en V et des bras. Chaque kilo de gras perdu rend la suivante plus facile.', target: 'Dos et biceps · dos en V, bras dessinés', cue: 'Objectif : 3 à 6 tractions, à ton étape. Étape 1 : négatives : monte menton au-dessus de la barre (saute, ou un pied sur un banc), puis redescends en 5 s. Étape 2 : élastique orange autour de la barre, un genou dedans. Étape 3 : vraies tractions, de bras tendus à menton au-dessus de la barre. Étape 4 : 1 s de pause en haut. Plus de 6 faciles : étape suivante.' },
+      { name: 'Tractions australiennes', work: 40, why: 'Le milieu du dos tire les épaules en arrière : posture droite, et la force de base des tractions.', target: 'Dos et biceps · dos en V, épaules en arrière', cue: 'Objectif : 6 à 10 tractions australiennes. 1. Sous une barre à hauteur de taille, mains un peu plus écartées que les épaules. 2. Pieds à plat, genoux pliés, corps gainé : tire la poitrine jusqu’à la barre, coudes vers le sol. 3. Redescends en 2 s. Plus de 10 faciles : jambes tendues, talons au sol. Pas de barre basse : suspension bras pliés, 5 à 10 s.' },
+      { name: 'Relevés de genoux suspendu', work: 35, why: 'Le bassin qui s’enroule, c’est le bas du ventre qui travaille ; la poigne travaille en plus.', target: 'Bas des abdos et avant-bras · le V du ventre', cue: 'Objectif : 6 à 10 relevés. 1. Suspendu bras tendus, épaules loin des oreilles. 2. Monte les genoux jusqu’aux hanches en enroulant le bassin, sans te balancer. 3. Redescends en 2 s. Plus de 10 faciles : genoux jusqu’à la poitrine.' },
+    ],
+  },
+  {
     id: 'M',
     name: 'M · Posture et dos droit',
     met: 2.3,
@@ -101,8 +119,8 @@ export const WORKOUTS = [
 ];
 
 // Semaine type (choisie par l'utilisateur) : A et B en alternance du lundi au samedi
-// (48 h de repos pour chaque muscle), le cardio C en plus quand il veut, mobilité
-// et repos le dimanche.
+// (48 h de repos pour chaque muscle), le cardio C en plus quand il veut (ou les
+// tractions P au parc à la place), mobilité et repos le dimanche.
 // La mobilité M reste le minimum de reprise n'importe quel jour.
 export const WEEK_PLAN = { 1: 'A', 2: 'B', 3: 'A', 4: 'B', 5: 'A', 6: 'B', 0: 'M' };
 
@@ -227,6 +245,10 @@ const DEMO_QUERIES = {
   'Fente basse': 'half kneeling hip flexor stretch',
   'Tirage superman': 'prone Y to W raise',
   'Chin tucks': 'chin tuck exercise',
+  'Suspension à la barre': 'dead hang pull up bar',
+  Tractions: 'pull up progression beginner negatives band',
+  'Tractions australiennes': 'bent knee inverted row beginner',
+  'Relevés de genoux suspendu': 'hanging knee raise proper form',
 };
 
 // Nom sans précision entre parenthèses : « Roue abdominale à genoux (1/2) » → « Roue abdominale à genoux ».
@@ -345,7 +367,7 @@ export const HELP = {
     title: 'Comment marche Corps',
     lines: [
       'Touche « Lancer la séance » et pose le téléphone au sol : l’appli te guide, bips compris.',
-      'Chaque jour a sa séance (A, B, C ou M). Pas la forme ? La mobilité suffit pour valider.',
+      'Chaque jour a sa séance (A, B ou M), plus C ou P si tu veux. Pas la forme ? La mobilité suffit.',
       'À la fin, note la séance : après 2 « Facile » ou 2 « Dur » de suite, l’appli te propose un autre niveau.',
     ],
   },

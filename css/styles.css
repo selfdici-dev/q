@@ -543,7 +543,7 @@ main { padding-top: calc(16px + env(safe-area-inset-top)); }
 .cardlist li { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
 
 /* ---------- v6 : design ---------- */
-:root { --wo-A: #22c55e; --wo-B: #3b82f6; --wo-C: #f97316; --wo-M: #a855f7; }
+:root { --wo-A: #22c55e; --wo-B: #3b82f6; --wo-C: #f97316; --wo-M: #a855f7; --wo-P: #eab308; }
 
 body { letter-spacing: -0.005em; padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 main { gap: 16px; }
@@ -630,6 +630,7 @@ details.card.more .rules { margin-top: 10px; }
 .wo-badge.wo-B, .today-workout .wo-badge.wo-B { background: var(--wo-B); }
 .wo-badge.wo-C, .today-workout .wo-badge.wo-C { background: var(--wo-C); }
 .wo-badge.wo-M, .today-workout .wo-badge.wo-M { background: var(--wo-M); }
+.wo-badge.wo-P, .today-workout .wo-badge.wo-P { background: var(--wo-P); }
 .week .wk-A b { color: var(--wo-A); } .week .wk-B b { color: var(--wo-B); } .week .wk-C b { color: var(--wo-C); } .week .wk-M b { color: var(--wo-M); }
 .week .today b { color: var(--accent-ink); }
 .timer-in { position: relative; display: flex; flex-direction: column; align-items: center; }

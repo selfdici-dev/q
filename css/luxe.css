@@ -54,6 +54,7 @@
   --wo-B: #035e91;
   --wo-C: #a3164f;
   --wo-M: #6d28d9;
+  --wo-P: #92400e;
   --effort: #f43f72;
   --rest: #14b8a6;
   --figure: #f1f0f7;
@@ -224,6 +225,7 @@
     --wo-B: #7dd3fc;
     --wo-C: #f9a8d4;
     --wo-M: #c4b5fd;
+    --wo-P: #fcd34d;
     --effort: #f43f72;
     --rest: #14b8a6;
     --figure: #f1f0f7;
@@ -395,6 +397,7 @@
   --wo-B: #7dd3fc;
   --wo-C: #f9a8d4;
   --wo-M: #c4b5fd;
+  --wo-P: #fcd34d;
   --effort: #f43f72;
   --rest: #14b8a6;
   --figure: #f1f0f7;
@@ -1148,7 +1151,7 @@ input.task { text-align: center; margin: 4px 0 10px; border-radius: 999px; }
 .cue-full-fig .fig { max-height: min(34vh, 300px); }
 
 /* ——— Corps ——— */
-.wo-A { --wo: var(--wo-A); } .wo-B { --wo: var(--wo-B); } .wo-C { --wo: var(--wo-C); } .wo-M { --wo: var(--wo-M); }
+.wo-A { --wo: var(--wo-A); } .wo-B { --wo: var(--wo-B); } .wo-C { --wo: var(--wo-C); } .wo-M { --wo: var(--wo-M); } .wo-P { --wo: var(--wo-P); }
 :root:root .wo-badge {
   border-radius: 9px; font-family: var(--rounded); font-weight: 800;
   color: var(--wo, var(--text));

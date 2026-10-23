@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { WORKOUTS, WEEK_PLAN, WARMUP, HELP, demoUrl, baseName } from '../js/data.js';
+import { goalOf } from '../js/logic.js';
 
 test('séances : les IDs stockés dans l’historique ne changent pas', () => {
   assert.deepEqual(WORKOUTS.map((w) => w.id), ['A', 'B', 'C', 'M']);
@@ -24,7 +25,10 @@ test('chaque exercice a une durée, une consigne et un objectif', () => {
 
 test('matériel : le corps, un tapis, une roue abdominale, des parallettes et un élastique en boucle, rien d’autre', () => {
   const all = [...WORKOUTS.flatMap((w) => [w.desc, ...w.exercises.flatMap((e) => [e.name, e.cue])]), ...WARMUP.flatMap((e) => [e.name, e.cue])];
-  for (const text of all) assert.doesNotMatch(text, /bouteille|serviette|sac à dos|haltère|barre|chaise|mur\b|\btable\b|\bporte\b/i, text);
+  for (const text of all) assert.doesNotMatch(text, /serviette|sac à dos|haltère|barre|chaise|mur\b|\btable\b|\bporte\b/i, text);
+  // A v4 : une bouteille d’eau pleine rend le Russian twist plus dur, et ne sert nulle part ailleurs
+  const twist = WORKOUTS.find((w) => w.id === 'A').exercises.find((e) => e.name === 'Russian twist');
+  assert.deepEqual(all.filter((text) => /bouteille/i.test(text)), [twist.cue]);
 });
 
 test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoire', () => {
@@ -84,6 +88,21 @@ test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoi
   assert.ok(ex('B').filter((e) => /pectoraux/i.test(e.target)).length >= 2);
   // rien ne vise la largeur : pas d'exercice d'épaules latérales ni de trapèzes
   for (const w of WORKOUTS) for (const e of w.exercises) assert.doesNotMatch(`${e.name} ${e.target}`, /latérales|trapèze|largeur/i);
+});
+
+test('A v4 : 2 tours durs plutôt que 3 mous, et une version plus dure quand la fourchette est atteinte', () => {
+  const A = WORKOUTS.find((w) => w.id === 'A');
+  assert.equal(A.rounds, 2);
+  assert.match(A.desc, /2 à 3 s/);
+  assert.match(A.desc, /1 ou 2 répétitions en réserve/);
+  // En haut de la fourchette, Cap propose la version plus dure : elle est écrite dans la consigne
+  const counted = A.exercises.filter((e) => goalOf(e.cue) && !e.name.endsWith('(2/2)'));
+  assert.deepEqual(counted.map((e) => e.name), ['Crunch vélo', 'Roue abdominale à genoux (1/2)', 'Russian twist', 'Crunch inversé']);
+  for (const e of counted) {
+    const g = goalOf(e.cue);
+    assert.ok(g.max > g.min, `${e.name} : pas de fourchette`);
+    assert.match(e.cue, new RegExp(`Plus de ${g.max} faciles : `), e.name);
+  }
 });
 
 test('nom de base sans précision entre parenthèses', () => {

@@ -8,7 +8,7 @@ import {
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl, baseName,
-  DAY_PLAN, FOOD_COLORS, FOOD_TREATS,
+  DAY_PLAN, FOOD_COLORS, FOOD_TREATS, SNACKS, SNACK_TEST, TEA_TIPS,
   WARMUP, PROTEIN_GRAMS, PROTEIN_FOODS, PHASES, MILESTONES, BOOKS, APPS, HELP,
 } from './data.js';
 import { ALL_LESSONS } from './finance-data.js';
@@ -936,7 +936,7 @@ function viewFood() {
   return `
   <section class="card">
     <div class="card-head"><h2>🕘 Ta journée type</h2></div>
-    <p class="hint">≈ 2 200 kcal et ${PROTEIN_GRAMS} g de protéines. Pas faim le matin ? Le 1er repas glisse vers 11 h : c’est le total du jour qui compte.</p>
+    <p class="hint">≈ 1 850 kcal avec 8 000 pas (≈ 2 000 les jours à 12 000 pas) et ${PROTEIN_GRAMS} g de protéines. Pas faim le matin ? Le 1er repas glisse vers 11 h : c’est le total du jour qui compte.</p>
     <ol class="day-plan">${DAY_PLAN.map(([when, what]) => `<li><b>${esc(when)}</b><span>${esc(what)}</span></li>`).join('')}</ol>
   </section>
   <section class="card">
@@ -944,6 +944,17 @@ function viewFood() {
     ${FOOD_COLORS.map((c) => `<div class="food-color fc-${c.id}"><p><strong>${c.ico} ${esc(c.title)}</strong></p><ul class="tight">${c.items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul></div>`).join('')}
     <p class="hint">Rien n’est interdit : le rouge veut dire « prévu », pas « jamais ».</p>
     <ul class="tight">${FOOD_TREATS.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>🥚 Collations et grignotages</h2></div>
+    <p class="hint">${esc(SNACK_TEST)}</p>
+    ${SNACKS.map((g) => `<p class="apps-cat">${esc(g.title)}</p><ul class="tight">${g.items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>`).join('')}
+    <p class="hint">Une collation prévue (comme celle de 16 h) n’est pas un grignotage : ta case reste validée.</p>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>🍵 Le thé</h2></div>
+    <p class="muted">Sans sucre, c’est 0 kcal et une arme contre le grignotage du soir. Il ne fait pas maigrir pour autant.</p>
+    <ul class="tight">${TEA_TIPS.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
   </section>
   <section class="card">
     <div class="card-head"><h2>📏 Six règles, pas de régime</h2></div>

@@ -157,7 +157,8 @@ export const FOOD_RULES = [
   'Les grignotages sucrés ou salés ne sont pas dans ta chambre. Ce qui n’est pas à portée de main ne se mange pas.',
 ];
 
-// Journée type (≈ 2 200 kcal) : [moment, quoi]. Pas de petit-déjeuner obligatoire :
+// Journée type (≈ 1 850 kcal avec 8 000 pas : ≈ 500 de moins que la dépense,
+// ≈ 0,5 kg de gras par semaine ; ≈ 2 000 les jours à 12 000 pas) : [moment, quoi]. Pas de petit-déjeuner obligatoire :
 // le 1er repas peut glisser vers 11 h, c'est le total du jour qui compte (le
 // petit-déjeuner n'aide pas à maigrir : méta-analyse Sievert 2019). Café : 400 mg
 // de caféine par jour au plus (EFSA), le dernier à 15 h pour dormir.
@@ -197,6 +198,48 @@ export const FOOD_TREATS = [
   'Mange-le à table, sans écran, une portion : un cornet ou une part, pas un pot d’un litre.',
   'Au fast-food, garde la protéine et enlève un extra (frites, sauce ou soda). De l’eau pour boire.',
   'Un craquage ? Le repas suivant redevient normal : jamais deux fois de suite.',
+];
+
+// Collations : quoi prendre quand on a faim entre les repas (ou qu'on grignote
+// quand même). Les protéines calent le plus (yaourt protéiné contre chocolat :
+// moins faim et ≈ 100 kcal de moins au dîner, Ortinau 2014) ; une pomme
+// entière avant un repas y fait manger ≈ 15 % de moins (Flood-Obbagy 2009).
+export const SNACKS = [
+  { title: '🥇 Ce qui cale le plus : les protéines', items: [
+    '150 g de skyr : 15 g de protéines, 90 kcal',
+    '2 œufs durs : 13 g, 150 kcal (fais-en 6 d’un coup)',
+    '1 boîte de thon au naturel et du citron : 25 g, 110 kcal',
+    '2 tranches de jambon blanc : 15 g, 90 kcal',
+  ] },
+  { title: '🍎 Du volume pour peu de calories', items: [
+    'Une pomme (80 kcal) : 15 min avant un repas, elle fait manger moins',
+    'Des clémentines, ou une banane (100 kcal)',
+    'Carottes, concombre, tomates cerises et 2 cuillères de houmous (90 kcal)',
+  ] },
+  { title: '🍫 Envie de sucré', items: [
+    'La « mousse » : 150 g de skyr, 1 cuillère de cacao non sucré, 1 cuillère à café de miel (130 kcal, 16 g)',
+    '2 carrés de chocolat noir avec un fruit',
+    'Une compote sans sucre ajouté (60 kcal)',
+  ] },
+  { title: '🥜 À doser', items: [
+    'Amandes ou noix : une poignée de 25 g (150 kcal), dans un bol, jamais dans le paquet',
+  ] },
+  { title: '🌙 Le soir, ou devant un écran', items: [
+    'Thé, tisane, eau pétillante, boisson zéro',
+    'Vraiment faim : un bol de popcorn nature fait maison (120 kcal)',
+  ] },
+];
+export const SNACK_TEST = 'Faim ou envie ? Demande-toi si tu mangerais une pomme. Non : c’est l’ennui ou l’écran. Un verre d’eau, 5 minutes dehors, et attends 10 minutes.';
+
+// Le thé : 0 kcal sans sucre, mais de la caféine (≈ 45 mg la tasse de noir,
+// ≈ 25 mg le vert), un frein au fer pendant les repas (Hurrell 1999) et des
+// taches comme le café. Les thés « détox » au séné sont des laxatifs.
+export const TEA_TIPS = [
+  'Le matin et jusqu’à 15 h : thé vert à la menthe sans sucre, ou Earl Grey.',
+  'Après 15 h, sans caféine : rooibos (vanille, caramel) ou tisane (verveine, camomille).',
+  'Au moins 1 h après le repas : pendant, le thé bloque une partie du fer.',
+  'Rince-toi la bouche à l’eau après : le thé noir tache autant que le café.',
+  'À éviter : thés « détox » ou « minceur » (souvent laxatifs), gélules de thé vert, thés glacés sucrés.',
 ];
 
 // Recettes de débutant : peu d’ustensiles, ingrédients de supermarché, riches en protéines.

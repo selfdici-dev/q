@@ -506,3 +506,17 @@ test('rythme : le bonhomme suit le tempo de la consigne (descente lente, montée
   // chaque pose qui a un tempo en donne un par passage (aller et retour)
   for (const [name, fig] of Object.entries(POSES)) if (fig.tempo) assert.doesNotThrow(() => beats(fig), name);
 });
+
+test('style lisse : un seul contour par membre, par buste et par tête ; aucun trait entre les pièces', () => {
+  for (const name of ['Pompes', 'Shadow boxing (esquives et crochets)', 'Crunch vélo']) {
+    const svg = figureSVG(POSES[name], { animate: false });
+    // 4 membres + buste + tête, chacun son calque de contour (sous ses pièces pleines)
+    assert.equal(count(svg, /<g class="fig-o">/g), 6, name);
+    // le fantôme (aide) reste un simple contour, sans calque en double
+    const defs = svg.slice(svg.indexOf('<defs>'), svg.indexOf('</defs>'));
+    assert.doesNotMatch(defs, /fig-o/, name);
+  }
+  const css = readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
+  assert.match(css, /\.fig \.fig-skin, \.fig \.fig-joint, \.fig \.fig-hand, \.fig \.fig-head, \.fig \.fig-hair, \.fig \.fig-shoe \{ stroke: none; \}/);
+  assert.match(css, /\.fig \.fig-o \{[^}]*stroke-width: 0\.7/);
+});

@@ -1228,8 +1228,8 @@ input.task { text-align: center; margin: 4px 0 10px; border-radius: 999px; }
    opacité, pour qu'un muscle travaillé de ce côté reste net */
 .fig .fig-far { opacity: 1; }
 /* vignettes de la liste (84 × 56) : le bonhomme seul, trait plus fin */
-.ex-fig .fig-ghost, .ex-fig .fig-move, .ex-fig .fig-joint, .ex-fig .fig-shadow { display: none; }
-.ex-fig .fig .fig-skin, .ex-fig .fig .fig-hand, .ex-fig .fig .fig-head, .ex-fig .fig .fig-hair, .ex-fig .fig .fig-shoe { stroke-width: 0.35; }
+.ex-fig .fig-ghost, .ex-fig .fig-move, .ex-fig .fig-shadow { display: none; }
+.ex-fig .fig .fig-o { stroke-width: 0.55; }
 
 /* ——— Bilan, sprints, tableaux ——— */
 .sprints li.current { background: var(--seg-on); box-shadow: inset 0 0 0 1px var(--seg-on-line); border-radius: 12px; }

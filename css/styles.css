@@ -905,11 +905,11 @@ details.card.more .rules { margin-top: 10px; }
 
 /* ---------- v19 : bonshommes animés ---------- */
 .fig { display: block; width: 100%; height: 100%; overflow: visible; }
-/* Mannequin : pièces pleines ombrées par des dégradés (fig-tone), cernées
-   d'un trait fin (--fig-line) pour qu'un bras devant le buste reste net. */
-.fig .fig-skin, .fig .fig-joint, .fig .fig-hand, .fig .fig-head, .fig .fig-hair, .fig .fig-shoe {
-  stroke: var(--fig-line, #0b0916); stroke-width: 0.45; stroke-linejoin: round;
-}
+/* Bonhomme lisse : pièces pleines ombrées par des dégradés (fig-tone), sans
+   trait entre elles ; chaque membre, le buste et la tête ont un seul contour
+   (calque .fig-o dessous) : un bras devant le buste reste net, sans rotules. */
+.fig .fig-skin, .fig .fig-joint, .fig .fig-hand, .fig .fig-head, .fig .fig-hair, .fig .fig-shoe { stroke: none; }
+.fig .fig-o { fill: var(--fig-line, #0b0916); stroke: var(--fig-line, #0b0916); stroke-width: 0.7; stroke-linejoin: round; }
 .fig .fig-muscle { stroke: none; }
 .fig-tone .fig-s1 { stop-color: color-mix(in srgb, var(--figure, #f1f0f7) 86%, #4d4672); }
 .fig-tone .fig-s2 { stop-color: color-mix(in srgb, var(--figure, #f1f0f7) 65%, #ffffff); }

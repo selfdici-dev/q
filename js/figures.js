@@ -218,11 +218,11 @@ const unwrap = (list) => list.reduce((out, a) => [...out, out.length ? a + Math.
 const SHAPES = {
   thigh: { a: 2.6, b: 1.8, pts: [[0.6, 3.3, 3.5], [4.5, 3.4, 3.3], [9.5, 2.85, 2.8], [13.4, 2.3, 2.3]] },
   shin: { a: 1.7, b: 1.2, pts: [[0.6, 2.25, 2.35], [3.6, 2.05, 2.85], [8.5, 1.65, 1.95], [12.9, 1.25, 1.3]] },
-  upperArm: { a: 2.5, b: 1.5, pts: [[0.3, 2.65, 2.75], [3.5, 2.45, 2.5], [8, 2.05, 2.1], [11, 1.75, 1.8]] },
+  upperArm: { a: 2.6, b: 1.5, pts: [[0.3, 2.85, 2.9], [3.5, 2.6, 2.6], [8, 2.15, 2.2], [11, 1.8, 1.85]] },
   forearm: { a: 1.5, b: 1.1, pts: [[0.5, 1.85, 1.9], [3.5, 1.95, 2.05], [8, 1.5, 1.55], [10.4, 1.25, 1.25]] },
   hand: { a: 1.0, b: 1.1, pts: [[0.3, 1.2, 1.2], [1.5, 1.42, 1.42], [2.7, 1.25, 1.25]] },
   neck: { a: 0.6, b: 1.0, pts: [[0, 1.65, 1.75], [5.6, 1.55, 1.6]] },
-  torso: { a: 2.4, b: 1.9, pts: [[-0.6, 3.1, 4.2], [1.6, 3.3, 4.6], [4.4, 3.2, 3.5], [7.4, 3.1, 2.9], [10.4, 3.4, 3.0], [13.4, 4.2, 3.5], [16.4, 4.8, 3.9], [19.2, 4.5, 4.0], [21.4, 3.5, 3.4]] },
+  torso: { a: 2.4, b: 1.9, pts: [[-0.6, 3.1, 4.2], [1.6, 3.3, 4.6], [4.4, 3.1, 3.4], [7.4, 2.95, 2.8], [10.4, 3.4, 3.0], [13.4, 4.3, 3.6], [16.4, 5.0, 4.1], [19.2, 4.7, 4.2], [21.4, 3.6, 3.5]] },
   // muscles qui travaillent : un fuseau dans la pièce (le bord reste clair)
   thighM: { a: 1.8, b: 1.5, pts: [[1.8, 2.35, 2.5], [5, 2.5, 2.4], [9.5, 2.05, 1.95], [11.8, 1.5, 1.5]] },
   shinM: { a: 1.4, b: 1.2, pts: [[1.6, 1.45, 1.95], [3.9, 1.35, 2.2], [8, 1.1, 1.45], [10.2, 0.8, 0.95]] },
@@ -236,7 +236,7 @@ const SHAPES = {
 // Vue de face : buste plus large (épaules), symétrique ; le ventre est une
 // tablette au milieu (pas une bande qui fait le tour comme un short).
 const FRONT = {
-  torso: { a: 2.3, b: 1.9, pts: [[-0.6, 4.5, 4.5], [1.6, 4.9, 4.9], [4.4, 4.4, 4.4], [7.4, 3.9, 3.9], [10.4, 4.1, 4.1], [13.4, 5.0, 5.0], [16.4, 5.8, 5.8], [19.2, 6.3, 6.3], [21.4, 5.8, 5.8]] },
+  torso: { a: 2.3, b: 1.9, pts: [[-0.6, 4.5, 4.5], [1.6, 4.9, 4.9], [4.4, 4.3, 4.3], [7.4, 3.75, 3.75], [10.4, 4.1, 4.1], [13.4, 5.2, 5.2], [16.4, 6.1, 6.1], [19.2, 6.6, 6.6], [21.4, 6.0, 6.0]] },
   abs: { a: 1.6, b: 1.6, pts: [[3.8, 2.4, 2.4], [8, 2.5, 2.5], [12.2, 2.6, 2.6]] },
   chest: { a: 1.8, b: 1.4, pts: [[13.6, 4.3, 4.3], [16.4, 5.0, 5.0], [19.2, 5.4, 5.4], [20.8, 4.9, 4.9]] },
 };
@@ -673,7 +673,8 @@ function draw(fig, { animate = true, mirror = false, fit = false, focus = [], he
     const muscle = (name, part) => (!ghost && hot(`${part}${side}`) ? use(shape(`${name}M`), 'fig-muscle fig-focus', tone(far, true)) : '');
     const t = sel.map((i) => L.t[i]);
     const upper = use(shape(up), skin(ghost), tone(far, false, ghost)) + muscle(up, up);
-    const knob = `<circle class="${ghost ? '' : 'fig-joint'}" r="${arm ? 1.95 : 2.35}"${ghost ? '' : ` fill="${tone(far, false)}"`}/>`;
+    // rotule : sous les deux os (elle ne fait que combler le pli du coude ou du genou)
+    const knob = `<circle class="${ghost ? '' : 'fig-joint'}" cx="${L1}" r="${arm ? 1.95 : 2.35}"${ghost ? '' : ` fill="${tone(far, false)}"`}/>`;
     let lower = use(shape(low), skin(ghost), tone(far, false, ghost)) + muscle(low, low);
     // Pied sur la pointe : la cheville remonte un peu (le tibia raccourcit d'autant).
     if (!arm && t.some((v) => v > 0)) {
@@ -689,8 +690,8 @@ function draw(fig, { animate = true, mirror = false, fit = false, focus = [], he
       tip = ghost ? use(form('shoe', sh)) : `${use(form('shoe', sh), 'fig-shoe')}${use(form('sole', so), 'fig-sole')}`;
     }
     const end = node(t.map((v) => [L2 - v, 0]), pick2(L.r3, sel), tip);
-    const mid = node(sel.map(() => [L1, 0]), pick2(L.r2, sel), `${knob}${lower}${end}`);
-    return node(pick2(L.root, sel), pick2(L.a1, sel), `${upper}${mid}`);
+    const mid = node(sel.map(() => [L1, 0]), pick2(L.r2, sel), `${lower}${end}`);
+    return node(pick2(L.root, sel), pick2(L.a1, sel), `${knob}${upper}${mid}`);
   };
   const pick2 = (list, s) => s.map((i) => list[i]);
 
@@ -705,10 +706,12 @@ function draw(fig, { animate = true, mirror = false, fit = false, focus = [], he
     const neck = node(pick2(R0.shoulder, sel), pick2(R0.neck, sel), use(shape('neck'), skin(ghost), tone(false, false, ghost)) + neckM);
     return torso + neck;
   };
-  const head = (sel, ghost) => {
+  // line : la forme seule (crâne et cheveux), pour le contour du style lisse
+  const head = (sel, ghost, line = false) => {
     const h = HEADS[front ? 'front' : 'side'];
     const flip = bodyFlip ? flipY : (p) => p;
-    const inner = `${use(form('head', flip(h.head)), ghost ? '' : 'fig-head', ghost ? '' : `url(#§-sk)`)}${ghost ? '' : use(form('hair', flip(h.hair)), 'fig-hair')}`;
+    const hair = line ? use(form('hair', flip(h.hair))) : ghost ? '' : use(form('hair', flip(h.hair)), 'fig-hair');
+    const inner = `${use(form('head', flip(h.head)), ghost ? '' : 'fig-head', ghost ? '' : `url(#§-sk)`)}${hair}`;
     if (R0.tilt) return node(sel.map((i) => R0.frames[i].head), pick2(R0.tilt, sel), inner);
     return node(pick2(R0.shoulder, sel), pick2(R0.neck, sel), `<g transform="translate(${BONES.neck} 0)">${inner}</g>`);
   };
@@ -759,13 +762,19 @@ function draw(fig, { animate = true, mirror = false, fit = false, focus = [], he
   // Le corps entier, dans l'ordre de dessin : de profil, le côté éloigné
   // (plus sombre) d'abord, l'élastique devant les jambes, la tête toujours
   // par-dessus ; de face, les poings devant le visage et l'élastique devant les bras.
+  // Style lisse : chaque membre (bras, main ; jambe, pied), le buste avec le
+  // cou, et la tête ont un seul contour, tracé d'un bloc sous leurs pièces
+  // pleines (calque .fig-o, les formes sans couleur) : pas de trait au coude,
+  // au genou ni à la base du cou ; un bras devant le buste garde le sien.
+  const lined = (outline, fill) => `<g class="fig-o">${outline}</g>${fill}`;
   const body = (sel, ghost = false) => {
-    const t = trunk(sel, ghost);
-    const L = (k) => limb(k, sel, ghost);
+    const t = ghost ? trunk(sel, true) : lined(trunk(sel, true), trunk(sel, false));
+    const L = (k) => (ghost ? limb(k, sel, true) : lined(limb(k, sel, true), limb(k, sel, false)));
+    const H = ghost ? head(sel, true) : lined(head(sel, true, true), head(sel, false));
     const extra = (s) => (ghost ? '' : s);
-    if (front) return `${t}${L('legF')}${L('legN')}${head(sel, ghost)}${L('armF')}${L('armN')}${extra(band)}`;
+    if (front) return `${t}${L('legF')}${L('legN')}${H}${L('armF')}${L('armN')}${extra(band)}`;
     const far = `${L('armF')}${L('legF')}`;
-    const near = fig.bar ? `${head(sel, ghost)}${L('armN')}` : `${L('armN')}${head(sel, ghost)}`;
+    const near = fig.bar ? `${H}${L('armN')}` : `${L('armN')}${H}`;
     return `${ghost ? far : `<g class="fig-far">${far}</g>`}${t}${L('legN')}${extra(band + parAt('handN') + wheel + bar)}${near}`;
   };
 

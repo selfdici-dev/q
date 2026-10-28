@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   todayKey, addDays, chain, recoveryMode, sprintInfo, bedtimeMinutes, minutesToHHMM,
-  sleepDuration, rollingAverage, nextAction, retireHabits, dayStatus,
+  sleepDuration, rollingAverage, nextAction, retireHabits, dayStatus, recordWall,
 } from '../js/logic.js';
 
 const habits = [{ id: 'a' }, { id: 'b' }];
@@ -136,6 +136,34 @@ test('coucher cible par semaine', async () => {
   assert.equal(weeklyBedtime(4), '00:30');
   assert.equal(weeklyBedtime(8), '23:30');
   assert.equal(weeklyBedtime(12), '23:30');
+});
+
+test('réveil progressif : 30 min plus tôt tous les 3 jours, de 10 h à 8 h 30, coucher 8 h avant', async () => {
+  const { wakePlan, bedGoal, clockFr } = await import('../js/logic.js');
+  assert.equal(wakePlan(null, '2026-11-01'), null);
+  // lancé le 31 : le 1er réveil visé est le 1er novembre ; ce soir, au lit avant 2 h
+  let p = wakePlan('2026-11-01', '2026-10-31');
+  assert.deepEqual([p.day, p.wake, p.nextWake, p.bed, p.stage], [0, null, '10:00', '02:00', 0]);
+  assert.deepEqual(p.steps, ['10:00', '09:30', '09:00', '08:30']);
+  // jours 1 à 3 : 10 h ; le soir du jour 3, le coucher suit le réveil du jour 4 (9 h 30)
+  const at = (n) => wakePlan('2026-11-01', addDays('2026-11-01', n - 1));
+  assert.deepEqual([at(1).wake, at(1).bed, at(3).wake, at(3).nextWake, at(3).bed], ['10:00', '02:00', '10:00', '09:30', '01:30']);
+  assert.deepEqual([4, 7, 10, 40].map((n) => at(n).wake), ['09:30', '09:00', '08:30', '08:30']);
+  assert.equal(at(9).bed, '00:30');
+  assert.equal(at(1).goalBed, '00:30');
+  assert.deepEqual([at(8).reached, at(9).reached, at(9).stage], [false, true, 3]);
+  // une autre cible : pas de 30 min puis la cible ; une cible plus tardive que 10 h reste fixe
+  assert.deepEqual(wakePlan('2026-11-01', '2026-11-01', '08:45').steps, ['10:00', '09:30', '09:00', '08:45']);
+  assert.deepEqual(wakePlan('2026-11-01', '2026-11-01', '07:30').steps.length, 6);
+  assert.equal(wakePlan('2026-11-01', '2026-11-01', '07:30').bed, '02:00');
+  assert.equal(wakePlan('2026-11-01', '2026-11-20', '07:30').bed, '23:30');
+  assert.deepEqual(wakePlan('2026-11-01', '2026-11-05', '10:30').steps, ['10:30']);
+  // le coucher visé suit le plan s'il est lancé, sinon le programme de 12 semaines
+  const state = { settings: { startDate: '2026-10-01', bedtimeTarget: '23:30', wakePlanStart: null, wakeTarget: '08:30' } };
+  assert.equal(bedGoal(state, '2026-10-01'), '01:15');
+  state.settings.wakePlanStart = '2026-10-02';
+  assert.equal(bedGoal(state, '2026-10-01'), '02:00');
+  assert.deepEqual(['10:00', '09:30', '00:30', '02:00', '00:00'].map(clockFr), ['10\u00a0h', '9\u00a0h\u00a030', '0\u00a0h\u00a030', '2\u00a0h', 'minuit']);
 });
 
 test('ratio gain/risque, courbe en R, pertes du jour, répartition', async () => {
@@ -386,4 +414,72 @@ test('créatine : jours cochés sur les 7 derniers, aujourd’hui compris', asyn
   } };
   assert.equal(creatineWeek(st, '2026-10-20'), 3);
   assert.equal(creatineWeek({ days: {} }, '2026-10-20'), 0);
+});
+
+test('mur des records : le meilleur de chaque exercice, tous tours confondus, le plus récent d’abord', () => {
+  const records = {
+    'Pompes (sur parallettes)#1': { best: 12, last: 11, date: '2026-10-20' },
+    'Pompes (sur parallettes)#2': { best: 10, last: 10, date: '2026-10-26' },
+    'Roue abdominale à genoux (1/2)#1': { best: 9, last: 9, date: '2026-10-10' },
+    'Roue abdominale à genoux (2/2)#2': { best: 11, last: 6, date: '2026-10-12' },
+    'Crunch vélo#1': { best: 0, last: 0, date: '2026-10-27' },
+    'Exercice disparu#1': { best: 30, last: 30, date: '2026-10-27' },
+  };
+  const exercises = [
+    { label: 'Pompes', names: ['Pompes (sur parallettes)'], unit: 'pompes', workout: 'B' },
+    { label: 'Roue abdominale à genoux', names: ['Roue abdominale à genoux (1/2)', 'Roue abdominale à genoux (2/2)'], unit: 'allers-retours', workout: 'A' },
+    { label: 'Crunch vélo', names: ['Crunch vélo'], unit: 'touches', workout: 'A' },
+  ];
+  const wall = recordWall(records, exercises);
+  // un record à 0 ne compte pas ; un exercice retiré du programme non plus ;
+  // les deux passages de la roue comptent ensemble
+  assert.deepEqual(wall.map((r) => [r.label, r.best, r.date, r.workout]), [
+    ['Pompes', 12, '2026-10-26', 'B'],
+    ['Roue abdominale à genoux', 11, '2026-10-12', 'A'],
+  ]);
+  assert.equal(wall[0].unit, 'pompes');
+  assert.equal(recordWall(records, exercises, 1).length, 1);
+  assert.deepEqual(recordWall({}, exercises), []);
+  assert.deepEqual(recordWall(undefined, exercises), []);
+});
+
+test('record battu : de combien, retenu pour la plaque neuve, au mur pendant 3 jours', async () => {
+  const { beatBy, logRecord, FRESH_DAYS } = await import('../js/logic.js');
+  // première note : rien à battre ; égal ou moins bien : pas de record
+  assert.equal(beatBy(undefined, 12), null);
+  assert.equal(beatBy({ best: 12 }, 12), null);
+  assert.equal(beatBy({ best: 12 }, 9), null);
+  assert.equal(beatBy({ best: 12 }, 15), 3);
+  let rec = logRecord({}, 'Crunch vélo#1', 18, '2026-10-20');
+  assert.equal(rec['Crunch vélo#1'].beatenOn, undefined); // la première note n'est pas un record battu
+  rec = logRecord(rec, 'Crunch vélo#1', 21, '2026-10-27');
+  assert.deepEqual(rec['Crunch vélo#1'], { best: 21, last: 21, date: '2026-10-27', beatenOn: '2026-10-27', beatenFrom: 18 });
+  // une moins bonne série garde le jour du record et l'ancien chiffre
+  rec = logRecord(rec, 'Crunch vélo#1', 19, '2026-10-28');
+  assert.deepEqual(rec['Crunch vélo#1'], { best: 21, last: 19, date: '2026-10-28', beatenOn: '2026-10-27', beatenFrom: 18 });
+  const ex = [{ label: 'Crunch vélo', names: ['Crunch vélo'], unit: 'touches', workout: 'A' }];
+  const at = (today) => recordWall(rec, ex, 6, today)[0];
+  assert.deepEqual([at('2026-10-27').fresh, at('2026-10-27').gain], [true, 3]);
+  assert.equal(FRESH_DAYS, 2);
+  assert.equal(at('2026-10-29').fresh, true); // avant-hier : encore neuve
+  assert.deepEqual([at('2026-10-30').fresh, at('2026-10-30').gain], [false, 0]); // ensuite : une plaque comme les autres
+  assert.equal(at('2026-10-26').fresh, false); // date du téléphone en arrière : rien de neuf
+  assert.equal(recordWall(rec, ex)[0].fresh, false); // sans date du jour : rien de neuf
+  // tous tours confondus : un record du tour 2 battu sous le chiffre du tour 1 ne change pas le mur
+  const pex = [{ label: 'Pompes', names: ['Pompes (sur parallettes)'], unit: 'pompes', workout: 'B' }];
+  let two = logRecord({ 'Pompes (sur parallettes)#1': { best: 20, last: 20, date: '2026-10-20' } }, 'Pompes (sur parallettes)#2', 14, '2026-10-21');
+  two = logRecord(two, 'Pompes (sur parallettes)#2', 17, '2026-10-27');
+  const wall = (today) => recordWall(two, pex, 6, today)[0];
+  assert.deepEqual([wall('2026-10-27').best, wall('2026-10-27').fresh], [20, false]);
+  // … et s'il passe au-dessus, le gain se compte depuis l'ancien chiffre du mur (20, pas 17)
+  two = logRecord(two, 'Pompes (sur parallettes)#2', 22, '2026-10-28');
+  assert.deepEqual([wall('2026-10-28').best, wall('2026-10-28').fresh, wall('2026-10-28').gain], [22, true, 2]);
+});
+
+test('« combien de touches ? », « combien d’allers-retours ? »', async () => {
+  const { combien } = await import('../js/logic.js');
+  assert.equal(combien('touches'), 'combien de touches');
+  assert.equal(combien('pompes'), 'combien de pompes');
+  assert.equal(combien('allers-retours'), 'combien d’allers-retours');
+  assert.equal(combien('esquives'), 'combien d’esquives');
 });

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { WORKOUTS, WEEK_PLAN, WARMUP, HELP, demoUrl, baseName, DAY_PLAN, FOOD_COLORS, FOOD_TREATS, FOOD_RULES, DEFAULT_RULES, PROTEIN_FOODS } from '../js/data.js';
+import { WORKOUTS, WEEK_PLAN, WARMUP, HELP, demoUrl, baseName, DAY_PLAN, FOOD_COLORS, FOOD_TREATS, FOOD_RULES, DEFAULT_RULES, PROTEIN_FOODS, SNACKS, SNACK_TEST, TEA_TIPS } from '../js/data.js';
 import { goalOf } from '../js/logic.js';
 
 test('séances : les IDs stockés dans l’historique ne changent pas', () => {
@@ -135,6 +135,10 @@ test('P : au parc, à la barre, à la place d’une C ; tractions par étapes', 
   for (const e of P.exercises) assert.ok(e.why && e.why.length <= 110 && !/gonfl|masse/i.test(e.why), e.name);
 });
 
+test('Salle : chaque séance a un exercice phare, qui fait partie de la séance', () => {
+  for (const w of WORKOUTS) assert.ok(w.exercises.some((e) => e.name === w.star), `${w.id} : ${w.star}`);
+});
+
 test('nom de base sans précision entre parenthèses', () => {
   assert.equal(baseName('Roue abdominale à genoux (1/2)'), 'Roue abdominale à genoux');
   assert.equal(baseName('Planche latérale (gauche)'), 'Planche latérale');
@@ -156,7 +160,9 @@ test('liens de démo vidéo', () => {
 });
 
 test('aide « ? » : chaque onglet expliqué en 3 phrases courtes', () => {
-  assert.deepEqual(Object.keys(HELP), ['jour', 'focus', 'sport', 'argent', 'moi']);
+  // v4 : 4 onglets (Salle, Jour, Manger, Moi) ; Focus retiré, Argent dans Moi
+  assert.deepEqual(Object.keys(HELP), ['jour', 'sport', 'manger', 'moi']);
+  assert.match(HELP.moi.lines.join(' '), /Argent/);
   for (const [tab, h] of Object.entries(HELP)) {
     assert.ok(h.title, tab);
     assert.equal(h.lines.length, 3, tab);
@@ -182,6 +188,15 @@ test('B : des consignes courtes et en étapes, lisibles pendant l’effort', () 
     assert.ok(e.cue.length <= 330, `${e.name} : ${e.cue.length} caractères`);
     assert.match(e.cue, /1\. |Étape 1 : /, e.name);
   }
+});
+
+test('B : pompes pike par étapes, de la négative à la complète', () => {
+  // il n'y arrivait pas et ne sentait aucun progrès : 4 étapes, 8 faciles font passer à la suivante
+  const pike = WORKOUTS.find((w) => w.id === 'B').exercises.find((e) => e.name === 'Pompes pike');
+  assert.match(pike.cue, /Étape 1 : négatives.*Étape 2 : .*Étape 3 : complètes.*Étape 4 : /);
+  const g = goalOf(pike.cue);
+  assert.equal(g.unit, 'pompes pike');
+  assert.match(pike.cue, new RegExp(`Plus de ${g.max} faciles : étape suivante`));
 });
 
 test('manger : journée type du réveil au coucher, et 3 couleurs où rien n’est interdit', () => {
@@ -213,4 +228,22 @@ test('manger : journée type du réveil au coucher, et 3 couleurs où rien n’e
   assert.match(treats, /sans écran/);
   assert.match(treats, /jamais deux fois de suite/);
   for (const t of FOOD_TREATS) assert.ok(t.length <= 110, t);
+});
+
+test('manger : collations protéinées d’abord, test de la pomme, thé loin des repas et avant 15 h', () => {
+  assert.match(SNACKS[0].title, /protéines/);
+  const first = SNACKS[0].items.join(' ');
+  for (const food of ['skyr', 'œufs', 'thon']) assert.match(first, new RegExp(food), food);
+  // chaque collation chiffrée donne ses calories ; rien n'est « interdit »
+  for (const g of SNACKS) {
+    assert.ok(g.items.length >= 1, g.title);
+    for (const i of g.items) assert.doesNotMatch(i, /interdit/i);
+  }
+  assert.ok(SNACKS.flatMap((g) => g.items).filter((i) => /kcal/.test(i)).length >= 8);
+  assert.match(SNACK_TEST, /pomme/);
+  const tea = TEA_TIPS.join(' ');
+  assert.match(tea, /15 h/);
+  assert.match(tea, /fer/);
+  assert.match(tea, /détox/);
+  for (const t of TEA_TIPS) assert.ok(t.length <= 110, t);
 });

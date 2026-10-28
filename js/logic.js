@@ -209,6 +209,9 @@ export function goalOf(cue = '') {
   return { min: Number(m[1]), max: Number(m[2] ?? m[1]), unit: (m[3] ?? 'répétitions').trim() };
 }
 
+// « combien de touches ? », « combien d’allers-retours ? » : élision devant une voyelle ou un h muet.
+export const combien = (unit = '') => `combien ${/^[aeéèêiîoôuûyh]/i.test(unit) ? 'd’' : 'de '}${unit}`;
+
 // Un record par exercice et par tour (au 2e tour, la fatigue change tout).
 export const recordKey = (name, round = 1) => `${name}#${round}`;
 
@@ -226,9 +229,47 @@ export function dropRecords(records, name) {
   return Object.fromEntries(Object.entries(records ?? {}).filter(([k]) => !k.startsWith(`${name}#`)));
 }
 
+// Record battu en notant n : de combien (prev : l'ancien record de ce tour).
+// null si ce n'en est pas un : pas mieux, ou toute première note (il n'y
+// avait rien à battre).
+export function beatBy(prev, n) {
+  return Number.isFinite(prev?.best) && n > prev.best ? n - prev.best : null;
+}
+
+// Une note : le record garde le meilleur chiffre. Record battu : on retient
+// aussi le jour (beatenOn) et l'ancien record (beatenFrom), pour la plaque neuve.
 export function logRecord(records, key, n, date) {
   const prev = records?.[key];
-  return { ...records, [key]: { best: Math.max(prev?.best ?? 0, n), last: n, date } };
+  const rec = { ...prev, best: Math.max(prev?.best ?? 0, n), last: n, date };
+  if (beatBy(prev, n) !== null) Object.assign(rec, { beatenOn: date, beatenFrom: prev.best });
+  return { ...records, [key]: rec };
+}
+
+// Plaque neuve au mur : record battu aujourd'hui, hier ou avant-hier.
+export const FRESH_DAYS = 2;
+
+// Mur des records de la Salle : le meilleur chiffre de chaque exercice, tous
+// tours confondus, le dernier travaillé en premier (la date d'un record est
+// celle de sa dernière note, pas celle où il a été battu). exercises :
+// [{ label, names, unit, workout }] (names : les noms complets qui comptent
+// pour ce label, ex. les deux passages de la roue). Avec today : fresh (plaque
+// neuve, le meilleur chiffre vient d'être battu) et gain (de combien il a
+// monté sur le mur, tous tours confondus).
+export function recordWall(records, exercises, limit = 6, today = null) {
+  const all = Object.entries(records ?? {}).map(([k, r]) => [k.slice(0, k.lastIndexOf('#')), r]);
+  const out = [];
+  for (const ex of exercises) {
+    const mine = all.filter(([name, r]) => ex.names.includes(name) && Number.isFinite(r?.best) && r.best > 0).map(([, r]) => r);
+    if (!mine.length) continue;
+    const date = mine.map((r) => r.date ?? '').sort().at(-1);
+    const best = Math.max(...mine.map((r) => r.best));
+    const top = mine.filter((r) => r.best === best).sort((a, b) => (b.beatenOn ?? '').localeCompare(a.beatenOn ?? ''))[0];
+    const recent = !!(today && top.beatenOn && diffDays(top.beatenOn, today) <= FRESH_DAYS && diffDays(top.beatenOn, today) >= 0);
+    const before = Math.max(top.beatenFrom ?? 0, ...mine.filter((r) => r !== top).map((r) => r.best));
+    const gain = recent ? best - before : 0;
+    out.push({ label: ex.label, unit: ex.unit, workout: ex.workout, best, date, fresh: gain > 0, gain: Math.max(0, gain) });
+  }
+  return out.sort((a, b) => b.date.localeCompare(a.date) || b.best - a.best).slice(0, limit);
 }
 
 // Coach vocal : la phrase dite au début de chaque étape de la séance. Courte,
@@ -378,6 +419,55 @@ export function weeklyBedtime(week, finalTarget = '23:30', start = '01:15') {
   const s = bedtimeMinutes(start);
   const f = bedtimeMinutes(finalTarget);
   return minutesToHHMM(Math.max(f, s - (week - 1) * 15));
+}
+
+// ---------- Réveil progressif ----------
+// Le corps se recale par le réveil et la lumière du matin, pas en se
+// couchant plus tôt sans sommeil : le réveil avance de 30 min tous les
+// 3 jours, de 10 h jusqu'à la cible, 7 jours sur 7, et le coucher suit
+// (au plus tard 8 h avant le réveil du lendemain). start : le jour du
+// 1er réveil visé (settings.wakePlanStart), null si le plan n'est pas lancé.
+export const WAKE_PLAN = { from: '10:00', step: 30, every: 3, inBed: 8 * 60 };
+
+const clockMinutes = (hhmm) => { const [h, m] = hhmm.split(':').map(Number); return h * 60 + m; };
+const clockHHMM = (mins) => { const t = ((mins % 1440) + 1440) % 1440; return `${pad(Math.floor(t / 60))}:${pad(t % 60)}`; };
+
+// « 09:30 » -> « 9 h 30 », « 10:00 » -> « 10 h », « 00:00 » -> « minuit ».
+// Espaces insécables : « 10 h » ne se coupe jamais en fin de ligne.
+export function clockFr(hhmm) {
+  const t = clockMinutes(hhmm);
+  if (t === 0) return 'minuit';
+  return `${Math.floor(t / 60)}\u00a0h${t % 60 ? `\u00a0${pad(t % 60)}` : ''}`;
+}
+
+export function wakePlan(start, today, target = '08:30', plan = WAKE_PLAN) {
+  if (!start) return null;
+  const f = clockMinutes(plan.from);
+  const t = clockMinutes(target);
+  // Réveil visé le jour n du plan (1 = premier réveil).
+  const wakeOn = (n) => Math.max(t, f - plan.step * Math.floor(Math.max(0, n - 1) / plan.every));
+  const steps = [];
+  for (let w = f; w > t; w -= plan.step) steps.push(w);
+  steps.push(t);
+  const day = diffDays(start, today) + 1;
+  const next = wakeOn(day + 1);
+  return {
+    day, // 0 ou moins : le 1er réveil n'est pas encore passé
+    wake: day >= 1 ? clockHHMM(wakeOn(day)) : null, // ce matin
+    nextWake: clockHHMM(next), // demain matin
+    bed: clockHHMM(next - plan.inBed), // ce soir, au plus tard
+    steps: steps.map(clockHHMM), // les réveils successifs, de 10 h à la cible
+    stage: steps.indexOf(next), // celui de demain dans steps
+    reached: next === t,
+    goalBed: clockHHMM(t - plan.inBed), // le coucher une fois la cible atteinte
+  };
+}
+
+// Coucher visé ce soir : celui du réveil progressif s'il est lancé, sinon
+// celui du programme (15 min plus tôt chaque semaine).
+export function bedGoal(state, today) {
+  const p = wakePlan(state.settings.wakePlanStart, today, state.settings.wakeTarget);
+  return p ? p.bed : weeklyBedtime(weekNumber(state, today), state.settings.bedtimeTarget);
 }
 
 // Le 3e jour de chaque sprint est un « jour minimum » prévu.

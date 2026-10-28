@@ -58,6 +58,8 @@ export function validateBackup(data) {
   if (data.settings !== undefined) {
     if (!isObj(data.settings)) return fail('réglages illisibles');
     if (data.settings.startDate !== undefined && !isKey(data.settings.startDate)) return fail('date de départ impossible');
+    if (!empty(data.settings.wakePlanStart) && !isKey(data.settings.wakePlanStart)) return fail('date du réveil progressif impossible');
+    if (!empty(data.settings.wakeTarget) && !isTime(data.settings.wakeTarget)) return fail('réveil visé illisible');
   }
   for (const f of LISTS) if (data[f] !== undefined && !Array.isArray(data[f])) return fail(`« ${f} » illisible`);
   for (const f of OBJECTS) if (data[f] !== undefined && !isObj(data[f])) return fail(`« ${f} » illisible`);

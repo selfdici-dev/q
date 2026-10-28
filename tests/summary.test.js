@@ -74,6 +74,22 @@ test('bilan de la semaine : sprint terminé, moyennes et réponses du bilan', ()
   assert.equal(lines[10], 'Ce que je change : Coucher plus tôt');
 });
 
+test('bilans : le réveil progressif fixe le coucher visé et dit où il en est', () => {
+  const st = base();
+  st.settings.wakePlanStart = '2026-10-02'; // lancé le 1er : 1er réveil visé le 2
+  let lines = daySummary(st, S).split('\n');
+  assert.ok(lines.includes('Coucher visé ce soir : 02:00'));
+  assert.ok(lines.includes('Réveil progressif : commence demain (réveil visé 10:00)'));
+  // jour 3 : debout à 10 h ce matin, 9 h 30 demain, donc au lit avant 1 h 30
+  lines = daySummary(st, '2026-10-04').split('\n');
+  assert.ok(lines.includes('Coucher visé ce soir : 01:30'));
+  assert.ok(lines.includes('Réveil progressif : jour 3, réveil visé 10:00 ce matin, 09:30 demain'));
+  // la semaine s'arrête au 7 (jour 6 du plan)
+  const week = weekSummary(st, S, '2026-10-08');
+  assert.match(week, /^Coucher : visé 01:00$/m);
+  assert.match(week, /^Réveil progressif : jour 6, réveil visé 09:30 ce matin, 09:00 demain$/m);
+});
+
 test('bilan de la semaine en cours : seuls les jours écoulés comptent', () => {
   const st = base();
   st.days[S] = { habits: { a: 1, b: 1 } };

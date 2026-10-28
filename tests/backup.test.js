@@ -55,6 +55,8 @@ test('fichiers invalides : refusés avec une raison', () => {
     { ...good(), days: { '2026-09-01': { bed: 'tard' } } },
     { ...good(), days: { '2026-09-01': { workouts: 'A' } } },
     { ...good(), settings: { startDate: 'hier' } },
+    { ...good(), settings: { startDate: '2026-09-01', wakePlanStart: 'demain' } },
+    { ...good(), settings: { startDate: '2026-09-01', wakeTarget: 'tôt' } },
     { ...good(), rules: 'une règle' },
     { ...good(), trades: {} },
     { ...good(), wealth: [] },

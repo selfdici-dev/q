@@ -950,21 +950,43 @@ details.more:not(.card) > summary::after { content: ""; position: absolute; inse
   --ico: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'><circle cx='12' cy='12' r='4.2'/><path d='M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4 7 7M17 17l1.6 1.6M5.4 18.6 7 17M17 7l1.6-1.6'/></svg>");
   --ico-on: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'><circle cx='12' cy='12' r='4.8' fill='%23000' stroke='none'/><path d='M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M5.2 18.8l1.6-1.6M17.2 6.8l1.6-1.6'/></svg>");
 }
-#tabs a[data-tab="focus"] {
-  --ico: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8'><circle cx='12' cy='12' r='9'/><circle cx='12' cy='12' r='5'/><circle cx='12' cy='12' r='1.5' fill='%23000' stroke='none'/></svg>");
-  --ico-on: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><mask id='m'><rect width='24' height='24' fill='%23fff'/><circle cx='12' cy='12' r='5.6' fill='none' stroke='%23000' stroke-width='1.9'/></mask></defs><circle cx='12' cy='12' r='9.8' fill='%23000' mask='url(%23m)'/></svg>");
-}
 #tabs a[data-tab="sport"] {
   --ico: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><rect x='4.6' y='6.6' width='3.4' height='10.8' rx='1.3'/><rect x='16' y='6.6' width='3.4' height='10.8' rx='1.3'/><path d='M2.4 10v4M21.6 10v4M8 12h8'/></svg>");
   --ico-on: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='4.4' y='6.2' width='3.8' height='11.6' rx='1.4'/><rect x='15.8' y='6.2' width='3.8' height='11.6' rx='1.4'/><path d='M2.3 9.8v4.4M21.7 9.8v4.4M8 12h8' fill='none'/></svg>");
 }
-#tabs a[data-tab="argent"] {
-  --ico: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'><circle cx='12' cy='12' r='9'/><path d='M15 8.7a4.2 4.2 0 1 0 0 6.6M7.6 10.9h5.6M7.6 13.1h5.6'/></svg>");
-  --ico-on: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><mask id='m'><rect width='24' height='24' fill='%23fff'/><path d='M15 8.7a4.2 4.2 0 1 0 0 6.6M7.6 10.9h5.6M7.6 13.1h5.6' fill='none' stroke='%23000' stroke-width='1.9' stroke-linecap='round'/></mask></defs><circle cx='12' cy='12' r='9.8' fill='%23000' mask='url(%23m)'/></svg>");
+#tabs a[data-tab="manger"] {
+  --ico: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M3.6 11.4h16.8a8.4 8.4 0 0 1-16.8 0Z'/><path d='M8.6 4.2c-.9.9.9 1.9 0 2.9M12 3.6c-.9.9.9 1.9 0 2.9M15.4 4.2c-.9.9.9 1.9 0 2.9'/></svg>");
+  --ico-on: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3.3 11.2h17.4a8.7 8.7 0 0 1-17.4 0Z' fill='%23000'/><path d='M8.6 4c-.9.9.9 1.9 0 2.9M12 3.4c-.9.9.9 1.9 0 2.9M15.4 4c-.9.9.9 1.9 0 2.9'/></svg>");
 }
 #tabs a[data-tab="moi"] {
   --ico: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'><circle cx='12' cy='12' r='9'/><circle cx='12' cy='9.8' r='3.1'/><path d='M6.4 18.3c1.3-2.2 3.3-3.4 5.6-3.4s4.3 1.2 5.6 3.4'/></svg>");
   --ico-on: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><mask id='m'><rect width='24' height='24' fill='%23fff'/><circle cx='12' cy='9.7' r='3.4' fill='%23000'/><path d='M5.6 18.7c1.4-2.6 3.6-4 6.4-4s5 1.4 6.4 4l-1.6 1.6H7.2z' fill='%23000'/></mask></defs><circle cx='12' cy='12' r='9.8' fill='%23000' mask='url(%23m)'/></svg>");
+}
+
+/* ——— Salle : la lumière de la séance (--wo) éclaire la scène et les postes ——— */
+:root:root .card.gym-hero {
+  background:
+    radial-gradient(90% 70% at 50% 46%, color-mix(in srgb, var(--wo, var(--accent)) 24%, transparent), transparent 72%),
+    radial-gradient(70% 90% at 100% 0%, rgb(124 58 237 / 0.18), transparent 70%),
+    var(--card) !important;
+  border-color: color-mix(in srgb, var(--wo, var(--accent)) 30%, var(--card-line));
+}
+.gym-hero h2 { font: 700 1.375rem/1.2 var(--sans); letter-spacing: -0.015em; }
+.gym-hero .eyebrow { margin-bottom: 2px; color: var(--wo, var(--accent)); }
+.gym-stage {
+  background: var(--fig-tile);
+  box-shadow: inset 0 0 0 1px var(--divider), 0 18px 40px -22px color-mix(in srgb, var(--wo, var(--accent)) 80%, transparent);
+}
+.poste { background: var(--tile); border-color: var(--divider); }
+.poste .poste-fig { background: var(--fig-tile); }
+.poste.planned { border-color: color-mix(in srgb, var(--wo, var(--accent)) 60%, transparent); box-shadow: 0 10px 26px -16px var(--wo, var(--accent)); }
+.poste-tag { background: color-mix(in srgb, var(--wo, var(--accent)) 18%, transparent); color: var(--wo, var(--accent)); }
+.poste-tag.done { background: color-mix(in srgb, var(--pos) 18%, transparent); color: var(--pos); }
+.record { background: var(--tile); box-shadow: inset 3px 0 0 var(--wo, var(--accent)); }
+.record b { font-family: var(--rounded); font-weight: 800; color: var(--wo, var(--text)); }
+@media (prefers-reduced-motion: no-preference) {
+  .poste { transition: transform 0.15s; }
+  .poste:active { transform: scale(0.97); }
 }
 
 /* Sous-onglets (Moi) et filtre des livres : une capsule de verre collante */
@@ -1127,7 +1149,7 @@ input.task { text-align: center; margin: 4px 0 10px; border-radius: 999px; }
 /* Petits écrans : la démo reste dans la liste, la place va au « pourquoi » et à « Ensuite » */
 @media (max-height: 800px) { .player .demo { display: none; } }
 .player .player-fig { flex-shrink: 1; min-height: 40px; }
-@media (max-height: 680px) { .player .player-main .why { display: none; } .player.rest:has(.log-reps) .player-fig { display: none; } }
+@media (max-height: 680px) { .player .player-main .why { display: none; } .player.rest:has(.log-reps, .plaque-new) .player-fig { display: none; } }
 /* Lecteur : le bonhomme passe au premier plan (c'est lui qui montre le geste) ;
    le chrono reste très grand mais lui cède un peu de hauteur */
 .player .player-main > * { flex-shrink: 0; }

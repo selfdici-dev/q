@@ -4,6 +4,7 @@ import { UNITS, ALL_LESSONS, RESOURCES, TRADING_RULES, PRE_TRADE_CHECKS, NEWS_RO
 import {
   compound, positionSize, tradeStats, tradeR, rewardRisk, equityCurve, lossesToday, allocation, XP,
 } from './logic.js';
+import { icon } from './icons.js';
 
 const eur = (v) => Number(v || 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
 const num = (v, d = 2) => Number(v).toLocaleString('fr-FR', { maximumFractionDigits: d });
@@ -48,14 +49,14 @@ export function createMoney(ctx) {
     </section>
     ${UNITS.map((u) => `
       <section class="unit">
-        <h3 class="unit-title"><span>${u.emoji}</span>${esc(u.title)}</h3>
+        <h3 class="unit-title">${icon(u.icon)}${esc(u.title)}</h3>
         <ol class="path">${u.lessons.map((l) => {
           const i = idx++;
           const st = ctx.state.lessons[l.id];
           const cls = st ? 'done' : i === currentIdx ? 'current' : isUnlocked(i) ? 'open' : 'locked';
           return `<li class="node ${cls}" style="--off:${[0, 1, 2, 1][i % 4]}">
             <button data-act="lesson-open" data-id="${l.id}" ${cls === 'locked' ? 'disabled' : ''} aria-label="${esc(l.title)}">
-              <span class="node-dot">${st ? (st.perfect ? '★' : '✓') : cls === 'locked' ? '🔒' : i + 1}</span>
+              <span class="node-dot">${st ? (st.perfect ? '★' : '✓') : cls === 'locked' ? icon('lock') : i + 1}</span>
             </button>
             <span class="node-label">${esc(l.title)}</span></li>`;
         }).join('')}</ol>
@@ -72,10 +73,10 @@ export function createMoney(ctx) {
     <div class="lesson">
       <div class="row"><button class="btn ghost small" data-act="lesson-close">← Parcours</button><span class="pill">Leçon ${i + 1}/${ALL_LESSONS.length}</span></div>
       <h2 class="lesson-title">${esc(l.title)}</h2>
-      <section class="card step"><h3>💡 L’idée</h3><p>${esc(l.idea)}</p></section>
-      <section class="card step"><h3>📌 Exemple</h3><p>${esc(l.example)}</p></section>
-      <section class="card step"><h3>🛠️ Exercice réel</h3><p>${esc(l.exercise)}</p></section>
-      <section class="card step"><h3>✅ Vérification</h3>
+      <section class="card step"><h3>${icon('lightbulb')}L’idée</h3><p>${esc(l.idea)}</p></section>
+      <section class="card step"><h3>${icon('pin')}Exemple</h3><p>${esc(l.example)}</p></section>
+      <section class="card step"><h3>${icon('pencil')}Exercice réel</h3><p>${esc(l.exercise)}</p></section>
+      <section class="card step"><h3>${icon('check-circle')}Vérification</h3>
         ${l.quiz.map((q, qi) => `
           <div class="q"><p><strong>${qi + 1}. ${esc(q.q)}</strong></p>
             <div class="answers">${q.a.map((a, ai) => {
@@ -106,18 +107,18 @@ export function createMoney(ctx) {
     const snaps = w.snapshots.slice(-6);
     return `
     <section class="card">
-      <div class="card-head"><h2>💼 Mon patrimoine</h2><span class="pill">${eur(a.total)}</span></div>
+      <div class="card-head"><h2>${icon('briefcase')}Mon patrimoine</h2><span class="pill">${eur(a.total)}</span></div>
       <div class="stack" role="img" aria-label="Répartition du patrimoine">${a.parts.map((p, i) => (p.pct > 0 ? `<span style="flex:${p.pct};background:${POCKET_COLORS[i]}"></span>` : '')).join('')}</div>
       <ul class="pockets">${a.parts.map((p, i) => `
         <li><i style="background:${POCKET_COLORS[i]}"></i>
           <div><strong>${esc(p.name)}</strong> <span class="muted">${num(p.pct, 0)} %</span><br><span class="hint">${esc(p.hint)}</span></div>
           <input type="number" inputmode="decimal" step="1" data-pocket="${i}" value="${p.amount}" aria-label="Montant ${esc(p.name)}"></li>`).join('')}</ul>
-      ${alerts.length ? `<div class="alerts">${alerts.map((x) => `<p>⚠️ ${esc(x)}</p>`).join('')}</div>` : '<p class="ok-text">✓ Répartition saine.</p>'}
+      ${alerts.length ? `<div class="alerts">${alerts.map((x) => `<p>${icon('alert')}${esc(x)}</p>`).join('')}</div>` : '<p class="ok-text">✓ Répartition saine.</p>'}
       <div class="row"><button class="btn" data-act="wealth-snapshot">Enregistrer le relevé du mois</button></div>
       ${snaps.length ? `<p class="hint">Relevés : ${snaps.map((s) => `${new Date(s.date).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })} ${eur(s.total)}`).join(' · ')}</p>` : '<p class="hint">Mets tes montants à jour une fois par mois, puis enregistre le relevé pour suivre l’évolution.</p>'}
     </section>
     <section class="card">
-      <div class="card-head"><h2>🧭 L’ordre des priorités</h2></div>
+      <div class="card-head"><h2>${icon('compass')}L’ordre des priorités</h2></div>
       <ol class="tight">
         <li><strong>Précaution</strong> : 3 mois de dépenses (≈ 500 €), disponible à tout moment.</li>
         <li><strong>PEA en pilote automatique</strong> : virement le jour de la paie, ETF monde.</li>
@@ -201,7 +202,7 @@ export function createMoney(ctx) {
     ];
     const cur = steps.findIndex((x) => !x.done);
     return `<section class="card program-hero">
-      <div class="card-head"><h2>🗺️ Feuille de route</h2><span class="pill">Étape ${cur + 1}/${steps.length}</span></div>
+      <div class="card-head"><h2>${icon('map')}Feuille de route</h2><span class="pill">Étape ${cur + 1}/${steps.length}</span></div>
       <ol class="roadmap">${steps.map((x, i) => `<li class="${x.done ? 'done' : i === cur ? 'current' : ''}">${x.done ? '✓' : i === cur ? '➜' : '·'} ${esc(x.label)}</li>`).join('')}</ol>
       <p class="hint">Chaque étape a un critère chiffré. Tant qu’il n’est pas atteint, on reste à l’étape : c’est ce qui sépare l’entraînement du pari.</p>
     </section>`;
@@ -228,7 +229,7 @@ export function createMoney(ctx) {
     ${roadmap()}
     ${copyBox ? `<section class="card"><div class="card-head"><h2>Texte à copier</h2><button class="btn ghost small" data-act="copy-close">Fermer</button></div><textarea rows="10" readonly onfocus="this.select()">${esc(copyBox)}</textarea></section>` : ''}
     <section class="card">
-      <div class="card-head"><h2>⚔️ Poche trading</h2><span class="pill">${eur(pocket)}</span></div>
+      <div class="card-head"><h2>${icon('candles')}Poche trading</h2><span class="pill">${eur(pocket)}</span></div>
       <div class="grid2">
         <label>Capital de départ (€)<input type="number" inputmode="decimal" data-wealth="tradingCapital" value="${w.tradingCapital}"></label>
         <label>Risque par trade (%)<input type="number" step="0.25" inputmode="decimal" data-wealth="riskPct" value="${w.riskPct}"></label>
@@ -242,7 +243,7 @@ export function createMoney(ctx) {
     </section>
     <section class="card">
       <div class="card-head"><h2>Nouveau trade</h2>${blocked ? '<span class="pill warn-pill">Bloqué</span>' : ''}</div>
-      ${blocked ? `<div class="alerts"><p>⛔ ${esc(blocked)}</p></div>` : ''}
+      ${blocked ? `<div class="alerts"><p>${icon('ban')}${esc(blocked)}</p></div>` : ''}
       <div class="seg-row">
         <label class="radio"><input type="radio" name="tr-mode" value="bt"> Backtest</label>
         <label class="radio"><input type="radio" name="tr-mode" value="sim" checked> Simulé</label>
@@ -292,7 +293,7 @@ export function createMoney(ctx) {
       ${trades.some((t) => t.bt && !isOpen(t)) ? statsBlock(trades.filter((t) => t.bt), 'backtest') : ''}
       ${trades.some((t) => !t.real && !t.bt && !isOpen(t)) ? statsBlock(trades.filter((t) => !t.real && !t.bt), 'simulée') : ''}</section>` : ''}
     <section class="card">
-      <div class="card-head"><h2>📜 Mes règles</h2></div>
+      <div class="card-head"><h2>${icon('list')}Mes règles</h2></div>
       <ol class="tight">${TRADING_RULES.map((r) => `<li>${esc(r)}</li>`).join('')}</ol>
     </section>`;
   }
@@ -333,7 +334,7 @@ export function createMoney(ctx) {
       if (days >= 0 && days <= 2) warn.push('Résultats dans moins de 2 jours.');
     }
     return `<p>Risque par action : <strong>${num(per)}</strong> · Quantité conseillée : <strong>${num(ideal, 3)}</strong>${t.qty ? ` · Risque saisi : <strong>${num(risk)}</strong>` : ''}${rr !== null ? ` · Gain/risque : <strong>${num(rr, 1)}</strong>` : ''}</p>
-      ${warn.length ? warn.map((x) => `<p class="warn-text">⚠️ ${esc(x)}</p>`).join('') : '<p class="ok-text">✓ Le trade respecte tes règles de risque.</p>'}
+      ${warn.length ? warn.map((x) => `<p class="warn-text">${icon('alert')}${esc(x)}</p>`).join('') : '<p class="ok-text">✓ Le trade respecte tes règles de risque.</p>'}
       <p class="hint">Calcul en devise du titre, en supposant 1 € ≈ 1 unité : pour un titre en dollars, garde une marge.</p>`;
   }
 
@@ -347,7 +348,7 @@ export function createMoney(ctx) {
     const atrPs = positionSize(c.capital, c.risk, c.entry, atrStop);
     return `
     <section class="card">
-      <div class="card-head"><h2>🎯 Taille de position</h2></div>
+      <div class="card-head"><h2>${icon('target')}Taille de position</h2></div>
       <div class="grid2">
         <label>Capital (€)<input type="number" inputmode="decimal" data-calc="capital" value="${c.capital}"></label>
         <label>Risque par trade (%)<input type="number" step="0.25" inputmode="decimal" data-calc="risk" value="${c.risk}"></label>
@@ -361,7 +362,7 @@ export function createMoney(ctx) {
       </div>` : '<p class="hint">Remplis les 4 champs.</p>'}
     </section>
     <section class="card">
-      <div class="card-head"><h2>🌊 Stop selon la volatilité (ATR)</h2></div>
+      <div class="card-head"><h2>${icon('waves')}Stop selon la volatilité (ATR)</h2></div>
       <div class="grid2">
         <label>ATR (14 jours)<input type="number" step="0.01" inputmode="decimal" data-calc="atr" value="${c.atr}"></label>
         <label>Multiple d’ATR<input type="number" step="0.5" inputmode="decimal" data-calc="atrMult" value="${c.atrMult}"></label>
@@ -370,7 +371,7 @@ export function createMoney(ctx) {
       <p class="hint">Plus le titre est volatil, plus le stop s’éloigne et plus la position rapetisse. Le risque en euros, lui, ne bouge pas. L’ATR se lit sur TradingView.</p>
     </section>
     <section class="card">
-      <div class="card-head"><h2>📈 Intérêts composés</h2></div>
+      <div class="card-head"><h2>${icon('trending-up')}Intérêts composés</h2></div>
       <div class="grid2">
         <label>Départ (€)<input type="number" inputmode="decimal" data-calc="initial" value="${c.initial}"></label>
         <label>Par mois (€)<input type="number" inputmode="decimal" data-calc="monthly" value="${c.monthly}"></label>
@@ -389,10 +390,10 @@ export function createMoney(ctx) {
 
   // ---------- Actu et sources ----------
   function newsView() {
-    return `<section class="card"><div class="card-head"><h2>📰 Ta routine d’actualité</h2></div>
+    return `<section class="card"><div class="card-head"><h2>${icon('newspaper')}Ta routine d’actualité</h2></div>
       <ul class="res">${NEWS_ROUTINE.map((n) => `<li><strong>${esc(n.when)}</strong><br><span class="muted">${esc(n.what)}</span></li>`).join('')}</ul>
       <p class="hint">L’actu donne le contexte et le calendrier. Elle ne donne pas de trades : quand une info arrive jusqu’à toi, le prix l’intègre déjà.</p></section>
-      <section class="card"><div class="card-head"><h2>📚 Sources fiables</h2></div>
+      <section class="card"><div class="card-head"><h2>${icon('books')}Sources fiables</h2></div>
       <ul class="res">${RESOURCES.map((r) => `<li><a href="${r.url}" target="_blank" rel="noopener">${esc(r.name)}</a><br><span class="muted">${esc(r.why)}</span></li>`).join('')}</ul>
       <p class="hint">Méfie-toi de tout ce qui promet un rendement élevé sans risque, des « signaux » payants et des comptes Telegram. Vérifie un site sur la liste noire de l’AMF.</p></section>`;
   }

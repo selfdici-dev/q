@@ -93,23 +93,49 @@ function order(fig) {
   return fig.loop === 'cycle' ? [...f, f[0]] : [...f, ...f.slice(0, -1).reverse()];
 }
 
-// Images clés de l'animation : chaque pose est tenue `hold` (part d'une
-// étape), puis on glisse vers la suivante en SUB petits pas, avec une courbe
-// douce (lente au départ et à l'arrivée).
+// Rythme du geste. Par défaut, chaque passage d'une pose à la suivante a la
+// même part du cycle (durée dur) et commence par un arrêt hold (part du
+// passage). Avec un rythme réel : tempo = secondes de chaque passage, dans
+// l'ordre joué (aller puis retour : pompes [2, 1], on descend en 2 s et on
+// remonte en 1 s, comme la consigne) ; pause = secondes d'arrêt sur chaque
+// pose avant de repartir (0,25 s par défaut). La durée du cycle en découle.
+// Renvoie { dur, seg } : seg[i] = { t0, len, hold } en part du cycle.
+export function beats(fig) {
+  const n = order(fig).length - 1;
+  if (!fig.tempo) {
+    const hold = fig.hold ?? 0.15;
+    return { dur: fig.dur ?? 2, seg: Array.from({ length: n }, (_, i) => ({ t0: i / n, len: 1 / n, hold })) };
+  }
+  const pause = fig.pause ?? fig.tempo.map(() => 0.25);
+  if (fig.tempo.length !== n || pause.length !== n) throw new Error(`tempo et pause : ${n} durées attendues`);
+  const secs = fig.tempo.map((m, i) => m + pause[i]);
+  const dur = secs.reduce((a, b) => a + b, 0);
+  let acc = 0;
+  const seg = secs.map((sec, i) => {
+    const t0 = acc / dur;
+    acc += sec;
+    return { t0, len: sec / dur, hold: pause[i] / sec };
+  });
+  return { dur: Math.round(dur * 100) / 100, seg };
+}
+
+// Images clés de l'animation : chaque pose est tenue (arrêt du passage), puis
+// on glisse vers la suivante en SUB petits pas, avec une courbe douce (lente
+// au départ et à l'arrivée).
 const SUB = 6;
 const ease = (u) => 0.5 - Math.cos(Math.PI * u) / 2;
 
 export function timeline(fig) {
   const specs = order(fig);
   const n = specs.length - 1;
-  const hold = fig.hold ?? 0.15;
+  const { seg } = beats(fig);
   const keys = [];
   for (let i = 0; i < n; i++) {
-    const t0 = i / n;
+    const { t0, len, hold } = seg[i];
     keys.push({ t: t0, joints: solve(specs[i]) });
     for (let k = 0; k < SUB; k++) {
       const u = k / SUB;
-      keys.push({ t: t0 + (hold + (1 - hold) * u) / n, joints: solve(between(specs[i], specs[i + 1], ease(u))) });
+      keys.push({ t: t0 + len * (hold + (1 - hold) * u), joints: solve(between(specs[i], specs[i + 1], ease(u))) });
     }
   }
   keys.push({ t: 1, joints: solve(specs[n]) });
@@ -390,8 +416,10 @@ export function explain(fig) {
     const ghost = !fig.front && st.ghost !== false && maxDist(J[st.from], J[st.to]) >= MOVE_MIN;
     return { ...st, posFrom, posTo, joint, ghost };
   });
-  // Fenêtre de temps de chaque étape (part du cycle, 0 → 1) : de son début au début de la suivante.
-  const start = (st) => (st.posAt !== undefined ? (st.posAt / n - 0.5 / steps.length + 1) % 1 : st.posFrom / n);
+  // Fenêtre de temps de chaque étape (part du cycle, 0 → 1) : de son début au
+  // début de la suivante (selon le rythme du geste).
+  const { seg } = beats(fig);
+  const start = (st) => (st.posAt !== undefined ? (seg[st.posAt].t0 - 0.5 / steps.length + 1) % 1 : seg[st.posFrom].t0);
   const sorted = [...steps].sort((a, b) => start(a) - start(b));
   return steps.map((st) => {
     const i = sorted.indexOf(st);
@@ -600,7 +628,7 @@ function draw(fig, { animate = true, mirror = false, fit = false, focus = [], he
   const shown = pose !== undefined ? pose : steps[0]?.posFrom ?? steps[0]?.posAt ?? 0;
   const sel = still ? [shown * (SUB + 1)] : keys.map((_, i) => i);
   const times = keys.map((k) => Math.round(k.t * 10000) / 10000).join(';');
-  const timing = `dur="${fig.dur ?? 2}s" repeatCount="indefinite"`;
+  const timing = `dur="${beats(fig).dur}s" repeatCount="indefinite"`;
   const moving = (v) => v.length > 1 && v.some((x) => x !== v[0]);
   const anim = (attr, values) => (moving(values) ? `<animate attributeName="${attr}" ${timing} keyTimes="${times}" values="${values.join(';')}"/>` : '');
   const turn = (type, values) => (moving(values) ? `<animateTransform attributeName="transform" type="${type}" ${timing} keyTimes="${times}" values="${values.join(';')}"/>` : '');

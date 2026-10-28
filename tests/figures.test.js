@@ -268,8 +268,8 @@ test('aides : une étape par geste, une par moitié pour les gestes alternés, r
   assert.deepEqual(ex('Respiration 4-6'), []);
   // de face : pas de fantôme (il ressemblerait à un deuxième bonhomme)
   assert.ok(ex('Shadow boxing (esquives et crochets)').every((s) => !s.ghost));
-  // crunch vélo : coude vers le genou opposé, de chaque côté
-  assert.deepEqual(ex('Crunch vélo').map((s) => [s.joint, s.toward]), [['elbowF', 'kneeN'], ['elbowN', 'kneeF']]);
+  // crunch vélo : le coude proche vient vers le genou éloigné, puis l'inverse (sans fantôme)
+  assert.deepEqual(ex('Crunch vélo').map((s) => [s.joint, s.from, s.to, s.ghost]), [['elbowN', 0, 1, false], ['elbowF', 1, 0, false]]);
   // aucune pose ne casse le calcul
   for (const [name, fig] of Object.entries(POSES)) assert.doesNotThrow(() => explain(fig), name);
   assert.throws(() => explain({ ...POSES.Pompes, explain: [{ from: 1, to: 0 }] })); // aller-retour : pas d'étape à l'envers
@@ -421,13 +421,23 @@ test('poses fidèles à la consigne : trajet des mains, dos au tapis, profondeur
   assert.ok(low.shoulder[1] >= low.handN[1] - 5, 'parallettes : pas assez bas');
 });
 
-test('Russian twist pieds décollés, regard vers les mains ; chat-vache : la poitrine descend', () => {
-  const eye = (n, i) => Number(figureSVG(POSES[n], { pose: i, help: false }).match(/class="fig-eye" cx="([\d.]+)"/)[1]);
-  POSES['Russian twist'].frames.forEach((f, i) => {
-    const j = solve(f);
-    assert.ok(Math.max(j.footN[1], j.footF[1]) <= VIEW.floor - 6, `pieds au sol (#${i})`);
-    assert.ok(eye('Russian twist', i) < j.head[0], `regard vers le plafond (#${i})`); // les mains sont devant (à gauche)
-  });
+test('Russian twist de face : pieds décollés, mains d’un côté du bassin puis de l’autre, la tête suit ; chat-vache : la poitrine descend', () => {
+  const twist = POSES['Russian twist'];
+  assert.equal(twist.front, true); // de face : la rotation se voit (de profil, les mains passaient devant et derrière)
+  const J = twist.frames.map(solve);
+  J.forEach((j, i) => assert.ok(Math.max(j.footN[1], j.footF[1]) <= VIEW.floor - 6, `pieds au sol (#${i})`));
+  // mains jointes devant la poitrine (au-dessus des genoux), puis à côté du bassin, d'un côté puis de l'autre
+  assert.ok(J[0].handN[1] < Math.min(J[0].kneeN[1], J[0].kneeF[1]));
+  for (const [i, side] of [[1, 1], [3, -1]]) {
+    const j = J[i];
+    for (const k of ['handN', 'handF']) {
+      assert.ok((j[k][0] - j.hip[0]) * side > 10, `#${i} ${k} : pas à côté du bassin`);
+      assert.ok(j[k][1] > j.kneeN[1] + 5, `#${i} ${k} : trop haut`);
+    }
+    assert.ok((j.head[0] - j.hip[0]) * side > 5, `#${i} : la tête ne suit pas les mains`);
+  }
+  // l'aide suit le bras qui croise le buste, un côté puis l'autre (pas de fantôme de face)
+  assert.deepEqual(explain(twist).map((s) => [s.joint, s.ghost]), [['handF', false], ['handN', false]]);
   const [cat, cow] = POSES['Chat-vache'].frames.map(solve);
   assert.ok(cow.shoulder[1] - cat.shoulder[1] >= 1, 'vache : la poitrine ne descend pas');
 });
@@ -447,13 +457,52 @@ test('tête : angle propre facultatif (tilt) ; chin tucks : la tête recule sans
 });
 
 test('aides des tenues et des coups ; bras du pont fessier posés le long du corps', () => {
-  assert.deepEqual(explain(POSES['Planche latérale']), []); // la tenue de la consigne, sans aller-retour du bras
-  assert.equal(solve(POSES['Planche latérale'].frames[1]).handF[1] < solve(POSES['Planche latérale'].frames[1]).shoulder[1] - 15, true); // bras libre vers le plafond
+  // planche latérale : la tenue (bras libre vers le plafond), puis la main passe sous le torse et remonte
+  const [up, under] = POSES['Planche latérale'].frames.map(solve);
+  assert.ok(up.handF[1] < up.shoulder[1] - 15, 'bras libre vers le plafond');
+  assert.ok(under.handF[1] > under.hip[1] + 3 && under.handF[0] < under.shoulder[0] - 12, 'main sous le torse');
+  assert.ok(Math.abs(under.hip[1] - up.hip[1]) < 0.5, 'le bassin reste haut');
+  assert.deepEqual(explain(POSES['Planche latérale']).map((s) => s.joint), ['handF']);
   assert.deepEqual(explain(POSES['Shadow boxing rapide']).map((s) => s.joint), ['handN', 'handF']); // un direct, puis l'autre
   assert.equal(explain(POSES['L-sit'])[0].joint, 'hip'); // le bassin décolle (pas « avance les coudes »)
+  // L-sit : bras tendus, fesses décollées, puis pieds en l'air et genoux vers la poitrine
+  const [sit, lift, tuck] = POSES['L-sit'].frames.map(solve);
+  for (const j of [lift, tuck]) {
+    assert.ok(dist(j.shoulder, j.handN) > 22.5, 'bras pliés');
+    assert.ok(j.hip[1] <= sit.hip[1] - 3.5, 'fesses au sol');
+  }
+  assert.ok(Math.max(tuck.footN[1], tuck.footF[1]) <= VIEW.floor - 6, 'pieds au sol');
+  assert.ok(tuck.kneeN[1] < lift.kneeN[1] - 4 && tuck.kneeN[1] < tuck.hip[1] - 10, 'genoux pas assez hauts');
+  // crunch vélo : à chaque touche, un coude contre le genou opposé, l'autre main derrière la tête
+  const [c0, c1] = POSES['Crunch vélo'].frames.map(solve);
+  assert.ok(dist(c0.elbowF, c0.kneeN) < 3.5 && dist(c1.elbowN, c1.kneeF) < 3.5, 'coude loin du genou opposé');
+  assert.ok(dist(c0.handN, c0.head) < 3 && dist(c1.handF, c1.head) < 3, 'main ouverte loin de la tête');
+  assert.ok(dist(c0.elbowN, c1.elbowN) > 10, 'les coudes ne tournent pas');
+  for (const j of [c0, c1]) assert.ok(Math.max(j.footN[1], j.footF[1]) <= VIEW.floor - 4, 'jambe allongée posée au sol');
   for (const f of POSES['Pont fessier'].frames) {
     const j = solve(f);
     const bend = Math.abs(Math.atan2(j.elbowN[1] - j.shoulder[1], j.elbowN[0] - j.shoulder[0]) - Math.atan2(j.handN[1] - j.elbowN[1], j.handN[0] - j.elbowN[0])) * 180 / Math.PI;
     assert.ok(bend < 15, `pont fessier : coude plié (${bend.toFixed(0)}°)`);
   }
+});
+
+test('rythme : le bonhomme suit le tempo de la consigne (descente lente, montée vive)', async () => {
+  const { beats } = await import('../js/figures.js');
+  // sans tempo : passages égaux, durée et arrêt d'origine
+  const dead = beats(POSES['Dead bug']);
+  assert.ok(dead.seg.every((s, i, a) => Math.abs(s.len - a[0].len) < 1e-9));
+  // pompes sur parallettes : descente 2 s, montée 1 s, 0,3 s d'arrêt en haut et en bas
+  const push = beats(POSES['Pompes (sur parallettes)']);
+  assert.equal(push.dur, 3.6);
+  const move = (s) => s.len * (1 - s.hold) * push.dur;
+  assert.deepEqual(push.seg.map((s) => Math.round(move(s) * 10) / 10), [2, 1]);
+  // rowing : 1 s d'arrêt « serré » en haut avant de redescendre en 2 s
+  const row = beats(POSES['Rowing penché à l’élastique']);
+  assert.equal(Math.round(row.seg[1].len * row.seg[1].hold * row.dur * 10) / 10, 1);
+  // l'animation suit ce rythme : la pose du bas est atteinte aux 2,3/3,6 du cycle
+  const keys = timeline(POSES['Pompes (sur parallettes)']);
+  assert.ok(Math.abs(keys[7].t - 2.3 / 3.6) < 1e-9);
+  assert.match(figureSVG(POSES['Pompes (sur parallettes)']), /dur="3.6s"/);
+  // chaque pose qui a un tempo en donne un par passage (aller et retour)
+  for (const [name, fig] of Object.entries(POSES)) if (fig.tempo) assert.doesNotThrow(() => beats(fig), name);
 });

@@ -22,10 +22,12 @@ export const DEFAULT_RULES = [
 // work = secondes d'effort au niveau 2 ; le niveau 1 fait -10 s, le niveau 3 +10 s.
 // target = à quoi sert l'exercice (objectif : fin, sec et élancé, abdos
 // visibles, mâchoire nette, pas de volume). Les IDs A, B, C, P, M sont stockés :
-// ne pas les changer. prep (facultatif) : la consigne du départ.
+// ne pas les changer. prep (facultatif) : la consigne du départ. star : l'exercice
+// phare, dont le bonhomme représente la séance dans la Salle.
 export const WORKOUTS = [
   {
     id: 'A',
+    star: 'Roue abdominale à genoux (1/2)',
     name: 'A · Abdos et tronc',
     met: 3.8,
     desc: 'Abdos visibles, taille fine et V du bas du ventre : crunch vélo et roue abdominale (les deux en tête des mesures, la roue deux fois par tour), crunch inversé pour le bas du ventre, Russian twist pieds décollés, planches latérales et hollow body qui progresse par étapes. 2 tours, mais durs : descentes en 2 à 3 s, et au bip il ne doit te rester que 1 ou 2 répétitions en réserve. Encore de la marge ? Passe à la version plus dure de la consigne.',
@@ -45,6 +47,7 @@ export const WORKOUTS = [
   },
   {
     id: 'B',
+    star: 'Pompes (sur parallettes)',
     name: 'B · Pectoraux, dos et bras',
     met: 4,
     desc: 'Calisthénie : ton corps est l’outil. Pompes profondes et L-sit sur parallettes, pompes pike et diamant, plus 2 tirages et un curl à l’élastique pour un dos en V et des bras dessinés. Poussée et tirage alternés : chaque muscle souffle avant de repartir. ≈ 16 min. Chaque série va jusqu’au bip, quitte à finir sur les genoux. 2 tours.',
@@ -54,7 +57,7 @@ export const WORKOUTS = [
     exercises: [
       { name: 'Pompes (sur parallettes)', work: 40, why: 'Descendre plus bas que les mains étire le pectoral : un torse ferme et dessiné, pas gonflé.', target: 'Pectoraux et triceps · torse ferme', cue: 'Objectif : 10 à 13 pompes. 1. Parallettes sous les épaules, poignées vers l’avant. 2. Corps droit, fesses serrées : descends en 2 s plus bas que les mains, remonte en 1 s. 3. Tu cales : finis sur les genoux. Plus de 13 aux 2 tours : descends en 3 s, tiens 1 s en bas. Sans parallettes : mains au sol.' },
       { name: 'Rowing penché à l’élastique', work: 40, why: 'Le grand dorsal élargit le haut du dos : la taille paraît plus fine, c’est ça le V.', target: 'Dos et arrière des épaules · dos en V', cue: 'Objectif : 10 à 12 rowings. 1. Debout en chaussures, pieds à plat sur le milieu de l’élastique vert, une boucle dans chaque main. 2. Genoux pliés, buste penché, dos plat. 3. Tire les coudes vers les hanches, serre 1 s, redescends en 2 s. Plus de 12 faciles : orange. Sans élastique : tirage superman de la séance M (vise 8).' },
-      { name: 'Pompes pike', work: 35, why: 'Le haut des épaules s’arrondit : des épaules nettes font paraître la taille plus fine.', target: 'Épaules · dessinées, sans gonfler', cue: 'Objectif : 6 à 10. 1. Mains au sol écartées comme les épaules, marche les pieds vers elles : fesses en l’air, le corps fait un V à l’envers. 2. Plie les coudes : le haut de la tête descend vers le tapis, devant les mains. 3. Repousse. Trop dur : genoux au sol. Plus de 10 : rapproche les pieds des mains.' },
+      { name: 'Pompes pike', work: 35, why: 'Le haut des épaules s’arrondit : des épaules nettes font paraître la taille plus fine.', target: 'Épaules · dessinées, sans gonfler', cue: 'Objectif : 4 à 8 pompes pike, à ton étape. Mains au sol, fesses en l’air : un V à l’envers. Étape 1 : négatives : la tête descend en 3 s, remonte sur les genoux. Étape 2 : la tête s’arrête sur un coussin. Étape 3 : complètes, tête au tapis devant les mains. Étape 4 : pieds plus près des mains. Plus de 8 faciles : étape suivante.' },
       { name: 'Tirage assis à l’élastique', work: 40, why: 'Les omoplates se serrent et les épaules s’ouvrent : tu te tiens droit, tu parais plus grand.', target: 'Dos et biceps · dos en V', cue: 'Objectif : 10 à 12 tirages. 1. Assis, genoux un peu pliés, élastique vert autour du milieu des pieds. 2. Attrape chaque côté assez près des pieds pour qu’il soit tendu bras tendus. 3. Tire les coudes jusqu’aux côtes, serre 1 s, reviens en 2 s. Plus de 12 faciles : orange. Sans élastique : tirage superman de la séance M (vise 8).' },
       { name: 'Pompes serrées (diamant)', work: 35, why: 'Le triceps fait les deux tiers du bras : c’est lui qui dessine un bras sec, sans gros biceps.', target: 'Triceps et pectoraux · arrière des bras dessiné', cue: 'Objectif : 6 à 10. 1. Mains au sol sous la poitrine, pouces et index qui se touchent. 2. Coudes collés aux côtes, descends en 2 s, remonte en 1 s. 3. Tu cales : finis sur les genoux. Plus de 10 : descends en 3 s.' },
       { name: 'Curl biceps à l’élastique', work: 35, why: 'Le biceps donne le relief du bras vu de face : avec le triceps, un bras sec et veiné, pas massif.', target: 'Biceps et avant-bras · bras dessinés', cue: 'Objectif : 10 à 12 curls. 1. Debout en chaussures sur le milieu de l’élastique noir, une boucle dans chaque main, sans l’enrouler. 2. Coudes collés aux côtes, monte les mains aux épaules en 1 s. 3. Redescends en 2 s, buste immobile. Plus de 12 faciles : violet. Sans élastique : tirage superman de la séance M (vise 8).' },
@@ -63,6 +66,7 @@ export const WORKOUTS = [
   },
   {
     id: 'C',
+    star: 'Shadow boxing',
     name: 'C · Cardio sans saut',
     met: 7,
     desc: 'Cardio boxe, dense, dans 2 m² et sans bruit : 3 tours, 10 s de pause seulement, le cœur reste haut du début à la fin. La moitié des exercices, c’est de la boxe : ça passe plus vite. Les fentes font travailler les jambes, les plus gros muscles, ceux qui dépensent le plus. Ça aide à sécher, mais ce sont l’assiette et les pas qui font le plus gros.',
@@ -80,6 +84,7 @@ export const WORKOUTS = [
   },
   {
     id: 'P',
+    star: 'Tractions (selon ton niveau)',
     name: 'P · Tractions au parc',
     met: 3.8,
     desc: 'À faire pendant ta marche, à la barre d’un parc de street workout, à la place d’une C : ≈ 15 min. La marche te chauffe, et la suspension du 1er tour finit l’échauffement. Tractions à ton étape (négatives, élastique, puis vraies), tractions australiennes pour le milieu du dos, relevés de genoux pour le bas du ventre. Les barres du parc suffisent ; l’élastique orange sert seulement à l’étape 2. 3 tours.',
@@ -97,6 +102,7 @@ export const WORKOUTS = [
   },
   {
     id: 'M',
+    star: 'Superman',
     name: 'M · Posture et dos droit',
     met: 2.3,
     desc: 'Tous les jours, même les jours de repos, ≈ 7 min dans 2 m² : renforcer le dos (c’est ce qui redresse le mieux, plus que s’étirer), ouvrir les épaules et l’avant des hanches, garder la tête droite. La mâchoire, c’est surtout la perte de gras, plus une tête qui ne part pas en avant. C’est aussi ton minimum de reprise.',
@@ -151,7 +157,8 @@ export const FOOD_RULES = [
   'Les grignotages sucrés ou salés ne sont pas dans ta chambre. Ce qui n’est pas à portée de main ne se mange pas.',
 ];
 
-// Journée type (≈ 2 200 kcal) : [moment, quoi]. Pas de petit-déjeuner obligatoire :
+// Journée type (≈ 1 850 kcal avec 8 000 pas : ≈ 500 de moins que la dépense,
+// ≈ 0,5 kg de gras par semaine ; ≈ 2 000 les jours à 12 000 pas) : [moment, quoi]. Pas de petit-déjeuner obligatoire :
 // le 1er repas peut glisser vers 11 h, c'est le total du jour qui compte (le
 // petit-déjeuner n'aide pas à maigrir : méta-analyse Sievert 2019). Café : 400 mg
 // de caféine par jour au plus (EFSA), le dernier à 15 h pour dormir.
@@ -171,17 +178,17 @@ export const DAY_PLAN = [
 // « prévu », pas « jamais » (s'interdire des aliments fait plus craquer :
 // Westenhoefer 1999). FOOD_TREATS : comment prendre le rouge.
 export const FOOD_COLORS = [
-  { id: 'vert', ico: '🟢', title: 'Tous les jours', items: [
+  { id: 'vert', title: 'Tous les jours', items: [
     'Légumes, et 2 ou 3 fruits',
     'Poulet, poisson, thon, œufs, steak haché 5 %, skyr, fromage blanc, lentilles, pois chiches',
     'Aux repas : riz, pâtes, pommes de terre, pain complet, flocons d’avoine',
     'Eau, café et thé sans sucre, boissons zéro',
   ] },
-  { id: 'jaune', ico: '🟡', title: 'Un peu chaque jour', items: [
+  { id: 'jaune', title: 'Un peu chaque jour', items: [
     'Une portion de fromage, 2 carrés de chocolat',
     'Pain blanc, beurre, mayonnaise, ketchup, charcuterie',
   ] },
-  { id: 'rouge', ico: '🔴', title: 'Prévu, 2 ou 3 fois par semaine', items: [
+  { id: 'rouge', title: 'Prévu, 2 ou 3 fois par semaine', items: [
     'Gâteaux, glaces, viennoiseries, biscuits, Nutella, chips',
     'Fast-food, sodas sucrés, jus de fruits, alcool',
   ] },
@@ -191,6 +198,48 @@ export const FOOD_TREATS = [
   'Mange-le à table, sans écran, une portion : un cornet ou une part, pas un pot d’un litre.',
   'Au fast-food, garde la protéine et enlève un extra (frites, sauce ou soda). De l’eau pour boire.',
   'Un craquage ? Le repas suivant redevient normal : jamais deux fois de suite.',
+];
+
+// Collations : quoi prendre quand on a faim entre les repas (ou qu'on grignote
+// quand même). Les protéines calent le plus (yaourt protéiné contre chocolat :
+// moins faim et ≈ 100 kcal de moins au dîner, Ortinau 2014) ; une pomme
+// entière avant un repas y fait manger ≈ 15 % de moins (Flood-Obbagy 2009).
+export const SNACKS = [
+  { title: 'Ce qui cale le plus : les protéines', items: [
+    '150 g de skyr : 15 g de protéines, 90 kcal',
+    '2 œufs durs : 13 g, 150 kcal (fais-en 6 d’un coup)',
+    '1 boîte de thon au naturel et du citron : 25 g, 110 kcal',
+    '2 tranches de jambon blanc : 15 g, 90 kcal',
+  ] },
+  { title: 'Du volume pour peu de calories', items: [
+    'Une pomme (80 kcal) : 15 min avant un repas, elle fait manger moins',
+    'Des clémentines, ou une banane (100 kcal)',
+    'Carottes, concombre, tomates cerises et 2 cuillères de houmous (90 kcal)',
+  ] },
+  { title: 'Envie de sucré', items: [
+    'La « mousse » : 150 g de skyr, 1 cuillère de cacao non sucré, 1 cuillère à café de miel (130 kcal, 16 g)',
+    '2 carrés de chocolat noir avec un fruit',
+    'Une compote sans sucre ajouté (60 kcal)',
+  ] },
+  { title: 'À doser', items: [
+    'Amandes ou noix : une poignée de 25 g (150 kcal), dans un bol, jamais dans le paquet',
+  ] },
+  { title: 'Le soir, ou devant un écran', items: [
+    'Thé, tisane, eau pétillante, boisson zéro',
+    'Vraiment faim : un bol de popcorn nature fait maison (120 kcal)',
+  ] },
+];
+export const SNACK_TEST = 'Faim ou envie ? Demande-toi si tu mangerais une pomme. Non : c’est l’ennui ou l’écran. Un verre d’eau, 5 minutes dehors, et attends 10 minutes.';
+
+// Le thé : 0 kcal sans sucre, mais de la caféine (≈ 45 mg la tasse de noir,
+// ≈ 25 mg le vert), un frein au fer pendant les repas (Hurrell 1999) et des
+// taches comme le café. Les thés « détox » au séné sont des laxatifs.
+export const TEA_TIPS = [
+  'Le matin et jusqu’à 15 h : thé vert à la menthe sans sucre, ou Earl Grey.',
+  'Après 15 h, sans caféine : rooibos (vanille, caramel) ou tisane (verveine, camomille).',
+  'Au moins 1 h après le repas : pendant, le thé bloque une partie du fer.',
+  'Rince-toi la bouche à l’eau après : le thé noir tache autant que le café.',
+  'À éviter : thés « détox » ou « minceur » (souvent laxatifs), gélules de thé vert, thés glacés sucrés.',
 ];
 
 // Recettes de débutant : peu d’ustensiles, ingrédients de supermarché, riches en protéines.
@@ -393,39 +442,31 @@ export const HELP = {
     title: 'Comment marche Jour',
     lines: [
       'Fais au moins le minimum de chaque habitude : la journée est validée et ta chaîne 🔥 avance.',
-      'Ton plan du jour te dit quoi faire ensuite : touche le gros bouton de la carte « Maintenant ».',
-      'Un jour raté, ça arrive : jamais deux fois de suite. Le soir, copie ton bilan pour Claude.',
-    ],
-  },
-  focus: {
-    title: 'Comment marche Focus',
-    lines: [
-      'Écris la seule chose sur laquelle tu travailles, pose le téléphone loin, puis Démarrer.',
-      'Un arbre pousse pendant les 25 minutes : va au bout et il rejoint ton jardin du jour.',
-      'Envie de scroller ? Lance le minuteur de 10 minutes et fais autre chose en attendant.',
+      'Ton plan du jour te dit quoi faire ensuite. Le soir, copie ton bilan pour Claude.',
+      'Un jour raté ? Jamais deux fois de suite. Envie d’ouvrir Snap ? « J’attends 10 min ».',
     ],
   },
   sport: {
-    title: 'Comment marche Corps',
+    title: 'Comment marche la Salle',
     lines: [
       'Touche « Lancer la séance » et pose le téléphone au sol : l’appli te guide, bips compris.',
       'Chaque jour a sa séance (A, B ou M), plus C ou P si tu veux. Pas la forme ? La mobilité suffit.',
       'À la fin, note la séance : après 2 « Facile » ou 2 « Dur » de suite, l’appli te propose un autre niveau.',
     ],
   },
-  argent: {
-    title: 'Comment marche Argent',
+  manger: {
+    title: 'Comment marche Manger',
     lines: [
-      'Une leçon dure environ 10 minutes : une idée, un exemple, un exercice réel, un quiz.',
-      'Les leçons s’ouvrent dans l’ordre : fais la suivante quand ton plan du jour la propose.',
-      'Les questions du quiz reviennent ensuite en cartes de révision, juste avant l’oubli.',
+      'Rien à calculer : ta journée type, ce que tu peux manger en 3 couleurs, et des recettes simples.',
+      'Rien n’est interdit : le rouge veut dire « prévu », 2 ou 3 fois par semaine.',
+      'Tes protéines et tes grignotages se notent dans Jour, en 2 touches.',
     ],
   },
   moi: {
     title: 'Comment marche Moi',
     lines: [
-      'Programme : où tu en es sur les 12 semaines, tes objectifs et tes outils à configurer.',
-      'Bilan : tes sprints et ta semaine à copier pour Claude. Livres : quoi lire ensuite.',
+      'Programme : tes 12 semaines. Bilan : ta semaine à copier pour Claude. Livres : quoi lire.',
+      'Argent : une leçon de 10 minutes à la fois, puis des cartes de révision juste avant l’oubli.',
       'Réglages : habitudes, règles, thème et sauvegarde. Exporte une fois par semaine.',
     ],
   },

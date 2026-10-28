@@ -1217,6 +1217,13 @@ label.steps-pick select { width: auto; min-height: 36px; padding: 0 10px; font-s
 .food b { font-size: 0.86rem; line-height: 1.2; }
 .food small { font-size: 0.72rem; line-height: 1.25; color: var(--muted); }
 .food .food-kcal { color: var(--accent); font-weight: 700; }
+.food b, .food small { overflow-wrap: break-word; }
+/* petits écrans (ou texte agrandi) : l'emoji au-dessus, le texte prend toute
+   la largeur (« Viennoiserie », « Clémentines » ne débordent plus) */
+@media (max-width: 380px) {
+  .food { grid-template-columns: minmax(0, 1fr); align-content: start; padding: 8px 9px; }
+  .food .food-emo { grid-row: auto; font-size: 1.25rem; margin-bottom: 3px; }
+}
 .meal-list { list-style: none; margin: 12px 0 4px; padding: 0; }
 .meal-list li { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 6px; padding: 6px 0; border-top: 1px solid var(--line); }
 .meal-list li:first-child { border-top: 0; }

@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { roomSVG } from '../js/room.js';
 
 test('salle : le décor est complet (mur, grille, logo, spots, LED, parquet)', () => {
@@ -30,4 +31,29 @@ test('salle : rien qui vienne d’Internet, des identifiants propres à chaque d
   // même réglage, même dessin
   assert.equal(roomSVG({ id: 'salle' }), a);
   assert.match(b, /viewBox="0 0 220 400"/);
+});
+
+test('séance dans la salle : le décor du lecteur garde ses proportions et ne dépasse jamais l’écran', () => {
+  const css = readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+  const rule = css.match(/\.player-room \{[^}]+\}/)[0];
+  // plus large que l'écran, il ferait glisser le lecteur sur le côté
+  assert.match(rule, /max-width: 100vw/);
+  assert.match(rule, /mask-image/);
+  // mêmes proportions dans le CSS et dans le dessin : le parquet reste sous les pieds du bonhomme
+  const [, w, h] = app.match(/roomSVG\(\{ w: (\d+), h: (\d+), floor: [\d.]+, id: 'seance' \}\)/);
+  assert.match(rule, new RegExp(`aspect-ratio: ${w} / ${h}`));
+  // le décor de la séance a ses propres identifiants (la Salle reste dessous)
+  assert.notEqual(roomSVG({ id: 'seance' }), roomSVG({ id: 'salle' }));
+  // les spots ne s'allument qu'avec les animations permises (dans un bloc « no-preference »)
+  const blocks = [...css.matchAll(/@media \(prefers-reduced-motion: no-preference\) \{/g)].map((m) => {
+    let depth = 0;
+    for (let i = m.index; i < css.length; i++) {
+      if (css[i] === '{') depth++;
+      if (css[i] === '}' && --depth === 0) return css.slice(m.index, i);
+    }
+    return '';
+  });
+  assert.ok(blocks.some((b) => b.includes('.player-room.lights .room-spot')));
+  assert.equal(css.split('.player-room.lights').length - 1, blocks.join('').split('.player-room.lights').length - 1);
 });

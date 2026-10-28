@@ -334,6 +334,16 @@ function figure(name, target, help = true) {
   return f ? figureSVG(f.fig, { mirror: f.mirror, fit: true, animate: !reduceMotion(), focus: focusFor(target), help }) : '';
 }
 
+// Le bonhomme du lecteur, dans ta salle : le décor (mur, spots, bande LED,
+// parquet) passe derrière lui et il a les pieds sur le parquet. Au début de
+// la séance, les spots s'allument (rien si on réduit les animations).
+let seanceRoom;
+function stageFig(fig, lights) {
+  if (!fig) return '<div class="player-fig"></div>';
+  seanceRoom ??= roomSVG({ w: 390, h: 210, floor: 0.6, id: 'seance' });
+  return `<div class="player-fig"><div class="player-room${lights ? ' lights' : ''}" aria-hidden="true">${seanceRoom}</div>${fig}</div>`;
+}
+
 // Barre qui glisse de sa valeur précédente (%) vers la nouvelle.
 function tweenBar(key, pct) {
   return `<span style="width:${previous(tweens, key, pct, 0)}%" data-to="${pct}"></span>`;
@@ -1090,7 +1100,7 @@ function renderPlayer() {
       })()}
       ${s.why && s.kind === 'work' ? `<p class="why">${esc(s.why)}</p>` : ''}
       ${s.kind === 'rest' ? logRow() : ''}
-      <div class="player-fig">${s.kind === 'work' || s.kind === 'warm' ? figure(s.name, s.target) : figure(next?.name, next?.target)}</div>
+      ${stageFig(s.kind === 'work' || s.kind === 'warm' ? figure(s.name, s.target) : figure(next?.name, next?.target), fresh && player.i === 0)}
       <div class="clock huge" id="player-clock">${fmtStep(player.remaining)}</div>
       ${s.kind === 'rest' ? '' : `<p class="cue">${esc(s.cue)}</p>
       <button class="btn ghost small cue-more" data-act="cue-open">${icon('book-open')}Lire la consigne</button>`}

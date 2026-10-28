@@ -1077,6 +1077,27 @@ details.card.more .rules { margin-top: 10px; }
 .gym-room, .gym-room .room { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .gym-fig { position: absolute; left: 4%; right: 4%; top: 16%; bottom: 6%; display: flex; align-items: flex-end; justify-content: center; }
 .gym-fig .fig { width: 100%; height: auto; max-height: 100%; }
+/* Séance dans ta salle : le décor passe derrière le bonhomme du lecteur (pieds
+   sur le parquet, à un tiers du bas de son cadre). Mêmes proportions que le
+   dessin (390 × 210, sol à 60 %), jamais plus large que l'écran (sinon le
+   lecteur glisserait sur le côté), fondu en haut, en bas et sur les côtés. */
+.player-fig { position: relative; display: flex; align-items: flex-end; justify-content: center; }
+.player-fig .fig { width: 100%; height: auto; max-height: 100%; }
+.player-room {
+  position: absolute; z-index: -1; left: 50%; top: -32%; height: 166%; aspect-ratio: 390 / 210; max-width: 100vw;
+  transform: translateX(-50%); pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 6%, #000 30%, #000 72%, transparent), linear-gradient(to right, transparent, #000 20%, #000 80%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to bottom, transparent 6%, #000 30%, #000 72%, transparent), linear-gradient(to right, transparent, #000 20%, #000 80%, transparent);
+  mask-composite: intersect;
+}
+.player-room .room { display: block; width: 100%; height: 100%; }
+.player-room :is(.room-glow, .room-grid, .room-logo, .room-name), .player-room .room-spot ellipse { display: none; }
+.player-room .room-led { opacity: 0.7; }
+/* repos : la salle passe au bleu glacé (bande LED, lumière des spots) */
+.player.rest .player-room .room-led rect:last-child { fill: #bfe6f2; }
+.player.rest .player-room [id$="-led"] stop { stop-color: #8fcbe0; }
+.player.rest .player-room :is([id$="-cone"], [id$="-pool"]) stop { stop-color: #d9f0f7; }
 
 /* Entrée dans la salle, au lancement (voir enterGym dans app.js) */
 #intro { position: fixed; inset: 0; z-index: 200; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; background: #050403; cursor: pointer; }
@@ -1087,11 +1108,12 @@ details.card.more .rules { margin-top: 10px; }
 #intro.out { opacity: 0; transform: scale(1.06); transition: opacity 0.45s ease, transform 0.5s ease; }
 @media (prefers-reduced-motion: no-preference) {
   #intro .room-dark { animation: intro-dark 1.2s ease-out both; }
-  #intro .room-spot { animation: intro-spot 0.55s ease-out both; }
-  #intro .room-spot.s1 { animation-delay: 0.15s; }
-  #intro .room-spot.s2 { animation-delay: 0.38s; }
-  #intro .room-spot.s3 { animation-delay: 0.6s; }
-  #intro .room-led { transform-box: fill-box; transform-origin: 50% 50%; animation: intro-led 0.6s 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  /* … et au début de la séance, dans la salle du lecteur */
+  #intro .room-spot, .player-room.lights .room-spot { animation: intro-spot 0.55s ease-out both; }
+  #intro .room-spot.s1, .player-room.lights .room-spot.s1 { animation-delay: 0.15s; }
+  #intro .room-spot.s2, .player-room.lights .room-spot.s2 { animation-delay: 0.38s; }
+  #intro .room-spot.s3, .player-room.lights .room-spot.s3 { animation-delay: 0.6s; }
+  #intro .room-led, .player-room.lights .room-led { transform-box: fill-box; transform-origin: 50% 50%; animation: intro-led 0.6s 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
   #intro .room-glow, #intro .room-grid { animation: intro-fade 0.9s 0.9s ease-out both; }
   #intro .room-logo, #intro .room-name { transform-box: fill-box; transform-origin: 50% 50%; animation: intro-logo 0.9s 0.85s ease-out both; }
   #intro .intro-text { animation: intro-text 0.6s 1.2s ease-out both; }

@@ -224,6 +224,18 @@ export function nextTarget(goal, rec) {
   return { target: rec.best + 1, best: rec.best };
 }
 
+// Noter en une touche : 5 nombres autour de celui qu'on vise (jamais sous 0).
+export function logChoices(center, n = 5) {
+  const start = Math.max(0, Math.round(center) - Math.floor(n / 2));
+  return Array.from({ length: n }, (_, i) => start + i);
+}
+
+// Ce qui reste à noter dans une séance : les efforts avec un objectif chiffré
+// (pas les tenues) pas encore notés. steps : étapes ; logged : index déjà notés.
+export function toLog(steps = [], logged = new Set()) {
+  return steps.flatMap((s, i) => (s?.kind === 'work' && goalOf(s.cue) && !logged.has(i) ? [i] : []));
+}
+
 // Version plus dure : on repart de zéro pour cet exercice, à tous les tours.
 export function dropRecords(records, name) {
   return Object.fromEntries(Object.entries(records ?? {}).filter(([k]) => !k.startsWith(`${name}#`)));
@@ -275,12 +287,14 @@ export function recordWall(records, exercises, limit = 6, today = null) {
 // Coach vocal : la phrase dite au début de chaque étape de la séance. Courte,
 // sans parenthèses ni « (1/2) », avec ton record quand tu en as un.
 const sayName = (name = '') => name.replace(/\s*\(\d\/\d\)/, '').replace(/[()]/g, '').trim();
-export function spokenStep(step, next, target) {
+// noteUnit : au repos, l'unité de l'effort qui vient de finir s'il reste à
+// noter (« Note tes touches. »), pour ne plus oublier.
+export function spokenStep(step, next, target, noteUnit = '') {
   if (!step) return '';
   const after = next ? sayName(next.name) : '';
   if (step.kind === 'prep') return `Prépare-toi.${after ? ` On commence par ${after}.` : ''}`;
   if (step.kind === 'warm') return `${sayName(step.name)}.`;
-  if (step.kind === 'rest') return `${step.name === 'Fin du tour' ? 'Fin du tour' : 'Repos'}.${after ? ` Ensuite : ${after}.` : ''}`;
+  if (step.kind === 'rest') return `${step.name === 'Fin du tour' ? 'Fin du tour' : 'Repos'}.${noteUnit ? ` Note tes ${noteUnit}.` : ''}${after ? ` Ensuite : ${after}.` : ''}`;
   const goal = target?.harder
     ? 'Passe à la version plus dure.'
     : target?.best != null

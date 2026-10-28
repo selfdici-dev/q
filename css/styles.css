@@ -97,7 +97,8 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 
-html { -webkit-text-size-adjust: 100%; }
+/* touch-action : pas de zoom au double-tap (taper vite sur un bouton ne doit pas zoomer) ; le pincement reste permis */
+html { -webkit-text-size-adjust: 100%; touch-action: manipulation; }
 
 body {
   margin: 0;

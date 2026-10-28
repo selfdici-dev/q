@@ -483,3 +483,30 @@ test('« combien de touches ? », « combien d’allers-retours ? »', async () 
   assert.equal(combien('allers-retours'), 'combien d’allers-retours');
   assert.equal(combien('esquives'), 'combien d’esquives');
 });
+
+test('noter en une touche : 5 nombres autour de l’objectif, les oublis rattrapés à la fin, le coach le rappelle', async () => {
+  const { logChoices, toLog, spokenStep } = await import('../js/logic.js');
+  assert.deepEqual(logChoices(22), [20, 21, 22, 23, 24]);
+  assert.deepEqual(logChoices(1), [0, 1, 2, 3, 4]); // jamais sous 0
+  assert.deepEqual(logChoices(7.4), [5, 6, 7, 8, 9]);
+  const steps = [
+    { kind: 'prep', name: 'Prépare-toi' },
+    { kind: 'work', name: 'Crunch vélo', cue: 'Objectif : 20 à 24 touches.' },
+    { kind: 'rest', name: 'Récupère' },
+    { kind: 'work', name: 'Planche latérale (droite)', cue: 'Objectif : 1 seule tenue jusqu’au bip.' },
+    { kind: 'rest', name: 'Récupère' },
+    { kind: 'work', name: 'Roue abdominale à genoux (1/2)', cue: 'Objectif : 8 allers-retours.' },
+  ];
+  assert.deepEqual(toLog(steps), [1, 5]); // pas les tenues, pas les repos
+  assert.deepEqual(toLog(steps, new Set([1])), [5]);
+  assert.deepEqual(toLog(), []);
+  // au repos, s'il reste un chiffre à noter
+  assert.equal(spokenStep({ kind: 'rest', name: 'Récupère' }, { name: 'Pompes pike' }, null, 'touches'), 'Repos. Note tes touches. Ensuite : Pompes pike.');
+  assert.equal(spokenStep({ kind: 'rest', name: 'Récupère' }, { name: 'Pompes pike' }), 'Repos. Ensuite : Pompes pike.');
+});
+
+test('séance : taper vite sur un nombre ne zoome pas (pas de zoom au double-tap)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const css = readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
+  assert.match(css, /html \{[^}]*touch-action: manipulation/);
+});

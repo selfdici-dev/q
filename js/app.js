@@ -3,7 +3,7 @@ import {
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
   dueCards, reviewCard, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
-  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, beatBy, combien, recordKey, spokenStep, dropRecords, creatineWeek,
+  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, beatBy, combien, logChoices, toLog, recordKey, spokenStep, dropRecords, creatineWeek,
   recordWall, wakePlan, bedGoal, clockFr, WAKE_PLAN,
 } from './logic.js';
 import {
@@ -957,7 +957,7 @@ function recordsCard() {
     ${wall.length
       ? `<div class="records">${wall.map((r) => `<div class="record wo-${r.workout}${r.fresh ? ' fresh' : ''}"><b>${r.best}</b><span class="rec-unit">${esc(r.unit)}</span><small>${esc(r.label)}</small>${r.fresh ? `<span class="rec-new">Nouveau · +${r.gain}</span>` : ''}</div>`).join('')}</div>
         <p class="hint">Ton meilleur chiffre par exercice, tous tours confondus. Le dernier travaillé d’abord ; une plaque neuve brille 3 jours.</p>`
-      : '<p class="muted">Pendant le repos, note en 2 touches combien tu en as fait : tes meilleurs chiffres s’affichent ici.</p>'}
+      : '<p class="muted">Pendant le repos, touche le nombre que tu as fait : tes meilleurs chiffres s’affichent ici.</p>'}
   </section>`;
 }
 
@@ -1023,32 +1023,47 @@ function stepTarget(s) {
 function speakStep() {
   if (!player || player.done) return;
   const s = player.steps[player.i];
-  say(spokenStep(s, player.steps[player.i + 1], stepTarget(s)));
+  const toNote = loggables().find((l) => !l.noted);
+  say(spokenStep(s, player.steps[player.i + 1], stepTarget(s), toNote?.goal.unit));
 }
 
-// L'effort qu'on peut noter maintenant : celui qui vient de finir (pendant le
-// repos, ou le dernier à la fin de la séance). Pas pour les tenues.
-function loggable() {
-  if (!player?.steps) return null;
-  const idx = player.done ? player.lastWork : player.steps[player.i]?.kind === 'rest' ? player.i - 1 : -1;
-  const s = player.steps[idx];
-  if (s?.kind !== 'work' || player.logged?.has(idx)) return null;
-  const goal = goalOf(s.cue);
-  return goal ? { idx, s, goal, value: player.logVal?.[idx] ?? stepTarget(s).target } : null;
+// Ce qu'on peut noter maintenant : pendant le repos, l'effort qui vient de
+// finir ; à la fin de la séance, tout ce qui n'a pas été noté (les oublis).
+// Pas pour les tenues. noted : déjà noté pendant cette séance (on peut corriger).
+function loggables() {
+  if (!player?.steps) return [];
+  const ids = player.done ? player.doneList ?? [] : player.steps[player.i]?.kind === 'rest' ? [player.i - 1] : [];
+  return ids.flatMap((idx) => {
+    const s = player.steps[idx];
+    const goal = s?.kind === 'work' && goalOf(s.cue);
+    if (!goal) return [];
+    const target = stepTarget(s).target;
+    return [{ idx, s, goal, target, center: player.logVal?.[idx] ?? target, noted: player.noted?.[idx] }];
+  });
 }
 
+// Noter en une touche : 5 nombres autour de l'objectif (‹ › pour aller plus
+// bas ou plus haut). Une fois noté : « Corriger » si on s'est trompé, et la
+// plaque neuve quand c'est un record.
 function logRow() {
-  const l = loggable();
-  if (!l) return '';
-  return `<div class="log-reps">
-    <p>${esc(l.s.name)} : ${esc(combien(l.goal.unit))} ?</p>
-    <div class="log-row">
-      <button class="ctrl small" data-act="reps" data-v="-1" aria-label="Une de moins">−</button>
-      <strong class="log-val" aria-live="polite">${l.value}</strong>
-      <button class="ctrl small" data-act="reps" data-v="1" aria-label="Une de plus">+</button>
-      <button class="btn primary small" data-act="reps-save">Noter</button>
+  const list = loggables();
+  if (!list.length) return '';
+  const name = (l) => (player.done && l.s.rounds > 1 ? `${l.s.name} · tour ${l.s.round}` : l.s.name);
+  const rows = list.map((l) => {
+    if (l.noted) {
+      const fix = `<button class="btn ghost small log-fix" data-act="reps-undo" data-idx="${l.idx}">Corriger</button>`;
+      return player.plaque?.idx === l.idx ? `${plaqueNew()}${fix}` : `<div class="log-done">${icon('check')}<span>${esc(name(l))} : ${l.noted.value} ${esc(l.goal.unit)}</span>${fix}</div>`;
+    }
+    return `<div class="log-reps">
+    <p>${esc(name(l))} : ${esc(combien(l.goal.unit))} ?</p>
+    <div class="log-chips">
+      <button class="log-step" data-act="reps-shift" data-idx="${l.idx}" data-v="-5" aria-label="Nombres plus bas">‹</button>
+      ${logChoices(l.center).map((v) => `<button class="log-chip${v === l.target ? ' aim' : ''}" data-act="reps-pick" data-idx="${l.idx}" data-v="${v}" aria-label="Noter ${v} ${esc(l.goal.unit)}">${v}</button>`).join('')}
+      <button class="log-step" data-act="reps-shift" data-idx="${l.idx}" data-v="5" aria-label="Nombres plus hauts">›</button>
     </div>
   </div>`;
+  });
+  return player.done && list.length > 1 ? `<div class="log-list"><p class="eyebrow">Pas encore noté · si tu t’en souviens</p>${rows.join('')}</div>` : rows.join('');
 }
 
 // Record battu : une plaque de cuivre neuve, gravée, s'allume (un reflet la
@@ -1056,7 +1071,7 @@ function logRow() {
 // si le téléphone demande de les réduire.
 function plaqueNew() {
   const p = player?.plaque;
-  if (!p || p.at !== (player.done ? 'done' : player.i)) return '';
+  if (!p) return '';
   const lit = !p.shown;
   p.shown = true;
   return `<div class="plaque-new${lit ? ' lit' : ''}"${lit ? ' role="status"' : ''}>
@@ -1083,7 +1098,7 @@ function renderPlayer() {
         <h2>${esc(player.workout.name)}</h2>
         ${icon('trophy', 'big-ico')}
         <p class="muted">≈ ${workoutKcal(player.workout)} kcal brûlées (estimation)</p>
-        ${logRow()}${plaqueNew()}
+        ${logRow()}
         <p class="cue">Comment c’était ? Ta réponse sert à ajuster le niveau.</p>
       </div>
       <div class="feel">
@@ -1115,7 +1130,7 @@ function renderPlayer() {
         return t?.best != null ? `<span class="rec-tag">${icon('trophy')}Record ${t.best} · vise ${t.target}</span>` : '';
       })()}
       ${s.why && s.kind === 'work' ? `<p class="why">${esc(s.why)}</p>` : ''}
-      ${s.kind === 'rest' ? logRow() + plaqueNew() : ''}
+      ${s.kind === 'rest' ? logRow() : ''}
       ${stageFig(s.kind === 'work' || s.kind === 'warm' ? figure(s.name, s.target) : figure(next?.name, next?.target), fresh && player.i === 0)}
       <div class="clock huge" id="player-clock">${fmtStep(player.remaining)}</div>
       ${s.kind === 'rest' ? '' : `<p class="cue">${esc(s.cue)}</p>
@@ -1171,7 +1186,8 @@ function finishWorkout() {
   d.workouts = [...(d.workouts ?? []), player.workout.id];
   raiseHabit(today, 'sport', player.workout.id === 'M' ? 1 : 2);
   save();
-  player = { workout: player.workout, done: true, steps: player.steps, lastWork: player.steps.findLastIndex((x) => x.kind === 'work'), logged: player.logged, logVal: player.logVal };
+  // fin : tout ce qui n'a pas été noté peut l'être maintenant (les oublis)
+  player = { workout: player.workout, done: true, steps: player.steps, logged: player.logged, logVal: player.logVal, doneList: toLog(player.steps, player.logged ?? new Set()) };
   keepAwake(false);
   beep(3);
   say('Séance terminée. Bien joué.');
@@ -1580,27 +1596,44 @@ const actions = {
     renderPlayer();
     toast('Record remis à zéro : note ton nouveau chiffre au repos.', 2500);
   },
-  reps(el) {
-    const l = loggable();
+  'reps-shift'(el) {
+    const l = loggables().find((x) => x.idx === Number(el.dataset.idx) && !x.noted);
     if (!l) return;
-    player.logVal = { ...player.logVal, [l.idx]: Math.max(0, l.value + Number(el.dataset.v)) };
+    player.logVal = { ...player.logVal, [l.idx]: Math.max(2, l.center + Number(el.dataset.v)) };
     renderPlayer();
   },
-  'reps-save'() {
-    const l = loggable();
+  // une touche sur un nombre : c'est noté
+  'reps-pick'(el) {
+    const l = loggables().find((x) => x.idx === Number(el.dataset.idx) && !x.noted);
     if (!l) return;
+    const value = Number(el.dataset.v);
     const key = recordKey(l.s.name, l.s.round);
-    const was = state.records?.[key]?.best;
-    const gain = beatBy(state.records?.[key], l.value);
-    state.records = logRecord(state.records, key, l.value, todayKey());
+    const prev = state.records?.[key];
+    const gain = beatBy(prev, value);
+    state.records = logRecord(state.records, key, value, todayKey());
     player.logged = new Set([...(player.logged ?? []), l.idx]);
-    if (gain !== null) player.plaque = { at: player.done ? 'done' : player.i, name: baseName(l.s.name), round: l.s.round ?? 1, value: l.value, unit: l.goal.unit, gain, was };
+    player.noted = { ...player.noted, [l.idx]: { key, prev, value } };
+    if (gain !== null) player.plaque = { idx: l.idx, name: baseName(l.s.name), round: l.s.round ?? 1, value, unit: l.goal.unit, gain, was: prev.best };
+    navigator.vibrate?.(gain !== null ? [12, 60, 18] : 8);
     save();
     renderPlayer();
-    if (gain !== null) {
-      navigator.vibrate?.([12, 60, 18]);
-      say(`Nouveau record : ${l.value} ${l.goal.unit}.`);
-    } else toast(`Noté : ${l.value}. La prochaine fois, vise ${state.records[key].best + 1}.`, 2000);
+    if (gain !== null) say(`Nouveau record : ${value} ${l.goal.unit}.`);
+  },
+  // « Corriger » : on remet le record d'avant et on renote
+  'reps-undo'(el) {
+    const idx = Number(el.dataset.idx);
+    const n = player?.noted?.[idx];
+    if (!n) return;
+    const records = { ...state.records };
+    if (n.prev) records[n.key] = n.prev;
+    else delete records[n.key];
+    state.records = records;
+    player.logged = new Set([...(player.logged ?? [])].filter((x) => x !== idx));
+    const { [idx]: _gone, ...noted } = player.noted;
+    player.noted = noted;
+    if (player.plaque?.idx === idx) player.plaque = null;
+    save();
+    renderPlayer();
   },
   feel(el) {
     state.feels = [...state.feels, { date: todayKey(), id: player.workout.id, v: el.dataset.v }].slice(-60);

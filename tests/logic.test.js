@@ -442,3 +442,44 @@ test('mur des records : le meilleur de chaque exercice, tous tours confondus, le
   assert.deepEqual(recordWall({}, exercises), []);
   assert.deepEqual(recordWall(undefined, exercises), []);
 });
+
+test('record battu : de combien, retenu pour la plaque neuve, au mur pendant 3 jours', async () => {
+  const { beatBy, logRecord, FRESH_DAYS } = await import('../js/logic.js');
+  // première note : rien à battre ; égal ou moins bien : pas de record
+  assert.equal(beatBy(undefined, 12), null);
+  assert.equal(beatBy({ best: 12 }, 12), null);
+  assert.equal(beatBy({ best: 12 }, 9), null);
+  assert.equal(beatBy({ best: 12 }, 15), 3);
+  let rec = logRecord({}, 'Crunch vélo#1', 18, '2026-10-20');
+  assert.equal(rec['Crunch vélo#1'].beatenOn, undefined); // la première note n'est pas un record battu
+  rec = logRecord(rec, 'Crunch vélo#1', 21, '2026-10-27');
+  assert.deepEqual(rec['Crunch vélo#1'], { best: 21, last: 21, date: '2026-10-27', beatenOn: '2026-10-27', beatenFrom: 18 });
+  // une moins bonne série garde le jour du record et l'ancien chiffre
+  rec = logRecord(rec, 'Crunch vélo#1', 19, '2026-10-28');
+  assert.deepEqual(rec['Crunch vélo#1'], { best: 21, last: 19, date: '2026-10-28', beatenOn: '2026-10-27', beatenFrom: 18 });
+  const ex = [{ label: 'Crunch vélo', names: ['Crunch vélo'], unit: 'touches', workout: 'A' }];
+  const at = (today) => recordWall(rec, ex, 6, today)[0];
+  assert.deepEqual([at('2026-10-27').fresh, at('2026-10-27').gain], [true, 3]);
+  assert.equal(FRESH_DAYS, 2);
+  assert.equal(at('2026-10-29').fresh, true); // avant-hier : encore neuve
+  assert.deepEqual([at('2026-10-30').fresh, at('2026-10-30').gain], [false, 0]); // ensuite : une plaque comme les autres
+  assert.equal(at('2026-10-26').fresh, false); // date du téléphone en arrière : rien de neuf
+  assert.equal(recordWall(rec, ex)[0].fresh, false); // sans date du jour : rien de neuf
+  // tous tours confondus : un record du tour 2 battu sous le chiffre du tour 1 ne change pas le mur
+  const pex = [{ label: 'Pompes', names: ['Pompes (sur parallettes)'], unit: 'pompes', workout: 'B' }];
+  let two = logRecord({ 'Pompes (sur parallettes)#1': { best: 20, last: 20, date: '2026-10-20' } }, 'Pompes (sur parallettes)#2', 14, '2026-10-21');
+  two = logRecord(two, 'Pompes (sur parallettes)#2', 17, '2026-10-27');
+  const wall = (today) => recordWall(two, pex, 6, today)[0];
+  assert.deepEqual([wall('2026-10-27').best, wall('2026-10-27').fresh], [20, false]);
+  // … et s'il passe au-dessus, le gain se compte depuis l'ancien chiffre du mur (20, pas 17)
+  two = logRecord(two, 'Pompes (sur parallettes)#2', 22, '2026-10-28');
+  assert.deepEqual([wall('2026-10-28').best, wall('2026-10-28').fresh, wall('2026-10-28').gain], [22, true, 2]);
+});
+
+test('« combien de touches ? », « combien d’allers-retours ? »', async () => {
+  const { combien } = await import('../js/logic.js');
+  assert.equal(combien('touches'), 'combien de touches');
+  assert.equal(combien('pompes'), 'combien de pompes');
+  assert.equal(combien('allers-retours'), 'combien d’allers-retours');
+  assert.equal(combien('esquives'), 'combien d’esquives');
+});

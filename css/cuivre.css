@@ -460,6 +460,33 @@
 }
 .record::before { left: 7px; }
 .record::after { right: 7px; }
+/* plaque neuve : record battu ces 3 derniers jours, elle brille */
+:root .record.fresh {
+  background: linear-gradient(150deg, #3a2a20, #1b1410 60%, #2a1e17);
+  box-shadow: inset 0 0 0 1px rgb(240 180 140 / 0.8), inset 0 1px 0 rgb(255 230 210 / 0.25), 0 0 0 1px rgb(220 154 112 / 0.22), 0 12px 28px -12px rgb(220 154 112 / 0.6);
+}
+.record .rec-new { background: linear-gradient(180deg, #f6d2b6, #d9956b 60%, #b46c47); color: #1a0f0a; box-shadow: 0 4px 10px -4px rgb(220 154 112 / 0.8); }
+/* … et dans le lecteur : la même plaque de cuivre, en grand, vissée comme celles du mur */
+.plaque-new {
+  background: linear-gradient(150deg, #3a2a20, #17110d 58%, #2a1e17);
+  box-shadow: inset 0 0 0 1px rgb(240 180 140 / 0.75), inset 0 1px 0 rgb(255 230 210 / 0.22), 0 0 0 1px rgb(220 154 112 / 0.2), 0 16px 34px -14px rgb(220 154 112 / 0.65);
+  color: #e8ddd1;
+}
+.plaque-new::before, .plaque-new::after {
+  content: ""; position: absolute; top: 8px; width: 5px; height: 5px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f2cfb3, #8f5232);
+}
+.plaque-new::before { left: 8px; }
+.plaque-new::after { right: 8px; }
+.plaque-new .pn-tag { color: #f2c3a3; }
+.plaque-new .pn-val {
+  background: linear-gradient(180deg, #fbe2cd, #e0a073 55%, #a8623d);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.plaque-new .pn-val small { -webkit-text-fill-color: #c9b8a8; }
+.plaque-new .pn-name { color: #d2c8bc; }
+.plaque-new .pn-name strong { color: #f6d2b6; }
+.plaque-new .pn-shine { background: linear-gradient(90deg, transparent, rgb(255 240 225 / 0.42), transparent); }
 
 /* Titres : une police plus élégante (Avenir Next, déjà dans l'iPhone, rien à
    télécharger ; ailleurs, la police du téléphone) */
@@ -514,6 +541,7 @@
     #0d0b08;
 }
 :root .player.warm { --fill: #e5c47f; }
+.player .eyebrow { color: #f2c3a3; } /* « Séance terminée » : cuivre, plus le lilas d'avant */
 :root .player.prep { --fill: #dc9a70; --phase-ink: #f2c3a3; --phase-tint: rgb(220 154 112 / 0.16); }
 :root .player.done {
   background:

@@ -3,7 +3,7 @@ import {
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
   dueCards, reviewCard, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
-  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, recordKey, spokenStep, dropRecords, creatineWeek,
+  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, beatBy, combien, recordKey, spokenStep, dropRecords, creatineWeek,
   recordWall, wakePlan, bedGoal, clockFr, WAKE_PLAN,
 } from './logic.js';
 import {
@@ -951,12 +951,12 @@ function recordsCard() {
       groups.get(label).names.push(e.name);
     }
   }
-  const wall = recordWall(state.records, [...groups.values()]);
+  const wall = recordWall(state.records, [...groups.values()], 6, todayKey());
   return `<section class="card records-card">
     <div class="card-head"><h2>${icon('trophy')}Mur des records</h2>${wall.length ? `<span class="pill">${wall.length}</span>` : ''}</div>
     ${wall.length
-      ? `<div class="records">${wall.map((r) => `<div class="record wo-${r.workout}"><b>${r.best}</b><span class="rec-unit">${esc(r.unit)}</span><small>${esc(r.label)}</small></div>`).join('')}</div>
-        <p class="hint">Ton meilleur chiffre par exercice, tous tours confondus. Le dernier travaillé d’abord.</p>`
+      ? `<div class="records">${wall.map((r) => `<div class="record wo-${r.workout}${r.fresh ? ' fresh' : ''}"><b>${r.best}</b><span class="rec-unit">${esc(r.unit)}</span><small>${esc(r.label)}</small>${r.fresh ? `<span class="rec-new">Nouveau · +${r.gain}</span>` : ''}</div>`).join('')}</div>
+        <p class="hint">Ton meilleur chiffre par exercice, tous tours confondus. Le dernier travaillé d’abord ; une plaque neuve brille 3 jours.</p>`
       : '<p class="muted">Pendant le repos, note en 2 touches combien tu en as fait : tes meilleurs chiffres s’affichent ici.</p>'}
   </section>`;
 }
@@ -1041,13 +1041,29 @@ function logRow() {
   const l = loggable();
   if (!l) return '';
   return `<div class="log-reps">
-    <p>${esc(l.s.name)} : combien de ${esc(l.goal.unit)} ?</p>
+    <p>${esc(l.s.name)} : ${esc(combien(l.goal.unit))} ?</p>
     <div class="log-row">
       <button class="ctrl small" data-act="reps" data-v="-1" aria-label="Une de moins">−</button>
       <strong class="log-val" aria-live="polite">${l.value}</strong>
       <button class="ctrl small" data-act="reps" data-v="1" aria-label="Une de plus">+</button>
       <button class="btn primary small" data-act="reps-save">Noter</button>
     </div>
+  </div>`;
+}
+
+// Record battu : une plaque de cuivre neuve, gravée, s'allume (un reflet la
+// traverse) pendant le repos qui suit, ou sur l'écran de fin. Sans animation
+// si le téléphone demande de les réduire.
+function plaqueNew() {
+  const p = player?.plaque;
+  if (!p || p.at !== (player.done ? 'done' : player.i)) return '';
+  const lit = !p.shown;
+  p.shown = true;
+  return `<div class="plaque-new${lit ? ' lit' : ''}"${lit ? ' role="status"' : ''}>
+    <span class="pn-shine" aria-hidden="true"></span>
+    <span class="pn-tag">${icon('trophy')}Nouveau record${p.round > 1 ? ` · tour ${p.round}` : ''}</span>
+    <b class="pn-val">${p.value}<small>${esc(p.unit)}</small></b>
+    <span class="pn-name">${esc(p.name)} · <strong>+${p.gain}</strong> (avant ${p.was})</span>
   </div>`;
 }
 
@@ -1067,7 +1083,7 @@ function renderPlayer() {
         <h2>${esc(player.workout.name)}</h2>
         ${icon('trophy', 'big-ico')}
         <p class="muted">≈ ${workoutKcal(player.workout)} kcal brûlées (estimation)</p>
-        ${logRow()}
+        ${logRow()}${plaqueNew()}
         <p class="cue">Comment c’était ? Ta réponse sert à ajuster le niveau.</p>
       </div>
       <div class="feel">
@@ -1099,7 +1115,7 @@ function renderPlayer() {
         return t?.best != null ? `<span class="rec-tag">${icon('trophy')}Record ${t.best} · vise ${t.target}</span>` : '';
       })()}
       ${s.why && s.kind === 'work' ? `<p class="why">${esc(s.why)}</p>` : ''}
-      ${s.kind === 'rest' ? logRow() : ''}
+      ${s.kind === 'rest' ? logRow() + plaqueNew() : ''}
       ${stageFig(s.kind === 'work' || s.kind === 'warm' ? figure(s.name, s.target) : figure(next?.name, next?.target), fresh && player.i === 0)}
       <div class="clock huge" id="player-clock">${fmtStep(player.remaining)}</div>
       ${s.kind === 'rest' ? '' : `<p class="cue">${esc(s.cue)}</p>
@@ -1574,12 +1590,17 @@ const actions = {
     const l = loggable();
     if (!l) return;
     const key = recordKey(l.s.name, l.s.round);
-    const prev = state.records?.[key]?.best;
+    const was = state.records?.[key]?.best;
+    const gain = beatBy(state.records?.[key], l.value);
     state.records = logRecord(state.records, key, l.value, todayKey());
     player.logged = new Set([...(player.logged ?? []), l.idx]);
+    if (gain !== null) player.plaque = { at: player.done ? 'done' : player.i, name: baseName(l.s.name), round: l.s.round ?? 1, value: l.value, unit: l.goal.unit, gain, was };
     save();
     renderPlayer();
-    toast(prev != null && l.value > prev ? `Nouveau record : ${l.value} 🏆` : `Noté : ${l.value}. La prochaine fois, vise ${state.records[key].best + 1}.`, 2000);
+    if (gain !== null) {
+      navigator.vibrate?.([12, 60, 18]);
+      say(`Nouveau record : ${l.value} ${l.goal.unit}.`);
+    } else toast(`Noté : ${l.value}. La prochaine fois, vise ${state.records[key].best + 1}.`, 2000);
   },
   feel(el) {
     state.feels = [...state.feels, { date: todayKey(), id: player.workout.id, v: el.dataset.v }].slice(-60);
@@ -1737,6 +1758,7 @@ const actions = {
     hush();
     keepAwake(false);
     renderPlayer();
+    render(); // les records notés pendant la séance restent : le mur se met à jour
   },
   'pomo-toggle'() {
     const p = state.timers.pomo;

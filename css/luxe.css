@@ -1149,7 +1149,7 @@ input.task { text-align: center; margin: 4px 0 10px; border-radius: 999px; }
 /* Petits écrans : la démo reste dans la liste, la place va au « pourquoi » et à « Ensuite » */
 @media (max-height: 800px) { .player .demo { display: none; } }
 .player .player-fig { flex-shrink: 1; min-height: 40px; }
-@media (max-height: 680px) { .player .player-main .why { display: none; } .player.rest:has(.log-reps) .player-fig { display: none; } }
+@media (max-height: 680px) { .player .player-main .why { display: none; } .player.rest:has(.log-reps, .plaque-new) .player-fig { display: none; } }
 /* Lecteur : le bonhomme passe au premier plan (c'est lui qui montre le geste) ;
    le chrono reste très grand mais lui cède un peu de hauteur */
 .player .player-main > * { flex-shrink: 0; }

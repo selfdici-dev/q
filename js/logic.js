@@ -209,6 +209,9 @@ export function goalOf(cue = '') {
   return { min: Number(m[1]), max: Number(m[2] ?? m[1]), unit: (m[3] ?? 'répétitions').trim() };
 }
 
+// « combien de touches ? », « combien d’allers-retours ? » : élision devant une voyelle ou un h muet.
+export const combien = (unit = '') => `combien ${/^[aeéèêiîoôuûyh]/i.test(unit) ? 'd’' : 'de '}${unit}`;
+
 // Un record par exercice et par tour (au 2e tour, la fatigue change tout).
 export const recordKey = (name, round = 1) => `${name}#${round}`;
 
@@ -226,24 +229,45 @@ export function dropRecords(records, name) {
   return Object.fromEntries(Object.entries(records ?? {}).filter(([k]) => !k.startsWith(`${name}#`)));
 }
 
+// Record battu en notant n : de combien (prev : l'ancien record de ce tour).
+// null si ce n'en est pas un : pas mieux, ou toute première note (il n'y
+// avait rien à battre).
+export function beatBy(prev, n) {
+  return Number.isFinite(prev?.best) && n > prev.best ? n - prev.best : null;
+}
+
+// Une note : le record garde le meilleur chiffre. Record battu : on retient
+// aussi le jour (beatenOn) et l'ancien record (beatenFrom), pour la plaque neuve.
 export function logRecord(records, key, n, date) {
   const prev = records?.[key];
-  return { ...records, [key]: { best: Math.max(prev?.best ?? 0, n), last: n, date } };
+  const rec = { ...prev, best: Math.max(prev?.best ?? 0, n), last: n, date };
+  if (beatBy(prev, n) !== null) Object.assign(rec, { beatenOn: date, beatenFrom: prev.best });
+  return { ...records, [key]: rec };
 }
+
+// Plaque neuve au mur : record battu aujourd'hui, hier ou avant-hier.
+export const FRESH_DAYS = 2;
 
 // Mur des records de la Salle : le meilleur chiffre de chaque exercice, tous
 // tours confondus, le dernier travaillé en premier (la date d'un record est
 // celle de sa dernière note, pas celle où il a été battu). exercises :
 // [{ label, names, unit, workout }] (names : les noms complets qui comptent
-// pour ce label, ex. les deux passages de la roue).
-export function recordWall(records, exercises, limit = 6) {
+// pour ce label, ex. les deux passages de la roue). Avec today : fresh (plaque
+// neuve, le meilleur chiffre vient d'être battu) et gain (de combien il a
+// monté sur le mur, tous tours confondus).
+export function recordWall(records, exercises, limit = 6, today = null) {
   const all = Object.entries(records ?? {}).map(([k, r]) => [k.slice(0, k.lastIndexOf('#')), r]);
   const out = [];
   for (const ex of exercises) {
     const mine = all.filter(([name, r]) => ex.names.includes(name) && Number.isFinite(r?.best) && r.best > 0).map(([, r]) => r);
     if (!mine.length) continue;
     const date = mine.map((r) => r.date ?? '').sort().at(-1);
-    out.push({ label: ex.label, unit: ex.unit, workout: ex.workout, best: Math.max(...mine.map((r) => r.best)), date });
+    const best = Math.max(...mine.map((r) => r.best));
+    const top = mine.filter((r) => r.best === best).sort((a, b) => (b.beatenOn ?? '').localeCompare(a.beatenOn ?? ''))[0];
+    const recent = !!(today && top.beatenOn && diffDays(top.beatenOn, today) <= FRESH_DAYS && diffDays(top.beatenOn, today) >= 0);
+    const before = Math.max(top.beatenFrom ?? 0, ...mine.filter((r) => r !== top).map((r) => r.best));
+    const gain = recent ? best - before : 0;
+    out.push({ label: ex.label, unit: ex.unit, workout: ex.workout, best, date, fresh: gain > 0, gain: Math.max(0, gain) });
   }
   return out.sort((a, b) => b.date.localeCompare(a.date) || b.best - a.best).slice(0, limit);
 }

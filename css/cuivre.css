@@ -428,6 +428,44 @@
     var(--card) !important;
 }
 
+/* Postes : chaque séance est une station de la salle, avec son spot, son
+   mur, son parquet et une bande LED de sa couleur */
+:root .poste .poste-fig {
+  background:
+    radial-gradient(70% 60% at 50% 0%, rgb(255 233 212 / 0.16), transparent 70%),
+    linear-gradient(180deg, #1c1714 0, #110d0b 72%, #2c1f16 72%, #4a3424 100%);
+  box-shadow: inset 0 0 0 1px rgb(255 235 215 / 0.06);
+}
+.poste .poste-fig::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 72%; height: 1.5px;
+  background: var(--wo, var(--accent)); box-shadow: 0 0 8px 1px var(--wo, var(--accent)); opacity: 0.85;
+}
+
+/* Mur des records : des plaques de cuivre gravées, vissées au mur */
+:root .record {
+  position: relative;
+  background: linear-gradient(150deg, #261e19, #15110e 60%, #1d1713);
+  box-shadow: inset 0 0 0 1px rgb(220 154 112 / 0.3), inset 0 1px 0 rgb(255 230 210 / 0.12), 0 10px 22px -14px rgb(0 0 0 / 0.8);
+  color: #e8ddd1;
+}
+.record b {
+  background: linear-gradient(180deg, #f6d2b6, #d9956b 55%, #a8623d);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.record .rec-unit { color: #a09486; }
+.record small { color: #d2c8bc; }
+.record::before, .record::after {
+  content: ""; position: absolute; top: 7px; width: 4px; height: 4px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f2cfb3, #8f5232);
+}
+.record::before { left: 7px; }
+.record::after { right: 7px; }
+
+/* Titres : une police plus élégante (Avenir Next, déjà dans l'iPhone, rien à
+   télécharger ; ailleurs, la police du téléphone) */
+.page-head h1, .gym-hero h2, .lesson-title, .card-head h2 { font-family: "Avenir Next", "Avenir", var(--sans); }
+.eyebrow { letter-spacing: 0.12em; }
+
 /* Leçons : le point de l'étape en cours brille en cuivre */
 .node.open .node-dot, .node.current .node-dot {
   box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 12%, transparent), 0 12px 30px -14px color-mix(in srgb, var(--accent) 60%, transparent);

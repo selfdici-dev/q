@@ -18,6 +18,7 @@ import { daySummary, weekSummary } from './summary.js';
 import { backupStatus, validateBackup } from './backup.js';
 import { figureFor, figureSVG, focusFor } from './figures.js';
 import { icon } from './icons.js';
+import { roomSVG } from './room.js';
 import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS } from './avatar.js';
 import { treeSVG, seedOf } from './tree.js';
 
@@ -900,7 +901,7 @@ function gymHero(planned, done, lvl) {
       <div><p class="eyebrow">Aujourd’hui${did ? ' · ✓ faite' : ''}</p><h2>${esc(shortName(w))}</h2>
         <p class="muted">≈ ${workoutMinutes(w)} min · ≈ ${workoutKcal(w)} kcal · ${w.exercises.length} exercices · niveau ${lvl}</p></div>
     </div>
-    <div class="gym-stage">${figure(star.name, star.target, false)}</div>
+    <div class="gym-stage"><div class="gym-room">${roomSVG({ id: 'salle' })}</div><div class="gym-fig">${figure(star.name, star.target, false)}</div></div>
     <button class="btn primary wide" data-act="start-workout" data-id="${w.id}">${did ? 'Refaire la séance' : 'Lancer la séance'}</button>
     <div class="level gym-level">
       <span class="badge">Niv. ${lv.level}</span><span class="rank">${esc(lv.rank)}</span>
@@ -2009,6 +2010,35 @@ window.addEventListener('hashchange', () => {
   }, dir);
 });
 
+// ---------- Entrée dans la salle ----------
+// À l'ouverture de l'appli : la salle est dans le noir, les spots s'allument
+// un par un, la bande LED s'éclaire, le logo brille, puis on entre (≈ 2 s,
+// une fois par ouverture). Une touche pour passer ; rien du tout si le
+// téléphone demande de réduire les animations.
+function enterGym() {
+  if (reduceMotion()) return;
+  try {
+    if (sessionStorage.getItem('cap-intro')) return;
+    sessionStorage.setItem('cap-intro', '1');
+  } catch { /* stockage indisponible : on montre l'entrée */ }
+  const w = WORKOUTS.find((x) => x.id === WEEK_PLAN[fromKey(todayKey()).getDay()]);
+  const el = document.createElement('div');
+  el.id = 'intro';
+  el.setAttribute('aria-hidden', 'true');
+  el.innerHTML = `${roomSVG({ w: 220, h: 400, logo: [0.5, 0.33], size: 1.9, floor: 0.72, id: 'intro' })}
+    <div class="intro-text"><p class="intro-line">Ta salle est ouverte</p><p class="intro-sub">Aujourd’hui · ${esc(shortName(w))}</p></div>`;
+  document.body.append(el);
+  let gone = false;
+  const leave = () => {
+    if (gone) return;
+    gone = true;
+    el.classList.add('out');
+    setTimeout(() => el.remove(), 500);
+  };
+  el.addEventListener('click', leave);
+  setTimeout(leave, 2300);
+}
+
 // ---------- démarrage ----------
 
 $('#tabs').innerHTML = `<span class="tab-ind" aria-hidden="true"></span>${TABS.map((t) => `<a href="#${t.id}" data-tab="${t.id}"><span class="tab-ico" aria-hidden="true">${t.icon}</span>${t.label}</a>`).join('')}`;
@@ -2018,6 +2048,7 @@ state.ui.lastLevel = Math.max(state.ui.lastLevel ?? 1, levelInfo(totalXP(state))
 save();
 render();
 moveTabIndicator(true);
+enterGym();
 setInterval(tick, 250);
 // Le changement de jour (4 h) se voit sans recharger.
 let shownDay = todayKey();

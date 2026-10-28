@@ -1084,10 +1084,10 @@ function logRow() {
   const rows = list.map((l) => {
     if (l.noted) {
       const fix = `<button class="btn ghost small log-fix" data-act="reps-undo" data-idx="${l.idx}">Corriger</button>`;
-      return player.plaque?.idx === l.idx ? `${plaqueNew()}${fix}` : `<div class="log-done">${icon('check')}<span>${esc(name(l))} : ${l.noted.value} ${esc(l.goal.unit)}</span>${fix}</div>`;
+      return player.plaque?.idx === l.idx ? `${plaqueNew()}${fix}` : `<div class="log-done">${icon('check')}<span>${esc(name(l))}\u00a0: ${l.noted.value}\u00a0${esc(l.goal.unit)}</span>${fix}</div>`;
     }
     return `<div class="log-reps">
-    <p>${esc(name(l))} : ${esc(combien(l.goal.unit))} ?</p>
+    <p>${esc(name(l))}\u00a0: ${esc(combien(l.goal.unit))}\u00a0?</p>
     <div class="log-chips">
       <button class="log-step" data-act="reps-shift" data-idx="${l.idx}" data-v="-5" aria-label="Nombres plus bas">‹</button>
       ${logChoices(l.center).map((v) => `<button class="log-chip${v === l.target ? ' aim' : ''}" data-act="reps-pick" data-idx="${l.idx}" data-v="${v}" aria-label="Noter ${v} ${esc(l.goal.unit)}">${v}</button>`).join('')}

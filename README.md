@@ -2,7 +2,7 @@
 
 Appli personnelle pour **tenir** et **apprendre** : habitudes à deux niveaux (minimum / complet), règle « jamais deux fois de suite », sprints de 7 jours, focus 25 min, minuteur anti-scroll, séances guidées sur tapis, sommeil.
 
-Design « Aurore » : fond noir, lueurs d’aurore violettes, bleues et sarcelle derrière l’accueil et la carte « Maintenant », boutons lumineux en dégradé, barre d’onglets en verre dépoli avec de vraies icônes, chiffres arrondis ; en séance, rose pour l’effort et sarcelle pour le repos (thème clair pastel en option). Elle fonctionne hors ligne et s’installe sur le téléphone. Aucune donnée ne quitte l’appareil. Les animations (changement d’onglet, anneau et barres qui se remplissent, case cochée) se coupent si le téléphone demande de réduire les animations.
+Design « Noir & Volt » : fond noir, une seule couleur forte, le volt (jaune-vert fluo), pour les boutons, les anneaux, les barres et ce qui est fait ; le reste en blanc et en gris, sans dégradés arc-en-ciel ; une lueur volt discrète derrière l’accueil et la séance du jour ; barre d’onglets en verre dépoli avec de vraies icônes, chiffres arrondis ; en séance, lueur volt pendant l’effort et bleu glacier pendant le repos (thème clair en option : boutons noirs à texte volt). Le look précédent, « Aurore », revient en retirant `css/volt.css` de `index.html`. Elle fonctionne hors ligne et s’installe sur le téléphone. Aucune donnée ne quitte l’appareil. Les animations (changement d’onglet, anneau et barres qui se remplissent, case cochée) se coupent si le téléphone demande de réduire les animations.
 
 ## Principes
 

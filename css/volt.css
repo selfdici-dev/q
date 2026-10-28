@@ -1,0 +1,445 @@
+/* Design « Noir & Volt » : fond noir, une seule couleur forte, le volt
+   (jaune-vert fluo), pour l'action et la progression : boutons, anneaux,
+   barres, onglet actif, ce qui est fait. Le reste en blanc et en gris
+   neutres, sans teinte. Plus d'aurores ni de dégradés arc-en-ciel : une
+   lueur volt discrète en haut de la page et derrière la séance du jour.
+   Les couleurs des séances (A, B, C, P, M) restent, en petit, pour les
+   reconnaître ; le muscle qui travaille reste rouge.
+   Thème clair : le volt est illisible sur du blanc, donc boutons noirs à
+   texte volt, et un vert olive foncé pour les textes et les traits.
+   Chargé APRÈS luxe.css, dont il garde la structure : il ne change que des
+   jetons de couleur et les quelques règles aux couleurs écrites en dur.
+   Pour revenir au look Aurore : retirer la ligne volt.css de index.html. */
+
+/* ——— Jetons : thème clair ——— */
+:root,
+:root[data-theme="light"] {
+  --bg: #f5f5f7;
+  --surface: #ffffff;
+  --surface-2: #ececef;
+  --line: #e2e2e6;
+  --text: #0a0a0a;
+  --text-2: #3a3a3c;
+  --muted: #6e6e73;
+  --accent: #3f6212;
+  --accent-2: #3f6212;
+  --accent-ink: #d4ff3a;
+  --accent-soft: rgb(212 255 58 / 0.4);
+  --gold: #3f6212;
+  --pos: #15803d;
+  --miss: #e5e5ea;
+  --series-1: #4d7c0f;
+  --series-raw: #a1a1a6;
+  --cat-1: #4d7c0f; --cat-2: #0369a1; --cat-3: #15803d; --cat-4: #be185d;
+  --hero-a: #84cc16; --hero-b: #4d7c0f; --hero-c: #3f6212;
+  --violet: #4d7c0f;
+  --wo-A: #0f766e;
+  --wo-B: #0369a1;
+  --wo-C: #be123c;
+  --wo-M: #6d28d9;
+  --wo-P: #a16207;
+  --fig-shoe: #c8f03a;
+  --fig-shoe-far: #8fae2a;
+  --figure-move: #d4ff3a;
+  --av-aura: #84cc16;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -12px rgb(0 0 0 / 0.12);
+  --tone: rgb(132 204 22 / 0.1);
+  --tone-2: rgb(132 204 22 / 0.16);
+  --tone-3: rgb(132 204 22 / 0.26);
+  --metal: linear-gradient(135deg, #0a0a0a, #3f6212);
+  --metal-h: linear-gradient(90deg, #0a0a0a, #3f6212);
+  --dial: radial-gradient(circle at 50% 38%, #ffffff 0%, #f7f7f8 58%, #ececef 100%);
+  --dot-bg: #ececef;
+  --sky-1: rgb(212 255 58 / 0.55);
+  --sky-2: rgb(190 242 100 / 0.25);
+  --sky-3: transparent;
+  --sky-4: transparent;
+  --grad-cta: linear-gradient(#0a0a0a, #0a0a0a);
+  --grad-data: linear-gradient(90deg, #4d7c0f, #84cc16);
+  --cta-shadow: 0 10px 24px -12px rgb(0 0 0 / 0.4), inset 0 1px 0 rgb(255 255 255 / 0.12);
+  --track: rgb(10 10 10 / 0.08);
+  --card-line: #e5e5ea;
+  --card-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -12px rgb(0 0 0 / 0.12);
+  --tile: #f2f2f5;
+  --chip: rgb(10 10 10 / 0.06);
+  --chip-press: rgb(10 10 10 / 0.1);
+  --divider: rgb(10 10 10 / 0.07);
+  --input-line: #d9d9de;
+  --seg-on: rgb(212 255 58 / 0.55);
+  --seg-on-line: rgb(77 124 15 / 0.45);
+  --seg-on-ink: #0a0a0a;
+  --glass-line: rgb(10 10 10 / 0.08);
+  --glass-shadow: 0 12px 32px -8px rgb(0 0 0 / 0.18);
+  --tab-ind: rgb(212 255 58 / 0.7);
+  --tab-ink: #6e6e73;
+  --tab-active: #0a0a0a;
+  --tab-icon: #0a0a0a;
+  --hero-bg:
+    radial-gradient(60% 70% at 96% -6%, rgb(212 255 58 / 0.6), transparent 72%),
+    #ffffff;
+  --hero-line: rgb(10 10 10 / 0.05);
+  --rim: linear-gradient(170deg, rgb(255 255 255 / 0.9), rgb(10 10 10 / 0.06) 50%, rgb(10 10 10 / 0.04));
+  --hero-shadow: inset 0 1px 0 #ffffff, 0 20px 40px -24px rgb(0 0 0 / 0.2);
+  --hero-num: #0a0a0a;
+  --dot-miss: rgb(10 10 10 / 0.1);
+  --dot-pre: rgb(10 10 10 / 0.22);
+  --ring-track: rgb(10 10 10 / 0.14);
+  --tring-track: rgb(10 10 10 / 0.1);
+  --ring-grad: conic-gradient(from 0deg, #4d7c0f, #84cc16 50%, #4d7c0f);
+  --clock-grad: linear-gradient(180deg, #0a0a0a, #0a0a0a);
+  --clock-solid: #0a0a0a;
+  --now-wash: rgb(212 255 58 / 0.3);
+  --now-border: linear-gradient(135deg, #84cc16, #3f6212);
+  --now-shadow: 0 18px 40px -22px rgb(0 0 0 / 0.25);
+  --now-ico: rgb(212 255 58 / 0.45);
+  --done-border: linear-gradient(135deg, #4d7c0f, #3f6212);
+  --halo-1: rgb(212 255 58 / 0.55);
+  --halo-2: rgb(212 255 58 / 0.12);
+  --pip-off: #0a0a0a;
+  --live: #4d7c0f;
+  --fig-tile: radial-gradient(90% 120% at 50% 0%, rgb(212 255 58 / 0.14), transparent 70%), #121214;
+  --leaf-1: #84cc16;
+  --leaf-2: #4d7c0f;
+  --leaf-3: #15803d;
+  --branch: #3a3a3c;
+  --quote-mark: #4d7c0f;
+  --toast-bg: rgb(22 22 24 / 0.9);
+  --scrim: rgb(0 0 0 / 0.35);
+  --cell-miss: rgb(10 10 10 / 0.07);
+  --cell-min: #a3e635;
+  --done-tile: rgb(212 255 58 / 0.4);
+  --done-ink: #3f6212;
+  --dial-glow: 0 30px 60px -36px rgb(0 0 0 / 0.25);
+  --cell-full: linear-gradient(135deg, #4d7c0f, #3f6212);
+  --cell-line: rgb(10 10 10 / 0.12);
+  --title-grad: linear-gradient(180deg, #0a0a0a, #0a0a0a);
+  --ink: #0a0a0a;
+  --ink-2: rgb(10 10 10 / 0.1);
+  --hair: rgb(10 10 10 / 0.08);
+  --hair-strong: rgb(10 10 10 / 0.24);
+  --edge: rgb(10 10 10 / 0.06);
+  --edge-2: rgb(10 10 10 / 0.16);
+  --rule: rgb(10 10 10 / 0.08);
+  --row: rgb(10 10 10 / 0.025);
+  --tick: rgb(10 10 10 / 0.2);
+  --balloon-ink: #0a0a0a;
+}
+
+/* ——— Jetons : nuit (par défaut), et le lecteur de séance, toujours sombre ——— */
+:root[data-theme="dark"],
+.player {
+  color-scheme: dark;
+  --bg: #000000;
+  --surface: #0f0f10;
+  --surface-2: #18181a;
+  --line: #262628;
+  --text: #f5f5f7;
+  --text-2: #c7c7cc;
+  --muted: #8e8e93;
+  --accent: #d4ff3a;
+  --accent-2: #d4ff3a;
+  --accent-ink: #0a0a0a;
+  --accent-soft: rgb(212 255 58 / 0.12);
+  --gold: #d4ff3a;
+  --warn: #ffd60a;
+  --warn-soft: #2a2408;
+  --pos: #32d74b;
+  --neg: #ff453a;
+  --miss: #1c1c1e;
+  --series-1: #d4ff3a;
+  --series-raw: #636366;
+  --cat-1: #d4ff3a; --cat-2: #64d2ff; --cat-3: #32d74b; --cat-4: #ff6482;
+  --hero-a: #d4ff3a; --hero-b: #b5f23d; --hero-c: #d4ff3a;
+  --violet: #d4ff3a;
+  --wo-A: #5ed6c4;
+  --wo-B: #6cc6ff;
+  --wo-C: #ff7a93;
+  --wo-M: #b79cff;
+  --wo-P: #ffcf4a;
+  --fig-shoe: #c8f03a;
+  --fig-shoe-far: #8fae2a;
+  --figure-move: #d4ff3a;
+  --av-aura: #d4ff3a;
+  --tone: rgb(212 255 58 / 0.1);
+  --tone-2: rgb(212 255 58 / 0.16);
+  --tone-3: rgb(212 255 58 / 0.28);
+  --metal: linear-gradient(135deg, #d4ff3a, #b5f23d);
+  --metal-h: linear-gradient(90deg, #b5f23d, #d4ff3a);
+  --card-bg: rgb(255 255 255 / 0.045);
+  --dial: radial-gradient(circle at 50% 40%, #1a1a1c 0%, #111112 60%, #0a0a0b 100%);
+  --dot-bg: rgb(255 255 255 / 0.06);
+  --glass: rgb(20 20 22 / 0.62);
+  --sky-1: rgb(212 255 58 / 0.22);
+  --sky-2: rgb(212 255 58 / 0.08);
+  --sky-3: rgb(181 242 61 / 0.06);
+  --sky-4: transparent;
+  --grad-cta: linear-gradient(#d4ff3a, #d4ff3a);
+  --grad-data: linear-gradient(90deg, #b5f23d, #d4ff3a);
+  --cta-shadow: 0 10px 28px -14px rgb(212 255 58 / 0.55), inset 0 1px 0 rgb(255 255 255 / 0.5);
+  --track: rgb(255 255 255 / 0.1);
+  --card: rgb(255 255 255 / 0.045);
+  --card-quiet: rgb(255 255 255 / 0.03);
+  --card-line: rgb(255 255 255 / 0.08);
+  --card-hi: inset 0 1px 0 rgb(255 255 255 / 0.05);
+  --tile: rgb(255 255 255 / 0.06);
+  --chip: rgb(255 255 255 / 0.08);
+  --chip-press: rgb(255 255 255 / 0.14);
+  --divider: rgb(255 255 255 / 0.07);
+  --input-bg: rgb(255 255 255 / 0.05);
+  --input-line: rgb(255 255 255 / 0.12);
+  --seg-on: rgb(212 255 58 / 0.14);
+  --seg-on-line: rgb(212 255 58 / 0.45);
+  --seg-on-ink: #ffffff;
+  --glass-bg: rgb(22 22 24 / 0.82);
+  --glass-solid: #161618;
+  --sheet-bg: rgb(22 22 24 / 0.86);
+  --tab-ind: rgb(255 255 255 / 0.1);
+  --tab-ink: #8e8e93;
+  --tab-active: #ffffff;
+  --tab-icon: #d4ff3a;
+  --hero-bg:
+    radial-gradient(70% 60% at 100% -10%, rgb(212 255 58 / 0.16), transparent 70%),
+    #0b0b0c;
+  --rim: linear-gradient(170deg, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0.04) 50%, rgb(255 255 255 / 0.02));
+  --hero-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+  --num-glow: none;
+  --dot-miss: rgb(255 255 255 / 0.12);
+  --ring-grad: conic-gradient(from 0deg, #b5f23d, #d4ff3a 50%, #b5f23d);
+  --ring-glow: none;
+  --clock-grad: linear-gradient(180deg, #ffffff, #ffffff);
+  --clock-solid: #ffffff;
+  --now-bg: #0e0e0f;
+  --now-wash: rgb(212 255 58 / 0.1);
+  --now-border: linear-gradient(135deg, #d4ff3a, #b5f23d);
+  --now-shadow: 0 18px 44px -26px rgb(212 255 58 / 0.55);
+  --now-ico: rgb(212 255 58 / 0.14);
+  --done-border: linear-gradient(135deg, #d4ff3a, #b5f23d);
+  --halo-1: rgb(212 255 58 / 0.22);
+  --halo-2: rgb(212 255 58 / 0.05);
+  --live: #d4ff3a;
+  --warn-ink: #ffd60a;
+  --fig-tile: radial-gradient(90% 120% at 50% 0%, rgb(212 255 58 / 0.08), transparent 70%), #0c0c0d;
+  --leaf-1: #d4ff3a;
+  --leaf-2: #9be15d;
+  --leaf-3: #4cc38a;
+  --branch: #d8d8dc;
+  --quote-mark: #d4ff3a;
+  --toast-bg: rgb(28 28 30 / 0.86);
+  --cell-miss: rgb(255 255 255 / 0.08);
+  --cell-min: rgb(212 255 58 / 0.55);
+  --target: #ff8fa3;
+  --target-bg: rgb(255 55 95 / 0.14);
+  --done-tile: rgb(212 255 58 / 0.16);
+  --done-ink: #d4ff3a;
+  --banner-warn: rgb(255 214 10 / 0.07);
+  --dial-glow: 0 30px 70px -40px rgb(212 255 58 / 0.4);
+  --dial-sheen: radial-gradient(70% 45% at 50% 12%, rgb(255 255 255 / 0.05), transparent 70%);
+  --cell-full: linear-gradient(135deg, #d4ff3a, #b5f23d);
+  --cell-line: rgb(255 255 255 / 0.12);
+  --title-grad: linear-gradient(180deg, #ffffff, #ffffff);
+}
+
+/* Thème « auto » d'un téléphone en mode sombre : mêmes jetons de nuit. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #000000;
+    --surface: #0f0f10;
+    --surface-2: #18181a;
+    --line: #262628;
+    --text: #f5f5f7;
+    --text-2: #c7c7cc;
+    --muted: #8e8e93;
+    --accent: #d4ff3a;
+    --accent-2: #d4ff3a;
+    --accent-ink: #0a0a0a;
+    --accent-soft: rgb(212 255 58 / 0.12);
+    --gold: #d4ff3a;
+    --warn: #ffd60a;
+    --warn-soft: #2a2408;
+    --pos: #32d74b;
+    --neg: #ff453a;
+    --miss: #1c1c1e;
+    --series-1: #d4ff3a;
+    --series-raw: #636366;
+    --cat-1: #d4ff3a; --cat-2: #64d2ff; --cat-3: #32d74b; --cat-4: #ff6482;
+    --hero-a: #d4ff3a; --hero-b: #b5f23d; --hero-c: #d4ff3a;
+    --violet: #d4ff3a;
+    --wo-A: #5ed6c4;
+    --wo-B: #6cc6ff;
+    --wo-C: #ff7a93;
+    --wo-M: #b79cff;
+    --wo-P: #ffcf4a;
+    --fig-shoe: #c8f03a;
+    --fig-shoe-far: #8fae2a;
+    --figure-move: #d4ff3a;
+    --av-aura: #d4ff3a;
+    --tone: rgb(212 255 58 / 0.1);
+    --tone-2: rgb(212 255 58 / 0.16);
+    --tone-3: rgb(212 255 58 / 0.28);
+    --metal: linear-gradient(135deg, #d4ff3a, #b5f23d);
+    --metal-h: linear-gradient(90deg, #b5f23d, #d4ff3a);
+    --card-bg: rgb(255 255 255 / 0.045);
+    --dial: radial-gradient(circle at 50% 40%, #1a1a1c 0%, #111112 60%, #0a0a0b 100%);
+    --dot-bg: rgb(255 255 255 / 0.06);
+    --glass: rgb(20 20 22 / 0.62);
+    --sky-1: rgb(212 255 58 / 0.22);
+    --sky-2: rgb(212 255 58 / 0.08);
+    --sky-3: rgb(181 242 61 / 0.06);
+    --sky-4: transparent;
+    --grad-cta: linear-gradient(#d4ff3a, #d4ff3a);
+    --grad-data: linear-gradient(90deg, #b5f23d, #d4ff3a);
+    --cta-shadow: 0 10px 28px -14px rgb(212 255 58 / 0.55), inset 0 1px 0 rgb(255 255 255 / 0.5);
+    --track: rgb(255 255 255 / 0.1);
+    --card: rgb(255 255 255 / 0.045);
+    --card-quiet: rgb(255 255 255 / 0.03);
+    --card-line: rgb(255 255 255 / 0.08);
+    --card-hi: inset 0 1px 0 rgb(255 255 255 / 0.05);
+    --tile: rgb(255 255 255 / 0.06);
+    --chip: rgb(255 255 255 / 0.08);
+    --chip-press: rgb(255 255 255 / 0.14);
+    --divider: rgb(255 255 255 / 0.07);
+    --input-bg: rgb(255 255 255 / 0.05);
+    --input-line: rgb(255 255 255 / 0.12);
+    --seg-on: rgb(212 255 58 / 0.14);
+    --seg-on-line: rgb(212 255 58 / 0.45);
+    --seg-on-ink: #ffffff;
+    --glass-bg: rgb(22 22 24 / 0.82);
+    --glass-solid: #161618;
+    --sheet-bg: rgb(22 22 24 / 0.86);
+    --tab-ind: rgb(255 255 255 / 0.1);
+    --tab-ink: #8e8e93;
+    --tab-active: #ffffff;
+    --tab-icon: #d4ff3a;
+    --hero-bg:
+      radial-gradient(70% 60% at 100% -10%, rgb(212 255 58 / 0.16), transparent 70%),
+      #0b0b0c;
+    --rim: linear-gradient(170deg, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0.04) 50%, rgb(255 255 255 / 0.02));
+    --hero-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+    --num-glow: none;
+    --dot-miss: rgb(255 255 255 / 0.12);
+    --ring-grad: conic-gradient(from 0deg, #b5f23d, #d4ff3a 50%, #b5f23d);
+    --ring-glow: none;
+    --clock-grad: linear-gradient(180deg, #ffffff, #ffffff);
+    --clock-solid: #ffffff;
+    --now-bg: #0e0e0f;
+    --now-wash: rgb(212 255 58 / 0.1);
+    --now-border: linear-gradient(135deg, #d4ff3a, #b5f23d);
+    --now-shadow: 0 18px 44px -26px rgb(212 255 58 / 0.55);
+    --now-ico: rgb(212 255 58 / 0.14);
+    --done-border: linear-gradient(135deg, #d4ff3a, #b5f23d);
+    --halo-1: rgb(212 255 58 / 0.22);
+    --halo-2: rgb(212 255 58 / 0.05);
+    --live: #d4ff3a;
+    --warn-ink: #ffd60a;
+    --fig-tile: radial-gradient(90% 120% at 50% 0%, rgb(212 255 58 / 0.08), transparent 70%), #0c0c0d;
+    --leaf-1: #d4ff3a;
+    --leaf-2: #9be15d;
+    --leaf-3: #4cc38a;
+    --branch: #d8d8dc;
+    --quote-mark: #d4ff3a;
+    --toast-bg: rgb(28 28 30 / 0.86);
+    --cell-miss: rgb(255 255 255 / 0.08);
+    --cell-min: rgb(212 255 58 / 0.55);
+    --target: #ff8fa3;
+    --target-bg: rgb(255 55 95 / 0.14);
+    --done-tile: rgb(212 255 58 / 0.16);
+    --done-ink: #d4ff3a;
+    --banner-warn: rgb(255 214 10 / 0.07);
+    --dial-glow: 0 30px 70px -40px rgb(212 255 58 / 0.4);
+    --dial-sheen: radial-gradient(70% 45% at 50% 12%, rgb(255 255 255 / 0.05), transparent 70%);
+    --cell-full: linear-gradient(135deg, #d4ff3a, #b5f23d);
+    --cell-line: rgb(255 255 255 / 0.12);
+    --title-grad: linear-gradient(180deg, #ffffff, #ffffff);
+  }
+}
+
+/* ——— Bonshommes : blanc neutre, silhouette d'arrivée en gris, parallettes
+   en métal, élastique vert comme celui des tirages (le repos garde ses teintes) ——— */
+:root:root:root, :root .player, :root .player-fig {
+  --figure: #f2f2f5;
+  --figure-far: #b0b0b5;
+  --fig-line: #0a0a0a;
+  --fig-sole: #ececef;
+  --fig-sole-far: #a1a1a6;
+  --fig-ghost: #1c1c1e;
+  --fig-ghost-edge: #8e8e93;
+  --fig-band: #9be15d;
+}
+.fig-par rect, .fig-bar rect { fill: color-mix(in srgb, var(--figure, #f2f2f5) 45%, #3a3a3c); }
+@supports not (color: color-mix(in srgb, red, blue)) {
+  .fig .fig-par rect, .fig .fig-bar rect { fill: #8e8e93; }
+}
+
+/* ——— Règles aux couleurs écrites en dur ——— */
+::selection { background: rgb(212 255 58 / 0.4); color: var(--text); }
+
+/* cartes vedettes : la lueur du coin passe au volt */
+:root:root .card.program-hero,
+:root:root .card.money-hero {
+  background:
+    radial-gradient(70% 90% at 100% 0%, var(--tone-2), transparent 70%),
+    var(--card);
+}
+
+/* Ton double : anneau volt sur son disque de nuit */
+.avatar-btn, .avatar-big { --accent: #d4ff3a; --accent-2: #b5f23d; --bg: #0b0b0c; }
+.av-ground { fill: rgb(212 255 58 / 0.25); }
+
+/* Salle : la séance du jour s'éclaire en volt (sa lettre garde la couleur de la séance) */
+:root:root .card.gym-hero {
+  background:
+    radial-gradient(90% 70% at 50% 46%, var(--tone), transparent 72%),
+    var(--card) !important;
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--card-line));
+}
+.gym-hero .eyebrow { color: var(--accent); }
+.gym-stage { box-shadow: inset 0 0 0 1px var(--divider), 0 18px 40px -26px color-mix(in srgb, var(--accent) 70%, transparent); }
+.poste.planned { border-color: color-mix(in srgb, var(--accent) 60%, transparent); box-shadow: 0 10px 26px -18px var(--accent); }
+.poste-tag { background: var(--accent-soft); color: var(--accent); }
+.poste-tag.done { background: var(--done-tile); color: var(--done-ink); }
+.record b { color: var(--text); }
+:root:root .card.today-workout {
+  background:
+    radial-gradient(80% 100% at 0% 0%, var(--tone), transparent 70%),
+    var(--card) !important;
+}
+
+/* Leçons : le point de l'étape en cours brille en volt */
+.node.open .node-dot, .node.current .node-dot {
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 12%, transparent), 0 12px 30px -14px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+/* Message : verre neutre, liseré volt */
+:root:root #toast {
+  border-color: rgb(212 255 58 / 0.3);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 16px 40px -12px rgb(0 0 0 / 0.6), 0 0 30px -12px rgb(212 255 58 / 0.4);
+}
+
+/* ——— Lecteur de séance : une lueur par phase ——— */
+/* effort : volt ; repos : bleu glacier ; échauffement : ambre ; fin : volt */
+:root .player, :root .player.work {
+  --fill: #d4ff3a; --phase-ink: #e4ff8a; --phase-tint: rgb(212 255 58 / 0.16);
+  background:
+    radial-gradient(110% 52% at 50% -10%, rgb(212 255 58 / 0.3), transparent 72%),
+    #050505;
+}
+:root .player.rest {
+  --fill: #64d2ff; --phase-ink: #a5e6ff; --phase-tint: rgb(100 210 255 / 0.16);
+  background:
+    radial-gradient(110% 52% at 50% -10%, rgb(100 210 255 / 0.26), transparent 72%),
+    #03070a;
+}
+:root .player.warm, :root .player.prep {
+  --phase-ink: #ffe08a; --phase-tint: rgb(255 214 10 / 0.16);
+  background:
+    radial-gradient(110% 55% at 50% -8%, rgb(255 214 10 / 0.24), transparent 72%),
+    #070707;
+}
+:root .player.warm { --fill: #ffd60a; }
+:root .player.prep { --fill: #d4ff3a; --phase-ink: #e4ff8a; --phase-tint: rgb(212 255 58 / 0.16); }
+:root .player.done {
+  background:
+    radial-gradient(110% 55% at 50% -8%, rgb(212 255 58 / 0.32), transparent 72%),
+    #050505;
+}

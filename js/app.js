@@ -542,7 +542,7 @@ function viewToday() {
         <ul class="tight">${state.habits.map((h) => `<li><strong>${esc(h.name)}</strong> · min : ${esc(h.min)} · complet : ${esc(h.full)}</li>`).join('')}</ul>
         <p class="hint">La journée est validée dès que tous les minimums sont faits.</p></details>`)}
     ${fold('food', '🍽️', 'Alimentation', `Protéines · ${snacks ? `${snacks} grignotage${snacks > 1 ? 's' : ''}` : 'aucun grignotage'}`, `<span class="pill ${prot >= PROTEIN_GRAMS ? 'ok' : ''}">🍗 ${prot} g</span>`, snackCard(today))}
-    ${fold('night', '🌙', 'Nuit dernière', wake ? `Au lit avant ${clockFr(wake.bed)} · réveil ${clockFr(wake.nextWake)}` : `Ce soir : couché à ${weeklyBedtime(week, state.settings.bedtimeTarget)}`, `<span class="pill">${d.bed && d.wake ? fmtDuration(sleepDuration(d.bed, d.wake)) : 'à noter'}</span>`, `
+    ${fold('night', '🌙', 'Nuit dernière', wake ? `Coucher\u00a0${clockFr(wake.bed)} · réveil\u00a0${clockFr(wake.nextWake)}` : `Ce soir : couché à ${weeklyBedtime(week, state.settings.bedtimeTarget)}`, `<span class="pill">${d.bed && d.wake ? fmtDuration(sleepDuration(d.bed, d.wake)) : 'à noter'}</span>`, `
       <div class="grid2">
         <label>Couché à<input type="time" data-field="bed" data-key="${today}" value="${esc(d.bed ?? '')}"></label>
         <label>Levé à<input type="time" data-field="wake" data-key="${today}" value="${esc(d.wake ?? '')}"></label>

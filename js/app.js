@@ -433,7 +433,7 @@ function render() {
     revision: ['Révisions', 'Chaque carte revient juste avant l’oubli'],
   };
   const h = heads[tab];
-  const helpKey = tab === 'argent' ? 'moi' : tab;
+  const helpKey = HIDDEN_TABS[tab] ?? tab;
   const head = h && !(tab === 'argent' && state.ui.lesson) ? `<header class="page-head"><div class="page-title"><h1>${h[0]}</h1>${HELP[helpKey] ? helpBtn(helpKey) : ''}</div><p>${h[1]}</p></header>` : '';
   $('#view').innerHTML = head + views[tab]();
   $('#view').dataset.tab = tab;
@@ -522,7 +522,7 @@ function viewToday() {
   ${backupBanner(today)}
   ${planCard(today)}
   <div class="folds">
-    ${fold('urge', '📵', 'Envie de scroller ?', state.timers.urge.endAt ? 'Minuteur en cours' : 'J’attends 10 min avant d’ouvrir', urgePill(d), urgeBody(state.timers.urge))}
+    ${fold('urge', '📵', 'Envie de scroller ?', state.timers.urge.endAt ? 'Minuteur en cours' : d.urges ? `${d.urges} envie${d.urges > 1 ? 's' : ''} retardée${d.urges > 1 ? 's' : ''} aujourd’hui` : 'J’attends 10 min avant d’ouvrir', '<span></span>', urgeBody(state.timers.urge))}
     ${fold('habits', '✅', 'Habitudes', toDo ? `${toDo} à faire · min ou complet` : 'Toutes faites', `<span class="pill ${toDo ? '' : 'ok'}">${st.done}/${st.total}</span>`, `
       <ul class="habits">
         ${state.habits.map((h) => {

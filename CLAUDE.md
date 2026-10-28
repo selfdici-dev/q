@@ -16,8 +16,8 @@ L'utilisateur est débutant : explique simplement, en français.
 - `js/tree.js` : arbre du focus qui pousse pendant la session (unique par session, calculé).
 - `js/data.js`, `js/finance-data.js`, `js/quotes.js` : contenu (séances, leçons…).
 - `css/styles.css` : styles de base ; `css/luxe.css` : structure du design
-  (verre, cartes, jetons de couleur), chargé après ; `css/volt.css` : couleurs
-  « Noir & Volt » (fond noir, une seule couleur forte, le volt), chargé en dernier.
+  (verre, cartes, jetons de couleur), chargé après ; `css/cuivre.css` : couleurs
+  « Cuivre » (noir chaud, cuivre, crème, bois, bleu glacé), chargé en dernier.
 - `tests/*.test.js` : tests `node --test`. `sw.js` : cache hors ligne.
 
 ## Règles

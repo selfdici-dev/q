@@ -749,7 +749,7 @@ function snackCard(key) {
       <div class="protein-head"><strong>Protéines</strong> <span class="muted">${prot}/${PROTEIN_GRAMS} g</span></div>
       <div class="bar">${tweenBar('protein', Math.min(100, (prot / PROTEIN_GRAMS) * 100))}</div>
     </div>
-    <div class="chips protein-chips">${PROTEIN_CHIPS.map((id) => FOODS.find((f) => f.id === id)).map((f) => `<button class="chip" data-act="meal-add" data-f="${f.id}" aria-label="Noter ${esc(f.name)} (${esc(f.portion)}) : ${f.p} g de protéines, ${f.kcal} kcal">+ ${f.emoji} ${esc(f.name.split(' ')[0])} <small>${f.p} g</small></button>`).join('')}</div>
+    <div class="chips protein-chips">${PROTEIN_CHIPS.map((id) => FOODS.find((f) => f.id === id)).map((f) => `<button class="chip" data-act="meal-add" data-f="${f.id}" aria-label="Noter ${esc(f.name)} (${esc(f.portion)}) : ${f.p} g de protéines, ${f.kcal} kcal">+ ${f.emoji} ${esc(f.short ?? f.name.split(' ')[0])} <small>${f.p} g</small></button>`).join('')}</div>
     ${mealUndo ? `<div class="row"><button class="btn ghost small" data-act="meal-undo">Annuler le dernier ajout (${esc(FOODS.find((f) => f.id === mealUndo)?.name ?? '')})</button></div>` : ''}
     ${(() => { const t = mealTotals(d.meals); return t.kcal ? `<p class="hint">Repas notés aujourd’hui : ≈ ${fmtInt(t.kcal)} kcal sur ${fmtInt(kcalTarget(d.steps))} · le détail est dans Manger.</p>` : ''; })()}
     <p class="hint">Vise ${PROTEIN_GRAMS} g par jour : c’est ce qui garde tes muscles pendant que tu sèches.</p>

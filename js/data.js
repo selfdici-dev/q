@@ -148,10 +148,11 @@ export const PROTEIN_CHIPS = ['oeufs', 'skyr', 'fromage-blanc', 'steak', 'thon',
 // Journal des repas (onglet Manger) : des aliments courants, en portions
 // faciles à estimer à l'œil. kcal et protéines (p, en g) par portion,
 // d'après la table Ciqual (Anses), arrondis : des repères, à ±15 % près.
+// short : nom court des boutons protéines de Jour (sinon le premier mot).
 export const FOOD_CATS = [['prot', 'Protéines'], ['fec', 'Féculents'], ['vert', 'Fruits et légumes'], ['lait', 'Laitiers'], ['extra', 'Extras'], ['boire', 'Boissons']];
 export const FOODS = [
   { id: 'poulet', cat: 'prot', emoji: '🍗', name: 'Poulet', portion: '1 filet cuit (120 g)', kcal: 190, p: 37 },
-  { id: 'steak', cat: 'prot', emoji: '🥩', name: 'Steak haché 5 %', portion: '1 steak (100 g cru)', kcal: 130, p: 21 },
+  { id: 'steak', cat: 'prot', emoji: '🥩', name: 'Steak haché 5 %', short: 'Steak haché', portion: '1 steak (100 g cru)', kcal: 130, p: 21 },
   { id: 'thon', cat: 'prot', emoji: '🐟', name: 'Thon au naturel', portion: '1 boîte égouttée (110 g)', kcal: 120, p: 27 },
   { id: 'oeufs', cat: 'prot', emoji: '🥚', name: 'Œufs', portion: '2 œufs', kcal: 150, p: 13 },
   { id: 'jambon', cat: 'prot', emoji: '🍖', name: 'Jambon blanc', portion: '2 tranches (80 g)', kcal: 90, p: 16 },
@@ -170,7 +171,7 @@ export const FOODS = [
   { id: 'avocat', cat: 'vert', emoji: '🥑', name: 'Avocat', portion: '½ avocat', kcal: 120, p: 1 },
   { id: 'amandes', cat: 'vert', emoji: '🥜', name: 'Amandes ou noix', portion: '1 poignée (25 g)', kcal: 150, p: 5 },
   { id: 'skyr', cat: 'lait', emoji: '🫙', name: 'Skyr nature', portion: '1 pot (150 g)', kcal: 90, p: 15 },
-  { id: 'fromage-blanc', cat: 'lait', emoji: '🥣', name: 'Fromage blanc 0 %', portion: '1 bol (200 g)', kcal: 100, p: 15 },
+  { id: 'fromage-blanc', cat: 'lait', emoji: '🥣', name: 'Fromage blanc 0 %', short: 'Fromage blanc', portion: '1 bol (200 g)', kcal: 100, p: 15 },
   { id: 'yaourt', cat: 'lait', emoji: '🥄', name: 'Yaourt nature', portion: '1 pot (125 g)', kcal: 65, p: 5 },
   { id: 'fromage', cat: 'lait', emoji: '🧀', name: 'Fromage', portion: '1 portion (30 g)', kcal: 110, p: 7 },
   { id: 'lait', cat: 'lait', emoji: '🥛', name: 'Lait demi-écrémé', portion: '1 verre (25 cl)', kcal: 115, p: 8 },

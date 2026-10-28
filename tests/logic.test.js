@@ -519,6 +519,14 @@ test('repas : objectif selon les pas, total kcal et protéines, une entrée par 
   assert.equal(kcalTarget(12000), 2010); // ≈ 2 000 les jours à 12 000 pas
   assert.equal(kcalTarget(3000), 1650); // jamais sous 1 650
   assert.equal(kcalTarget(30000), 2150); // ni au-dessus de 2 150
+  // le menu des pas coche la valeur ronde la plus proche
+  const { nearestSteps, STEP_CHOICES } = await import('../js/logic.js');
+  assert.equal(nearestSteps(undefined), 8000);
+  assert.equal(nearestSteps(0), 8000);
+  assert.equal(nearestSteps(11200), 12000);
+  assert.equal(nearestSteps(2000), 3000);
+  assert.equal(nearestSteps(25000), 15000);
+  assert.ok(STEP_CHOICES.every((n) => kcalTarget(n) >= 1650 && kcalTarget(n) <= 2150));
   const poulet = { id: 'poulet', kcal: 190, p: 37 };
   const riz = { id: 'riz', kcal: 260, p: 5 };
   let m = addMeal(undefined, poulet);

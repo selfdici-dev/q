@@ -1201,6 +1201,9 @@ details.card.more .rules { margin-top: 10px; }
 .kcal-head { margin: 2px 0 0; }
 .kcal-head strong { font: 800 1.7rem/1 var(--rounded, var(--sans)); font-variant-numeric: tabular-nums; }
 .kcal-bar.over span { background: linear-gradient(90deg, var(--warn, #e0a64a), var(--neg, #e05a43)); }
+/* pas du jour : un petit menu, l'objectif de calories suit */
+label.steps-pick { flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0 2px; font-size: 0.85rem; color: var(--text-2); }
+label.steps-pick select { width: auto; min-height: 36px; padding: 0 10px; font-size: 0.85rem; }
 /* familles d'aliments : toutes visibles (sur deux lignes au besoin) */
 .food-cats { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 8px; }
 .food-cats .seg { flex: 0 0 auto; min-width: 0; min-height: 38px; padding: 0 12px; border-radius: 999px; }

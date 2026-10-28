@@ -321,6 +321,14 @@ export function kcalTarget(steps) {
   return Math.round(Math.min(2150, Math.max(1650, KCAL_BASE + 0.04 * (steps - 8000))) / 10) * 10;
 }
 
+// Pas du jour (comptés par une autre appli) : un petit menu de valeurs rondes,
+// la plus proche est cochée (8 000 sans pas notés, comme l'objectif).
+export const STEP_CHOICES = [3000, 5000, 8000, 10000, 12000, 15000];
+export function nearestSteps(steps) {
+  const v = Number.isFinite(steps) && steps > 0 ? steps : 8000;
+  return STEP_CHOICES.reduce((a, b) => (Math.abs(b - v) < Math.abs(a - v) ? b : a));
+}
+
 // Total des repas notés : kcal et protéines (g), arrondis.
 export function mealTotals(meals) {
   const t = (Array.isArray(meals) ? meals : []).reduce((s, m) => ({ kcal: s.kcal + m.n * m.kcal, p: s.p + m.n * m.p }), { kcal: 0, p: 0 });

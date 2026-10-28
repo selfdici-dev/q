@@ -4,7 +4,7 @@ import {
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
   dueCards, reviewCard, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
   sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, beatBy, combien, logChoices, toLog, recordKey, spokenStep, dropRecords, creatineWeek,
-  recordWall, wakePlan, bedGoal, clockFr, WAKE_PLAN, kcalTarget, mealTotals, addMeal,
+  recordWall, wakePlan, bedGoal, clockFr, WAKE_PLAN, kcalTarget, mealTotals, addMeal, STEP_CHOICES, nearestSteps,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl, baseName,
@@ -961,8 +961,6 @@ function recordsCard() {
   </section>`;
 }
 
-// Onglet Manger : des conseils, rien à calculer (protéines et grignotages se
-// notent dans Jour).
 // Ton assiette du jour : touche ce que tu manges (un aliment = une portion),
 // les calories et les protéines du jour s'additionnent, comparées à
 // l'objectif (selon tes pas). Des repères, pas une balance.
@@ -983,6 +981,7 @@ function mealsCard() {
     <p class="kcal-head"><strong>≈ ${fmtInt(tot.kcal)}</strong> <span class="muted">/ ${fmtInt(target)} kcal${d.steps ? ` · ${fmtInt(d.steps)} pas` : ''}</span></p>
     <div class="bar kcal-bar${left < -100 ? ' over' : ''}">${tweenBar('kcal', Math.min(100, (tot.kcal / target) * 100))}</div>
     <p class="hint">${status} · ≈ ${tot.p} g de protéines sur ${PROTEIN_GRAMS}</p>
+    <label class="steps-pick">Tes pas aujourd’hui (l’objectif suit)<select data-field="steps" data-key="${todayKey()}">${STEP_CHOICES.map((n) => `<option value="${n}"${n === nearestSteps(d.steps) ? ' selected' : ''}>${n >= 15000 ? `${fmtInt(n)} ou plus` : `≈ ${fmtInt(n)}`}</option>`).join('')}</select></label>
     <div class="food-cats" role="group" aria-label="Familles d’aliments">${FOOD_CATS.map(([c, label]) => `<button class="seg ${c === cat ? 'on' : ''}" data-act="food-cat" data-c="${c}" aria-pressed="${c === cat}">${label}</button>`).join('')}</div>
     <div class="food-grid">${FOODS.filter((f) => f.cat === cat).map((f) => `<button class="food" data-act="meal-add" data-f="${f.id}" aria-label="Noter ${esc(f.name)}, ${esc(f.portion)}, ${f.kcal} kcal"><span class="food-emo" aria-hidden="true">${f.emoji}</span><b>${esc(f.name)}</b><small>${esc(f.portion)}</small><small class="food-kcal">${f.kcal} kcal</small></button>`).join('')}</div>
     ${meals.length ? `<ul class="meal-list">${meals.map((m) => {
@@ -994,6 +993,7 @@ function mealsCard() {
   </section>`;
 }
 
+// Onglet Manger : ton assiette du jour en haut, puis les conseils.
 function viewFood() {
   return `
   ${mealsCard()}
@@ -2014,6 +2014,7 @@ document.addEventListener('change', (e) => {
     if (v === null) delete d[el.dataset.field];
     else d[el.dataset.field] = v;
     save();
+    if (el.dataset.field === 'steps') render(); // l'objectif de calories suit les pas
     toast('Enregistré.');
   } else if (el.dataset.setting) {
     const k = el.dataset.setting;

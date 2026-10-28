@@ -163,7 +163,7 @@ test('réveil progressif : 30 min plus tôt tous les 3 jours, de 10 h à 8 h 30,
   assert.equal(bedGoal(state, '2026-10-01'), '01:15');
   state.settings.wakePlanStart = '2026-10-02';
   assert.equal(bedGoal(state, '2026-10-01'), '02:00');
-  assert.deepEqual(['10:00', '09:30', '00:30', '02:00', '00:00'].map(clockFr), ['10 h', '9 h 30', '0 h 30', '2 h', 'minuit']);
+  assert.deepEqual(['10:00', '09:30', '00:30', '02:00', '00:00'].map(clockFr), ['10\u00a0h', '9\u00a0h\u00a030', '0\u00a0h\u00a030', '2\u00a0h', 'minuit']);
 });
 
 test('ratio gain/risque, courbe en R, pertes du jour, répartition', async () => {

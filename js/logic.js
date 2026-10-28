@@ -409,10 +409,11 @@ const clockMinutes = (hhmm) => { const [h, m] = hhmm.split(':').map(Number); ret
 const clockHHMM = (mins) => { const t = ((mins % 1440) + 1440) % 1440; return `${pad(Math.floor(t / 60))}:${pad(t % 60)}`; };
 
 // « 09:30 » -> « 9 h 30 », « 10:00 » -> « 10 h », « 00:00 » -> « minuit ».
+// Espaces insécables : « 10 h » ne se coupe jamais en fin de ligne.
 export function clockFr(hhmm) {
   const t = clockMinutes(hhmm);
   if (t === 0) return 'minuit';
-  return `${Math.floor(t / 60)} h${t % 60 ? ` ${pad(t % 60)}` : ''}`;
+  return `${Math.floor(t / 60)}\u00a0h${t % 60 ? `\u00a0${pad(t % 60)}` : ''}`;
 }
 
 export function wakePlan(start, today, target = '08:30', plan = WAKE_PLAN) {

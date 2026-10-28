@@ -321,6 +321,10 @@ export function kcalTarget(steps) {
   return Math.round(Math.min(2150, Math.max(1650, KCAL_BASE + 0.04 * (steps - 8000))) / 10) * 10;
 }
 
+// « 5 % », « 100 g », « 2 œufs » : un nombre reste collé au mot qui le suit
+// (espace insécable), jamais seul en fin de ligne.
+export const nbsp = (text) => String(text).replace(/([\d¼½]) (?=\S)/g, '$1\u00a0');
+
 // Pas du jour (comptés par une autre appli) : un petit menu de valeurs rondes,
 // la plus proche est cochée (8 000 sans pas notés, comme l'objectif).
 export const STEP_CHOICES = [3000, 5000, 8000, 10000, 12000, 15000];

@@ -527,6 +527,12 @@ test('repas : objectif selon les pas, total kcal et protéines, une entrée par 
   assert.equal(nearestSteps(2000), 3000);
   assert.equal(nearestSteps(25000), 15000);
   assert.ok(STEP_CHOICES.every((n) => kcalTarget(n) >= 1650 && kcalTarget(n) <= 2150));
+  // un nombre ne finit jamais seul en bout de ligne : « 5 % », « 100 g »
+  const { nbsp } = await import('../js/logic.js');
+  assert.equal(nbsp('Steak haché 5 %'), 'Steak haché 5\u00a0%');
+  assert.equal(nbsp('1 steak (100 g cru)'), '1\u00a0steak (100\u00a0g cru)');
+  assert.equal(nbsp('½ avocat'), '½\u00a0avocat');
+  assert.equal(nbsp('Poulet'), 'Poulet');
   const poulet = { id: 'poulet', kcal: 190, p: 37 };
   const riz = { id: 'riz', kcal: 260, p: 5 };
   let m = addMeal(undefined, poulet);

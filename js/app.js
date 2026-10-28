@@ -4,7 +4,7 @@ import {
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
   dueCards, reviewCard, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
   sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, beatBy, combien, logChoices, toLog, recordKey, spokenStep, dropRecords, creatineWeek,
-  recordWall, wakePlan, bedGoal, clockFr, WAKE_PLAN, kcalTarget, mealTotals, addMeal, STEP_CHOICES, nearestSteps,
+  recordWall, wakePlan, bedGoal, clockFr, WAKE_PLAN, kcalTarget, mealTotals, addMeal, STEP_CHOICES, nearestSteps, nbsp,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl, baseName,
@@ -983,13 +983,13 @@ function mealsCard() {
     <p class="hint">${status} · ≈ ${tot.p} g de protéines sur ${PROTEIN_GRAMS}</p>
     <label class="steps-pick">Tes pas aujourd’hui (l’objectif suit)<select data-field="steps" data-key="${todayKey()}">${STEP_CHOICES.map((n) => `<option value="${n}"${n === nearestSteps(d.steps) ? ' selected' : ''}>${n >= 15000 ? `${fmtInt(n)} ou plus` : `≈ ${fmtInt(n)}`}</option>`).join('')}</select></label>
     <div class="food-cats" role="group" aria-label="Familles d’aliments">${FOOD_CATS.map(([c, label]) => `<button class="seg ${c === cat ? 'on' : ''}" data-act="food-cat" data-c="${c}" aria-pressed="${c === cat}">${label}</button>`).join('')}</div>
-    <div class="food-grid">${FOODS.filter((f) => f.cat === cat).map((f) => `<button class="food" data-act="meal-add" data-f="${f.id}" aria-label="Noter ${esc(f.name)}, ${esc(f.portion)}, ${f.kcal} kcal"><span class="food-emo" aria-hidden="true">${f.emoji}</span><b>${esc(f.name)}</b><small>${esc(f.portion)}</small><small class="food-kcal">${f.kcal} kcal</small></button>`).join('')}</div>
+    <div class="food-grid">${FOODS.filter((f) => f.cat === cat).map((f) => `<button class="food" data-act="meal-add" data-f="${f.id}" aria-label="Noter ${esc(f.name)}, ${esc(f.portion)}, ${f.kcal} kcal"><span class="food-emo" aria-hidden="true">${f.emoji}</span><b>${esc(nbsp(f.name))}</b><small>${esc(nbsp(f.portion))}</small><small class="food-kcal">${f.kcal} kcal</small></button>`).join('')}</div>
     ${meals.length ? `<ul class="meal-list">${meals.map((m) => {
       const f = FOODS.find((x) => x.id === m.f);
-      return `<li><span class="meal-name">${f?.emoji ?? '🍽️'} ${esc(f?.name ?? m.f)}${m.n !== 1 ? ` <small>×${half(m.n)}</small>` : ''}</span><span class="meal-kcal">${fmtInt(m.n * m.kcal)} kcal</span>
+      return `<li><span class="meal-name">${f?.emoji ?? '🍽️'} ${esc(nbsp(f?.name ?? m.f))}${m.n !== 1 ? ` <small>×${half(m.n)}</small>` : ''}</span><span class="meal-kcal">${fmtInt(m.n * m.kcal)} kcal</span>
         <button class="meal-step" data-act="meal-step" data-f="${m.f}" data-v="-0.5" aria-label="Une demi-portion de ${esc(f?.name ?? m.f)} en moins">−</button><button class="meal-step" data-act="meal-step" data-f="${m.f}" data-v="0.5" aria-label="Une demi-portion de ${esc(f?.name ?? m.f)} en plus">+</button></li>`;
     }).join('')}</ul>` : '<p class="muted">Touche ce que tu manges : un aliment = une portion (− et + par demi-portion ensuite).</p>'}
-    <p class="hint">Des repères, pas une balance : à ±15 % près, c’est la tendance de la semaine qui compte. L’huile de cuisson compte (90 kcal la cuillère). Les protéines notées ici comptent aussi dans Jour.</p>
+    <p class="hint">Des repères, pas une balance : à ±15\u00a0% près, c’est la tendance de la semaine qui compte. L’huile de cuisson compte (90 kcal la cuillère). Les protéines notées ici comptent aussi dans Jour.</p>
   </section>`;
 }
 

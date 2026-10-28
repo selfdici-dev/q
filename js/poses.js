@@ -547,6 +547,18 @@ export const POSES = {
       { at: [60, 41], torso: -90, neck: -90, armN: { to: [83, 19.5], bend: -1 }, armF: { to: [37, 19.5], bend: 1 }, legN: { to: [63, 70], bend: -1 }, legF: { to: [57, 70], bend: 1 } },
     ],
   },
+  'Élévations latérales à l’élastique': {
+    // De face, debout sur le milieu de l'élastique, une boucle dans chaque main :
+    // les bras montent sur les côtés jusqu'à hauteur d'épaules (coudes à peine
+    // pliés, mains un peu sous les coudes), puis redescendent lentement.
+    // Rythme de la consigne : montée 1 s, descente 2 s. Mains visées depuis le
+    // milieu des épaules (chaque épaule est écartée de 3,9 au dessin).
+    front: true, tempo: [1, 2], pause: [0.3, 0.3], band: [['footN', 'handN'], ['footF', 'handF']],
+    frames: [
+      { at: [60, 41], torso: -90, neck: -90, armN: { to: [62.4, 41.2], bend: -1 }, armF: { to: [57.6, 41.2], bend: 1 }, legN: { to: [63, 70], bend: -1 }, legF: { to: [57, 70], bend: 1 } },
+      { at: [60, 41], torso: -90, neck: -90, armN: { to: [82.2, 21.5], bend: -1 }, armF: { to: [37.8, 21.5], bend: 1 }, legN: { to: [63, 70], bend: -1 }, legF: { to: [57, 70], bend: 1 } },
+    ],
+  },
   // Ronde 12 : séance B calisthénie (planche penchée, L-sit)
   'Planche penchée': {
     dur: 4, hold: 0.35,

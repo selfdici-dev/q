@@ -94,14 +94,22 @@ test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoi
   assert.ok(ex('B').filter((e) => /dos/i.test(e.target)).length >= 2);
   for (const e of ex('B').filter((x) => /élastique/i.test(x.name))) assert.match(e.cue, /Sans élastique : /, e.name);
   // B v3 : l'élastique pour les 2 tirages et un curl biceps (il aime les curls, les biceps n'avaient rien de direct)
-  assert.equal(ex('B').filter((e) => /élastique/i.test(e.name)).length, 3);
+  // B v4 : + les élévations latérales (après un mois, il veut le V : épaules un peu plus larges)
+  assert.equal(ex('B').filter((e) => /élastique/i.test(e.name)).length, 4);
   assert.ok(ex('B').some((e) => e.name === 'Curl biceps à l’élastique'));
   for (const e of ex('B').filter((x) => /parallettes/i.test(x.cue))) assert.match(e.cue, /Sans parallettes : /, e.name);
   assert.ok(ex('B').some((e) => /^Pompes pike/.test(e.name)) && ex('B').some((e) => /^L-sit/.test(e.name)));
   // B : deux exercices pour des pectoraux fermes (pompes et pompes serrées)
   assert.ok(ex('B').filter((e) => /pectoraux/i.test(e.target)).length >= 2);
-  // rien ne vise la largeur : pas d'exercice d'épaules latérales ni de trapèzes
-  for (const w of WORKOUTS) for (const e of w.exercises) assert.doesNotMatch(`${e.name} ${e.target}`, /latérales|trapèze|largeur/i);
+  // trapèzes : jamais (ils tassent le cou). Largeur : seulement les élévations latérales de la B,
+  // choisies après un mois pour le V (avant : « rien ne vise la largeur »)
+  for (const w of WORKOUTS) for (const e of w.exercises) assert.doesNotMatch(`${e.name} ${e.target}`, /trapèze/i);
+  const wide = WORKOUTS.flatMap((w) => w.exercises.map((e) => [w.id, e.name])).filter(([, n]) => /latérales/i.test(n) && !/^Planche/.test(n));
+  assert.deepEqual(wide, [['B', 'Élévations latérales à l’élastique']]);
+  // juste après le curl : même élastique (le noir, le plus léger), même position
+  const names = ex('B').map((e) => e.name);
+  assert.equal(names.indexOf('Élévations latérales à l’élastique'), names.indexOf('Curl biceps à l’élastique') + 1);
+  assert.match(ex('B').find((e) => /^Élévations/.test(e.name)).cue, /élastique noir/);
 });
 
 test('A v4 : 2 tours durs plutôt que 3 mous, et une version plus dure quand la fourchette est atteinte', () => {

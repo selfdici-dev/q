@@ -397,6 +397,54 @@ export function weeklyBedtime(week, finalTarget = '23:30', start = '01:15') {
   return minutesToHHMM(Math.max(f, s - (week - 1) * 15));
 }
 
+// ---------- Réveil progressif ----------
+// Le corps se recale par le réveil et la lumière du matin, pas en se
+// couchant plus tôt sans sommeil : le réveil avance de 30 min tous les
+// 3 jours, de 10 h jusqu'à la cible, 7 jours sur 7, et le coucher suit
+// (au plus tard 8 h avant le réveil du lendemain). start : le jour du
+// 1er réveil visé (settings.wakePlanStart), null si le plan n'est pas lancé.
+export const WAKE_PLAN = { from: '10:00', step: 30, every: 3, inBed: 8 * 60 };
+
+const clockMinutes = (hhmm) => { const [h, m] = hhmm.split(':').map(Number); return h * 60 + m; };
+const clockHHMM = (mins) => { const t = ((mins % 1440) + 1440) % 1440; return `${pad(Math.floor(t / 60))}:${pad(t % 60)}`; };
+
+// « 09:30 » -> « 9 h 30 », « 10:00 » -> « 10 h », « 00:00 » -> « minuit ».
+export function clockFr(hhmm) {
+  const t = clockMinutes(hhmm);
+  if (t === 0) return 'minuit';
+  return `${Math.floor(t / 60)} h${t % 60 ? ` ${pad(t % 60)}` : ''}`;
+}
+
+export function wakePlan(start, today, target = '08:30', plan = WAKE_PLAN) {
+  if (!start) return null;
+  const f = clockMinutes(plan.from);
+  const t = clockMinutes(target);
+  // Réveil visé le jour n du plan (1 = premier réveil).
+  const wakeOn = (n) => Math.max(t, f - plan.step * Math.floor(Math.max(0, n - 1) / plan.every));
+  const steps = [];
+  for (let w = f; w > t; w -= plan.step) steps.push(w);
+  steps.push(t);
+  const day = diffDays(start, today) + 1;
+  const next = wakeOn(day + 1);
+  return {
+    day, // 0 ou moins : le 1er réveil n'est pas encore passé
+    wake: day >= 1 ? clockHHMM(wakeOn(day)) : null, // ce matin
+    nextWake: clockHHMM(next), // demain matin
+    bed: clockHHMM(next - plan.inBed), // ce soir, au plus tard
+    steps: steps.map(clockHHMM), // les réveils successifs, de 10 h à la cible
+    stage: steps.indexOf(next), // celui de demain dans steps
+    reached: next === t,
+    goalBed: clockHHMM(t - plan.inBed), // le coucher une fois la cible atteinte
+  };
+}
+
+// Coucher visé ce soir : celui du réveil progressif s'il est lancé, sinon
+// celui du programme (15 min plus tôt chaque semaine).
+export function bedGoal(state, today) {
+  const p = wakePlan(state.settings.wakePlanStart, today, state.settings.wakeTarget);
+  return p ? p.bed : weeklyBedtime(weekNumber(state, today), state.settings.bedtimeTarget);
+}
+
 // Le 3e jour de chaque sprint est un « jour minimum » prévu.
 export function isPlannedMinimumDay(state, today) {
   return diffDays(state.settings.startDate, today) % 7 === 2;

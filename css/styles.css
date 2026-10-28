@@ -1031,6 +1031,16 @@ details.card.more .rules { margin-top: 10px; }
 .fold-body .goal-list { margin-top: 8px; }
 .fold-body > .week { margin-bottom: 4px; }
 .apps-cat { margin: 14px 0 4px; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+/* Réveil progressif (Jour > Nuit dernière) : les réveils successifs en frise */
+.wake { margin-top: 14px; display: grid; gap: 8px; }
+.wake p { margin: 0; }
+.wake .btn { justify-self: start; }
+.wake-steps { list-style: none; margin: 2px 0; padding: 0; display: flex; flex-wrap: wrap; gap: 5px; }
+.wake-steps li { flex: 1 0 auto; padding: 8px 2px; border: 1px solid var(--line); border-radius: 12px; text-align: center; font-size: 0.85rem; font-weight: 650; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.wake-steps li.past { opacity: 0.6; }
+.wake-steps li.past::before { content: '✓ '; }
+.wake-steps li.now { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+
 /* Salle : séance du jour, postes, mur des records */
 .gym-head { display: grid; grid-template-columns: 56px 1fr; gap: 14px; align-items: center; }
 .gym-head h2 { margin: 0; font-size: 1.3rem; }

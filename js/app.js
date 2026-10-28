@@ -4,7 +4,7 @@ import {
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
   dueCards, reviewCard, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
   sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, recordKey, spokenStep, dropRecords, creatineWeek,
-  recordWall,
+  recordWall, wakePlan, bedGoal, clockFr, WAKE_PLAN,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl, baseName,
@@ -34,6 +34,8 @@ function freshState() {
     settings: {
       startDate: todayKey(),
       bedtimeTarget: '23:30',
+      wakeTarget: '08:30', // réveil visé au bout du réveil progressif
+      wakePlanStart: null, // jour du 1er réveil visé (null : plan pas lancé)
       screenTarget: 180,
       weightTarget: 70,
       level: 1,
@@ -495,6 +497,7 @@ function viewToday() {
   const snacks = d.snacks?.length ?? 0;
   const week = weekNumber(state, today);
   const grid = regularityGrid(state, today);
+  const wake = wakePlan(state.settings.wakePlanStart, today, state.settings.wakeTarget);
   return `
   <header class="hero">
     <div class="hero-top">
@@ -539,16 +542,32 @@ function viewToday() {
         <ul class="tight">${state.habits.map((h) => `<li><strong>${esc(h.name)}</strong> · min : ${esc(h.min)} · complet : ${esc(h.full)}</li>`).join('')}</ul>
         <p class="hint">La journée est validée dès que tous les minimums sont faits.</p></details>`)}
     ${fold('food', '🍽️', 'Alimentation', `Protéines · ${snacks ? `${snacks} grignotage${snacks > 1 ? 's' : ''}` : 'aucun grignotage'}`, `<span class="pill ${prot >= PROTEIN_GRAMS ? 'ok' : ''}">🍗 ${prot} g</span>`, snackCard(today))}
-    ${fold('night', '🌙', 'Nuit dernière', `Ce soir : couché à ${weeklyBedtime(week, state.settings.bedtimeTarget)}`, `<span class="pill">${d.bed && d.wake ? fmtDuration(sleepDuration(d.bed, d.wake)) : 'à noter'}</span>`, `
+    ${fold('night', '🌙', 'Nuit dernière', wake ? `Au lit avant ${clockFr(wake.bed)} · réveil ${clockFr(wake.nextWake)}` : `Ce soir : couché à ${weeklyBedtime(week, state.settings.bedtimeTarget)}`, `<span class="pill">${d.bed && d.wake ? fmtDuration(sleepDuration(d.bed, d.wake)) : 'à noter'}</span>`, `
       <div class="grid2">
         <label>Couché à<input type="time" data-field="bed" data-key="${today}" value="${esc(d.bed ?? '')}"></label>
         <label>Levé à<input type="time" data-field="wake" data-key="${today}" value="${esc(d.wake ?? '')}"></label>
       </div>
-      <p class="hint">Cible de la semaine ${week} : couché à <strong>${weeklyBedtime(week, state.settings.bedtimeTarget)}</strong>, levé à heure fixe. On avance de 15 min par semaine jusqu’à ${esc(state.settings.bedtimeTarget)}.</p>`)}
+      ${wake ? wakeBody(wake) : `<p class="hint">Cible de la semaine ${week} : couché à <strong>${weeklyBedtime(week, state.settings.bedtimeTarget)}</strong>, levé à heure fixe. On avance de 15 min par semaine jusqu’à ${esc(state.settings.bedtimeTarget)}.</p>
+      <div class="wake">
+        <p><strong>⏰ Réveil progressif</strong> : debout à ${clockFr(WAKE_PLAN.from)}, puis ${WAKE_PLAN.step} min plus tôt tous les ${WAKE_PLAN.every} jours jusqu’à ${clockFr(state.settings.wakeTarget)}. Le coucher suit tout seul.</p>
+        <button class="btn primary small" data-act="wake-start">Commencer demain matin</button>
+      </div>`}`)}
     ${fold('heat', '📅', 'Régularité', '12 semaines d’un coup d’œil', `<span class="pill">${grid.valid}/${grid.elapsed}</span>`, heatmap(grid))}
     ${fold('rules', '🧭', 'Mes règles', '« Si… alors… »', `<span class="pill">${state.rules.length}</span>`, `<ul class="rules">${state.rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
       <p class="hint">Modifie-les dans Moi > Réglages.</p>`)}
     ${fold('quote', '💬', 'Pensée du jour', esc(q.author), '<span></span>', `<blockquote class="quote"><p>« ${esc(q.text)} »</p><cite>${esc(q.author)}</cite></blockquote>`)}
+  </div>`;
+}
+
+// Réveil progressif : les réveils successifs (passés, celui de demain, à
+// venir), ce soir et demain matin, et comment tenir.
+function wakeBody(p) {
+  return `<div class="wake">
+    <p class="eyebrow">⏰ Réveil progressif · ${p.day >= 1 ? `jour ${p.day}` : 'commence demain'}</p>
+    <ol class="wake-steps">${p.steps.map((s, i) => `<li class="${i < p.stage ? 'past' : i === p.stage ? 'now' : ''}"${i === p.stage ? ' aria-current="step"' : ''}>${clockFr(s)}</li>`).join('')}</ol>
+    <p>Ce soir : au lit avant <strong>${clockFr(p.bed)}</strong>. Demain : debout à <strong>${clockFr(p.nextWake)}</strong>, week-end compris.</p>
+    <p class="hint">${p.reached ? 'Cible atteinte : garde ces heures, 7 jours sur 7.' : '30 min plus tôt tous les 3 jours.'} Au réveil, 10 min de lumière du jour, dehors ou à la fenêtre. Nuit ratée ? Lève-toi quand même à l’heure : c’est le réveil qui recale le corps.</p>
+    <button class="btn ghost small" data-act="wake-stop">Arrêter le plan</button>
   </div>`;
 }
 
@@ -1184,6 +1203,7 @@ function viewProgram() {
   const weights = rollingAverage(series(state, 'weight', today, 14));
   const weight = weights.at(-1)?.value ?? null;
   const bed = avgLast7('bed', today, bedtimeMinutes);
+  const wake = wakePlan(state.settings.wakePlanStart, today, state.settings.wakeTarget);
   const lastTest = state.tests.at(-1) ?? {};
   const lessons = Object.keys(state.lessons).length;
   const row = (label, now, target, fmt, better) => {
@@ -1195,7 +1215,7 @@ function viewProgram() {
     <div class="card-head"><h2>Semaine ${week}/12</h2><span class="pill">${esc(phase.name)}</span></div>
     <div class="bar"><span style="width:${(week / 12) * 100}%"></span></div>
     <ul class="tight">${phase.focus.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>
-    <p class="hint">Coucher cible cette semaine : <strong>${weeklyBedtime(week, state.settings.bedtimeTarget)}</strong>. Le 3ᵉ jour de chaque sprint est un jour minimum prévu.</p>
+    <p class="hint">Coucher cible ce soir : <strong>${bedGoal(state, today)}</strong>. Le 3ᵉ jour de chaque sprint est un jour minimum prévu.</p>
   </section>
   ${appsFold()}
   <section class="card">
@@ -1204,7 +1224,7 @@ function viewProgram() {
       <thead><tr><th>Mesure</th><th>Actuel</th><th>Cible</th><th></th></tr></thead>
       <tbody>
         ${screen !== null ? row('Écran (moy. 7 j)', screen, next.screen, fmtDuration, 'lower') : ''}
-        ${row('Coucher (moy. 7 j)', bed, bedtimeMinutes(weeklyBedtime(next.week, state.settings.bedtimeTarget)), minutesToHHMM, 'lower')}
+        ${row('Coucher (moy. 7 j)', bed, bedtimeMinutes(wake ? wake.goalBed : weeklyBedtime(next.week, state.settings.bedtimeTarget)), minutesToHHMM, 'lower')}
         ${weight !== null ? row('Poids (moy. 7 j)', weight, next.weight, (v) => `${Number(v).toFixed(1)} kg`, 'lower') : ''}
         ${row('Pompes', lastTest.pushups ?? null, next.pushups, (v) => v, 'higher')}
         ${row('Planche', lastTest.plank ?? null, next.plank, (v) => `${v} s`, 'higher')}
@@ -1378,8 +1398,10 @@ function viewSettings() {
     <div class="card-head"><h2>Réglages</h2></div>
     <div class="grid2">
       <label>Coucher cible<input type="time" data-setting="bedtimeTarget" value="${esc(s.bedtimeTarget)}"></label>
+      <label>Réveil visé<input type="time" data-setting="wakeTarget" value="${esc(s.wakeTarget)}"></label>
       <label>Date de départ<input type="date" data-setting="startDate" value="${s.startDate}" max="${today}"></label>
     </div>
+    <p class="hint">Le réveil visé est la fin du réveil progressif (Jour > Nuit dernière). Une fois lancé, c’est lui qui fixe ton coucher.</p>
   </section>
   <section class="card">
     <div class="card-head"><h2>Données</h2></div>
@@ -1776,6 +1798,20 @@ const actions = {
     state.timers.urge.endAt = Date.now() + URGE_DELAY * 1000;
     openFolds.add('urge'); // le minuteur reste en vue dans Jour
     audioCtx ??= new AudioContext();
+    save();
+    render();
+  },
+  'wake-start'() {
+    const today = todayKey();
+    state.settings.wakePlanStart = addDays(today, 1);
+    openFolds.add('night');
+    save();
+    render();
+    toast(`C’est parti : demain, debout à ${clockFr(wakePlan(state.settings.wakePlanStart, today, state.settings.wakeTarget).nextWake)}.`);
+  },
+  'wake-stop'() {
+    if (!confirm('Arrêter le réveil progressif ? Tu pourras le relancer.')) return;
+    state.settings.wakePlanStart = null;
     save();
     render();
   },

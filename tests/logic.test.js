@@ -138,6 +138,34 @@ test('coucher cible par semaine', async () => {
   assert.equal(weeklyBedtime(12), '23:30');
 });
 
+test('réveil progressif : 30 min plus tôt tous les 3 jours, de 10 h à 8 h 30, coucher 8 h avant', async () => {
+  const { wakePlan, bedGoal, clockFr } = await import('../js/logic.js');
+  assert.equal(wakePlan(null, '2026-11-01'), null);
+  // lancé le 31 : le 1er réveil visé est le 1er novembre ; ce soir, au lit avant 2 h
+  let p = wakePlan('2026-11-01', '2026-10-31');
+  assert.deepEqual([p.day, p.wake, p.nextWake, p.bed, p.stage], [0, null, '10:00', '02:00', 0]);
+  assert.deepEqual(p.steps, ['10:00', '09:30', '09:00', '08:30']);
+  // jours 1 à 3 : 10 h ; le soir du jour 3, le coucher suit le réveil du jour 4 (9 h 30)
+  const at = (n) => wakePlan('2026-11-01', addDays('2026-11-01', n - 1));
+  assert.deepEqual([at(1).wake, at(1).bed, at(3).wake, at(3).nextWake, at(3).bed], ['10:00', '02:00', '10:00', '09:30', '01:30']);
+  assert.deepEqual([4, 7, 10, 40].map((n) => at(n).wake), ['09:30', '09:00', '08:30', '08:30']);
+  assert.equal(at(9).bed, '00:30');
+  assert.equal(at(1).goalBed, '00:30');
+  assert.deepEqual([at(8).reached, at(9).reached, at(9).stage], [false, true, 3]);
+  // une autre cible : pas de 30 min puis la cible ; une cible plus tardive que 10 h reste fixe
+  assert.deepEqual(wakePlan('2026-11-01', '2026-11-01', '08:45').steps, ['10:00', '09:30', '09:00', '08:45']);
+  assert.deepEqual(wakePlan('2026-11-01', '2026-11-01', '07:30').steps.length, 6);
+  assert.equal(wakePlan('2026-11-01', '2026-11-01', '07:30').bed, '02:00');
+  assert.equal(wakePlan('2026-11-01', '2026-11-20', '07:30').bed, '23:30');
+  assert.deepEqual(wakePlan('2026-11-01', '2026-11-05', '10:30').steps, ['10:30']);
+  // le coucher visé suit le plan s'il est lancé, sinon le programme de 12 semaines
+  const state = { settings: { startDate: '2026-10-01', bedtimeTarget: '23:30', wakePlanStart: null, wakeTarget: '08:30' } };
+  assert.equal(bedGoal(state, '2026-10-01'), '01:15');
+  state.settings.wakePlanStart = '2026-10-02';
+  assert.equal(bedGoal(state, '2026-10-01'), '02:00');
+  assert.deepEqual(['10:00', '09:30', '00:30', '02:00', '00:00'].map(clockFr), ['10 h', '9 h 30', '0 h 30', '2 h', 'minuit']);
+});
+
 test('ratio gain/risque, courbe en R, pertes du jour, répartition', async () => {
   const { rewardRisk, equityCurve, lossesToday, allocation } = await import('../js/logic.js');
   assert.equal(rewardRisk({ entry: 100, stop: 95, target: 110 }), 2);

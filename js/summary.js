@@ -1,8 +1,9 @@
 // Textes courts à coller dans Claude : bilan du jour (onglet Jour) et bilan
 // de la semaine (Moi > Bilan). Logique pure, testée par tests/summary.test.js.
 import {
-  addDays, diffDays, fromKey, dayStatus, chain, weekNumber, weeklyBedtime,
+  addDays, diffDays, fromKey, dayStatus, chain, weekNumber,
   sleepDuration, bedtimeMinutes, minutesToHHMM, SPRINT_LENGTH, SPRINT_PASS, SPRINT_COUNT, proteinGrams,
+  wakePlan, bedGoal,
 } from './logic.js';
 import { WORKOUTS, WEEK_PLAN, PROTEIN_GRAMS } from './data.js';
 
@@ -13,6 +14,15 @@ const dateLabel = (key, opts) => fromKey(key).toLocaleDateString('fr-FR', opts);
 const habitName = (state, id) => state.habits.find((h) => h.id === id)?.name ?? id;
 const workoutName = (id) => WORKOUTS.find((w) => w.id === id)?.name ?? id;
 const dayIds = (state, d) => d.ids ?? state.habits.map((h) => h.id);
+
+// Réveil progressif lancé : où il en est ce jour-là (rien sinon).
+function wakeLines(state, key) {
+  const p = wakePlan(state.settings.wakePlanStart, key, state.settings.wakeTarget);
+  if (!p) return [];
+  return [p.day >= 1
+    ? `Réveil progressif : jour ${p.day}, réveil visé ${p.wake} ce matin, ${p.nextWake} demain`
+    : `Réveil progressif : commence demain (réveil visé ${p.nextWake})`];
+}
 
 function sessionLine(planned, done) {
   const real = done.filter((w) => w !== 'M');
@@ -39,7 +49,8 @@ export function daySummary(state, key) {
     `Protéines : ${proteinGrams(d)}/${PROTEIN_GRAMS} g`,
     ...(state.settings?.creatine ? [`Créatine : ${d.creatine ? 'prise ✓' : 'pas encore prise'}`] : []),
     `Grignotages : ${snacks.length ? `${snacks.length} (${snacks.map((s) => `${s.time} ${s.trigger}`).join(', ')})` : 'aucun'}${resisted ? ` · ${plural(resisted, 'envie')} résistée${resisted > 1 ? 's' : ''}` : ''}`,
-    `Coucher visé ce soir : ${weeklyBedtime(weekNumber(state, key), state.settings.bedtimeTarget)}`,
+    `Coucher visé ce soir : ${bedGoal(state, key)}`,
+    ...wakeLines(state, key),
   ];
   if (d.bed) {
     const slept = sleepDuration(d.bed, d.wake);
@@ -53,6 +64,7 @@ export function daySummary(state, key) {
 export function weekSummary(state, first, today) {
   const n = Math.max(1, Math.min(SPRINT_LENGTH, diffDays(first, today) + 1));
   const last = addDays(first, SPRINT_LENGTH - 1);
+  const end = addDays(first, n - 1); // dernier jour compté : aujourd'hui, ou la fin du sprint
   const week = weekNumber(state, first);
   const days = Array.from({ length: n }, (_, i) => {
     const key = addDays(first, i);
@@ -100,7 +112,8 @@ export function weekSummary(state, first, today) {
     `Protéines : ${Math.round(protein)} g/jour en moyenne · objectif (${PROTEIN_GRAMS} g) atteint ${proteinDays} jour${proteinDays > 1 ? 's' : ''} sur ${n}`,
     ...(state.settings?.creatine ? [`Créatine : ${days.filter((x) => x.d.creatine === true).length}/${n} jours`] : []),
     `Grignotages : ${snacks.length || 'aucun'}${top ? ` · déclencheur n° 1 : ${top[0]} (${top[1]} fois)` : ''}${resisted ? ` · ${plural(resisted, 'envie')} résistée${resisted > 1 ? 's' : ''}` : ''}`,
-    `Coucher : visé ${weeklyBedtime(week, state.settings.bedtimeTarget)}${beds.length ? ` · réel en moyenne ${minutesToHHMM(avg(beds))} (${plural(beds.length, 'nuit')} notée${beds.length > 1 ? 's' : ''})` : ''}${sleeps.length ? ` · sommeil moyen ${hours(avg(sleeps))}` : ''}`,
+    `Coucher : visé ${bedGoal(state, end)}${beds.length ? ` · réel en moyenne ${minutesToHHMM(avg(beds))} (${plural(beds.length, 'nuit')} notée${beds.length > 1 ? 's' : ''})` : ''}${sleeps.length ? ` · sommeil moyen ${hours(avg(sleeps))}` : ''}`,
+    ...wakeLines(state, end),
   ];
   if (weights.length) {
     lines.push(weights.length > 1

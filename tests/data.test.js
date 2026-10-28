@@ -135,6 +135,10 @@ test('P : au parc, à la barre, à la place d’une C ; tractions par étapes', 
   for (const e of P.exercises) assert.ok(e.why && e.why.length <= 110 && !/gonfl|masse/i.test(e.why), e.name);
 });
 
+test('Salle : chaque séance a un exercice phare, qui fait partie de la séance', () => {
+  for (const w of WORKOUTS) assert.ok(w.exercises.some((e) => e.name === w.star), `${w.id} : ${w.star}`);
+});
+
 test('nom de base sans précision entre parenthèses', () => {
   assert.equal(baseName('Roue abdominale à genoux (1/2)'), 'Roue abdominale à genoux');
   assert.equal(baseName('Planche latérale (gauche)'), 'Planche latérale');

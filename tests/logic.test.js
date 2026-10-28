@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   todayKey, addDays, chain, recoveryMode, sprintInfo, bedtimeMinutes, minutesToHHMM,
-  sleepDuration, rollingAverage, nextAction, retireHabits, dayStatus,
+  sleepDuration, rollingAverage, nextAction, retireHabits, dayStatus, recordWall,
 } from '../js/logic.js';
 
 const habits = [{ id: 'a' }, { id: 'b' }];
@@ -386,4 +386,31 @@ test('créatine : jours cochés sur les 7 derniers, aujourd’hui compris', asyn
   } };
   assert.equal(creatineWeek(st, '2026-10-20'), 3);
   assert.equal(creatineWeek({ days: {} }, '2026-10-20'), 0);
+});
+
+test('mur des records : le meilleur de chaque exercice, tous tours confondus, le plus récent d’abord', () => {
+  const records = {
+    'Pompes (sur parallettes)#1': { best: 12, last: 11, date: '2026-10-20' },
+    'Pompes (sur parallettes)#2': { best: 10, last: 10, date: '2026-10-26' },
+    'Roue abdominale à genoux (1/2)#1': { best: 9, last: 9, date: '2026-10-10' },
+    'Roue abdominale à genoux (2/2)#2': { best: 11, last: 6, date: '2026-10-12' },
+    'Crunch vélo#1': { best: 0, last: 0, date: '2026-10-27' },
+    'Exercice disparu#1': { best: 30, last: 30, date: '2026-10-27' },
+  };
+  const exercises = [
+    { label: 'Pompes', names: ['Pompes (sur parallettes)'], unit: 'pompes', workout: 'B' },
+    { label: 'Roue abdominale à genoux', names: ['Roue abdominale à genoux (1/2)', 'Roue abdominale à genoux (2/2)'], unit: 'allers-retours', workout: 'A' },
+    { label: 'Crunch vélo', names: ['Crunch vélo'], unit: 'touches', workout: 'A' },
+  ];
+  const wall = recordWall(records, exercises);
+  // un record à 0 ne compte pas ; un exercice retiré du programme non plus ;
+  // les deux passages de la roue comptent ensemble
+  assert.deepEqual(wall.map((r) => [r.label, r.best, r.date, r.workout]), [
+    ['Pompes', 12, '2026-10-26', 'B'],
+    ['Roue abdominale à genoux', 11, '2026-10-12', 'A'],
+  ]);
+  assert.equal(wall[0].unit, 'pompes');
+  assert.equal(recordWall(records, exercises, 1).length, 1);
+  assert.deepEqual(recordWall({}, exercises), []);
+  assert.deepEqual(recordWall(undefined, exercises), []);
 });

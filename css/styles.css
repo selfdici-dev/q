@@ -1031,6 +1031,31 @@ details.card.more .rules { margin-top: 10px; }
 .fold-body .goal-list { margin-top: 8px; }
 .fold-body > .week { margin-bottom: 4px; }
 .apps-cat { margin: 14px 0 4px; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+/* Salle : séance du jour, postes, mur des records */
+.gym-head { display: grid; grid-template-columns: 56px 1fr; gap: 14px; align-items: center; }
+.gym-head h2 { margin: 0; font-size: 1.3rem; }
+.gym-head p { margin: 0; }
+.gym-stage { height: 180px; margin: 12px 0 2px; border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--surface-2); }
+.gym-stage .fig { width: 100%; height: 100%; }
+.gym-level { margin-top: 12px; }
+.postes { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 2px 8px; scrollbar-width: none; }
+.postes::-webkit-scrollbar { display: none; }
+.poste {
+  flex: 0 0 132px; scroll-snap-align: start; display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  padding: 10px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface-2);
+  color: var(--text); font: inherit; text-align: left; cursor: pointer;
+}
+.poste-fig { width: 100%; height: 70px; border-radius: 10px; overflow: hidden; display: flex; justify-content: center; }
+.poste-fig .fig { width: 100%; height: 100%; }
+.poste-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; }
+.poste strong { font-size: 0.86rem; line-height: 1.2; }
+.poste small { color: var(--muted); font-size: 0.75rem; }
+.poste-tag { font-size: 0.68rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--accent-soft); white-space: nowrap; }
+.records { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.record { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; padding: 10px 12px; border-radius: 14px; background: var(--surface-2); }
+.record b { font-size: 1.7rem; line-height: 1; }
+.record .rec-unit { color: var(--muted); font-size: 0.8rem; }
+.record small { flex-basis: 100%; font-size: 0.78rem; color: var(--text-2); }
 /* Manger : journée type (moment, quoi) et aliments en 3 couleurs */
 .day-plan { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; }
 .day-plan li { display: grid; grid-template-columns: 6.6em 1fr; gap: 10px; align-items: baseline; }

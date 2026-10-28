@@ -22,10 +22,12 @@ export const DEFAULT_RULES = [
 // work = secondes d'effort au niveau 2 ; le niveau 1 fait -10 s, le niveau 3 +10 s.
 // target = à quoi sert l'exercice (objectif : fin, sec et élancé, abdos
 // visibles, mâchoire nette, pas de volume). Les IDs A, B, C, P, M sont stockés :
-// ne pas les changer. prep (facultatif) : la consigne du départ.
+// ne pas les changer. prep (facultatif) : la consigne du départ. star : l'exercice
+// phare, dont le bonhomme représente la séance dans la Salle.
 export const WORKOUTS = [
   {
     id: 'A',
+    star: 'Roue abdominale à genoux (1/2)',
     name: 'A · Abdos et tronc',
     met: 3.8,
     desc: 'Abdos visibles, taille fine et V du bas du ventre : crunch vélo et roue abdominale (les deux en tête des mesures, la roue deux fois par tour), crunch inversé pour le bas du ventre, Russian twist pieds décollés, planches latérales et hollow body qui progresse par étapes. 2 tours, mais durs : descentes en 2 à 3 s, et au bip il ne doit te rester que 1 ou 2 répétitions en réserve. Encore de la marge ? Passe à la version plus dure de la consigne.',
@@ -45,6 +47,7 @@ export const WORKOUTS = [
   },
   {
     id: 'B',
+    star: 'Pompes (sur parallettes)',
     name: 'B · Pectoraux, dos et bras',
     met: 4,
     desc: 'Calisthénie : ton corps est l’outil. Pompes profondes et L-sit sur parallettes, pompes pike et diamant, plus 2 tirages et un curl à l’élastique pour un dos en V et des bras dessinés. Poussée et tirage alternés : chaque muscle souffle avant de repartir. ≈ 16 min. Chaque série va jusqu’au bip, quitte à finir sur les genoux. 2 tours.',
@@ -63,6 +66,7 @@ export const WORKOUTS = [
   },
   {
     id: 'C',
+    star: 'Shadow boxing',
     name: 'C · Cardio sans saut',
     met: 7,
     desc: 'Cardio boxe, dense, dans 2 m² et sans bruit : 3 tours, 10 s de pause seulement, le cœur reste haut du début à la fin. La moitié des exercices, c’est de la boxe : ça passe plus vite. Les fentes font travailler les jambes, les plus gros muscles, ceux qui dépensent le plus. Ça aide à sécher, mais ce sont l’assiette et les pas qui font le plus gros.',
@@ -80,6 +84,7 @@ export const WORKOUTS = [
   },
   {
     id: 'P',
+    star: 'Tractions (selon ton niveau)',
     name: 'P · Tractions au parc',
     met: 3.8,
     desc: 'À faire pendant ta marche, à la barre d’un parc de street workout, à la place d’une C : ≈ 15 min. La marche te chauffe, et la suspension du 1er tour finit l’échauffement. Tractions à ton étape (négatives, élastique, puis vraies), tractions australiennes pour le milieu du dos, relevés de genoux pour le bas du ventre. Les barres du parc suffisent ; l’élastique orange sert seulement à l’étape 2. 3 tours.',
@@ -97,6 +102,7 @@ export const WORKOUTS = [
   },
   {
     id: 'M',
+    star: 'Superman',
     name: 'M · Posture et dos droit',
     met: 2.3,
     desc: 'Tous les jours, même les jours de repos, ≈ 7 min dans 2 m² : renforcer le dos (c’est ce qui redresse le mieux, plus que s’étirer), ouvrir les épaules et l’avant des hanches, garder la tête droite. La mâchoire, c’est surtout la perte de gras, plus une tête qui ne part pas en avant. C’est aussi ton minimum de reprise.',

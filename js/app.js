@@ -2,11 +2,12 @@ import {
   todayKey, addDays, diffDays, fromKey, dayStatus, chain, lastNDays,
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
-  dueCards, reviewCard, sportWeeks, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
+  dueCards, reviewCard, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
   sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, recordKey, spokenStep, dropRecords, creatineWeek,
+  recordWall,
 } from './logic.js';
 import {
-  DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl,
+  DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl, baseName,
   DAY_PLAN, FOOD_COLORS, FOOD_TREATS,
   WARMUP, PROTEIN_GRAMS, PROTEIN_FOODS, PHASES, MILESTONES, BOOKS, APPS, HELP,
 } from './data.js';
@@ -826,27 +827,12 @@ function viewSport() {
   const suggestDown = lvl > 1 && recent.length === 2 && recent.every((f) => f.v === 'dur');
   const dayNames = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
   const todayDow = (fromKey(today).getDay() + 6) % 7;
-  const sw = sportWeeks(state, today);
   return `
   ${suggestUp ? `<div class="banner ok"><strong>2 séances « faciles » de suite.</strong> Il est temps de monter. <button class="btn small primary" data-act="level" data-lvl="${lvl + 1}">Passer au niveau ${lvl + 1}</button></div>` : ''}
   ${suggestDown ? `<div class="banner warn"><strong>2 séances « dures » de suite.</strong> Redescendre d’un niveau n’est pas un échec. <button class="btn small" data-act="level" data-lvl="${lvl - 1}">Revenir au niveau ${lvl - 1}</button></div>` : ''}
-  ${(() => {
-    const pw = WORKOUTS.find((w) => w.id === planned);
-    const did = done.includes(planned);
-    return `<section class="card today-workout">
-      <span class="wo-badge big wo-${pw.id}">${pw.id}</span>
-      <div><p class="eyebrow">Aujourd’hui</p><h2>${esc(pw.name.split(' · ')[1] ?? pw.name)}</h2><p class="muted">≈ ${workoutMinutes(pw)} min · ≈ ${workoutKcal(pw)} kcal · niveau ${lvl}${did ? ' · ✓ faite' : ''}</p></div>
-      <button class="btn primary wide" data-act="start-workout" data-id="${pw.id}">${did ? 'Refaire' : 'Lancer la séance'}</button>
-      ${pw.id !== 'M' ? `<button class="btn ghost small" data-act="start-workout" data-id="C">${done.includes('C') ? '✓ Cardio boxe fait' : `En plus : cardio boxe C (${workoutMinutes(WORKOUTS.find((w) => w.id === 'C'))} min)`}</button>` : ''}
-      ${pw.id !== 'M' ? `<button class="btn ghost small" data-act="start-workout" data-id="P">${done.includes('P') ? '✓ Tractions au parc faites' : `Au parc : tractions P (${workoutMinutes(WORKOUTS.find((w) => w.id === 'P'))} min)`}</button>` : ''}
-      ${pw.id !== 'M' ? `<button class="btn ghost small" data-act="start-workout" data-id="M">Pas la forme ? Juste la mobilité (${workoutMinutes(WORKOUTS.find((w) => w.id === 'M'))} min)</button>` : ''}
-    </section>`;
-  })()}
-  <section class="card program-hero">
-    <div class="card-head"><h2>🔥 Régularité</h2><span class="pill">${sw.streak} semaine${sw.streak > 1 ? 's' : ''} tenue${sw.streak > 1 ? 's' : ''}</span></div>
-    <div class="pips big">${Array.from({ length: sw.goal }, (_, i) => `<i class="${i < sw.thisWeek ? 'on' : ''}"></i>`).join('')}</div>
-    <p class="hint">${sw.thisWeek}/${sw.goal} séances A, B, C ou P cette semaine (lundi → dimanche). Une semaine est tenue à ${sw.goal}. La régularité bat l’intensité : 4 séances moyennes valent mieux qu’une séance héroïque.</p>
-  </section>
+  ${gymHero(planned, done, lvl)}
+  ${gymPostes(planned, done)}
+  ${recordsCard()}
   <div class="folds">
     ${fold('c-goal', '🎯', 'Ton objectif', 'Pourquoi ces séances', '<span></span>', goalBody())}
     ${fold('c-wo', '🏋️', 'Les 5 séances', 'Exercices et semaine type', `<span class="pill">Niv. ${lvl}</span>`, `
@@ -875,6 +861,73 @@ function viewSport() {
         <li>Chaque exercice a un lien « démo vidéo ». Regarde-le avant ta première séance, pas pendant.</li>
       </ul>`)}
   </div>`;
+}
+
+// ——— Salle ———
+// L'exercice phare d'une séance (son bonhomme la représente).
+const starOf = (w) => w.exercises.find((e) => e.name === w.star) ?? w.exercises[0];
+const shortName = (w) => w.name.split(' · ')[1] ?? w.name;
+
+// La séance du jour en grand, avec le bonhomme de son exercice phare et ton niveau.
+function gymHero(planned, done, lvl) {
+  const w = WORKOUTS.find((x) => x.id === planned);
+  const did = done.includes(w.id);
+  const star = starOf(w);
+  const lv = levelInfo(totalXP(state));
+  return `<section class="card gym-hero wo-${w.id}">
+    <div class="gym-head">
+      <span class="wo-badge big wo-${w.id}">${w.id}</span>
+      <div><p class="eyebrow">Aujourd’hui${did ? ' · ✓ faite' : ''}</p><h2>${esc(shortName(w))}</h2>
+        <p class="muted">≈ ${workoutMinutes(w)} min · ≈ ${workoutKcal(w)} kcal · ${w.exercises.length} exercices · niveau ${lvl}</p></div>
+    </div>
+    <div class="gym-stage">${figure(star.name, star.target, false)}</div>
+    <button class="btn primary wide" data-act="start-workout" data-id="${w.id}">${did ? 'Refaire la séance' : 'Lancer la séance'}</button>
+    <div class="level gym-level">
+      <span class="badge">Niv. ${lv.level}</span><span class="rank">${esc(lv.rank)}</span>
+      <div class="xpbar">${tweenBar('gym-xp', (lv.into / lv.span) * 100)}</div>
+      <span class="xp">${lv.into}/${lv.span} XP</span>
+    </div>
+  </section>`;
+}
+
+// Les postes de la salle : les 5 séances, à lancer d'une touche (bonshommes fixes, légers).
+function gymPostes(planned, done) {
+  return `<section class="card gym-postes">
+    <div class="card-head"><h2>Les postes</h2><span class="pill">${WORKOUTS.length}</span></div>
+    <div class="postes">${WORKOUTS.map((w) => {
+      const f = figureFor(starOf(w).name);
+      const did = done.includes(w.id);
+      const tag = did ? '<span class="poste-tag done">✓ Faite</span>' : w.id === planned ? '<span class="poste-tag">Aujourd’hui</span>' : '';
+      return `<button class="poste wo-${w.id}${w.id === planned ? ' planned' : ''}" data-act="start-workout" data-id="${w.id}" aria-label="Lancer la séance ${w.id} : ${esc(shortName(w))}${did ? ', déjà faite aujourd’hui' : ''}">
+        <span class="poste-fig">${f ? figureSVG(f.fig, { mirror: f.mirror, fit: true, animate: false, help: false }) : ''}</span>
+        <span class="poste-top"><span class="wo-badge wo-${w.id}">${w.id}</span>${tag}</span>
+        <strong>${esc(shortName(w))}</strong><small>≈ ${workoutMinutes(w)} min</small>
+      </button>`;
+    }).join('')}</div>
+    <p class="hint">C ou P en plus quand tu veux. Pas la forme ? M suffit à valider « Bouger ».</p>
+  </section>`;
+}
+
+// Mur des records : tes meilleurs chiffres, notés au repos pendant les séances.
+function recordsCard() {
+  const groups = new Map();
+  for (const w of WORKOUTS) {
+    for (const e of w.exercises) {
+      const goal = goalOf(e.cue);
+      if (!goal) continue;
+      const label = baseName(e.name);
+      if (!groups.has(label)) groups.set(label, { label, names: [], unit: goal.unit, workout: w.id });
+      groups.get(label).names.push(e.name);
+    }
+  }
+  const wall = recordWall(state.records, [...groups.values()]);
+  return `<section class="card records-card">
+    <div class="card-head"><h2>🏆 Mur des records</h2>${wall.length ? `<span class="pill">${wall.length}</span>` : ''}</div>
+    ${wall.length
+      ? `<div class="records">${wall.map((r) => `<div class="record wo-${r.workout}"><b>${r.best}</b><span class="rec-unit">${esc(r.unit)}</span><small>${esc(r.label)}</small></div>`).join('')}</div>
+        <p class="hint">Ton meilleur chiffre par exercice, tous tours confondus. Le dernier travaillé d’abord.</p>`
+      : '<p class="muted">Pendant le repos, note en 2 touches combien tu en as fait : tes meilleurs chiffres s’affichent ici.</p>'}
+  </section>`;
 }
 
 // Onglet Manger : des conseils, rien à calculer (protéines et grignotages se

@@ -231,6 +231,23 @@ export function logRecord(records, key, n, date) {
   return { ...records, [key]: { best: Math.max(prev?.best ?? 0, n), last: n, date } };
 }
 
+// Mur des records de la Salle : le meilleur chiffre de chaque exercice, tous
+// tours confondus, le dernier travaillé en premier (la date d'un record est
+// celle de sa dernière note, pas celle où il a été battu). exercises :
+// [{ label, names, unit, workout }] (names : les noms complets qui comptent
+// pour ce label, ex. les deux passages de la roue).
+export function recordWall(records, exercises, limit = 6) {
+  const all = Object.entries(records ?? {}).map(([k, r]) => [k.slice(0, k.lastIndexOf('#')), r]);
+  const out = [];
+  for (const ex of exercises) {
+    const mine = all.filter(([name, r]) => ex.names.includes(name) && Number.isFinite(r?.best) && r.best > 0).map(([, r]) => r);
+    if (!mine.length) continue;
+    const date = mine.map((r) => r.date ?? '').sort().at(-1);
+    out.push({ label: ex.label, unit: ex.unit, workout: ex.workout, best: Math.max(...mine.map((r) => r.best)), date });
+  }
+  return out.sort((a, b) => b.date.localeCompare(a.date) || b.best - a.best).slice(0, limit);
+}
+
 // Coach vocal : la phrase dite au début de chaque étape de la séance. Courte,
 // sans parenthèses ni « (1/2) », avec ton record quand tu en as un.
 const sayName = (name = '') => name.replace(/\s*\(\d\/\d\)/, '').replace(/[()]/g, '').trim();

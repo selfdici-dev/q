@@ -23,8 +23,9 @@ export const POSES = {
 
   // Sur le dos et sur le côté
   'Crunch inversé': {
+    // séance A : les genoux montent en 1 s, les jambes redescendent lentement (2 à 3 s)
     face: -1,
-    dur: 4,
+    tempo: [1, 2.5], pause: [0.3, 0.3],
     frames: [
       { anchor: 'shoulder', at: [76, 68.5], torso: 0, neck: 0, armN: { to: [53, 70], bend: 1 }, armF: { to: [53.5, 70], bend: 1 }, legN: [-130, 140], legF: [-134, 136] },
       { anchor: 'shoulder', at: [76, 68.5], torso: 10, neck: 0, armN: { to: [53, 70], bend: 1 }, armF: { to: [53.5, 70], bend: 1 }, legN: [-50, -140], legF: [-54, -144] },
@@ -69,7 +70,8 @@ export const POSES = {
 
   // Planches et pompes
   'Roue abdominale à genoux': {
-    dur: 5, wheel: true,
+    // séance A : on roule vers l'avant lentement (2 à 3 s), on revient plus vite
+    tempo: [2.5, 1.5], pause: [0.4, 0.4], wheel: true,
     frames: [
       { anchor: 'kneeN', at: [24, 69], torso: -29, neck: 6, armN: { to: [48.2, 66.5] }, armF: { to: [49.7, 66.5] }, legN: [90, 180], legF: [92, 182] },
       { anchor: 'kneeN', at: [24, 69], torso: -18, neck: -4, armN: { to: [76.15, 66.5] }, armF: { to: [77.65, 66.5] }, legN: [140, 180], legF: [142, 182] },
@@ -92,14 +94,16 @@ export const POSES = {
     ],
   },
   'Pompes pike': {
-    dur: 2.8,
+    // rythme de la consigne (étape 1, négatives) : la tête descend en 3 s
+    tempo: [3, 1.2], pause: [0.3, 0.3],
     frames: [
       { anchor: 'footN', at: [44, 70], torso: 17.31, neck: 55, armN: { to: [80, 70] }, armF: { to: [81.5, 70] }, legN: [104, 104], legF: [106.5, 106.5] },
       { anchor: 'footN', at: [44, 70], torso: 24, neck: 45, armN: { to: [80, 70] }, armF: { to: [81.5, 70] }, legN: [123, 123], legF: [125.5, 125.5] },
     ],
   },
   'Pompes serrées': {
-    dur: 3,
+    // rythme de la consigne : descente 2 s, montée 1 s
+    tempo: [2, 1], pause: [0.3, 0.3],
     frames: [
       { anchor: 'footN', at: [18, 70], torso: -26.8, armN: { to: [62.5, 70] }, armF: { to: [64, 70] }, legN: [153.2, 153.2], legF: [155.6, 155.6] },
       { anchor: 'footN', at: [18, 70], torso: -9, armN: { to: [62.5, 70] }, armF: { to: [64, 70] }, legN: [171, 171], legF: [173.4, 173.4] },
@@ -482,7 +486,8 @@ export const POSES = {
   },
   // Ronde 11 : séance B à l'élastique (rowing, triceps, curls, tirage assis, écarté arrière)
   'Rowing penché à l’élastique': {
-    dur: 4, hold: 0.25, band: [['footN', 'handN']],
+    // rythme de la consigne : tirage 1 s, serré 1 s en haut, retour 2 s
+    tempo: [1, 2], pause: [0.4, 1], band: [['footN', 'handN']],
     frames: [
       { at: [52, 42], torso: -38, neck: -28, armN: [95, 95], armF: [98, 98], legN: { to: [55.5, 70], bend: -1 }, legF: { to: [57, 70], bend: -1 } },
       { at: [52, 42], torso: -38, neck: -28, armN: [160, 95], armF: [163, 98], legN: { to: [55.5, 70], bend: -1 }, legF: { to: [57, 70], bend: -1 } },
@@ -496,7 +501,8 @@ export const POSES = {
     ],
   },
   'Curl biceps à l’élastique': {
-    dur: 3, hold: 0.2, band: [['footN', 'handN']],
+    // rythme de la consigne : montée 1 s, descente 2 s
+    tempo: [1, 2], pause: [0.3, 0.3], band: [['footN', 'handN']],
     frames: [
       { at: [60, 41], torso: -90, neck: -90, armN: [86, 86], armF: [88, 88], legN: [90, 90], legF: [88, 92] },
       { at: [60, 41], torso: -90, neck: -90, armN: [86, -60], armF: [88, -58], legN: [90, 90], legF: [88, 92] },
@@ -512,7 +518,8 @@ export const POSES = {
   'Tirage assis à l’élastique': {
     // mains visées (et non angles) : elles reculent en ligne droite, à hauteur de
     // poitrine, jusqu'aux côtes (pas de trajet en cuillère le long des cuisses)
-    dur: 4, hold: 0.25, band: [['footN', 'handN']],
+    // rythme de la consigne : tirage 1 s, serré 1 s, retour 2 s
+    tempo: [1, 2], pause: [0.4, 1], band: [['footN', 'handN']],
     frames: [
       { at: [40, 68.5], torso: -88, neck: -88, armN: { to: [59.4, 60], bend: 1 }, armF: { to: [58.6, 61], bend: 1 }, legN: [-14, 12], legF: [-12, 10] },
       { at: [40, 68.5], torso: -94, neck: -90, armN: { to: [42, 56], bend: 1 }, armF: { to: [41.5, 56], bend: 1 }, legN: [-14, 12], legF: [-12, 10] },
@@ -571,8 +578,9 @@ export const POSES = {
   },
   // Ronde 14 : programme v3 (pompes sur parallettes, esquives de face, fentes arrière)
   'Pompes (sur parallettes)': {
-    // en bas, la poitrine descend au niveau des poignées (plus bas que les mains)
-    dur: 3, parallettes: true,
+    // en bas, la poitrine descend au niveau des poignées (plus bas que les mains) ;
+    // rythme de la consigne : descente 2 s, montée 1 s
+    tempo: [2, 1], pause: [0.3, 0.3], parallettes: true,
     frames: [
       { anchor: 'footN', at: [23, 67], torso: -28, neck: -20, armN: { to: [65.5, 65.5] }, armF: { to: [67, 65.5] }, legN: [152, 152], legF: [154, 154] },
       { anchor: 'footN', at: [23, 67], torso: -7, neck: -6, armN: { to: [65.5, 65.5] }, armF: { to: [67, 65.5] }, legN: [173, 173], legF: [175, 175] },

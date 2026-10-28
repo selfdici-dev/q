@@ -457,3 +457,24 @@ test('aides des tenues et des coups ; bras du pont fessier posés le long du cor
     assert.ok(bend < 15, `pont fessier : coude plié (${bend.toFixed(0)}°)`);
   }
 });
+
+test('rythme : le bonhomme suit le tempo de la consigne (descente lente, montée vive)', async () => {
+  const { beats } = await import('../js/figures.js');
+  // sans tempo : passages égaux, durée et arrêt d'origine
+  const dead = beats(POSES['Dead bug']);
+  assert.ok(dead.seg.every((s, i, a) => Math.abs(s.len - a[0].len) < 1e-9));
+  // pompes sur parallettes : descente 2 s, montée 1 s, 0,3 s d'arrêt en haut et en bas
+  const push = beats(POSES['Pompes (sur parallettes)']);
+  assert.equal(push.dur, 3.6);
+  const move = (s) => s.len * (1 - s.hold) * push.dur;
+  assert.deepEqual(push.seg.map((s) => Math.round(move(s) * 10) / 10), [2, 1]);
+  // rowing : 1 s d'arrêt « serré » en haut avant de redescendre en 2 s
+  const row = beats(POSES['Rowing penché à l’élastique']);
+  assert.equal(Math.round(row.seg[1].len * row.seg[1].hold * row.dur * 10) / 10, 1);
+  // l'animation suit ce rythme : la pose du bas est atteinte aux 2,3/3,6 du cycle
+  const keys = timeline(POSES['Pompes (sur parallettes)']);
+  assert.ok(Math.abs(keys[7].t - 2.3 / 3.6) < 1e-9);
+  assert.match(figureSVG(POSES['Pompes (sur parallettes)']), /dur="3.6s"/);
+  // chaque pose qui a un tempo en donne un par passage (aller et retour)
+  for (const [name, fig] of Object.entries(POSES)) if (fig.tempo) assert.doesNotThrow(() => beats(fig), name);
+});

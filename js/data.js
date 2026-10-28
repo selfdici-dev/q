@@ -124,11 +124,12 @@ export const WORKOUTS = [
   },
 ];
 
-// Semaine type (choisie par l'utilisateur) : A et B en alternance du lundi au samedi
-// (48 h de repos pour chaque muscle), le cardio C en plus quand il veut (ou les
-// tractions P au parc à la place), mobilité et repos le dimanche.
-// La mobilité M reste le minimum de reprise n'importe quel jour.
-export const WEEK_PLAN = { 1: 'A', 2: 'B', 3: 'A', 4: 'B', 5: 'A', 6: 'B', 0: 'M' };
+// Semaine type (choisie par l'utilisateur, revue après un mois) : B trois fois
+// (mardi, jeudi, samedi : 48 h de repos pour chaque muscle), A deux fois (lundi
+// et vendredi : 32 séries d'abdos par semaine suffisent, c'est la sèche qui les
+// montre), le cardio C le mercredi (pas de tractions : pas de barre), mobilité
+// et repos le dimanche. La mobilité M reste le minimum de reprise n'importe quel jour.
+export const WEEK_PLAN = { 1: 'A', 2: 'B', 3: 'C', 4: 'B', 5: 'A', 6: 'B', 0: 'M' };
 
 // Échauffement ajouté avant A, B et C.
 export const WARMUP = [

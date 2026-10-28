@@ -872,7 +872,7 @@ function viewSport() {
     ${fold('c-goal', icon('target'), 'Ton objectif', 'Pourquoi ces séances', '<span></span>', goalBody())}
     ${fold('c-wo', icon('dumbbell'), 'Les 5 séances', 'Exercices et semaine type', `<span class="pill">Niv. ${lvl}</span>`, `
       <div class="week">${[1, 2, 3, 4, 5, 6, 0].map((dow, i) => `<div class="wk-${WEEK_PLAN[dow]} ${i === todayDow ? 'today' : ''}"><small>${dayNames[i]}</small><b>${WEEK_PLAN[dow]}</b></div>`).join('')}</div>
-      <p class="hint">A = abdos et tronc, B = bras, avant-bras, épaules et dos, en alternance du lundi au samedi : chaque muscle a 48 h pour récupérer. C = cardio boxe, en plus quand tu veux. P = tractions au parc, pendant ta marche, à la place d’une C. M = mobilité et posture, le dimanche (repos). Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
+      <p class="hint">B = pectoraux, dos, épaules et bras, le mardi, le jeudi et le samedi : chaque muscle a 48 h pour récupérer. A = abdos et tronc, le lundi et le vendredi : deux séances suffisent, c’est la sèche qui montre les abdos. C = cardio boxe, le mercredi (et en plus quand tu veux). P = tractions au parc, quand tu auras une barre, à la place d’une C. M = mobilité et posture, le dimanche (repos). Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
       <div class="row">${[1, 2, 3].map((n) => `<button class="seg ${lvl === n ? 'on' : ''}" data-act="level" data-lvl="${n}" aria-pressed="${lvl === n}">Niveau ${n}</button>`).join('')}</div>
       <p class="hint">À la fin de chaque séance, dis si c’était facile, correct ou dur : l’appli te propose de monter ou de descendre. Niveau 1 = 2 tours, efforts plus courts.</p>
       ${WORKOUTS.map((w) => {
@@ -950,7 +950,7 @@ function gymHub(planned, done, lvl) {
         <p class="muted">≈ ${workoutMinutes(w)} min · ≈ ${workoutKcal(w)} kcal · ${w.exercises.length} exercices${w.fixed ? '' : ` · niveau ${lvl}`}</p></div>
     </div>
     <button class="btn primary wide" data-act="start-workout" data-id="${w.id}">${did ? 'Refaire la séance' : `Lancer la séance ${w.id}`}</button>
-    <p class="hint">Touche un poste pour changer de séance. C ou P en plus quand tu veux ; pas la forme ? M suffit à valider « Bouger ».</p>
+    <p class="hint">Touche un poste pour changer de séance. Pas la forme ? M suffit à valider « Bouger ».</p>
     <div class="level gym-level">
       <span class="badge">Niv. ${lv.level}</span><span class="rank">${esc(lv.rank)}</span>
       <div class="xpbar">${tweenBar('gym-xp', (lv.into / lv.span) * 100)}</div>

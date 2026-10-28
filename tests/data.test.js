@@ -10,6 +10,17 @@ test('séances : les IDs stockés dans l’historique ne changent pas', () => {
   assert.deepEqual(Object.keys(WEEK_PLAN).map(Number).sort(), [0, 1, 2, 3, 4, 5, 6]);
 });
 
+test('semaine type : B trois fois, A deux fois, cardio C le mercredi, M le dimanche', () => {
+  // revue après un mois : 3 séances d'abdos, c'était trop (la sèche montre les abdos) ;
+  // le mercredi devait passer aux tractions, mais pas de barre : ce sera la C
+  const count = (id) => Object.values(WEEK_PLAN).filter((x) => x === id).length;
+  assert.deepEqual([count('A'), count('B'), count('C'), count('M'), count('P')], [2, 3, 1, 1, 0]);
+  assert.equal(WEEK_PLAN[3], 'C');
+  assert.equal(WEEK_PLAN[0], 'M');
+  // jamais la même séance deux jours de suite : chaque muscle a 48 h pour récupérer
+  for (let d = 0; d < 7; d++) assert.notEqual(WEEK_PLAN[d], WEEK_PLAN[(d + 1) % 7], `jour ${d}`);
+});
+
 test('chaque exercice a une durée, une consigne et un objectif', () => {
   for (const w of WORKOUTS) {
     assert.ok(w.rounds >= 1 && w.exercises.length >= 4, w.id);

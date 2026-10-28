@@ -19,7 +19,7 @@ import { backupStatus, validateBackup } from './backup.js';
 import { figureFor, figureSVG, focusFor } from './figures.js';
 import { icon } from './icons.js';
 import { roomSVG } from './room.js';
-import { hubSVG, hubLayout, HUB } from './gym.js';
+import { hubSVG, hubLayout, HUB, covers } from './gym.js';
 import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS } from './avatar.js';
 import { treeSVG, seedOf } from './tree.js';
 
@@ -459,6 +459,7 @@ function render() {
   }
   document.querySelectorAll('#tabs a').forEach((a) => a.setAttribute('aria-current', a.dataset.tab === (HIDDEN_TABS[tab] ?? tab) ? 'page' : 'false'));
   moveTabIndicator();
+  hubDeclutter();
   runTweens();
   tick();
 }
@@ -906,6 +907,25 @@ const shortName = (w) => w.name.split(' · ')[1] ?? w.name;
 // du jour.
 let gymPick = null;
 const pctOf = (v, total) => `${Math.round((v / total) * 1000) / 10}%`;
+
+// L'étiquette du poste choisi efface les pastilles qu'elle recouvrirait
+// (« B · Pectoraux, dos et bras » passe devant le A). Calculé sur la place
+// finale (étiquette et pastilles posées au-dessus de leur zone, remontées de
+// 55 % de leur hauteur, comme dans styles.css), pas pendant leur apparition.
+function hubDeclutter() {
+  const tag = $('.hub-stage .hub-tag');
+  if (!tag) return;
+  const place = (el) => {
+    const hit = el.parentElement;
+    const [w, h] = [el.offsetWidth, el.offsetHeight];
+    const x = el.classList.contains('at-l') ? hit.offsetLeft
+      : el.classList.contains('at-r') ? hit.offsetLeft + hit.offsetWidth - w
+      : hit.offsetLeft + (hit.offsetWidth - w) / 2;
+    return [x, hit.offsetTop - h * 0.55, w, h];
+  };
+  const t = place(tag);
+  document.querySelectorAll('.hub-stage .hub-badge').forEach((b) => b.classList.toggle('under-tag', covers(t, place(b))));
+}
 
 function gymHub(planned, done, lvl) {
   const pick = WORKOUTS.some((x) => x.id === gymPick) ? gymPick : planned;
@@ -2162,7 +2182,7 @@ function enterGym() {
 
 $('#tabs').innerHTML = `<span class="tab-ind" aria-hidden="true"></span>${TABS.map((t) => `<a href="#${t.id}" data-tab="${t.id}"><span class="tab-ico" aria-hidden="true">${t.icon}</span>${t.label}</a>`).join('')}`;
 $('#tabs').classList.add('has-ind');
-addEventListener('resize', () => moveTabIndicator(true));
+addEventListener('resize', () => { moveTabIndicator(true); hubDeclutter(); });
 state.ui.lastLevel = Math.max(state.ui.lastLevel ?? 1, levelInfo(totalXP(state)).level);
 save();
 render();

@@ -43,6 +43,15 @@ export function hubLayout() {
   });
 }
 
+// L'étiquette du poste choisi cache-t-elle la pastille d'un autre poste ?
+// Rectangles [gauche, haut, largeur, hauteur] ; pad : marge (la lueur de la
+// pastille du jour dépasse un peu).
+export function covers(tag, badge, pad = 4) {
+  const [x1, y1, w1, h1] = tag;
+  const [x2, y2, w2, h2] = badge;
+  return x1 < x2 + w2 + pad && x2 < x1 + w1 + pad && y1 < y2 + h2 + pad && y2 < y1 + h1 + pad;
+}
+
 // Sac de boxe pendu au plafond, devant les poings du bonhomme (en unités du
 // bonhomme : le direct touche vers x = 86).
 function bag(p, st, id) {

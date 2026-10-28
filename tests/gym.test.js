@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { hubSVG, hubLayout, HUB, STATIONS } from '../js/gym.js';
+import { hubSVG, hubLayout, HUB, STATIONS, covers } from '../js/gym.js';
 import { WORKOUTS } from '../js/data.js';
 import { figureFor } from '../js/figures.js';
 
@@ -49,4 +49,13 @@ test('ta salle : rien qui vienne d’internet, identifiants propres à chaque sa
   assert.equal(new Set(ids).size, ids.length);
   for (const [, ref] of svg.matchAll(/url\(#([^)]+)\)/g)) assert.ok(ids.includes(ref), ref);
   assert.ok(ids.some((x) => x.startsWith('h1-')));
+});
+
+test('ta salle : l’étiquette du poste choisi efface seulement les pastilles qu’elle cache', () => {
+  const tag = [100, 200, 180, 26]; // « B · Pectoraux, dos et bras »
+  assert.equal(covers(tag, [90, 202, 24, 24]), true); // la pastille A, à moitié dessous
+  assert.equal(covers(tag, [60, 202, 24, 24]), false); // assez loin à gauche
+  assert.equal(covers(tag, [150, 150, 24, 24]), false); // plus haut (un poste du fond)
+  assert.equal(covers(tag, [282, 202, 24, 24]), true); // à 2 px : la lueur toucherait
+  assert.equal(covers(tag, [282, 202, 24, 24], 0), false);
 });

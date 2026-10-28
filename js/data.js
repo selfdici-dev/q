@@ -178,17 +178,17 @@ export const DAY_PLAN = [
 // « prévu », pas « jamais » (s'interdire des aliments fait plus craquer :
 // Westenhoefer 1999). FOOD_TREATS : comment prendre le rouge.
 export const FOOD_COLORS = [
-  { id: 'vert', ico: '🟢', title: 'Tous les jours', items: [
+  { id: 'vert', title: 'Tous les jours', items: [
     'Légumes, et 2 ou 3 fruits',
     'Poulet, poisson, thon, œufs, steak haché 5 %, skyr, fromage blanc, lentilles, pois chiches',
     'Aux repas : riz, pâtes, pommes de terre, pain complet, flocons d’avoine',
     'Eau, café et thé sans sucre, boissons zéro',
   ] },
-  { id: 'jaune', ico: '🟡', title: 'Un peu chaque jour', items: [
+  { id: 'jaune', title: 'Un peu chaque jour', items: [
     'Une portion de fromage, 2 carrés de chocolat',
     'Pain blanc, beurre, mayonnaise, ketchup, charcuterie',
   ] },
-  { id: 'rouge', ico: '🔴', title: 'Prévu, 2 ou 3 fois par semaine', items: [
+  { id: 'rouge', title: 'Prévu, 2 ou 3 fois par semaine', items: [
     'Gâteaux, glaces, viennoiseries, biscuits, Nutella, chips',
     'Fast-food, sodas sucrés, jus de fruits, alcool',
   ] },
@@ -205,26 +205,26 @@ export const FOOD_TREATS = [
 // moins faim et ≈ 100 kcal de moins au dîner, Ortinau 2014) ; une pomme
 // entière avant un repas y fait manger ≈ 15 % de moins (Flood-Obbagy 2009).
 export const SNACKS = [
-  { title: '🥇 Ce qui cale le plus : les protéines', items: [
+  { title: 'Ce qui cale le plus : les protéines', items: [
     '150 g de skyr : 15 g de protéines, 90 kcal',
     '2 œufs durs : 13 g, 150 kcal (fais-en 6 d’un coup)',
     '1 boîte de thon au naturel et du citron : 25 g, 110 kcal',
     '2 tranches de jambon blanc : 15 g, 90 kcal',
   ] },
-  { title: '🍎 Du volume pour peu de calories', items: [
+  { title: 'Du volume pour peu de calories', items: [
     'Une pomme (80 kcal) : 15 min avant un repas, elle fait manger moins',
     'Des clémentines, ou une banane (100 kcal)',
     'Carottes, concombre, tomates cerises et 2 cuillères de houmous (90 kcal)',
   ] },
-  { title: '🍫 Envie de sucré', items: [
+  { title: 'Envie de sucré', items: [
     'La « mousse » : 150 g de skyr, 1 cuillère de cacao non sucré, 1 cuillère à café de miel (130 kcal, 16 g)',
     '2 carrés de chocolat noir avec un fruit',
     'Une compote sans sucre ajouté (60 kcal)',
   ] },
-  { title: '🥜 À doser', items: [
+  { title: 'À doser', items: [
     'Amandes ou noix : une poignée de 25 g (150 kcal), dans un bol, jamais dans le paquet',
   ] },
-  { title: '🌙 Le soir, ou devant un écran', items: [
+  { title: 'Le soir, ou devant un écran', items: [
     'Thé, tisane, eau pétillante, boisson zéro',
     'Vraiment faim : un bol de popcorn nature fait maison (120 kcal)',
   ] },

@@ -382,7 +382,7 @@ body { font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Seg
 .money-hero { background: linear-gradient(160deg, color-mix(in srgb, var(--hero-b) 12%, var(--surface)), var(--surface)); }
 
 .unit-title { display: flex; align-items: center; gap: 8px; margin: 6px 4px 4px; font-size: 1rem; }
-.unit-title span { font-size: 1.3rem; }
+.unit-title .ico { width: 24px; height: 24px; color: var(--accent); }
 .path { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .node { display: flex; align-items: center; gap: 12px; padding-left: calc(var(--off) * 18%); }
 .node button { border: 0; background: none; padding: 0; cursor: pointer; }
@@ -1031,6 +1031,32 @@ details.card.more .rules { margin-top: 10px; }
 .fold-body .goal-list { margin-top: 8px; }
 .fold-body > .week { margin-bottom: 4px; }
 .apps-cat { margin: 14px 0 4px; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+/* Icônes au trait (js/icons.js) : à la taille du texte, de la couleur du texte ;
+   la couleur d'accent pour les titres de cartes et ce qui compte */
+.ico { width: 1.2em; height: 1.2em; flex-shrink: 0; vertical-align: -0.22em; }
+.fold-ico { color: var(--text-2); }
+.fold-ico .ico { width: 20px; height: 20px; }
+.card-head h2 .ico, .card > h2 .ico, .step h3 .ico { width: 20px; height: 20px; color: var(--accent); }
+.step h3 { display: flex; align-items: center; gap: 8px; }
+.hero-stat .big .ico { width: 0.7em; height: 0.7em; margin-right: 0.12em; vertical-align: -0.02em; color: var(--accent); }
+.hero-stat .mid .ico { width: 0.9em; height: 0.9em; margin-right: 0.25em; vertical-align: -0.12em; color: var(--accent); }
+.hero-note > span:first-child { flex-shrink: 0; color: var(--accent); }
+.hero-note .ico { width: 20px; height: 20px; vertical-align: -5px; }
+.todo-ico .ico { width: 22px; height: 22px; }
+.now-card .now-ico { color: var(--accent); }
+.now-card .now-ico .ico { width: 24px; height: 24px; }
+.big-ico { display: block; width: 64px; height: 64px; margin: 10px auto; color: var(--accent); }
+.plant .big-ico { width: 56px; height: 56px; }
+.btn .ico, .seg .ico { width: 1.15em; height: 1.15em; margin-right: 0.4em; vertical-align: -0.2em; }
+.target-tag .ico, .rec-tag .ico { width: 1.05em; height: 1.05em; margin-right: 0.3em; vertical-align: -0.16em; }
+.voice-btn .ico { width: 18px; height: 18px; vertical-align: -4px; }
+.eyebrow .ico, strong .ico { margin-right: 0.15em; }
+.ok-ico { width: 18px; height: 18px; color: var(--accent); }
+.wait-ico { width: 18px; height: 18px; color: var(--muted); }
+.alerts p .ico, .warn-text .ico { margin-right: 0.35em; color: var(--warn); }
+.node-dot .ico { width: 18px; height: 18px; }
+.fc-dot { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; background: var(--fc, var(--muted)); vertical-align: 1px; }
+
 /* Réveil progressif (Jour > Nuit dernière) : les réveils successifs en frise */
 .wake { margin-top: 14px; display: grid; gap: 8px; }
 .wake p { margin: 0; }

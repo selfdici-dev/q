@@ -6,7 +6,7 @@ export const UNITS = [
   {
     id: 'u1',
     title: 'Les bases',
-    emoji: '🧱',
+    icon: 'school',
     lessons: [
       {
         id: 'precaution',
@@ -49,7 +49,7 @@ export const UNITS = [
   {
     id: 'u2',
     title: 'Investir',
-    emoji: '🌱',
+    icon: 'sprout',
     lessons: [
       {
         id: 'produits',
@@ -104,7 +104,7 @@ export const UNITS = [
   {
     id: 'u3',
     title: 'Analyser',
-    emoji: '🔍',
+    icon: 'search',
     lessons: [
       {
         id: 'resultats',
@@ -147,7 +147,7 @@ export const UNITS = [
   {
     id: 'um',
     title: 'La méthode (ce que disent les études)',
-    emoji: '🧪',
+    icon: 'flask',
     lessons: [
       {
         id: 'etudes',
@@ -190,7 +190,7 @@ export const UNITS = [
   {
     id: 'u4',
     title: 'Trader',
-    emoji: '⚔️',
+    icon: 'candles',
     lessons: [
       {
         id: 'ordres',
@@ -293,7 +293,7 @@ export const UNITS = [
   {
     id: 'uc',
     title: 'Crypto',
-    emoji: '🪙',
+    icon: 'coin',
     lessons: [
       {
         id: 'crypto-bases',

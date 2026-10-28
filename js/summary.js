@@ -2,7 +2,7 @@
 // de la semaine (Moi > Bilan). Logique pure, testée par tests/summary.test.js.
 import {
   addDays, diffDays, fromKey, dayStatus, chain, weekNumber,
-  sleepDuration, bedtimeMinutes, minutesToHHMM, SPRINT_LENGTH, SPRINT_PASS, SPRINT_COUNT, proteinGrams,
+  sleepDuration, bedtimeMinutes, minutesToHHMM, SPRINT_LENGTH, SPRINT_PASS, SPRINT_COUNT, proteinGrams, mealTotals, kcalTarget,
   wakePlan, bedGoal,
 } from './logic.js';
 import { WORKOUTS, WEEK_PLAN, PROTEIN_GRAMS } from './data.js';
@@ -47,6 +47,7 @@ export function daySummary(state, key) {
     sessionLine(WEEK_PLAN[fromKey(key).getDay()], d.workouts ?? []),
     `Focus : ${focus ? `${plural(focus, 'session')} de 25 min` : 'aucune session'}`,
     `Protéines : ${proteinGrams(d)}/${PROTEIN_GRAMS} g`,
+    ...(d.meals?.length ? [`Repas notés : ≈ ${mealTotals(d.meals).kcal} kcal (objectif ${kcalTarget(d.steps)})`] : []),
     ...(state.settings?.creatine ? [`Créatine : ${d.creatine ? 'prise ✓' : 'pas encore prise'}`] : []),
     `Grignotages : ${snacks.length ? `${snacks.length} (${snacks.map((s) => `${s.time} ${s.trigger}`).join(', ')})` : 'aucun'}${resisted ? ` · ${plural(resisted, 'envie')} résistée${resisted > 1 ? 's' : ''}` : ''}`,
     `Coucher visé ce soir : ${bedGoal(state, key)}`,
@@ -90,6 +91,7 @@ export function weekSummary(state, first, today) {
   const focus = days.reduce((s, x) => s + (x.d.focus ?? 0), 0);
   const protein = days.reduce((s, x) => s + proteinGrams(x.d), 0) / n;
   const proteinDays = days.filter((x) => proteinGrams(x.d) >= PROTEIN_GRAMS).length;
+  const eaten = days.filter((x) => x.d.meals?.length).map((x) => [mealTotals(x.d.meals).kcal, kcalTarget(x.d.steps)]);
 
   const snacks = days.flatMap((x) => x.d.snacks ?? []);
   const resisted = days.reduce((s, x) => s + (x.d.snackResisted ?? 0), 0);
@@ -110,6 +112,7 @@ export function weekSummary(state, first, today) {
     `Séances : ${real.length}${planned ? ` sur ${planned} prévues` : ''}${real.length ? ` (${real.join(', ')})` : ''}${mobility ? ` + ${mobility} mobilité` : ''}`,
     `Focus : ${focus ? `${plural(focus, 'session')} de 25 min` : 'aucune session'}`,
     `Protéines : ${Math.round(protein)} g/jour en moyenne · objectif (${PROTEIN_GRAMS} g) atteint ${proteinDays} jour${proteinDays > 1 ? 's' : ''} sur ${n}`,
+    ...(eaten.length ? [`Repas notés : ≈ ${Math.round(eaten.reduce((s, [k]) => s + k, 0) / eaten.length)} kcal/jour en moyenne sur ${plural(eaten.length, 'jour')} (objectif ≈ ${Math.round(eaten.reduce((s, [, t]) => s + t, 0) / eaten.length)})`] : []),
     ...(state.settings?.creatine ? [`Créatine : ${days.filter((x) => x.d.creatine === true).length}/${n} jours`] : []),
     `Grignotages : ${snacks.length || 'aucun'}${top ? ` · déclencheur n° 1 : ${top[0]} (${top[1]} fois)` : ''}${resisted ? ` · ${plural(resisted, 'envie')} résistée${resisted > 1 ? 's' : ''}` : ''}`,
     `Coucher : visé ${bedGoal(state, end)}${beds.length ? ` · réel en moyenne ${minutesToHHMM(avg(beds))} (${plural(beds.length, 'nuit')} notée${beds.length > 1 ? 's' : ''})` : ''}${sleeps.length ? ` · sommeil moyen ${hours(avg(sleeps))}` : ''}`,

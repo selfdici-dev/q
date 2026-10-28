@@ -22,7 +22,7 @@ const good = () => ({
   habits: [{ id: 'a', name: 'Lire' }, { id: 'b', name: 'Bouger' }],
   rules: ['Si X, alors Y'],
   days: {
-    '2026-09-02': { ids: ['a', 'b'], habits: { a: 1, b: 2 }, weight: 74.5, bed: '00:30', wake: '08:00', workouts: ['A'], snacks: [] },
+    '2026-09-02': { ids: ['a', 'b'], habits: { a: 1, b: 2 }, weight: 74.5, bed: '00:30', wake: '08:00', workouts: ['A'], snacks: [], meals: [{ f: 'poulet', n: 1.5, kcal: 190, p: 37 }] },
     '2026-09-01': { habits: { a: 0 }, weight: null, bed: '' },
   },
   trades: [],
@@ -54,6 +54,8 @@ test('fichiers invalides : refusés avec une raison', () => {
     { ...good(), days: { '2026-09-01': { weight: '74 kg' } } },
     { ...good(), days: { '2026-09-01': { bed: 'tard' } } },
     { ...good(), days: { '2026-09-01': { workouts: 'A' } } },
+    { ...good(), days: { '2026-09-01': { meals: 'poulet' } } },
+    { ...good(), days: { '2026-09-01': { meals: [{ f: 'poulet', n: 'deux', kcal: 190, p: 37 }] } } },
     { ...good(), settings: { startDate: 'hier' } },
     { ...good(), settings: { startDate: '2026-09-01', wakePlanStart: 'demain' } },
     { ...good(), settings: { startDate: '2026-09-01', wakeTarget: 'tôt' } },

@@ -111,3 +111,16 @@ test('bilans : la ligne créatine n’apparaît que si la case est affichée', (
   st.days['2026-10-03'] = { creatine: true };
   assert.ok(weekSummary(st, S, '2026-10-08').split('\n').includes('Créatine : 2/7 jours'));
 });
+
+test('bilans : les repas notés (calories du jour, et moyenne de la semaine)', () => {
+  const st = base();
+  st.days[S] = { meals: [{ f: 'poulet', n: 2, kcal: 190, p: 37 }, { f: 'riz', n: 1, kcal: 260, p: 5 }], steps: 12000 };
+  st.days['2026-10-02'] = { meals: [{ f: 'pizza', n: 2, kcal: 550, p: 22 }] };
+  const day = daySummary(st, S).split('\n');
+  assert.ok(day.includes('Protéines : 79/120 g'), day.join('\n')); // les protéines des repas comptent
+  assert.ok(day.includes('Repas notés : ≈ 640 kcal (objectif 2010)'));
+  // sans repas notés : pas de ligne
+  assert.ok(!daySummary(base(), S).includes('Repas notés'));
+  const week = weekSummary(st, S, '2026-10-07');
+  assert.match(week, /Repas notés : ≈ 870 kcal\/jour en moyenne sur 2 jours \(objectif ≈ 1930\)/);
+});

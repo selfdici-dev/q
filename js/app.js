@@ -4,12 +4,12 @@ import {
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
   dueCards, reviewCard, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
   sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, beatBy, combien, logChoices, toLog, recordKey, spokenStep, dropRecords, creatineWeek,
-  recordWall, wakePlan, bedGoal, clockFr, WAKE_PLAN,
+  recordWall, wakePlan, bedGoal, clockFr, WAKE_PLAN, kcalTarget, mealTotals, addMeal,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl, baseName,
   DAY_PLAN, FOOD_COLORS, FOOD_TREATS, SNACKS, SNACK_TEST, TEA_TIPS,
-  WARMUP, PROTEIN_GRAMS, PROTEIN_FOODS, PHASES, MILESTONES, BOOKS, APPS, HELP,
+  WARMUP, PROTEIN_GRAMS, PROTEIN_CHIPS, FOODS, FOOD_CATS, PHASES, MILESTONES, BOOKS, APPS, HELP,
 } from './data.js';
 import { ALL_LESSONS } from './finance-data.js';
 import { createMoney, DEFAULT_CALC, DEFAULT_WEALTH } from './money.js';
@@ -749,8 +749,9 @@ function snackCard(key) {
       <div class="protein-head"><strong>Protéines</strong> <span class="muted">${prot}/${PROTEIN_GRAMS} g</span></div>
       <div class="bar">${tweenBar('protein', Math.min(100, (prot / PROTEIN_GRAMS) * 100))}</div>
     </div>
-    <div class="chips protein-chips">${PROTEIN_FOODS.map(([food, g]) => `<button class="chip" data-act="protein-add" data-g="${g}">+ ${esc(food)} <small>${g} g</small></button>`).join('')}</div>
-    ${proteinUndo ? `<div class="row"><button class="btn ghost small" data-act="protein-undo">Annuler le dernier ajout (${proteinUndo} g)</button></div>` : ''}
+    <div class="chips protein-chips">${PROTEIN_CHIPS.map((id) => FOODS.find((f) => f.id === id)).map((f) => `<button class="chip" data-act="meal-add" data-f="${f.id}" aria-label="Noter ${esc(f.name)} (${esc(f.portion)}) : ${f.p} g de protéines, ${f.kcal} kcal">+ ${f.emoji} ${esc(f.name.split(' ')[0])} <small>${f.p} g</small></button>`).join('')}</div>
+    ${mealUndo ? `<div class="row"><button class="btn ghost small" data-act="meal-undo">Annuler le dernier ajout (${esc(FOODS.find((f) => f.id === mealUndo)?.name ?? '')})</button></div>` : ''}
+    ${(() => { const t = mealTotals(d.meals); return t.kcal ? `<p class="hint">Repas notés aujourd’hui : ≈ ${fmtInt(t.kcal)} kcal sur ${fmtInt(kcalTarget(d.steps))} · le détail est dans Manger.</p>` : ''; })()}
     <p class="hint">Vise ${PROTEIN_GRAMS} g par jour : c’est ce qui garde tes muscles pendant que tu sèches.</p>
     <div class="card-head sub"><h3>Grignotage</h3><span class="pill">${snacks.length} grignotage${snacks.length > 1 ? 's' : ''} · ${resisted} envie${resisted > 1 ? 's' : ''} résistée${resisted > 1 ? 's' : ''}</span></div>
     ${pending
@@ -828,7 +829,9 @@ function urgeBody(u) {
 }
 
 let player = null; // séance en cours
-let proteinUndo = 0; // grammes du dernier bouton protéines (pour « Annuler »)
+let mealUndo = ''; // dernier aliment noté (pour « Annuler le dernier ajout »)
+let foodCat = 'prot'; // famille d'aliments affichée dans Manger
+const fmtInt = (n) => Math.round(n).toLocaleString('fr-FR');
 
 function buildSteps(w, level) {
   const delta = w.fixed ? 0 : (level - 2) * 10;
@@ -960,8 +963,40 @@ function recordsCard() {
 
 // Onglet Manger : des conseils, rien à calculer (protéines et grignotages se
 // notent dans Jour).
+// Ton assiette du jour : touche ce que tu manges (un aliment = une portion),
+// les calories et les protéines du jour s'additionnent, comparées à
+// l'objectif (selon tes pas). Des repères, pas une balance.
+function mealsCard() {
+  const d = state.days[todayKey()] ?? {};
+  const meals = d.meals ?? [];
+  const tot = mealTotals(meals);
+  const target = kcalTarget(d.steps);
+  const left = target - tot.kcal;
+  const cat = FOOD_CATS.some(([c]) => c === foodCat) ? foodCat : 'prot';
+  const half = (n) => (n % 1 ? `${Math.floor(n) || ''}½` : String(n));
+  const status = !tot.kcal ? 'rien de noté pour l’instant'
+    : left > 50 ? `il te reste ≈ ${fmtInt(left)} kcal`
+    : left >= -100 ? 'pile dans l’objectif'
+    : `≈ ${fmtInt(-left)} kcal au-dessus : pas grave, c’est la semaine qui compte`;
+  return `<section class="card meals-card">
+    <div class="card-head"><h2>${icon('utensils')}Ton assiette du jour</h2><span class="pill">≈ ${fmtInt(tot.kcal)} kcal</span></div>
+    <p class="kcal-head"><strong>≈ ${fmtInt(tot.kcal)}</strong> <span class="muted">/ ${fmtInt(target)} kcal${d.steps ? ` · ${fmtInt(d.steps)} pas` : ''}</span></p>
+    <div class="bar kcal-bar${left < -100 ? ' over' : ''}">${tweenBar('kcal', Math.min(100, (tot.kcal / target) * 100))}</div>
+    <p class="hint">${status} · ≈ ${tot.p} g de protéines sur ${PROTEIN_GRAMS}</p>
+    <div class="food-cats" role="group" aria-label="Familles d’aliments">${FOOD_CATS.map(([c, label]) => `<button class="seg ${c === cat ? 'on' : ''}" data-act="food-cat" data-c="${c}" aria-pressed="${c === cat}">${label}</button>`).join('')}</div>
+    <div class="food-grid">${FOODS.filter((f) => f.cat === cat).map((f) => `<button class="food" data-act="meal-add" data-f="${f.id}" aria-label="Noter ${esc(f.name)}, ${esc(f.portion)}, ${f.kcal} kcal"><span class="food-emo" aria-hidden="true">${f.emoji}</span><b>${esc(f.name)}</b><small>${esc(f.portion)}</small><small class="food-kcal">${f.kcal} kcal</small></button>`).join('')}</div>
+    ${meals.length ? `<ul class="meal-list">${meals.map((m) => {
+      const f = FOODS.find((x) => x.id === m.f);
+      return `<li><span class="meal-name">${f?.emoji ?? '🍽️'} ${esc(f?.name ?? m.f)}${m.n !== 1 ? ` <small>×${half(m.n)}</small>` : ''}</span><span class="meal-kcal">${fmtInt(m.n * m.kcal)} kcal</span>
+        <button class="meal-step" data-act="meal-step" data-f="${m.f}" data-v="-0.5" aria-label="Une demi-portion de ${esc(f?.name ?? m.f)} en moins">−</button><button class="meal-step" data-act="meal-step" data-f="${m.f}" data-v="0.5" aria-label="Une demi-portion de ${esc(f?.name ?? m.f)} en plus">+</button></li>`;
+    }).join('')}</ul>` : '<p class="muted">Touche ce que tu manges : un aliment = une portion (− et + par demi-portion ensuite).</p>'}
+    <p class="hint">Des repères, pas une balance : à ±15 % près, c’est la tendance de la semaine qui compte. L’huile de cuisson compte (90 kcal la cuillère). Les protéines notées ici comptent aussi dans Jour.</p>
+  </section>`;
+}
+
 function viewFood() {
   return `
+  ${mealsCard()}
   <section class="card">
     <div class="card-head"><h2>${icon('clock')}Ta journée type</h2></div>
     <p class="hint">≈ 1 850 kcal avec 8 000 pas (≈ 2 000 les jours à 12 000 pas) et ${PROTEIN_GRAMS} g de protéines. Pas faim le matin ? Le 1er repas glisse vers 11 h : c’est le total du jour qui compte.</p>
@@ -1645,15 +1680,37 @@ const actions = {
     renderPlayer();
     render();
   },
-  'protein-add'(el) {
+  // un aliment touché (Manger, ou les boutons protéines de Jour) : une portion de plus
+  'meal-add'(el) {
+    const food = FOODS.find((f) => f.id === el.dataset.f);
+    if (!food) return;
     const d = day(todayKey());
     const before = proteinGrams(d);
-    proteinUndo = Number(el.dataset.g);
-    d.proteinG = before + proteinUndo;
+    d.meals = addMeal(d.meals, food, 1);
+    mealUndo = food.id;
     navigator.vibrate?.(8);
     save();
     render();
-    if (before < PROTEIN_GRAMS && d.proteinG >= PROTEIN_GRAMS) celebrate('Objectif protéines atteint 💪');
+    if (before < PROTEIN_GRAMS && proteinGrams(d) >= PROTEIN_GRAMS) celebrate('Objectif protéines atteint 💪');
+  },
+  'meal-step'(el) {
+    const d = day(todayKey());
+    d.meals = addMeal(d.meals, { id: el.dataset.f }, Number(el.dataset.v));
+    if (!d.meals.length) delete d.meals;
+    save();
+    render();
+  },
+  'meal-undo'() {
+    const d = day(todayKey());
+    d.meals = addMeal(d.meals, { id: mealUndo }, -1);
+    if (!d.meals.length) delete d.meals;
+    mealUndo = '';
+    save();
+    render();
+  },
+  'food-cat'(el) {
+    foodCat = el.dataset.c;
+    render();
   },
   creatine() {
     const d = day(todayKey());
@@ -1664,13 +1721,6 @@ const actions = {
   },
   'creatine-show'(el) {
     state.settings.creatine = el.dataset.v === '1';
-    save();
-    render();
-  },
-  'protein-undo'() {
-    const d = day(todayKey());
-    d.proteinG = Math.max(0, proteinGrams(d) - proteinUndo);
-    proteinUndo = 0;
     save();
     render();
   },

@@ -306,8 +306,36 @@ export function spokenStep(step, next, target, noteUnit = '') {
 // Protéines du jour en grammes. Les anciens jours comptaient en « portions »
 // (champ protein) : une portion vaut 25 g.
 export const PROTEIN_PORTION_G = 25;
+// Avec le journal des repas : les protéines des repas notés s'ajoutent.
 export function proteinGrams(d) {
-  return Number.isFinite(d?.proteinG) ? d.proteinG : (d?.protein ?? 0) * PROTEIN_PORTION_G;
+  const manual = Number.isFinite(d?.proteinG) ? d.proteinG : (d?.protein ?? 0) * PROTEIN_PORTION_G;
+  return manual + mealTotals(d?.meals).p;
+}
+
+// Journal des repas. Objectif du jour selon les pas : 1 850 kcal à 8 000 pas,
+// ≈ 0,04 kcal par pas en plus ou en moins, entre 1 650 et 2 150 (≈ 2 000 à
+// 12 000 pas). Sans pas notés : 1 850.
+export const KCAL_BASE = 1850;
+export function kcalTarget(steps) {
+  if (!Number.isFinite(steps) || steps <= 0) return KCAL_BASE;
+  return Math.round(Math.min(2150, Math.max(1650, KCAL_BASE + 0.04 * (steps - 8000))) / 10) * 10;
+}
+
+// Total des repas notés : kcal et protéines (g), arrondis.
+export function mealTotals(meals) {
+  const t = (Array.isArray(meals) ? meals : []).reduce((s, m) => ({ kcal: s.kcal + m.n * m.kcal, p: s.p + m.n * m.p }), { kcal: 0, p: 0 });
+  return { kcal: Math.round(t.kcal), p: Math.round(t.p) };
+}
+
+// Ajoute (delta > 0) ou retire des portions d'un aliment, par demi-portion.
+// Une entrée par aliment et par jour, avec ses kcal et protéines par portion
+// du moment : changer la table plus tard ne réécrit pas les jours passés.
+export function addMeal(meals, food, delta = 1) {
+  const list = Array.isArray(meals) ? meals : [];
+  const i = list.findIndex((m) => m.f === food.id);
+  if (i < 0) return delta > 0 ? [...list, { f: food.id, n: delta, kcal: food.kcal, p: food.p }] : list;
+  const n = Math.round((list[i].n + delta) * 2) / 2;
+  return n <= 0 ? list.filter((_, k) => k !== i) : list.map((m, k) => (k === i ? { ...m, n } : m));
 }
 
 // Créatine : une case par jour, à part des habitudes (un oubli ne rate pas la

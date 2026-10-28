@@ -142,7 +142,53 @@ export const WARMUP = [
 export const PROTEIN_TARGET = 4; // portions par jour, ≈ 25-30 g de protéines chacune
 // Protéines en grammes (depuis la v53) : objectif du jour et boutons rapides [aliment, g].
 export const PROTEIN_GRAMS = 120; // ≈ 1,7 g par kg pour ~70 kg
-export const PROTEIN_FOODS = [['2 œufs', 13], ['Skyr', 15], ['Fromage blanc', 15], ['Steak haché', 25], ['Thon', 25], ['Poulet', 30], ['Jambon', 10], ['Lentilles', 15]];
+// Boutons protéines de Jour : ils notent l'aliment dans le journal des repas.
+export const PROTEIN_CHIPS = ['oeufs', 'skyr', 'fromage-blanc', 'steak', 'thon', 'poulet', 'jambon', 'lentilles'];
+
+// Journal des repas (onglet Manger) : des aliments courants, en portions
+// faciles à estimer à l'œil. kcal et protéines (p, en g) par portion,
+// d'après la table Ciqual (Anses), arrondis : des repères, à ±15 % près.
+export const FOOD_CATS = [['prot', 'Protéines'], ['fec', 'Féculents'], ['vert', 'Fruits et légumes'], ['lait', 'Laitiers'], ['extra', 'Extras'], ['boire', 'Boissons']];
+export const FOODS = [
+  { id: 'poulet', cat: 'prot', emoji: '🍗', name: 'Poulet', portion: '1 filet cuit (120 g)', kcal: 190, p: 37 },
+  { id: 'steak', cat: 'prot', emoji: '🥩', name: 'Steak haché 5 %', portion: '1 steak (100 g cru)', kcal: 130, p: 21 },
+  { id: 'thon', cat: 'prot', emoji: '🐟', name: 'Thon au naturel', portion: '1 boîte égouttée (110 g)', kcal: 120, p: 27 },
+  { id: 'oeufs', cat: 'prot', emoji: '🥚', name: 'Œufs', portion: '2 œufs', kcal: 150, p: 13 },
+  { id: 'jambon', cat: 'prot', emoji: '🍖', name: 'Jambon blanc', portion: '2 tranches (80 g)', kcal: 90, p: 16 },
+  { id: 'saumon', cat: 'prot', emoji: '🍣', name: 'Saumon', portion: '1 pavé cuit (120 g)', kcal: 250, p: 27 },
+  { id: 'lentilles', cat: 'prot', emoji: '🫘', name: 'Lentilles ou pois chiches', portion: '1 assiette cuite (200 g)', kcal: 230, p: 17 },
+  { id: 'patate-douce', cat: 'fec', emoji: '🍠', name: 'Patate douce', portion: '1 grosse cuite (250 g)', kcal: 215, p: 4 },
+  { id: 'riz', cat: 'fec', emoji: '🍚', name: 'Riz', portion: '1 assiette cuite (200 g)', kcal: 260, p: 5 },
+  { id: 'pates', cat: 'fec', emoji: '🍝', name: 'Pâtes', portion: '1 assiette cuite (200 g)', kcal: 300, p: 10 },
+  { id: 'pdt', cat: 'fec', emoji: '🥔', name: 'Pommes de terre', portion: '1 assiette (250 g)', kcal: 210, p: 5 },
+  { id: 'pain', cat: 'fec', emoji: '🥖', name: 'Pain', portion: '¼ de baguette (60 g)', kcal: 160, p: 5 },
+  { id: 'avoine', cat: 'fec', emoji: '🌾', name: 'Flocons d’avoine', portion: '40 g', kcal: 150, p: 5 },
+  { id: 'legumes', cat: 'vert', emoji: '🥦', name: 'Légumes', portion: '1 assiette (250 g)', kcal: 70, p: 4 },
+  { id: 'banane', cat: 'vert', emoji: '🍌', name: 'Banane', portion: '1 banane', kcal: 100, p: 1 },
+  { id: 'pomme', cat: 'vert', emoji: '🍎', name: 'Pomme', portion: '1 pomme', kcal: 80, p: 0 },
+  { id: 'clementines', cat: 'vert', emoji: '🍊', name: 'Clémentines', portion: '2 clémentines', kcal: 70, p: 1 },
+  { id: 'avocat', cat: 'vert', emoji: '🥑', name: 'Avocat', portion: '½ avocat', kcal: 120, p: 1 },
+  { id: 'amandes', cat: 'vert', emoji: '🥜', name: 'Amandes ou noix', portion: '1 poignée (25 g)', kcal: 150, p: 5 },
+  { id: 'skyr', cat: 'lait', emoji: '🫙', name: 'Skyr nature', portion: '1 pot (150 g)', kcal: 90, p: 15 },
+  { id: 'fromage-blanc', cat: 'lait', emoji: '🥣', name: 'Fromage blanc 0 %', portion: '1 bol (200 g)', kcal: 100, p: 15 },
+  { id: 'yaourt', cat: 'lait', emoji: '🥄', name: 'Yaourt nature', portion: '1 pot (125 g)', kcal: 65, p: 5 },
+  { id: 'fromage', cat: 'lait', emoji: '🧀', name: 'Fromage', portion: '1 portion (30 g)', kcal: 110, p: 7 },
+  { id: 'lait', cat: 'lait', emoji: '🥛', name: 'Lait demi-écrémé', portion: '1 verre (25 cl)', kcal: 115, p: 8 },
+  { id: 'huile', cat: 'extra', emoji: '🫒', name: 'Huile ou beurre', portion: '1 cuillère à soupe', kcal: 90, p: 0 },
+  { id: 'mayo', cat: 'extra', emoji: '🥫', name: 'Mayonnaise', portion: '1 cuillère à soupe', kcal: 100, p: 0 },
+  { id: 'chocolat', cat: 'extra', emoji: '🍫', name: 'Chocolat', portion: '2 carrés (20 g)', kcal: 110, p: 1 },
+  { id: 'biscuits', cat: 'extra', emoji: '🍪', name: 'Biscuits ou gâteau', portion: '3 biscuits (40 g)', kcal: 190, p: 2 },
+  { id: 'viennoiserie', cat: 'extra', emoji: '🥐', name: 'Viennoiserie', portion: '1 croissant', kcal: 230, p: 5 },
+  { id: 'chips', cat: 'extra', emoji: '🍿', name: 'Chips ou pop-corn', portion: '1 petit paquet (30 g)', kcal: 160, p: 2 },
+  { id: 'pizza', cat: 'extra', emoji: '🍕', name: 'Pizza', portion: '½ pizza', kcal: 550, p: 22 },
+  { id: 'burger', cat: 'extra', emoji: '🍔', name: 'Burger', portion: '1 burger', kcal: 500, p: 25 },
+  { id: 'frites', cat: 'extra', emoji: '🍟', name: 'Frites', portion: '1 portion moyenne', kcal: 340, p: 4 },
+  { id: 'kebab', cat: 'extra', emoji: '🌯', name: 'Kebab ou tacos', portion: '1 sandwich', kcal: 850, p: 35 },
+  { id: 'sandwich', cat: 'extra', emoji: '🥪', name: 'Sandwich', portion: '1 jambon-beurre', kcal: 400, p: 18 },
+  { id: 'soda', cat: 'boire', emoji: '🥤', name: 'Soda', portion: '1 canette (33 cl)', kcal: 140, p: 0 },
+  { id: 'jus', cat: 'boire', emoji: '🧃', name: 'Jus de fruits', portion: '1 verre (25 cl)', kcal: 110, p: 1 },
+  { id: 'biere', cat: 'boire', emoji: '🍺', name: 'Bière', portion: '1 demi (25 cl)', kcal: 110, p: 1 },
+];
 export const PROTEIN_EXAMPLES = '1 portion ≈ 3 œufs, 1 filet de poulet, 1 boîte de thon, 200 g de skyr ou 1 boîte de lentilles + 1 yaourt.';
 
 // Déclencheurs de grignotage : les repérer compte plus que de les compter.

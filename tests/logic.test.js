@@ -510,3 +510,29 @@ test('séance : taper vite sur un nombre ne zoome pas (pas de zoom au double-tap
   const css = readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
   assert.match(css, /html \{[^}]*touch-action: manipulation/);
 });
+
+test('repas : objectif selon les pas, total kcal et protéines, une entrée par aliment', async () => {
+  const { kcalTarget, mealTotals, addMeal, proteinGrams, KCAL_BASE } = await import('../js/logic.js');
+  assert.equal(KCAL_BASE, 1850);
+  assert.equal(kcalTarget(undefined), 1850);
+  assert.equal(kcalTarget(8000), 1850);
+  assert.equal(kcalTarget(12000), 2010); // ≈ 2 000 les jours à 12 000 pas
+  assert.equal(kcalTarget(3000), 1650); // jamais sous 1 650
+  assert.equal(kcalTarget(30000), 2150); // ni au-dessus de 2 150
+  const poulet = { id: 'poulet', kcal: 190, p: 37 };
+  const riz = { id: 'riz', kcal: 260, p: 5 };
+  let m = addMeal(undefined, poulet);
+  m = addMeal(m, riz);
+  m = addMeal(m, poulet); // même aliment : une seule entrée, 2 portions
+  assert.deepEqual(m, [{ f: 'poulet', n: 2, kcal: 190, p: 37 }, { f: 'riz', n: 1, kcal: 260, p: 5 }]);
+  assert.deepEqual(mealTotals(m), { kcal: 640, p: 79 });
+  m = addMeal(m, riz, -0.5);
+  assert.equal(m[1].n, 0.5);
+  m = addMeal(m, riz, -0.5); // plus rien : l'entrée disparaît
+  assert.deepEqual(m.map((x) => x.f), ['poulet']);
+  assert.deepEqual(addMeal(m, { id: 'pomme' }, -1), m); // retirer ce qui n'est pas noté : rien ne change
+  assert.deepEqual(mealTotals(undefined), { kcal: 0, p: 0 });
+  // les protéines des repas comptent dans le total du jour, en plus des anciens boutons
+  assert.equal(proteinGrams({ meals: m }), 74);
+  assert.equal(proteinGrams({ proteinG: 20, meals: m }), 94);
+});

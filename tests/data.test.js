@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { WORKOUTS, WEEK_PLAN, WARMUP, HELP, demoUrl, baseName, DAY_PLAN, FOOD_COLORS, FOOD_TREATS, FOOD_RULES, DEFAULT_RULES, PROTEIN_FOODS, SNACKS, SNACK_TEST, TEA_TIPS } from '../js/data.js';
+import { WORKOUTS, WEEK_PLAN, WARMUP, HELP, demoUrl, baseName, DAY_PLAN, FOOD_COLORS, FOOD_TREATS, FOOD_RULES, DEFAULT_RULES, PROTEIN_CHIPS, FOODS, FOOD_CATS, SNACKS, SNACK_TEST, TEA_TIPS } from '../js/data.js';
 import { goalOf } from '../js/logic.js';
 
 test('séances : les IDs stockés dans l’historique ne changent pas', () => {
@@ -217,7 +217,7 @@ test('manger : journée type du réveil au coucher, et 3 couleurs où rien n’e
   // 3 couleurs : vert tous les jours (toutes les protéines des boutons, sauf le jambon), jaune un peu, rouge prévu
   assert.deepEqual(FOOD_COLORS.map((c) => c.id), ['vert', 'jaune', 'rouge']);
   const green = FOOD_COLORS[0].items.join(' ').toLowerCase();
-  for (const [food] of PROTEIN_FOODS.filter(([f]) => f !== 'Jambon')) assert.ok(green.includes(food.replace(/^\d+ /, '').toLowerCase()), food);
+  for (const id of PROTEIN_CHIPS.filter((f) => f !== 'jambon')) assert.ok(green.includes(FOODS.find((f) => f.id === id).name.split(' ')[0].toLowerCase()), id);
   const red = FOOD_COLORS[2];
   assert.match(red.title, /^Prévu, 2 ou 3 fois par semaine/);
   assert.ok(/Gâteaux/.test(red.items.join(' ')) && /Fast-food/.test(red.items.join(' ')));
@@ -246,4 +246,25 @@ test('manger : collations protéinées d’abord, test de la pomme, thé loin de
   assert.match(tea, /fer/);
   assert.match(tea, /détox/);
   for (const t of TEA_TIPS) assert.ok(t.length <= 110, t);
+});
+
+test('journal des repas : des aliments courants, en portions, avec des repères crédibles', () => {
+  const ids = FOODS.map((f) => f.id);
+  assert.equal(new Set(ids).size, ids.length);
+  const cats = FOOD_CATS.map(([c]) => c);
+  for (const c of cats) assert.ok(FOODS.some((f) => f.cat === c), c);
+  for (const f of FOODS) {
+    assert.ok(cats.includes(f.cat), f.id);
+    assert.ok(f.emoji && f.name && f.portion, f.id);
+    assert.ok(Number.isInteger(f.kcal) && f.kcal >= 0 && f.kcal <= 1000, f.id);
+    // les protéines ne peuvent pas apporter plus de calories que l'aliment (4 kcal par g)
+    assert.ok(f.p >= 0 && f.p * 4 <= f.kcal, f.id);
+  }
+  // ce qu'il demandait : patate douce et poulet ; et les boutons protéines de Jour existent tous
+  assert.ok(ids.includes('patate-douce') && ids.includes('poulet'));
+  for (const id of PROTEIN_CHIPS) assert.ok(ids.includes(id), id);
+  // cohérent avec les conseils de Manger : skyr 150 g = 90 kcal, 15 g ; amandes 25 g = 150 kcal
+  const by = (id) => FOODS.find((f) => f.id === id);
+  assert.deepEqual([by('skyr').kcal, by('skyr').p], [90, 15]);
+  assert.equal(by('amandes').kcal, 150);
 });

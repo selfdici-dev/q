@@ -1196,3 +1196,31 @@ details.card.more .rules { margin-top: 10px; }
 .cue-full-fig .fig { width: 100%; height: auto; }
 .cue-full-text { margin: 0; font-size: 1.15rem; line-height: 1.55; color: #f5f5f7; }
 .cue-full .btn { margin-top: auto; min-height: 56px; font-size: 1.05rem; }
+
+/* ---------- Manger : ton assiette du jour (journal des repas) ---------- */
+.kcal-head { margin: 2px 0 0; }
+.kcal-head strong { font: 800 1.7rem/1 var(--rounded, var(--sans)); font-variant-numeric: tabular-nums; }
+.kcal-bar.over span { background: linear-gradient(90deg, var(--warn, #e0a64a), var(--neg, #e05a43)); }
+/* familles d'aliments : toutes visibles (sur deux lignes au besoin) */
+.food-cats { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 8px; }
+.food-cats .seg { flex: 0 0 auto; min-width: 0; min-height: 38px; padding: 0 12px; border-radius: 999px; }
+.food-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.food {
+  display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto auto; column-gap: 8px; align-items: center;
+  min-height: 56px; padding: 8px 10px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface-2);
+  color: var(--text); font: inherit; text-align: left; cursor: pointer;
+}
+.food .food-emo { grid-row: span 3; font-size: 1.5rem; line-height: 1; }
+.food b { font-size: 0.86rem; line-height: 1.2; }
+.food small { font-size: 0.72rem; line-height: 1.25; color: var(--muted); }
+.food .food-kcal { color: var(--accent); font-weight: 700; }
+.meal-list { list-style: none; margin: 12px 0 4px; padding: 0; }
+.meal-list li { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 6px; padding: 6px 0; border-top: 1px solid var(--line); }
+.meal-list li:first-child { border-top: 0; }
+.meal-name small { color: var(--muted); }
+.meal-kcal { color: var(--text-2); font-size: 0.85rem; font-variant-numeric: tabular-nums; margin-right: 4px; }
+.meal-step { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font-size: 1.1rem; cursor: pointer; }
+@media (prefers-reduced-motion: no-preference) {
+  .food { transition: transform 0.1s; }
+  .food:active, .meal-step:active { transform: scale(0.96); }
+}

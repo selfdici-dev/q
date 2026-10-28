@@ -973,21 +973,9 @@ details.more:not(.card) > summary::after { content: ""; position: absolute; inse
 }
 .gym-hero h2 { font: 700 1.375rem/1.2 var(--sans); letter-spacing: -0.015em; }
 .gym-hero .eyebrow { margin-bottom: 2px; color: var(--wo, var(--accent)); }
-.gym-stage {
-  background: var(--fig-tile);
-  box-shadow: inset 0 0 0 1px var(--divider), 0 18px 40px -22px color-mix(in srgb, var(--wo, var(--accent)) 80%, transparent);
-}
-.poste { background: var(--tile); border-color: var(--divider); }
-.poste .poste-fig { background: var(--fig-tile); }
-.poste.planned { border-color: color-mix(in srgb, var(--wo, var(--accent)) 60%, transparent); box-shadow: 0 10px 26px -16px var(--wo, var(--accent)); }
-.poste-tag { background: color-mix(in srgb, var(--wo, var(--accent)) 18%, transparent); color: var(--wo, var(--accent)); }
-.poste-tag.done { background: color-mix(in srgb, var(--pos) 18%, transparent); color: var(--pos); }
+.hub-stage { box-shadow: inset 0 0 0 1px var(--divider), 0 18px 40px -22px color-mix(in srgb, var(--wo, var(--accent)) 80%, transparent); }
 .record { background: var(--tile); box-shadow: inset 3px 0 0 var(--wo, var(--accent)); }
 .record b { font-family: var(--rounded); font-weight: 800; color: var(--wo, var(--text)); }
-@media (prefers-reduced-motion: no-preference) {
-  .poste { transition: transform 0.15s; }
-  .poste:active { transform: scale(0.97); }
-}
 
 /* Sous-onglets (Moi) et filtre des livres : une capsule de verre collante */
 .subtabs, .book-filter {

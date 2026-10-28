@@ -19,6 +19,7 @@ import { backupStatus, validateBackup } from './backup.js';
 import { figureFor, figureSVG, focusFor } from './figures.js';
 import { icon } from './icons.js';
 import { roomSVG } from './room.js';
+import { hubSVG, hubLayout, HUB } from './gym.js';
 import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS } from './avatar.js';
 import { treeSVG, seedOf } from './tree.js';
 
@@ -861,8 +862,7 @@ function viewSport() {
   return `
   ${suggestUp ? `<div class="banner ok"><strong>2 séances « faciles » de suite.</strong> Il est temps de monter. <button class="btn small primary" data-act="level" data-lvl="${lvl + 1}">Passer au niveau ${lvl + 1}</button></div>` : ''}
   ${suggestDown ? `<div class="banner warn"><strong>2 séances « dures » de suite.</strong> Redescendre d’un niveau n’est pas un échec. <button class="btn small" data-act="level" data-lvl="${lvl - 1}">Revenir au niveau ${lvl - 1}</button></div>` : ''}
-  ${gymHero(planned, done, lvl)}
-  ${gymPostes(planned, done)}
+  ${gymHub(planned, done, lvl)}
   ${recordsCard()}
   <div class="folds">
     ${fold('c-goal', icon('target'), 'Ton objectif', 'Pourquoi ces séances', '<span></span>', goalBody())}
@@ -895,47 +895,44 @@ function viewSport() {
 }
 
 // ——— Salle ———
-// L'exercice phare d'une séance (son bonhomme la représente).
-const starOf = (w) => w.exercises.find((e) => e.name === w.star) ?? w.exercises[0];
 const shortName = (w) => w.name.split(' · ')[1] ?? w.name;
 
-// La séance du jour en grand, avec le bonhomme de son exercice phare et ton niveau.
-function gymHero(planned, done, lvl) {
-  const w = WORKOUTS.find((x) => x.id === planned);
+// Ta salle : un poste par séance, chacun avec son bonhomme et son matériel.
+// Touche un poste : son bonhomme se met au travail, sa séance s'écrit
+// au-dessus de lui et s'affiche dessous, prête à lancer. Au départ : celle
+// du jour.
+let gymPick = null;
+const pctOf = (v, total) => `${Math.round((v / total) * 1000) / 10}%`;
+
+function gymHub(planned, done, lvl) {
+  const pick = WORKOUTS.some((x) => x.id === gymPick) ? gymPick : planned;
+  const w = WORKOUTS.find((x) => x.id === pick);
   const did = done.includes(w.id);
-  const star = starOf(w);
   const lv = levelInfo(totalXP(state));
-  return `<section class="card gym-hero wo-${w.id}">
+  const hits = hubLayout().map(({ id, box: [x, y, bw, bh] }) => {
+    const on = id === pick;
+    const wo = WORKOUTS.find((z) => z.id === id);
+    const mid = x + bw / 2;
+    const side = mid < HUB.w * 0.3 ? ' at-l' : mid > HUB.w * 0.7 ? ' at-r' : '';
+    const label = on
+      ? `<span class="hub-tag${side}"><b>${id}</b>${esc(shortName(wo))}</span>`
+      : `<span class="hub-badge${id === planned ? ' today' : ''}">${done.includes(id) ? '✓' : id}</span>`;
+    return `<button class="hub-hit wo-${id}${on ? ' on' : ''}" style="left:${pctOf(x - 6, HUB.w)};top:${pctOf(y - 6, HUB.h)};width:${pctOf(bw + 12, HUB.w)};height:${pctOf(bh + 12, HUB.h)}" data-act="gym-pick" data-id="${id}" aria-pressed="${on}" aria-label="Séance ${id} : ${esc(shortName(wo))}${id === planned ? ', celle du jour' : ''}${done.includes(id) ? ', faite aujourd’hui' : ''}">${label}</button>`;
+  }).join('');
+  return `<section class="card gym-hero hub wo-${w.id}">
+    <div class="hub-stage">${hubSVG({ pick, animate: !reduceMotion() })}${hits}</div>
     <div class="gym-head">
       <span class="wo-badge big wo-${w.id}">${w.id}</span>
-      <div><p class="eyebrow">Aujourd’hui${did ? ' · ✓ faite' : ''}</p><h2>${esc(shortName(w))}</h2>
-        <p class="muted">≈ ${workoutMinutes(w)} min · ≈ ${workoutKcal(w)} kcal · ${w.exercises.length} exercices · niveau ${lvl}</p></div>
+      <div><p class="eyebrow">${pick === planned ? 'Aujourd’hui' : `Poste ${w.id}`}${did ? ' · ✓ faite' : ''}</p><h2>${esc(shortName(w))}</h2>
+        <p class="muted">≈ ${workoutMinutes(w)} min · ≈ ${workoutKcal(w)} kcal · ${w.exercises.length} exercices${w.fixed ? '' : ` · niveau ${lvl}`}</p></div>
     </div>
-    <div class="gym-stage"><div class="gym-room">${roomSVG({ id: 'salle' })}</div><div class="gym-fig">${figure(star.name, star.target, false)}</div></div>
-    <button class="btn primary wide" data-act="start-workout" data-id="${w.id}">${did ? 'Refaire la séance' : 'Lancer la séance'}</button>
+    <button class="btn primary wide" data-act="start-workout" data-id="${w.id}">${did ? 'Refaire la séance' : `Lancer la séance ${w.id}`}</button>
+    <p class="hint">Touche un poste pour changer de séance. C ou P en plus quand tu veux ; pas la forme ? M suffit à valider « Bouger ».</p>
     <div class="level gym-level">
       <span class="badge">Niv. ${lv.level}</span><span class="rank">${esc(lv.rank)}</span>
       <div class="xpbar">${tweenBar('gym-xp', (lv.into / lv.span) * 100)}</div>
       <span class="xp">${lv.into}/${lv.span} XP</span>
     </div>
-  </section>`;
-}
-
-// Les postes de la salle : les 5 séances, à lancer d'une touche (bonshommes fixes, légers).
-function gymPostes(planned, done) {
-  return `<section class="card gym-postes">
-    <div class="card-head"><h2>Les postes</h2><span class="pill">${WORKOUTS.length}</span></div>
-    <div class="postes">${WORKOUTS.map((w) => {
-      const f = figureFor(starOf(w).name);
-      const did = done.includes(w.id);
-      const tag = did ? '<span class="poste-tag done">✓ Faite</span>' : w.id === planned ? '<span class="poste-tag">Aujourd’hui</span>' : '';
-      return `<button class="poste wo-${w.id}${w.id === planned ? ' planned' : ''}" data-act="start-workout" data-id="${w.id}" aria-label="Lancer la séance ${w.id} : ${esc(shortName(w))}${did ? ', déjà faite aujourd’hui' : ''}">
-        <span class="poste-fig">${f ? figureSVG(f.fig, { mirror: f.mirror, fit: true, animate: false, help: false }) : ''}</span>
-        <span class="poste-top"><span class="wo-badge wo-${w.id}">${w.id}</span>${tag}</span>
-        <strong>${esc(shortName(w))}</strong><small>≈ ${workoutMinutes(w)} min</small>
-      </button>`;
-    }).join('')}</div>
-    <p class="hint">C ou P en plus quand tu veux. Pas la forme ? M suffit à valider « Bouger ».</p>
   </section>`;
 }
 
@@ -1547,6 +1544,12 @@ const actions = {
     save();
     render();
     if (dayStatus(state, today).valid && chain(state, today).count > before) celebrate('Journée validée 🔥 Chaîne +1');
+  },
+  // Salle : toucher un poste le choisit (son bonhomme se met au travail)
+  'gym-pick'(el) {
+    gymPick = el.dataset.id;
+    navigator.vibrate?.(6);
+    render();
   },
   'start-workout'(el, e) {
     e.preventDefault();

@@ -190,6 +190,15 @@ test('B : des consignes courtes et en étapes, lisibles pendant l’effort', () 
   }
 });
 
+test('B : pompes pike par étapes, de la négative à la complète', () => {
+  // il n'y arrivait pas et ne sentait aucun progrès : 4 étapes, 8 faciles font passer à la suivante
+  const pike = WORKOUTS.find((w) => w.id === 'B').exercises.find((e) => e.name === 'Pompes pike');
+  assert.match(pike.cue, /Étape 1 : négatives.*Étape 2 : .*Étape 3 : complètes.*Étape 4 : /);
+  const g = goalOf(pike.cue);
+  assert.equal(g.unit, 'pompes pike');
+  assert.match(pike.cue, new RegExp(`Plus de ${g.max} faciles : étape suivante`));
+});
+
 test('manger : journée type du réveil au coucher, et 3 couleurs où rien n’est interdit', () => {
   // journée type : des lignes courtes, lisibles d'un coup d'œil
   assert.ok(DAY_PLAN.length >= 6);

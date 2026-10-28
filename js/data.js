@@ -393,39 +393,31 @@ export const HELP = {
     title: 'Comment marche Jour',
     lines: [
       'Fais au moins le minimum de chaque habitude : la journée est validée et ta chaîne 🔥 avance.',
-      'Ton plan du jour te dit quoi faire ensuite : touche le gros bouton de la carte « Maintenant ».',
-      'Un jour raté, ça arrive : jamais deux fois de suite. Le soir, copie ton bilan pour Claude.',
-    ],
-  },
-  focus: {
-    title: 'Comment marche Focus',
-    lines: [
-      'Écris la seule chose sur laquelle tu travailles, pose le téléphone loin, puis Démarrer.',
-      'Un arbre pousse pendant les 25 minutes : va au bout et il rejoint ton jardin du jour.',
-      'Envie de scroller ? Lance le minuteur de 10 minutes et fais autre chose en attendant.',
+      'Ton plan du jour te dit quoi faire ensuite. Le soir, copie ton bilan pour Claude.',
+      'Un jour raté ? Jamais deux fois de suite. Envie d’ouvrir Snap ? « J’attends 10 min ».',
     ],
   },
   sport: {
-    title: 'Comment marche Corps',
+    title: 'Comment marche la Salle',
     lines: [
       'Touche « Lancer la séance » et pose le téléphone au sol : l’appli te guide, bips compris.',
       'Chaque jour a sa séance (A, B ou M), plus C ou P si tu veux. Pas la forme ? La mobilité suffit.',
       'À la fin, note la séance : après 2 « Facile » ou 2 « Dur » de suite, l’appli te propose un autre niveau.',
     ],
   },
-  argent: {
-    title: 'Comment marche Argent',
+  manger: {
+    title: 'Comment marche Manger',
     lines: [
-      'Une leçon dure environ 10 minutes : une idée, un exemple, un exercice réel, un quiz.',
-      'Les leçons s’ouvrent dans l’ordre : fais la suivante quand ton plan du jour la propose.',
-      'Les questions du quiz reviennent ensuite en cartes de révision, juste avant l’oubli.',
+      'Rien à calculer : ta journée type, ce que tu peux manger en 3 couleurs, et des recettes simples.',
+      'Rien n’est interdit : le rouge veut dire « prévu », 2 ou 3 fois par semaine.',
+      'Tes protéines et tes grignotages se notent dans Jour, en 2 touches.',
     ],
   },
   moi: {
     title: 'Comment marche Moi',
     lines: [
-      'Programme : où tu en es sur les 12 semaines, tes objectifs et tes outils à configurer.',
-      'Bilan : tes sprints et ta semaine à copier pour Claude. Livres : quoi lire ensuite.',
+      'Programme : tes 12 semaines. Bilan : ta semaine à copier pour Claude. Livres : quoi lire.',
+      'Argent : une leçon de 10 minutes à la fois, puis des cartes de révision juste avant l’oubli.',
       'Réglages : habitudes, règles, thème et sauvegarde. Exporte une fois par semaine.',
     ],
   },

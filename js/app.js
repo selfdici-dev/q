@@ -396,17 +396,22 @@ function greeting() {
   return 'Bonsoir. Dernière ligne droite.';
 }
 
+// 4 onglets, la Salle d'abord (c'est l'onglet le plus utilisé). Les icônes au
+// trait sont dessinées dans luxe.css ; l'emoji ne sert que si elle manque.
 const TABS = [
+  { id: 'sport', label: 'Salle', icon: '🏋️' },
   { id: 'jour', label: 'Jour', icon: '☀️' },
-  { id: 'focus', label: 'Focus', icon: '🎯' },
-  { id: 'sport', label: 'Corps', icon: '💪' },
-  { id: 'argent', label: 'Argent', icon: '💶' },
+  { id: 'manger', label: 'Manger', icon: '🍽️' },
   { id: 'moi', label: 'Moi', icon: '🧭' },
 ];
+// Pages sans onglet, et l'onglet allumé quand on y est : Argent et ses
+// révisions vivent dans Moi ; le minuteur de focus (onglet retiré) reste
+// joignable par #focus, ses données sont intactes.
+const HIDDEN_TABS = { argent: 'moi', revision: 'moi', focus: 'jour' };
 
 function currentTab() {
   const h = location.hash.slice(1) === 'bilan' ? 'moi' : location.hash.slice(1);
-  return TABS.some((t) => t.id === h) || h === 'revision' ? h : 'jour';
+  return TABS.some((t) => t.id === h) || HIDDEN_TABS[h] ? h : 'sport';
 }
 
 let renders = 0; // nombre d'affichages : distingue un réaffichage sur place d'une arrivée
@@ -414,16 +419,19 @@ let renders = 0; // nombre d'affichages : distingue un réaffichage sur place d'
 function render() {
   renders++;
   const tab = currentTab();
-  const views = { jour: viewToday, focus: viewFocus, sport: viewSport, argent: money.view, moi: viewMe, revision: viewRevision };
+  const views = { jour: viewToday, focus: viewFocus, sport: viewSport, manger: viewFood, argent: viewMe, moi: viewMe, revision: viewRevision };
+  const me = ['Moi', 'Programme, bilan, argent, livres, réglages'];
   const heads = {
     focus: ['Focus', 'Une seule chose à la fois'],
-    sport: ['Corps', 'Séance du jour, régularité, alimentation'],
-    argent: ['Argent', 'Les bases, une leçon de 10 minutes à la fois'],
-    moi: ['Moi', 'Programme, bilan, livres, réglages'],
+    sport: ['Salle', 'Ta séance, tes postes, tes records'],
+    manger: ['Manger', 'Ta journée type, des conseils, des recettes'],
+    argent: me,
+    moi: me,
     revision: ['Révisions', 'Chaque carte revient juste avant l’oubli'],
   };
   const h = heads[tab];
-  const head = h && !(tab === 'argent' && state.ui.lesson) ? `<header class="page-head"><div class="page-title"><h1>${h[0]}</h1>${HELP[tab] ? helpBtn(tab) : ''}</div><p>${h[1]}</p></header>` : '';
+  const helpKey = tab === 'argent' ? 'moi' : tab;
+  const head = h && !(tab === 'argent' && state.ui.lesson) ? `<header class="page-head"><div class="page-title"><h1>${h[0]}</h1>${HELP[helpKey] ? helpBtn(helpKey) : ''}</div><p>${h[1]}</p></header>` : '';
   $('#view').innerHTML = head + views[tab]();
   $('#view').dataset.tab = tab;
   const lv = levelInfo(totalXP(state));
@@ -433,7 +441,7 @@ function render() {
     save();
     celebrate(`Niveau ${lv.level} atteint : ${lv.rank}${grew ? ' · ton double évolue' : ''}`);
   }
-  document.querySelectorAll('#tabs a').forEach((a) => a.setAttribute('aria-current', a.dataset.tab === tab ? 'page' : 'false'));
+  document.querySelectorAll('#tabs a').forEach((a) => a.setAttribute('aria-current', a.dataset.tab === (HIDDEN_TABS[tab] ?? tab) ? 'page' : 'false'));
   moveTabIndicator();
   runTweens();
   tick();
@@ -510,6 +518,7 @@ function viewToday() {
   ${backupBanner(today)}
   ${planCard(today)}
   <div class="folds">
+    ${fold('urge', '📵', 'Envie de scroller ?', state.timers.urge.endAt ? 'Minuteur en cours' : 'J’attends 10 min avant d’ouvrir', urgePill(d), urgeBody(state.timers.urge))}
     ${fold('habits', '✅', 'Habitudes', toDo ? `${toDo} à faire · min ou complet` : 'Toutes faites', `<span class="pill ${toDo ? '' : 'ok'}">${st.done}/${st.total}</span>`, `
       <ul class="habits">
         ${state.habits.map((h) => {
@@ -586,7 +595,7 @@ function planItems(today) {
   const done = d.workouts ?? [];
   const items = [];
   items.push({
-    id: 'seance', ico: '💪', title: `Séance ${wo.name.split(' · ')[1] ?? wo.name}`, sub: `≈ ${workoutMinutes(wo)} min · niveau ${state.settings.level}`,
+    id: 'seance', ico: '🏋️', title: `Séance ${wo.name.split(' · ')[1] ?? wo.name}`, sub: `≈ ${workoutMinutes(wo)} min · niveau ${state.settings.level}`,
     done: wo.id === 'M' ? done.length > 0 : done.some((x) => x !== 'M'),
     go: { label: 'Lancer', act: 'start-workout', id: wo.id },
   });
@@ -768,14 +777,21 @@ function viewFocus() {
     <div class="garden" role="img" aria-label="${d.focus ?? 0} arbre${(d.focus ?? 0) > 1 ? 's' : ''} : sessions terminées aujourd’hui">${Array.from({ length: d.focus ?? 0 }, (_, i) => treeSVG(1, focusSeed(today, i), { mini: true })).join('') || '<span class="muted">Ton jardin du jour est vide. Chaque session fait pousser un arbre.</span>'}</div>
   </section>
   <section class="card center urge">
-    <div class="card-head"><h2>Envie de scroller ?</h2><span class="pill">${d.urges ?? 0} envie${(d.urges ?? 0) > 1 ? 's' : ''} retardée${(d.urges ?? 0) > 1 ? 's' : ''}</span></div>
-    <p class="muted">Tu n’as pas à résister pour toujours. Juste 10 minutes. Une envie retombe souvent d’elle-même ; si elle est encore là après, ouvre l’appli consciemment, avec un minuteur.</p>
+    <div class="card-head"><h2>Envie de scroller ?</h2>${urgePill(d)}</div>
+    ${urgeBody(u)}
+  </section>`;
+}
+
+// « Envie de scroller ? » : 10 minutes d'attente avant d'ouvrir Snap ou
+// TikTok. Dans Jour (et sur l'ancienne page Focus).
+const urgePill = (d) => `<span class="pill">${d.urges ?? 0} envie${(d.urges ?? 0) > 1 ? 's' : ''} retardée${(d.urges ?? 0) > 1 ? 's' : ''}</span>`;
+function urgeBody(u) {
+  return `<p class="muted">Tu n’as pas à résister pour toujours. Juste 10 minutes. Une envie retombe souvent d’elle-même ; si elle est encore là après, ouvre l’appli consciemment, avec un minuteur.</p>
     <div class="clock small" id="urge-clock">${u.endAt ? fmtClock(Math.max(0, (u.endAt - Date.now()) / 1000)) : '10:00'}</div>
     <div class="row center">
       ${u.endAt ? '<button class="btn" data-act="urge-stop">Arrêter</button>' : '<button class="btn primary" data-act="urge-start">J’attends 10 min</button>'}
     </div>
-    <p class="hint">Pendant ces 10 min : 10 pompes, un verre d’eau, ou 2 pages de lecture.</p>
-  </section>`;
+    <p class="hint">Pendant ces 10 min : 10 pompes, un verre d’eau, ou sortir prendre l’air.</p>`;
 }
 
 let player = null; // séance en cours
@@ -833,7 +849,7 @@ function viewSport() {
   </section>
   <div class="folds">
     ${fold('c-goal', '🎯', 'Ton objectif', 'Pourquoi ces séances', '<span></span>', goalBody())}
-    ${fold('c-wo', '💪', 'Les 5 séances', 'Exercices et semaine type', `<span class="pill">Niv. ${lvl}</span>`, `
+    ${fold('c-wo', '🏋️', 'Les 5 séances', 'Exercices et semaine type', `<span class="pill">Niv. ${lvl}</span>`, `
       <div class="week">${[1, 2, 3, 4, 5, 6, 0].map((dow, i) => `<div class="wk-${WEEK_PLAN[dow]} ${i === todayDow ? 'today' : ''}"><small>${dayNames[i]}</small><b>${WEEK_PLAN[dow]}</b></div>`).join('')}</div>
       <p class="hint">A = abdos et tronc, B = bras, avant-bras, épaules et dos, en alternance du lundi au samedi : chaque muscle a 48 h pour récupérer. C = cardio boxe, en plus quand tu veux. P = tractions au parc, pendant ta marche, à la place d’une C. M = mobilité et posture, le dimanche (repos). Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
       <div class="row">${[1, 2, 3].map((n) => `<button class="seg ${lvl === n ? 'on' : ''}" data-act="level" data-lvl="${n}" aria-pressed="${lvl === n}">Niveau ${n}</button>`).join('')}</div>
@@ -849,20 +865,6 @@ function viewSport() {
         </details>`;
       }).join('')}`)}
     ${fold('c-tests', '📏', 'Tests de niveau', 'Tous les 4 sprints', `<span class="pill">${state.tests.length} test${state.tests.length > 1 ? 's' : ''}</span>`, testsBody())}
-    ${fold('c-food', '🍽️', 'Manger et cuisiner', `Journée type · ${FOOD_RULES.length} règles · ${RECIPES.length} recettes`, '<span></span>', `
-      <h3 class="apps-cat">Ta journée type</h3>
-      <p class="hint">≈ 2 200 kcal et ${PROTEIN_GRAMS} g de protéines. Pas faim le matin ? Le 1er repas glisse vers 11 h : c’est le total du jour qui compte.</p>
-      <ol class="day-plan">${DAY_PLAN.map(([when, what]) => `<li><b>${esc(when)}</b><span>${esc(what)}</span></li>`).join('')}</ol>
-      <h3 class="apps-cat">Ce que tu peux manger</h3>
-      ${FOOD_COLORS.map((c) => `<div class="food-color fc-${c.id}"><p><strong>${c.ico} ${esc(c.title)}</strong></p><ul class="tight">${c.items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul></div>`).join('')}
-      <p class="hint">Rien n’est interdit : le rouge veut dire « prévu », pas « jamais ».</p>
-      <ul class="tight">${FOOD_TREATS.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
-      <h3 class="apps-cat">Les règles et les recettes</h3>
-      <p class="muted">Pour des abdos visibles, l’alimentation pèse plus lourd que les séances. Six règles, pas de régime :</p>
-      <ol class="tight">${FOOD_RULES.map((r) => `<li>${esc(r)}</li>`).join('')}</ol>
-      <p class="hint">Objectif : maîtriser une recette par semaine. Propose à tes parents de cuisiner un repas par semaine : tu apprends, et tu choisis ce qui est dans l’assiette.</p>
-      ${RECIPES.map((r) => `<details><summary><strong>${esc(r.name)}</strong> · ${esc(r.time)}</summary>
-        <p><em>Ingrédients :</em> ${esc(r.items)}</p><p>${esc(r.steps)}</p></details>`).join('')}`)}
     ${fold('c-safe', '⛑️', 'Sécurité', 'Avant ta première séance', '<span></span>', `
       <ul class="tight">
         <li>Douleur vive ou articulaire : arrête l’exercice. Une brûlure musculaire, c’est normal.</li>
@@ -873,6 +875,34 @@ function viewSport() {
         <li>Chaque exercice a un lien « démo vidéo ». Regarde-le avant ta première séance, pas pendant.</li>
       </ul>`)}
   </div>`;
+}
+
+// Onglet Manger : des conseils, rien à calculer (protéines et grignotages se
+// notent dans Jour).
+function viewFood() {
+  return `
+  <section class="card">
+    <div class="card-head"><h2>🕘 Ta journée type</h2></div>
+    <p class="hint">≈ 2 200 kcal et ${PROTEIN_GRAMS} g de protéines. Pas faim le matin ? Le 1er repas glisse vers 11 h : c’est le total du jour qui compte.</p>
+    <ol class="day-plan">${DAY_PLAN.map(([when, what]) => `<li><b>${esc(when)}</b><span>${esc(what)}</span></li>`).join('')}</ol>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>🚦 Ce que tu peux manger</h2></div>
+    ${FOOD_COLORS.map((c) => `<div class="food-color fc-${c.id}"><p><strong>${c.ico} ${esc(c.title)}</strong></p><ul class="tight">${c.items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul></div>`).join('')}
+    <p class="hint">Rien n’est interdit : le rouge veut dire « prévu », pas « jamais ».</p>
+    <ul class="tight">${FOOD_TREATS.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>📏 Six règles, pas de régime</h2></div>
+    <p class="muted">Pour des abdos visibles, l’alimentation pèse plus lourd que les séances.</p>
+    <ol class="tight">${FOOD_RULES.map((r) => `<li>${esc(r)}</li>`).join('')}</ol>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>🍳 Recettes</h2><span class="pill">${RECIPES.length}</span></div>
+    <p class="hint">Objectif : maîtriser une recette par semaine. Propose à tes parents de cuisiner un repas par semaine : tu apprends, et tu choisis ce qui est dans l’assiette.</p>
+    ${RECIPES.map((r) => `<details><summary><strong>${esc(r.name)}</strong> · ${esc(r.time)}</summary>
+      <p><em>Ingrédients :</em> ${esc(r.items)}</p><p>${esc(r.steps)}</p></details>`).join('')}
+  </section>`;
 }
 
 function goalBody() {
@@ -1063,13 +1093,17 @@ function testsBody() {
       }).join('')}</tr>` : ''}</tbody></table></div>` : ''}`;
 }
 
-// 4 sous-onglets : les outils (anciennement « Apps ») sont rangés dans Programme.
-const ME_TABS = [['programme', 'Programme'], ['bilan', 'Bilan'], ['livres', 'Livres'], ['reglages', 'Réglages']];
+// 5 sous-onglets : les outils (anciennement « Apps ») sont rangés dans Programme ;
+// Argent (ancien onglet) est ici. #argent ouvre Moi › Argent : c'est là que
+// s'ouvrent les leçons, y compris depuis le plan du jour.
+const ME_TABS = [['programme', 'Programme'], ['bilan', 'Bilan'], ['argent', 'Argent'], ['livres', 'Livres'], ['reglages', 'Réglages']];
 
 function viewMe() {
-  const sub = ME_TABS.some(([id]) => id === state.ui.meTab) ? state.ui.meTab : 'programme';
-  const body = { programme: viewProgram, bilan: viewReview, livres: viewBooks, reglages: viewSettings }[sub]();
-  return `<nav class="subtabs">${ME_TABS.map(([id, label]) => `<button class="${sub === id ? 'on' : ''}" data-act="me-tab" data-id="${id}">${label}</button>`).join('')}</nav>${body}`;
+  const onMoney = currentTab() === 'argent';
+  const sub = onMoney ? 'argent' : ME_TABS.some(([id]) => id === state.ui.meTab) ? state.ui.meTab : 'programme';
+  const body = { programme: viewProgram, bilan: viewReview, argent: money.view, livres: viewBooks, reglages: viewSettings }[sub]();
+  // depuis #argent, les autres sous-onglets ramènent sur #moi
+  return `<nav class="subtabs five">${ME_TABS.map(([id, label]) => `<button class="${sub === id ? 'on' : ''}" data-act="me-tab" data-id="${id}"${onMoney && id !== 'argent' ? ' data-go="moi"' : ''}>${label}</button>`).join('')}</nav>${body}`;
 }
 
 function avgLast7(field, today, map = (v) => v) {
@@ -1112,7 +1146,7 @@ function viewProgram() {
         ${row('Planche', lastTest.plank ?? null, next.plank, (v) => `${v} s`, 'higher')}
         ${row('Leçons de finance', lessons, next.lessons, (v) => v, 'higher')}
       </tbody></table></div>
-    <p class="hint">Le coucher vient de « Nuit dernière » (onglet Jour), les pompes et la planche de tes tests de niveau (onglet Corps).</p>
+    <p class="hint">Le coucher vient de « Nuit dernière » (onglet Jour), les pompes et la planche de tes tests de niveau (onglet Salle).</p>
   </section>
   <section class="card">
     <div class="card-head"><h2>Les 3 phases</h2></div>
@@ -1323,7 +1357,7 @@ function tick() {
     save();
     beep(2);
     toast('10 minutes tenues. Si l’envie est encore là, vas-y avec un minuteur. Sinon, continue.');
-    if (currentTab() === 'focus') render();
+    if (['jour', 'focus'].includes(currentTab())) render();
   }
   const uc = $('#urge-clock');
   if (uc && u.endAt) uc.textContent = fmtClock(Math.ceil((u.endAt - Date.now()) / 1000));
@@ -1676,6 +1710,7 @@ const actions = {
     const d = day(todayKey());
     d.urges = (d.urges ?? 0) + 1;
     state.timers.urge.endAt = Date.now() + URGE_DELAY * 1000;
+    openFolds.add('urge'); // le minuteur reste en vue dans Jour
     audioCtx ??= new AudioContext();
     save();
     render();
@@ -1855,7 +1890,7 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-const TAB_ORDER = ['jour', 'revision', 'focus', 'sport', 'argent', 'moi'];
+const TAB_ORDER = ['sport', 'jour', 'focus', 'revision', 'manger', 'moi', 'argent'];
 let shownTab = currentTab();
 
 window.addEventListener('hashchange', () => {

@@ -329,7 +329,9 @@ def prop_points(sp):
         pts += [c_ + [0, r_, 0], c_ + [0, -r_, 0], c_ + [0, 0, r_], c_ + [0, 0, -r_], c_ + [1.35, 0, 0], c_ + [-1.35, 0, 0]]
     if sp.get('bar'):
         c_, hf = np.asarray(sp['bar']['c'], float), sp['bar']['half']
-        pts += [c_ + [hf, 0.3, 0], c_ + [-hf, 0.3, 0], [c_[0] + hf, _FLOOR0, c_[2]], [c_[0] - hf, _FLOOR0, c_[2]]]
+        far = sp['bar'].get('posts') == 'far'      # barre basse vue de côté : le bout proche sort du cadre
+        lo = -3.4 if far else -hf
+        pts += [c_ + [hf, 0.3, 0], c_ + [lo, 0.3, 0], [c_[0] + hf, _FLOOR0, c_[2]], [c_[0] + lo, _FLOOR0, c_[2]]]
     for bar_ in sp.get('parallettes', []):
         pts += [np.asarray(bar_, float) + [0, 0, 1.7], np.asarray(bar_, float) - [0, 0, 1.7]]
     return pts
@@ -345,7 +347,7 @@ if spec.get('wheel'):
 if spec.get('bar'):
     c_ = np.asarray(spec['bar']['c'], float); hf = spec['bar']['half']
     cyl('pbar', to_b1(c_ + [-hf - 0.2, 0, 0]), to_b1(c_ + [hf + 0.2, 0, 0]), 0.16, metal_m)
-    for e_ in (-1, 1):
+    for e_ in ((1,) if spec['bar'].get('posts') == 'far' else (-1, 1)):
         cyl('ppost', to_b1([c_[0] + e_ * (hf + 0.2), _FLOOR0, c_[2]]), to_b1([c_[0] + e_ * (hf + 0.2), c_[1] + 0.3, c_[2]]), 0.3, metal_m)
 for p_ in prop_points(spec): scene_pts.append(to_b(np.array([p_])))
 

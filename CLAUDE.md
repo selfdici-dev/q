@@ -14,8 +14,9 @@ L'utilisateur est débutant : explique simplement, en français.
   `js/poses.js` : une pose par exercice (vue de profil, tête à droite, sol à y = 70).
 - `js/avatar.js` : « ton double », personnage qui évolue avec le niveau (calculé, jamais stocké).
 - `js/tree.js` : arbre du focus qui pousse pendant la session (unique par session, calculé).
-- `js/room.js` : décor de la salle (mur, spots, LED, parquet) ; `js/gym.js` : la salle
-  interactive de l'onglet Salle (un poste par séance) ; `js/icons.js` : icônes au trait.
+- `js/room.js` : décor de la salle vue de face (lecteur de séance, entrée) ; `js/gym.js` :
+  la salle de l'onglet Salle, en maquette vue de dessus façon jeu vidéo (une plateforme
+  par séance) ; `js/icons.js` : icônes au trait.
 - `js/drawings.js` : dessins au crayon des exercices (corps en 3D, muscles travaillés
   en rouge), joués au rythme du bonhomme ; sans dessin, le bonhomme reste.
   `js/drawings-data.js` (leur manifeste) et `img/ex/*.webp` (leurs images) sont

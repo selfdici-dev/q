@@ -4,24 +4,30 @@ import { hubSVG, hubLayout, HUB, STATIONS, covers } from '../js/gym.js';
 import { WORKOUTS } from '../js/data.js';
 import { figureFor } from '../js/figures.js';
 
-test('ta salle : un poste par séance, chacun avec son bonhomme, dans le décor', () => {
+test('ta salle en maquette : un poste par séance, chacun avec son bonhomme, son matériel et sa plateforme', () => {
   assert.deepEqual(STATIONS.map((s) => s.id).sort(), WORKOUTS.map((w) => w.id).sort());
   for (const st of STATIONS) assert.ok(figureFor(st.ex), `bonhomme manquant : ${st.ex}`);
   const svg = hubSVG({ pick: 'B' });
   assert.match(svg, new RegExp(`^<svg class="hub-scene" viewBox="0 0 ${HUB.w} ${HUB.h}" aria-hidden="true">`));
   for (const id of ['P', 'M', 'C', 'A', 'B']) assert.match(svg, new RegExp(`class="hub-st st-${id} wo-${id}`), id);
-  // le décor (mur, spots, parquet) et le matériel : sac de boxe (C), barre sur ses montants (P)
-  for (const part of ['room-led', 'room-planks', 'room-spot s2', 'hub-bag', 'hub-rack', 'fig-par', 'fig-bar']) assert.match(svg, new RegExp(part), part);
+  // le décor (logo, écran, bandes LED) et le matériel : tour de traction (P), sac de boxe (C),
+  // plante du coin yoga (M), roue (A), parallettes et élastiques (B)
+  for (const part of ['hub-logo', 'hub-screen', 'hub-led', 'hub-tower', 'hub-bag', 'hub-plant', 'hub-wheel', 'hub-bands', 'fig-par', 'fig-bar']) assert.match(svg, new RegExp(part), part);
+  assert.equal((svg.match(/class="hub-plat"/g) ?? []).length, 5);
   // les bonshommes gardent la classe fig (leurs couleurs et leur style lisse s'appliquent)
   assert.equal((svg.match(/<g class="fig" transform=/g) ?? []).length, 5);
 });
 
-test('ta salle : seul le bonhomme du poste choisi bouge, et rien si on réduit les animations', () => {
-  const moving = (svg) => [...svg.matchAll(/<g class="hub-st st-(\w)[^"]*">(.*?)(?=<g class="hub-st|<\/svg>)/gs)].filter(([, , g]) => /<animate/.test(g)).map(([, id]) => id);
+test('ta salle : seul le poste choisi s’allume et bouge, et rien ne bouge si on réduit les animations', () => {
+  const moving = (svg) => [...svg.matchAll(/<g class="hub-st st-(\w)[^"]*">(.*?)(?=<g class="hub-st|<g class="hub-light|<\/svg>)/gs)].filter(([, , g]) => /<animate/.test(g)).map(([, id]) => id);
   assert.deepEqual(moving(hubSVG({ pick: 'C' })), ['C']);
   assert.deepEqual(moving(hubSVG({ pick: 'A' })), ['A']);
   assert.deepEqual(moving(hubSVG({ pick: 'A', animate: false })), []);
   assert.match(hubSVG({ pick: 'M' }), /class="hub-st st-M wo-M on"/);
+  // l'écran au mur affiche la séance choisie ; le faisceau tombe sur son poste
+  assert.match(hubSVG({ pick: 'C' }), /SÉANCE C/);
+  assert.match(hubSVG({ pick: 'C' }), /class="hub-beam"/);
+  assert.doesNotMatch(hubSVG({ pick: 'C', animate: false }), /<animate/);
 });
 
 test('ta salle : zones à toucher dans le décor, sans se chevaucher, assez grandes pour un doigt', () => {

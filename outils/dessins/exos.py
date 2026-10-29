@@ -259,7 +259,7 @@ def planche_laterale(P, p):
     spec = dict(view=(0, 22), focus=['obliques'], body=(up_b, front_b), chest=(up_b, front_b),
                 neck=(up_b, front_b), head=(nz(up_b + [0, 0.05, 0]), front_b))
     spec = place(P, spec, 'upperarm01.R', [0, FLOOR + 3.05, 0])
-    spec['armR'] = dict(up=DOWN, fo=nz([0, -0.04, 1]), hand=nz([0, 0.03, 1]), palm=DOWN, fist=-1)
+    spec['armR'] = dict(up=DOWN, fo=nz([0, -0.04, 1]), hand=nz([0, 0.05, 1]), palm=nz([1, 0, 0]), fist=0.8)   # poing posé sur la tranche
     up_a = nz(lerp([0, 1, 0.02], [0.1, -0.55, 0.83], a))
     fo_a = nz(lerp([0, 1, 0.02], [0.35, -0.45, -0.82], a))
     spec['armL'] = dict(up=up_a, fo=fo_a, hand=fo_a, palm=nz(lerp([0, 0, 1], [0, -1, 0], a)), elbow=front_b, fist=0.15)
@@ -721,7 +721,7 @@ def australian(P, p):
     shoulder = np.array([0, sh_y, knee[2] + dz])
     up_b = nz(shoulder - knee)
     front_b = nz(perp(UP, up_b))
-    spec = dict(view=(-74, 10), focus=['lats', 'upper_back', 'biceps'], bar=dict(c=np.array([0, bar_y, bar_z]), half=7.2, low=True),
+    spec = dict(view=(-74, 10), focus=['lats', 'upper_back', 'biceps'], bar=dict(c=np.array([0, bar_y, bar_z]), half=7.2, low=True, posts='far'),
                 body=(up_b, front_b), chest=(up_b, front_b), neck=(up_b, front_b), head=(nz(up_b + front_b * 0.15), nz(front_b - up_b * 0.25)))
     spec = place(P, spec, 'shoulders', shoulder)
     for s_, sx in (('L', 1), ('R', -1)):
@@ -767,7 +767,7 @@ def tirage_superman(P, p):
     for s_, sx in (('L', 1), ('R', -1)):
         fwd = sh + np.array([sx * 2.6, 1.2, 4.9])
         pulled = sh + np.array([sx * 3.0, 0.9, -1.0])
-        spec[f'arm{s_}'] = dict(at=lerp(fwd, pulled, t), elbow=nz(lerp([sx * 0.2, 1, 0], [sx * 0.6, 0.6, -1], t)),
+        spec[f'arm{s_}'] = dict(at=lerp(fwd, pulled, t), elbow=nz([sx * 0.9, 0.25, -0.5]),
                                 hand=nz(lerp([0, 0.15, 1], [0, 0.2, 1], t)), palm=nz([-sx, 0, 0]), fist=0.55)
         dl = nz(BACK + [sx * 0.05, 0.02, 0])
         spec[f'leg{s_}'] = dict(th=dl, sh=dl, foot=nz([sx * 0.1, -0.35, -0.94]), top=nz([0, -0.94, 0.35]), knee=DOWN)
@@ -798,22 +798,28 @@ def pont(P, p):
 
 
 def chin_tucks(P, p):
-    """Chin tucks assis en tailleur, dos droit : u = 1 la tête recule à l'horizontale."""
+    """Chin tucks assis en tailleur, dos droit, mains posées sur les genoux : u = 1 la
+    tête recule à l'horizontale."""
     h = P.h
     u = p['u']
     spec = dict(view=(-88, 6), focus=['neck_back'], body=(nz([0, 1, -0.04]), FWD), chest=(UP, FWD),
                 neck=(nz([0, 1, lerp(0.22, -0.05, u)]), FWD), head=(nz([0, 1, lerp(0.05, 0.12, u)]), nz([0, -0.04, 1])))
     spec = place(P, spec, 'hips', [0, 0, 0])
-    spec = dict(spec)
-    m = measure(P, spec, ['upperleg01.L', 'upperleg01.R', 'shoulders'])
+    m = measure(P, spec, ['upperleg01.L', 'upperleg01.R'])
     for s_, sx in (('L', 1), ('R', -1)):
         hp = m[f'upperleg01.{s_}']
         knee_dir = nz([sx * 0.78, 0.12, 0.62])
         knee_p = hp + knee_dir * 4.28
         ank = np.array([-sx * 1.3, hp[1] + 0.22, hp[2] + 3.2])
         spec[f'leg{s_}'] = dict(th=knee_dir, sh=nz(ank - knee_p), foot=nz([-sx * 0.6, -0.1, 0.8]), top=nz([sx * 0.2, 1, 0]))
-        spec[f'arm{s_}'] = dict(at=knee_p + [-sx * 0.6, 0.85, -0.6], elbow=nz([sx * 0.5, -0.2, -1]), hand=nz([sx * 0.2, -0.8, 0.5]), palm=DOWN, fist=0.2)
-    return rest_on(P, spec, ['spine05', 'pelvis'])
+    spec = rest_on(P, spec, ['spine05', 'pelvis'])
+    # les mains se posent sur les genoux, une fois le corps assis au sol
+    G, L, t = P.solve(spec)
+    h.pose(G, L, t)
+    for s_, sx in (('L', 1), ('R', -1)):
+        knee = jpos(h, f'lowerleg01.{s_}')
+        spec[f'arm{s_}'] = dict(at=knee + [-sx * 0.5, 0.75, -0.5], elbow=nz([sx * 0.5, -0.2, -1]), hand=nz([sx * 0.2, -0.8, 0.5]), palm=DOWN, fist=0.2)
+    return spec
 
 
 def passage(P, p):
@@ -855,6 +861,90 @@ def etirement_pecs(P, p):
     behind = m['hips'] + np.array([0, -0.4 + 2.6 * e, -2.3 - 1.0 * e])
     for s_, sx in (('L', 1), ('R', -1)):
         spec[f'arm{s_}'] = dict(at=behind + [sx * 0.25, 0, 0], elbow=nz([sx * 0.4, 0, 0.3]), hand=nz([-sx * 0.8, -0.4, -0.4]), palm=nz([-sx, 0, 0]), fist=0.6)
+    return spec
+
+
+# ═══════════════ échauffement ═══════════════
+
+def chat_vache(P, p):
+    """Chat-vache à quatre pattes : v = 1 dos arrondi, menton rentré (chat) ; v = -1 dos
+    creusé, poitrine vers le tapis, tête levée (vache). Mains sous les épaules, genoux
+    sous les hanches."""
+    v = p['v']
+    hip = np.array([0, FLOOR + 0.5 + 4.25, -2.4])           # genoux au sol sous les hanches
+    up_b = nz([0, 0.06 - 0.02 * v, 1])                        # le bassin bascule un peu
+    down = DOWN
+    chest_u = nz(ang(up_b, -14 * v, UP))                      # v < 0 : le dos s'arrondit vers le plafond
+    spec = dict(view=(-80, 10), focus=['lower_back', 'abs'], body=(up_b, down),
+                chest=(chest_u, perp(DOWN, chest_u)),
+                neck=(nz(ang(chest_u, -30 * v - 8, UP)), perp(DOWN, nz(ang(chest_u, -30 * v - 8, UP)))),
+                head=(nz(ang(chest_u, -48 * v - 12, UP)), perp(DOWN + FWD * 0.3 * v, nz(ang(chest_u, -48 * v - 12, UP)))))
+    spec = place(P, spec, 'hips', hip)
+    sh = measure(P, spec, ['shoulders'])['shoulders']
+    for s_, sx in (('L', 1), ('R', -1)):
+        spec[f'arm{s_}'] = dict(at=np.array([sx * 1.9, WRIST_FLAT, sh[2] + 0.2]), elbow=nz([sx * 0.2, 0, -1]), hand=FWD, palm=DOWN, fist=-1)
+        hp = measure(P, spec, [f'upperleg01.{s_}'])[f'upperleg01.{s_}']
+        knee = np.array([sx * 1.0, FLOOR + 0.5, hp[2]])
+        spec[f'leg{s_}'] = dict(th=nz(knee - hp), sh=nz([0, 0.05, -1]), foot=nz([0, -0.25, -0.97]), top=nz([0, -0.97, 0.25]))
+    return spec
+
+
+def montees(P, p):
+    """Montées de genoux lentes, sur place : r = 1 genou droit monté à la hanche (bras
+    gauche devant), r = -1 le gauche, r = 0 debout ; les bras balancent comme en courant."""
+    r = p['r']
+    spec = dict(view=(-66, 6), focus=['hipflex', 'quads'], body=(UP, FWD), neck=(UP, FWD), head=(UP, FWD))
+    spec = place(P, spec, 'hips', [0, ANKLE + 8.62, 0])
+    standing_legs(spec, 1.0, 0.0)
+    for s_, sx, kk in (('R', -1, max(0.0, r)), ('L', 1, max(0.0, -r))):
+        if kk > 1e-3:
+            fl = 92 * kk; bd = 95 * kk
+            th = nz([sx * 0.06, -np.cos(deg(fl)), np.sin(deg(fl))])
+            a2 = fl - bd
+            sh = nz([sx * 0.03, -np.cos(deg(a2)), np.sin(deg(a2))])
+            spec[f'leg{s_}'] = dict(th=th, sh=sh, foot=nz(perp(FWD + DOWN * 0.3, sh)), top=-sh)
+    for s_, sx in (('L', 1), ('R', -1)):
+        swing = r if s_ == 'L' else -r          # le bras opposé au genou monte devant
+        up = nz([sx * 0.1, -np.cos(deg(38 * swing)), np.sin(deg(38 * swing))])
+        fo = nz(ang(up, 85, FWD + UP * 0.2)) if swing > -0.2 else nz(ang(up, 35, FWD))
+        spec[f'arm{s_}'] = dict(up=up, fo=fo, hand=fo, palm=nz([-sx, 0, 0]), fist=0.55)
+    return spec
+
+
+def pompes_genoux(P, p):
+    """Pompes sur les genoux : genoux au sol, pieds croisés en l'air, corps droit des genoux
+    aux épaules ; k = 0 bras tendus, k = 1 poitrine près du sol."""
+    h = P.h
+    k = p['k']
+    reach = sum(P.lengths('L')['arm'])
+    L1 = P.lengths('L')['leg'][0]
+    knee_z = -3.2
+
+    def place_ang(an):
+        up = np.array([0, np.sin(an), np.cos(an)]); belly = np.array([0, -np.cos(an), np.sin(an)])
+        sp = dict(view=(-74, 12), focus=['pecs', 'triceps'], body=(up, belly), neck=(up, belly),
+                  head=(nz(up + [0, 0.1, 0]), nz(belly + [0, 0, 0.3])))
+        sp = place(P, sp, 'hips', np.array([0, FLOOR + 0.5, knee_z]) + up * L1)
+        return sp, measure(P, sp, ['shoulders'])['shoulders']
+
+    def angle_for(y):
+        lo, hi = 0.0, 1.2
+        for _ in range(30):
+            mid = (lo + hi) / 2
+            if place_ang(mid)[1][1] < y: lo = mid
+            else: hi = mid
+        return (lo + hi) / 2
+    a_top = angle_for(WRIST_FLAT + reach * 0.96)
+    _, sh_top = place_ang(a_top)
+    a_low = angle_for(FLOOR + 2.3)
+    spec, _ = place_ang(a_top + (a_low - a_top) * k)
+    for s_, sx in (('L', 1), ('R', -1)):
+        spec[f'arm{s_}'] = dict(at=np.array([sx * 2.5, WRIST_FLAT, sh_top[2] - 0.2]), elbow=nz([sx * 0.6, 0.3, -1]),
+                                hand=FWD, palm=DOWN, fist=-1)
+        hp = measure(P, spec, [f'upperleg01.{s_}'])[f'upperleg01.{s_}']
+        knee = np.array([sx * 0.9, FLOOR + 0.5, knee_z])
+        sh = nz([-sx * 0.12, np.sin(deg(28)), -np.cos(deg(28))])
+        spec[f'leg{s_}'] = dict(th=nz(knee - hp), sh=sh, foot=nz(perp([0, -0.2, -1], sh)), top=-sh)
     return spec
 
 
@@ -922,6 +1012,11 @@ add('Suspension à la barre', 'suspension', lambda P, p: hang(P, k=p['k']), [dic
 add('Tractions', 'tractions', lambda P, p: hang(P, pull=p['q'], focus=('lats', 'biceps')), [dict(q=v) for v in np.linspace(0, 1, 5)], pp(5))
 add('Tractions australiennes', 'tractions-australiennes', australian, [dict(q=v) for v in np.linspace(0, 1, 5)], pp(5))
 add('Relevés de genoux suspendu', 'releves-genoux', lambda P, p: hang(P, knees=p['g'], focus=('abs', 'hipflex', 'forearms')), [dict(g=v) for v in np.linspace(0, 1, 5)], pp(5))
+# échauffement
+add('Chat-vache', 'chat-vache', chat_vache, [dict(v=v) for v in (1, 0, -1)], pp(3))      # chat, puis vache
+add('Montées de genoux lentes', 'montees-genoux', montees, [dict(r=v) for v in (1, 0.5, 0, -0.5, -1)],
+    [[0, 1, 2], [2, 3, 4], [4, 3, 2], [2, 1, 0]])
+add('Pompes sur les genoux', 'pompes-genoux', pompes_genoux, [dict(k=v) for v in np.linspace(0, 1, 5)], pp(5))
 # M
 add('Fente basse', 'fente-basse', lambda P, p: lunge(P, p['t']), [dict(t=v) for v in np.linspace(0, 1, 5)], pp(5), side='droite')
 add('Superman', 'superman', superman, [dict(u=v) for v in (0, 0.33, 0.67, 1)], [[0, 1, 2, 3], [3], [3, 2, 1, 0], [0]])

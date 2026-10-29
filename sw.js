@@ -1,5 +1,5 @@
 // Cache hors ligne. Incrémente VERSION à chaque modification des fichiers.
-const VERSION = 'cap-v104';
+const VERSION = 'cap-v105';
 const FILES = [
   './', './index.html', './css/styles.css', './css/luxe.css', './css/cuivre.css', './manifest.webmanifest',
   './js/app.js', './js/logic.js', './js/data.js',
@@ -13,7 +13,7 @@ const FILES = [
 // version à l'autre pour ne pas les retélécharger. Change IMG si on refait des
 // images sous le même nom.
 const IMG = 'cap-img-v1';
-const DRAWN = {};
+const DRAWN = { 'pompes-parallettes': 5, rowing: 5, 'pompes-pike': 5, 'tirage-assis': 5, 'pompes-serrees': 5, curl: 5, 'elevations-laterales': 5, 'l-sit': 5 };
 const IMAGES = Object.entries(DRAWN).flatMap(([slug, n]) => Array.from({ length: n }, (_, k) => `./img/ex/${slug}-${k}.webp`));
 
 self.addEventListener('install', (e) => {

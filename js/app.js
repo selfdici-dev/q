@@ -906,10 +906,11 @@ function viewSport() {
 // ——— Salle ———
 const shortName = (w) => w.name.split(' · ')[1] ?? w.name;
 
-// Ta salle : un poste par séance, chacun avec son bonhomme et son matériel.
-// Touche un poste : son bonhomme se met au travail, sa séance s'écrit
-// au-dessus de lui et s'affiche dessous, prête à lancer. Au départ : celle
-// du jour.
+// Ta salle, en maquette façon jeu vidéo : une plateforme par séance, chacune
+// avec son bonhomme et son matériel. Touche un poste : il s'allume, son
+// bonhomme se met au travail, sa séance s'écrit au-dessus de lui et s'affiche
+// dessous, prête à lancer. Au départ : celle du jour, marquée comme une
+// quête. En haut, ton niveau et ton XP, comme dans un jeu.
 let gymPick = null;
 const pctOf = (v, total) => `${Math.round((v / total) * 1000) / 10}%`;
 
@@ -944,11 +945,13 @@ function gymHub(planned, done, lvl) {
     const side = mid < HUB.w * 0.3 ? ' at-l' : mid > HUB.w * 0.7 ? ' at-r' : '';
     const label = on
       ? `<span class="hub-tag${side}"><b>${id}</b>${esc(shortName(wo))}</span>`
-      : `<span class="hub-badge${id === planned ? ' today' : ''}">${done.includes(id) ? '✓' : id}</span>`;
+      : `<span class="hub-badge${id === planned && !done.includes(id) ? ' today' : ''}${done.includes(id) ? ' done' : ''}">${done.includes(id) ? '✓' : id}</span>`;
     return `<button class="hub-hit wo-${id}${on ? ' on' : ''}" style="left:${pctOf(x - 6, HUB.w)};top:${pctOf(y - 6, HUB.h)};width:${pctOf(bw + 12, HUB.w)};height:${pctOf(bh + 12, HUB.h)}" data-act="gym-pick" data-id="${id}" aria-pressed="${on}" aria-label="Séance ${id} : ${esc(shortName(wo))}${id === planned ? ', celle du jour' : ''}${done.includes(id) ? ', faite aujourd’hui' : ''}">${label}</button>`;
   }).join('');
   return `<section class="card gym-hero hub wo-${w.id}">
-    <div class="hub-stage">${hubSVG({ pick, animate: !reduceMotion() })}${hits}</div>
+    <div class="hub-stage">${hubSVG({ pick, animate: !reduceMotion() })}${hits}
+      <div class="hub-hud" aria-label="Niveau ${lv.level}, ${lv.into} sur ${lv.span} XP"><b>Niv. ${lv.level}</b><span class="hud-rank">${esc(lv.rank)}</span><span class="hud-bar">${tweenBar('gym-xp', (lv.into / lv.span) * 100)}</span><span class="hud-xp">${lv.into}/${lv.span} XP</span></div>
+    </div>
     <div class="gym-head">
       <span class="wo-badge big wo-${w.id}">${w.id}</span>
       <div><p class="eyebrow">${pick === planned ? 'Aujourd’hui' : `Poste ${w.id}`}${did ? ' · ✓ faite' : ''}</p><h2>${esc(shortName(w))}</h2>
@@ -956,11 +959,6 @@ function gymHub(planned, done, lvl) {
     </div>
     <button class="btn primary wide" data-act="start-workout" data-id="${w.id}">${did ? 'Refaire la séance' : `Lancer la séance ${w.id}`}</button>
     <p class="hint">Touche un poste pour changer de séance. Pas la forme ? M suffit à valider « Bouger ».</p>
-    <div class="level gym-level">
-      <span class="badge">Niv. ${lv.level}</span><span class="rank">${esc(lv.rank)}</span>
-      <div class="xpbar">${tweenBar('gym-xp', (lv.into / lv.span) * 100)}</div>
-      <span class="xp">${lv.into}/${lv.span} XP</span>
-    </div>
   </section>`;
 }
 

@@ -1072,17 +1072,24 @@ details.card.more .rules { margin-top: 10px; }
 .gym-head { display: grid; grid-template-columns: 56px 1fr; gap: 14px; align-items: center; }
 .gym-head h2 { margin: 0; font-size: 1.3rem; }
 .gym-head p { margin: 0; }
-/* Ta salle (js/gym.js) : un poste par séance. Le décor est un seul dessin ;
-   par-dessus, une zone à toucher par poste, avec sa lettre (ou, pour le poste
-   choisi, sa séance écrite au-dessus du bonhomme). */
+/* Ta salle (js/gym.js) : une maquette vue de dessus, façon jeu vidéo, une
+   plateforme par séance. Le décor est un seul dessin ; par-dessus, une zone à
+   toucher par poste, avec sa lettre (ou, pour le poste choisi, sa séance
+   écrite au-dessus du bonhomme), et le HUD (niveau, XP). */
 .hub-stage { position: relative; margin: 0 0 14px; border-radius: 16px; overflow: hidden; background: #0f0c0a; }
 .hub-scene { display: block; width: 100%; height: auto; }
-.hub-pool { fill: var(--wo, #dc9a70); fill-opacity: 0.1; }
-.hub-st.on .hub-pool { fill-opacity: 0.34; }
 .hub-st .fig-mat { fill: rgb(255 240 225 / 0.1); }
 .st-M .fig-mat { fill: #8fb08a; fill-opacity: 0.75; } /* tapis de yoga */
 .hub-st:not(.on) > .fig { opacity: 0.85; }
-.hub-rack rect { fill: #4a423d; stroke: #0e0b09; stroke-width: 0.5; }
+/* couleurs des séances sur le fond sombre de la maquette (les mêmes que son dessin) */
+.hub-stage .wo-A { --wo: #9fd08f; } .hub-stage .wo-B { --wo: #7cc4e4; } .hub-stage .wo-C { --wo: #e98a6b; } .hub-stage .wo-M { --wo: #c3a3e0; } .hub-stage .wo-P { --wo: #e7c76b; }
+/* HUD de jeu : ton niveau et ton XP, dans le coin libre en bas à gauche de la salle */
+.hub-hud { position: absolute; left: 8px; bottom: 8px; display: grid; grid-template-columns: auto auto; justify-content: start; align-items: center; gap: 4px 7px; padding: 6px 9px 7px; border-radius: 10px; background: rgb(12 10 9 / 0.78); box-shadow: inset 0 0 0 1px rgb(220 154 112 / 0.45); color: #f4eee7; pointer-events: none; }
+.hub-hud b { font: 800 0.7rem/1 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: #e9b897; }
+.hud-rank { font: 650 0.66rem/1 var(--sans); color: rgb(244 238 231 / 0.78); }
+.hud-bar { grid-column: 1 / -1; display: block; width: 104px; height: 5px; border-radius: 999px; background: rgb(255 255 255 / 0.14); overflow: hidden; }
+.hud-bar span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f3c9a8, #d9956b); transition: width 0.8s cubic-bezier(.2,.8,.2,1); }
+.hud-xp { grid-column: 1 / -1; font: 650 0.6rem/1 var(--sans); color: rgb(244 238 231 / 0.7); font-variant-numeric: tabular-nums; }
 .hub-hit { position: absolute; padding: 0; border: 0; border-radius: 14px; background: none; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .hub-hit:focus-visible { outline: 2px solid var(--wo, var(--accent)); outline-offset: 2px; }
 .hub-badge, .hub-tag { position: absolute; left: 50%; top: 0; transform: translate(-50%, -55%); pointer-events: none; white-space: nowrap; }
@@ -1092,6 +1099,11 @@ details.card.more .rules { margin-top: 10px; }
 .hub-badge { transition: opacity 0.2s; }
 .hub-badge.under-tag { opacity: 0; }
 .hub-badge.today { box-shadow: inset 0 0 0 1.5px var(--wo), 0 0 0 3px rgb(220 154 112 / 0.4), 0 0 12px 2px rgb(220 154 112 / 0.45); }
+/* la séance du jour, marquée comme une quête : un « ! » doré au coin de sa pastille */
+.hub-badge.today::after { content: '!'; position: absolute; right: -9px; top: -9px; display: grid; place-items: center; width: 14px; height: 14px; border-radius: 4px; background: linear-gradient(#ffe39a, #e0a43a); color: #2a1a05; font: 900 0.64rem/1 var(--sans); box-shadow: 0 0 10px 2px rgb(255 214 120 / 0.55); }
+.hub-badge.done { color: #14100d; background: var(--wo); }
+/* lancer la séance : un « ▶ », comme « Jouer » */
+.gym-hero.hub > .btn.primary::before { content: '▶'; margin-right: 8px; font-size: 0.8em; }
 .hub-tag { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px 5px 6px; border-radius: 999px; font: 700 0.78rem/1.2 var(--sans); background: rgb(12 10 9 / 0.84); color: #f4eee7; box-shadow: inset 0 0 0 1px var(--wo), 0 8px 18px -8px rgb(0 0 0 / 0.8); }
 .hub-tag b { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--wo); color: #14100d; font-size: 0.7rem; }
 /* Séance dans ta salle : le décor passe derrière le bonhomme du lecteur (pieds
@@ -1138,8 +1150,8 @@ details.card.more .rules { margin-top: 10px; }
   #intro .room-glow, #intro .room-grid { animation: intro-fade 0.9s 0.9s ease-out both; }
   #intro .room-logo, #intro .room-name { transform-box: fill-box; transform-origin: 50% 50%; animation: intro-logo 0.9s 0.85s ease-out both; }
   #intro .intro-text { animation: intro-text 0.6s 1.2s ease-out both; }
-  /* dans la Salle, la lueur du logo respire doucement */
-  .hub-scene .room-glow { animation: room-breathe 6s ease-in-out infinite; }
+  /* dans la Salle, la quête du jour flotte au-dessus de sa pastille */
+  .hub-badge.today::after { animation: quest-bob 1.6s ease-in-out infinite; }
   /* poste choisi : son étiquette se pose, le sac de boxe se balance sous les coups */
   .hub-tag { animation: hub-tag 0.3s ease-out both; }
   .hub-tag.at-l, .hub-tag.at-r { animation-name: hub-tag-side; }
@@ -1156,13 +1168,12 @@ details.card.more .rules { margin-top: 10px; }
 @keyframes hub-tag { from { opacity: 0; transform: translate(-50%, -25%); } to { opacity: 1; transform: translate(-50%, -55%); } }
 @keyframes hub-tag-side { from { opacity: 0; transform: translate(0, -25%); } to { opacity: 1; transform: translate(0, -55%); } }
 @keyframes hub-bag { from { transform: rotate(-1.6deg); } to { transform: rotate(1.6deg); } }
-@keyframes room-breathe { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
+@keyframes quest-bob { 0%, 100% { transform: none; } 50% { transform: translateY(-3px); } }
 @keyframes lights-down { from { opacity: 0; transform: scale(1.03); } to { opacity: 1; transform: none; } }
 @keyframes plaque-in { from { opacity: 0; transform: translateY(-10px) scale(0.92); } to { opacity: 1; transform: none; } }
 @keyframes plaque-ring { from { outline: 2px solid rgb(240 180 140 / 0.75); outline-offset: 0; } to { outline: 2px solid rgb(240 180 140 / 0); outline-offset: 14px; } }
 @keyframes plaque-shine { from { transform: translateX(-130%) skewX(-18deg); } to { transform: translateX(260%) skewX(-18deg); } }
 @keyframes plaque-glow { 0% { filter: drop-shadow(0 0 0 rgb(240 180 140 / 0)); } 35% { filter: drop-shadow(0 0 14px rgb(240 180 140 / 0.9)); } 100% { filter: drop-shadow(0 0 5px rgb(240 180 140 / 0.35)); } }
-.gym-level { margin-top: 12px; }
 .records { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .record { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; padding: 10px 12px; border-radius: 14px; background: var(--surface-2); }
 .record b { font-size: 1.7rem; line-height: 1; }

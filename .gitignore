@@ -1,2 +1,8 @@
 node_modules/
 *.log
+__pycache__/
+# outils/dessins : données MakeHuman et rendus (gros, refaits à la demande)
+outils/dessins/makehuman-data/
+outils/dessins/*.tgz
+outils/dessins/rendus/
+outils/dessins/apercus/

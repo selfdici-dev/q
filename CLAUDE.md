@@ -16,6 +16,10 @@ L'utilisateur est débutant : explique simplement, en français.
 - `js/tree.js` : arbre du focus qui pousse pendant la session (unique par session, calculé).
 - `js/room.js` : décor de la salle (mur, spots, LED, parquet) ; `js/gym.js` : la salle
   interactive de l'onglet Salle (un poste par séance) ; `js/icons.js` : icônes au trait.
+- `js/drawings.js` : dessins au crayon des exercices (corps en 3D, muscles travaillés
+  en rouge), joués au rythme du bonhomme ; sans dessin, le bonhomme reste.
+  `js/drawings-data.js` (leur manifeste) et `img/ex/*.webp` (leurs images) sont
+  fabriqués par `outils/dessins/` (Python + Blender, pas servi par l'appli, voir son README).
 - `js/data.js`, `js/finance-data.js`, `js/quotes.js` : contenu (séances, leçons…).
 - `css/styles.css` : styles de base ; `css/luxe.css` : structure du design
   (verre, cartes, jetons de couleur), chargé après ; `css/cuivre.css` : couleurs
@@ -32,7 +36,9 @@ L'utilisateur est débutant : explique simplement, en français.
    et la tester dans `tests/`.
 4. **`npm test` après chaque étape**, tout doit passer.
 5. **Incrémenter `VERSION` dans `sw.js`** à chaque modification des fichiers
-   servis ; ajouter tout nouveau fichier à `FILES`.
+   servis ; ajouter tout nouveau fichier à `FILES`. Les images des dessins vont
+   dans `DRAWN` (écrit par `outils/dessins/images.py`) ; si des images changent
+   sous le même nom, changer aussi `IMG`.
 6. **Un commit par modification**, message clair en français.
 7. **Aucune donnée ne quitte l'appareil** : pas de requête réseau avec des
    données, pas d'analytics, pas de CDN ni de police externe. Copier, exporter

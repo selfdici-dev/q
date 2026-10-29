@@ -11,15 +11,19 @@
 import { figureFor, figureSVG, focusFor, solve, barAt, VIEW } from './figures.js';
 import { WORKOUTS } from './data.js';
 
-export const HUB = { w: 360, h: 256 };
+export const HUB = { w: 360, h: 530 };
 // couleurs des séances sur le fond sombre de la salle
 export const COLORS = { A: '#9fd08f', B: '#7cc4e4', C: '#e98a6b', M: '#c3a3e0', P: '#e7c76b' };
 
-// La pièce : N × N dalles de C px, murs de HW dalles de haut ; O : le coin du
-// fond à l'écran. P(X, Y, Z) : un point de la pièce (en dalles) à l'écran.
-const N = 7, C = 22, HW = 3.0;
-const O = [180, 82];
-const P = (X, Y, Z = 0) => [O[0] + (X - Y) * C, O[1] + (X + Y) * C / 2 - Z * C];
+// La pièce, vue d'un peu haut, en grand (elle remplit l'écran, ses coins sortent
+// du cadre : on est dedans) : N × N dalles de C px, murs de HW dalles de haut ;
+// K : aplatissement du sol, KZ : des hauteurs ; O : le coin du fond à l'écran.
+// P(X, Y, Z) : un point de la pièce (en dalles) à l'écran. En bas, une bande
+// libre pour la séance choisie et son bouton (posés par l'appli).
+const N = 7, C = 27, HW = 3.0, K = 0.6, KZ = 0.85;
+const O = [180, 72 + HW * C * KZ];
+const P = (X, Y, Z = 0) => [O[0] + (X - Y) * C, O[1] + (X + Y) * C * K - Z * C * KZ];
+const SKEW = Math.round(Math.atan(K) * 180 / Math.PI * 100) / 100; // pente du mur de droite
 const r1 = (v) => Math.round(v * 10) / 10;
 const pts = (list) => list.map((p) => `${r1(p[0])} ${r1(p[1])}`).join('L');
 const poly = (list, fill, extra = '') => `<path d="M${pts(list)}Z" fill="${fill}"${extra}/>`;
@@ -37,11 +41,11 @@ function box(X, Y, Z, w, d, h, [top, left, right]) {
 // devant B.
 const S = 2.3, PH = 0.14;
 export const STATIONS = [
-  { id: 'P', ex: 'Tractions (selon ton niveau)', X: 0.4, Y: 0.4, s: 0.84 },
-  { id: 'M', ex: 'Fente basse (droite)', X: 0.4, Y: 4.3, s: 0.86 },
-  { id: 'A', ex: 'Crunch vélo', X: 2.35, Y: 2.35, s: 0.84 },
-  { id: 'C', ex: 'Shadow boxing', X: 4.3, Y: 0.4, s: 0.86 },
-  { id: 'B', ex: 'Pompes (sur parallettes)', X: 4.4, Y: 4.4, s: 0.84 },
+  { id: 'P', ex: 'Tractions (selon ton niveau)', X: 0.4, Y: 0.4, s: 1.04 },
+  { id: 'M', ex: 'Fente basse (droite)', X: 0.4, Y: 4.3, s: 1.06 },
+  { id: 'A', ex: 'Crunch vélo', X: 2.35, Y: 2.35, s: 1.04 },
+  { id: 'C', ex: 'Shadow boxing', X: 4.3, Y: 0.4, s: 1.06 },
+  { id: 'B', ex: 'Pompes (sur parallettes)', X: 4.4, Y: 4.4, s: 1.04 },
 ];
 const center = (st) => [st.X + S / 2, st.Y + S / 2];
 const targetOf = (name) => WORKOUTS.flatMap((w) => w.exercises).find((e) => e.name === name)?.target ?? '';
@@ -60,21 +64,22 @@ function place(st, animate) {
 }
 
 // Zones à toucher (unités de la salle) : de la tête du bonhomme au bord avant
-// de sa plateforme, 68 de large ; une zone ne mord pas sur celle de dessus
-// (12 d'écart, car l'appli les agrandit de 6 de chaque côté).
+// de sa plateforme, ZW de large ; une zone ne mord pas sur celle de dessus
+// (13 d'écart, car l'appli les agrandit de 6 de chaque côté).
+const ZW = 80;
 export function hubLayout() {
   const zones = STATIONS.map((st) => {
     const [, figTop] = place(st, false).box;
     const [x, y] = P(...center(st), PH);
-    return { id: st.id, x: x - 34, top: figTop - 4, bottom: y + 14 };
+    return { id: st.id, x: x - ZW / 2, top: figTop - 4, bottom: y + 18 };
   });
   for (const z of [...zones].sort((a, b) => a.bottom - b.bottom)) {
     for (const u of zones) {
-      const sideBySide = Math.abs(u.x - z.x) >= 68 + 12;
-      if (u !== z && !sideBySide && u.bottom < z.bottom && z.top < u.bottom + 12) z.top = u.bottom + 12;
+      const sideBySide = Math.abs(u.x - z.x) >= ZW + 12;
+      if (u !== z && !sideBySide && u.bottom < z.bottom && z.top < u.bottom + 13) z.top = u.bottom + 13;
     }
   }
-  return zones.map((z) => ({ id: z.id, box: [r1(z.x), r1(z.top), 68, r1(z.bottom - z.top)] }));
+  return zones.map((z) => ({ id: z.id, box: [r1(z.x), r1(z.top), ZW, r1(z.bottom - z.top)] }));
 }
 
 // L'étiquette du poste choisi cache-t-elle la pastille d'un autre poste ?
@@ -136,7 +141,7 @@ function plant(id, x, y, s) {
 
 // Roue abdominale posée au sol.
 function wheel(x, y) {
-  return `<g class="hub-wheel"><circle cx="${r1(x)}" cy="${r1(y - 2.4)}" r="2.6" fill="#3a3532" stroke="#c98059" stroke-width="0.5"/><rect x="${r1(x - 4)}" y="${r1(y - 3)}" width="8" height="1.2" rx="0.6" fill="#2a2522"/></g>`;
+  return `<g class="hub-wheel"><circle cx="${r1(x)}" cy="${r1(y - 3.1)}" r="3.3" fill="#3a3532" stroke="#c98059" stroke-width="0.6"/><rect x="${r1(x - 5)}" y="${r1(y - 3.8)}" width="10" height="1.5" rx="0.75" fill="#2a2522"/></g>`;
 }
 
 // La salle entière. pick : poste choisi (son bonhomme bouge si animate) ;
@@ -158,8 +163,8 @@ export function hubSVG({ pick = 'A', animate = true, id = 'hub' } = {}) {
   const mirror = poly([rw(4.6, 0.5), rw(6.7, 0.5), rw(6.7, 2.6), rw(4.6, 2.6)], `url(#${u('mirror')})`, ' stroke="#4a3a2e" stroke-width="0.8"');
   const [tx, ty] = rw(2.1, 2.4);
   const screen = `<g class="hub-screen">${poly([rw(1.9, 1.5), rw(4.2, 1.5), rw(4.2, 2.75), rw(1.9, 2.75)], '#0a0807', ' stroke="#3a2a20" stroke-width="0.8"')}`
-    + `<g transform="translate(${r1(tx)} ${r1(ty)}) skewY(26.57)"><text font-family="system-ui, sans-serif" font-weight="800" font-size="5.2" fill="#e9a87c" letter-spacing="0.5">SÉANCE ${pick}</text>`
-    + `<text y="7" font-family="system-ui, sans-serif" font-weight="700" font-size="4.6" fill="#f4eee7">${shortName(pick).replace(/,.*$/, '')}…</text></g></g>`;
+    + `<g transform="translate(${r1(tx)} ${r1(ty)}) skewY(${SKEW})"><text font-family="system-ui, sans-serif" font-weight="800" font-size="6.4" fill="#e9a87c" letter-spacing="0.6">SÉANCE ${pick}</text>`
+    + `<text y="8.4" font-family="system-ui, sans-serif" font-weight="700" font-size="5.6" fill="#f4eee7">${shortName(pick).replace(/,.*$/, '')}…</text></g></g>`;
   // sol (dalles), lueur et bandes LED au pied des murs, tranche des murs
   const lines = [];
   for (let i = 1; i < N; i++) lines.push(`M${pts([P(i, 0), P(i, N)])}M${pts([P(0, i), P(N, i)])}`);
@@ -194,9 +199,9 @@ export function hubSVG({ pick = 'A', animate = true, id = 'hub' } = {}) {
     }[st.id]();
     const after = {
       P: '', C: '',
-      M: plant(id, ...P(st.X + 0.3, st.Y + 2.0, PH), 0.9),
+      M: plant(id, ...P(st.X + 0.3, st.Y + 2.0, PH), 1.1),
       A: wheel(...P(st.X + 1.95, st.Y + 1.7, PH)),
-      B: bands(...P(st.X + 2.1, st.Y + 0.25, PH), 0.72),
+      B: bands(...P(st.X + 2.1, st.Y + 0.25, PH), 0.9),
     }[st.id];
     return `<g class="hub-st st-${st.id} wo-${st.id}${on ? ' on' : ''}">${plat}${gear}<g class="fig" transform="translate(${r1(p.tx)} ${r1(p.ty)}) scale(${st.s})">${p.inner}</g>${after}</g>`;
   }).join('');
@@ -206,7 +211,7 @@ export function hubSVG({ pick = 'A', animate = true, id = 'hub' } = {}) {
   const top = P(bx, by, HW + 1.2), left = P(bx - 1.0, by + 1.0, PH), right = P(bx + 1.0, by - 1.0, PH);
   const beam = `<path class="hub-beam" d="M${r1(top[0] - 6)} ${r1(top[1])}L${r1(top[0] + 6)} ${r1(top[1])}L${r1(right[0])} ${r1(right[1])}L${r1(left[0])} ${r1(left[1])}Z" fill="url(#${u('beam')})"/>`;
   const [fx, fy] = P(bx, by, PH);
-  const dust = animate ? `<g class="hub-dust" fill="#ffe2c4">${[[-14, 0, 2.6], [-6, 0.9, 3.4], [3, 0.3, 2.9], [10, 1.6, 3.8], [16, 1.1, 3.1], [-1, 2.2, 4.2]].map(([dx, delay, dur]) => `<circle cx="${r1(fx + dx)}" cy="${r1(fy - 6)}" r="0.9" opacity="0"><animate attributeName="cy" values="${r1(fy - 6)};${r1(fy - 62)}" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.8;0" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/></circle>`).join('')}</g>` : '';
+  const dust = animate ? `<g class="hub-dust" fill="#ffe2c4">${[[-14, 0, 2.6], [-6, 0.9, 3.4], [3, 0.3, 2.9], [10, 1.6, 3.8], [16, 1.1, 3.1], [-1, 2.2, 4.2]].map(([dx, delay, dur]) => `<circle cx="${r1(fx + dx)}" cy="${r1(fy - 6)}" r="0.9" opacity="0"><animate attributeName="cy" values="${r1(fy - 6)};${r1(fy - 78)}" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.8;0" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/></circle>`).join('')}</g>` : '';
 
   return `<svg class="hub-scene" viewBox="0 0 ${HUB.w} ${HUB.h}" aria-hidden="true"><defs>
 <linearGradient id="${u('floor')}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d1917"/><stop offset="1" stop-color="#2a2420"/></linearGradient>
@@ -222,10 +227,11 @@ export function hubSVG({ pick = 'A', animate = true, id = 'hub' } = {}) {
 <linearGradient id="${u('bag')}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1c120c"/><stop offset="0.38" stop-color="#6b4430"/><stop offset="1" stop-color="#20140e"/></linearGradient>
 <linearGradient id="${u('pad')}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3330"/><stop offset="1" stop-color="#1c1816"/></linearGradient>
 <radialGradient id="${u('leaf')}" cx="0.4" cy="0.3" r="0.8"><stop offset="0" stop-color="#7fae6b"/><stop offset="1" stop-color="#2f5a2c"/></radialGradient>
+<radialGradient id="${u('vig')}" cx="0.5" cy="0.42" r="0.75"><stop offset="0.55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.55"/></radialGradient>
 <filter id="${u('glow')}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
 </defs>
 <rect width="${HUB.w}" height="${HUB.h}" fill="#0c0a09"/>
-${walls}<path d="${grid.join('')}" stroke="#dc9a70" stroke-opacity="0.18" stroke-width="0.5"/>${logo}${mirror}${screen}${gloves(...rw(6.85, 1.9), 0.8)}
+${walls}<path d="${grid.join('')}" stroke="#dc9a70" stroke-opacity="0.18" stroke-width="0.5"/>${logo}${mirror}${screen}${gloves(...rw(6.85, 1.9), 1)}
 ${floor}${led}${cap}${decor}${floorLogo}
-${stations}<g class="hub-light">${beam}${dust}</g></svg>`;
+${stations}<g class="hub-light">${beam}${dust}</g><rect class="hub-vig" width="${HUB.w}" height="${HUB.h}" fill="url(#${u('vig')})"/></svg>`;
 }

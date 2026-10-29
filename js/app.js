@@ -452,7 +452,7 @@ function render() {
   };
   const h = heads[tab];
   const helpKey = HIDDEN_TABS[tab] ?? tab;
-  const head = h && !(tab === 'argent' && state.ui.lesson) ? `<header class="page-head"><div class="page-title"><h1>${h[0]}</h1>${HELP[helpKey] ? helpBtn(helpKey) : ''}</div><p>${h[1]}</p></header>` : '';
+  const head = h && tab !== 'sport' && !(tab === 'argent' && state.ui.lesson) ? `<header class="page-head"><div class="page-title"><h1>${h[0]}</h1>${HELP[helpKey] ? helpBtn(helpKey) : ''}</div><p>${h[1]}</p></header>` : '';
   $('#view').innerHTML = head + views[tab]();
   $('#view').dataset.tab = tab;
   const lv = levelInfo(totalXP(state));
@@ -869,9 +869,9 @@ function viewSport() {
   const dayNames = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
   const todayDow = (fromKey(today).getDay() + 6) % 7;
   return `
+  ${gymHub(planned, done, lvl)}
   ${suggestUp ? `<div class="banner ok"><strong>2 séances « faciles » de suite.</strong> Il est temps de monter. <button class="btn small primary" data-act="level" data-lvl="${lvl + 1}">Passer au niveau ${lvl + 1}</button></div>` : ''}
   ${suggestDown ? `<div class="banner warn"><strong>2 séances « dures » de suite.</strong> Redescendre d’un niveau n’est pas un échec. <button class="btn small" data-act="level" data-lvl="${lvl - 1}">Revenir au niveau ${lvl - 1}</button></div>` : ''}
-  ${gymHub(planned, done, lvl)}
   ${recordsCard()}
   <div class="folds">
     ${fold('c-goal', icon('target'), 'Ton objectif', 'Pourquoi ces séances', '<span></span>', goalBody())}
@@ -948,16 +948,21 @@ function gymHub(planned, done, lvl) {
       : `<span class="hub-badge${id === planned && !done.includes(id) ? ' today' : ''}${done.includes(id) ? ' done' : ''}">${done.includes(id) ? '✓' : id}</span>`;
     return `<button class="hub-hit wo-${id}${on ? ' on' : ''}" style="left:${pctOf(x - 6, HUB.w)};top:${pctOf(y - 6, HUB.h)};width:${pctOf(bw + 12, HUB.w)};height:${pctOf(bh + 12, HUB.h)}" data-act="gym-pick" data-id="${id}" aria-pressed="${on}" aria-label="Séance ${id} : ${esc(shortName(wo))}${id === planned ? ', celle du jour' : ''}${done.includes(id) ? ', faite aujourd’hui' : ''}">${label}</button>`;
   }).join('');
-  return `<section class="card gym-hero hub wo-${w.id}">
+  // la salle prend tout le haut de l'écran : on y entre. En haut, le HUD (niveau,
+  // XP) et l'aide ; en bas, la séance choisie et son bouton, comme dans un jeu.
+  return `<section class="gym-hero hub immersive wo-${w.id}">
     <div class="hub-stage">${hubSVG({ pick, animate: !reduceMotion() })}${hits}
       <div class="hub-hud" aria-label="Niveau ${lv.level}, ${lv.into} sur ${lv.span} XP"><b>Niv. ${lv.level}</b><span class="hud-rank">${esc(lv.rank)}</span><span class="hud-bar">${tweenBar('gym-xp', (lv.into / lv.span) * 100)}</span><span class="hud-xp">${lv.into}/${lv.span} XP</span></div>
+      ${HELP.sport ? `<span class="hub-help">${helpBtn('sport')}</span>` : ''}
+      <div class="hub-panel">
+        <div class="gym-head">
+          <span class="wo-badge big wo-${w.id}">${w.id}</span>
+          <div><p class="eyebrow">${pick === planned ? 'Aujourd’hui' : `Poste ${w.id}`}${did ? ' · ✓ faite' : ''}</p><h2>${esc(shortName(w))}</h2>
+            <p class="muted">≈ ${workoutMinutes(w)} min · ≈ ${workoutKcal(w)} kcal · ${w.exercises.length} exercices${w.fixed ? '' : ` · niveau ${lvl}`}</p></div>
+        </div>
+        <button class="btn primary wide" data-act="start-workout" data-id="${w.id}">${did ? 'Refaire la séance' : `Lancer la séance ${w.id}`}</button>
+      </div>
     </div>
-    <div class="gym-head">
-      <span class="wo-badge big wo-${w.id}">${w.id}</span>
-      <div><p class="eyebrow">${pick === planned ? 'Aujourd’hui' : `Poste ${w.id}`}${did ? ' · ✓ faite' : ''}</p><h2>${esc(shortName(w))}</h2>
-        <p class="muted">≈ ${workoutMinutes(w)} min · ≈ ${workoutKcal(w)} kcal · ${w.exercises.length} exercices${w.fixed ? '' : ` · niveau ${lvl}`}</p></div>
-    </div>
-    <button class="btn primary wide" data-act="start-workout" data-id="${w.id}">${did ? 'Refaire la séance' : `Lancer la séance ${w.id}`}</button>
     <p class="hint">Touche un poste pour changer de séance. Pas la forme ? M suffit à valider « Bouger ».</p>
   </section>`;
 }
@@ -2175,7 +2180,8 @@ function enterGym() {
     if (gone) return;
     gone = true;
     el.classList.add('out');
-    setTimeout(() => el.remove(), 500);
+    $('.hub-stage')?.classList.add('arrive');
+    setTimeout(() => el.remove(), 650);
   };
   el.addEventListener('click', leave);
   setTimeout(leave, 2300);

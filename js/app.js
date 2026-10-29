@@ -3,13 +3,13 @@ import {
   sprintInfo, bedtimeMinutes, minutesToHHMM, sleepDuration, rollingAverage, series,
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
   dueCards, reviewCard, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
-  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, beatBy, combien, recordKey, spokenStep, dropRecords, creatineWeek,
-  recordWall, wakePlan, bedGoal, clockFr, WAKE_PLAN,
+  sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, beatBy, combien, logChoices, toLog, recordKey, spokenStep, dropRecords, creatineWeek,
+  recordWall, wakePlan, bedGoal, clockFr, WAKE_PLAN, kcalTarget, mealTotals, addMeal, STEP_CHOICES, nearestSteps, nbsp,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl, baseName,
   DAY_PLAN, FOOD_COLORS, FOOD_TREATS, SNACKS, SNACK_TEST, TEA_TIPS,
-  WARMUP, PROTEIN_GRAMS, PROTEIN_FOODS, PHASES, MILESTONES, BOOKS, APPS, HELP,
+  WARMUP, PROTEIN_GRAMS, PROTEIN_CHIPS, FOODS, FOOD_CATS, PHASES, MILESTONES, BOOKS, APPS, HELP,
 } from './data.js';
 import { ALL_LESSONS } from './finance-data.js';
 import { createMoney, DEFAULT_CALC, DEFAULT_WEALTH } from './money.js';
@@ -19,6 +19,7 @@ import { backupStatus, validateBackup } from './backup.js';
 import { figureFor, figureSVG, focusFor } from './figures.js';
 import { icon } from './icons.js';
 import { roomSVG } from './room.js';
+import { hubSVG, hubLayout, HUB, covers } from './gym.js';
 import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS } from './avatar.js';
 import { treeSVG, seedOf } from './tree.js';
 
@@ -458,6 +459,7 @@ function render() {
   }
   document.querySelectorAll('#tabs a').forEach((a) => a.setAttribute('aria-current', a.dataset.tab === (HIDDEN_TABS[tab] ?? tab) ? 'page' : 'false'));
   moveTabIndicator();
+  hubDeclutter();
   runTweens();
   tick();
 }
@@ -748,8 +750,9 @@ function snackCard(key) {
       <div class="protein-head"><strong>Protéines</strong> <span class="muted">${prot}/${PROTEIN_GRAMS} g</span></div>
       <div class="bar">${tweenBar('protein', Math.min(100, (prot / PROTEIN_GRAMS) * 100))}</div>
     </div>
-    <div class="chips protein-chips">${PROTEIN_FOODS.map(([food, g]) => `<button class="chip" data-act="protein-add" data-g="${g}">+ ${esc(food)} <small>${g} g</small></button>`).join('')}</div>
-    ${proteinUndo ? `<div class="row"><button class="btn ghost small" data-act="protein-undo">Annuler le dernier ajout (${proteinUndo} g)</button></div>` : ''}
+    <div class="chips protein-chips">${PROTEIN_CHIPS.map((id) => FOODS.find((f) => f.id === id)).map((f) => `<button class="chip" data-act="meal-add" data-f="${f.id}" aria-label="Noter ${esc(f.name)} (${esc(f.portion)}) : ${f.p} g de protéines, ${f.kcal} kcal">+ ${f.emoji} ${esc(f.short ?? f.name.split(' ')[0])} <small>${f.p} g</small></button>`).join('')}</div>
+    ${mealUndo ? `<div class="row"><button class="btn ghost small" data-act="meal-undo">Annuler le dernier ajout (${esc(FOODS.find((f) => f.id === mealUndo)?.name ?? '')})</button></div>` : ''}
+    ${(() => { const t = mealTotals(d.meals); return t.kcal ? `<p class="hint">Repas notés aujourd’hui : ≈ ${fmtInt(t.kcal)} kcal sur ${fmtInt(kcalTarget(d.steps))} · le détail est dans Manger.</p>` : ''; })()}
     <p class="hint">Vise ${PROTEIN_GRAMS} g par jour : c’est ce qui garde tes muscles pendant que tu sèches.</p>
     <div class="card-head sub"><h3>Grignotage</h3><span class="pill">${snacks.length} grignotage${snacks.length > 1 ? 's' : ''} · ${resisted} envie${resisted > 1 ? 's' : ''} résistée${resisted > 1 ? 's' : ''}</span></div>
     ${pending
@@ -827,7 +830,9 @@ function urgeBody(u) {
 }
 
 let player = null; // séance en cours
-let proteinUndo = 0; // grammes du dernier bouton protéines (pour « Annuler »)
+let mealUndo = ''; // dernier aliment noté (pour « Annuler le dernier ajout »)
+let foodCat = 'prot'; // famille d'aliments affichée dans Manger
+const fmtInt = (n) => Math.round(n).toLocaleString('fr-FR');
 
 function buildSteps(w, level) {
   const delta = w.fixed ? 0 : (level - 2) * 10;
@@ -861,14 +866,13 @@ function viewSport() {
   return `
   ${suggestUp ? `<div class="banner ok"><strong>2 séances « faciles » de suite.</strong> Il est temps de monter. <button class="btn small primary" data-act="level" data-lvl="${lvl + 1}">Passer au niveau ${lvl + 1}</button></div>` : ''}
   ${suggestDown ? `<div class="banner warn"><strong>2 séances « dures » de suite.</strong> Redescendre d’un niveau n’est pas un échec. <button class="btn small" data-act="level" data-lvl="${lvl - 1}">Revenir au niveau ${lvl - 1}</button></div>` : ''}
-  ${gymHero(planned, done, lvl)}
-  ${gymPostes(planned, done)}
+  ${gymHub(planned, done, lvl)}
   ${recordsCard()}
   <div class="folds">
     ${fold('c-goal', icon('target'), 'Ton objectif', 'Pourquoi ces séances', '<span></span>', goalBody())}
     ${fold('c-wo', icon('dumbbell'), 'Les 5 séances', 'Exercices et semaine type', `<span class="pill">Niv. ${lvl}</span>`, `
       <div class="week">${[1, 2, 3, 4, 5, 6, 0].map((dow, i) => `<div class="wk-${WEEK_PLAN[dow]} ${i === todayDow ? 'today' : ''}"><small>${dayNames[i]}</small><b>${WEEK_PLAN[dow]}</b></div>`).join('')}</div>
-      <p class="hint">A = abdos et tronc, B = bras, avant-bras, épaules et dos, en alternance du lundi au samedi : chaque muscle a 48 h pour récupérer. C = cardio boxe, en plus quand tu veux. P = tractions au parc, pendant ta marche, à la place d’une C. M = mobilité et posture, le dimanche (repos). Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
+      <p class="hint">B = pectoraux, dos, épaules et bras, le mardi, le jeudi et le samedi : chaque muscle a 48 h pour récupérer. A = abdos et tronc, le lundi et le vendredi : deux séances suffisent, c’est la sèche qui montre les abdos. C = cardio boxe, le mercredi (et en plus quand tu veux). P = tractions au parc, quand tu auras une barre, à la place d’une C. M = mobilité et posture, le dimanche (repos). Échauffement inclus dans A, B et C. Les jours sans envie, M suffit à valider « Bouger ».</p>
       <div class="row">${[1, 2, 3].map((n) => `<button class="seg ${lvl === n ? 'on' : ''}" data-act="level" data-lvl="${n}" aria-pressed="${lvl === n}">Niveau ${n}</button>`).join('')}</div>
       <p class="hint">À la fin de chaque séance, dis si c’était facile, correct ou dur : l’appli te propose de monter ou de descendre. Niveau 1 = 2 tours, efforts plus courts.</p>
       ${WORKOUTS.map((w) => {
@@ -895,47 +899,63 @@ function viewSport() {
 }
 
 // ——— Salle ———
-// L'exercice phare d'une séance (son bonhomme la représente).
-const starOf = (w) => w.exercises.find((e) => e.name === w.star) ?? w.exercises[0];
 const shortName = (w) => w.name.split(' · ')[1] ?? w.name;
 
-// La séance du jour en grand, avec le bonhomme de son exercice phare et ton niveau.
-function gymHero(planned, done, lvl) {
-  const w = WORKOUTS.find((x) => x.id === planned);
+// Ta salle : un poste par séance, chacun avec son bonhomme et son matériel.
+// Touche un poste : son bonhomme se met au travail, sa séance s'écrit
+// au-dessus de lui et s'affiche dessous, prête à lancer. Au départ : celle
+// du jour.
+let gymPick = null;
+const pctOf = (v, total) => `${Math.round((v / total) * 1000) / 10}%`;
+
+// L'étiquette du poste choisi efface les pastilles qu'elle recouvrirait
+// (« B · Pectoraux, dos et bras » passe devant le A). Calculé sur la place
+// finale (étiquette et pastilles posées au-dessus de leur zone, remontées de
+// 55 % de leur hauteur, comme dans styles.css), pas pendant leur apparition.
+function hubDeclutter() {
+  const tag = $('.hub-stage .hub-tag');
+  if (!tag) return;
+  const place = (el) => {
+    const hit = el.parentElement;
+    const [w, h] = [el.offsetWidth, el.offsetHeight];
+    const x = el.classList.contains('at-l') ? hit.offsetLeft
+      : el.classList.contains('at-r') ? hit.offsetLeft + hit.offsetWidth - w
+      : hit.offsetLeft + (hit.offsetWidth - w) / 2;
+    return [x, hit.offsetTop - h * 0.55, w, h];
+  };
+  const t = place(tag);
+  document.querySelectorAll('.hub-stage .hub-badge').forEach((b) => b.classList.toggle('under-tag', covers(t, place(b))));
+}
+
+function gymHub(planned, done, lvl) {
+  const pick = WORKOUTS.some((x) => x.id === gymPick) ? gymPick : planned;
+  const w = WORKOUTS.find((x) => x.id === pick);
   const did = done.includes(w.id);
-  const star = starOf(w);
   const lv = levelInfo(totalXP(state));
-  return `<section class="card gym-hero wo-${w.id}">
+  const hits = hubLayout().map(({ id, box: [x, y, bw, bh] }) => {
+    const on = id === pick;
+    const wo = WORKOUTS.find((z) => z.id === id);
+    const mid = x + bw / 2;
+    const side = mid < HUB.w * 0.3 ? ' at-l' : mid > HUB.w * 0.7 ? ' at-r' : '';
+    const label = on
+      ? `<span class="hub-tag${side}"><b>${id}</b>${esc(shortName(wo))}</span>`
+      : `<span class="hub-badge${id === planned ? ' today' : ''}">${done.includes(id) ? '✓' : id}</span>`;
+    return `<button class="hub-hit wo-${id}${on ? ' on' : ''}" style="left:${pctOf(x - 6, HUB.w)};top:${pctOf(y - 6, HUB.h)};width:${pctOf(bw + 12, HUB.w)};height:${pctOf(bh + 12, HUB.h)}" data-act="gym-pick" data-id="${id}" aria-pressed="${on}" aria-label="Séance ${id} : ${esc(shortName(wo))}${id === planned ? ', celle du jour' : ''}${done.includes(id) ? ', faite aujourd’hui' : ''}">${label}</button>`;
+  }).join('');
+  return `<section class="card gym-hero hub wo-${w.id}">
+    <div class="hub-stage">${hubSVG({ pick, animate: !reduceMotion() })}${hits}</div>
     <div class="gym-head">
       <span class="wo-badge big wo-${w.id}">${w.id}</span>
-      <div><p class="eyebrow">Aujourd’hui${did ? ' · ✓ faite' : ''}</p><h2>${esc(shortName(w))}</h2>
-        <p class="muted">≈ ${workoutMinutes(w)} min · ≈ ${workoutKcal(w)} kcal · ${w.exercises.length} exercices · niveau ${lvl}</p></div>
+      <div><p class="eyebrow">${pick === planned ? 'Aujourd’hui' : `Poste ${w.id}`}${did ? ' · ✓ faite' : ''}</p><h2>${esc(shortName(w))}</h2>
+        <p class="muted">≈ ${workoutMinutes(w)} min · ≈ ${workoutKcal(w)} kcal · ${w.exercises.length} exercices${w.fixed ? '' : ` · niveau ${lvl}`}</p></div>
     </div>
-    <div class="gym-stage"><div class="gym-room">${roomSVG({ id: 'salle' })}</div><div class="gym-fig">${figure(star.name, star.target, false)}</div></div>
-    <button class="btn primary wide" data-act="start-workout" data-id="${w.id}">${did ? 'Refaire la séance' : 'Lancer la séance'}</button>
+    <button class="btn primary wide" data-act="start-workout" data-id="${w.id}">${did ? 'Refaire la séance' : `Lancer la séance ${w.id}`}</button>
+    <p class="hint">Touche un poste pour changer de séance. Pas la forme ? M suffit à valider « Bouger ».</p>
     <div class="level gym-level">
       <span class="badge">Niv. ${lv.level}</span><span class="rank">${esc(lv.rank)}</span>
       <div class="xpbar">${tweenBar('gym-xp', (lv.into / lv.span) * 100)}</div>
       <span class="xp">${lv.into}/${lv.span} XP</span>
     </div>
-  </section>`;
-}
-
-// Les postes de la salle : les 5 séances, à lancer d'une touche (bonshommes fixes, légers).
-function gymPostes(planned, done) {
-  return `<section class="card gym-postes">
-    <div class="card-head"><h2>Les postes</h2><span class="pill">${WORKOUTS.length}</span></div>
-    <div class="postes">${WORKOUTS.map((w) => {
-      const f = figureFor(starOf(w).name);
-      const did = done.includes(w.id);
-      const tag = did ? '<span class="poste-tag done">✓ Faite</span>' : w.id === planned ? '<span class="poste-tag">Aujourd’hui</span>' : '';
-      return `<button class="poste wo-${w.id}${w.id === planned ? ' planned' : ''}" data-act="start-workout" data-id="${w.id}" aria-label="Lancer la séance ${w.id} : ${esc(shortName(w))}${did ? ', déjà faite aujourd’hui' : ''}">
-        <span class="poste-fig">${f ? figureSVG(f.fig, { mirror: f.mirror, fit: true, animate: false, help: false }) : ''}</span>
-        <span class="poste-top"><span class="wo-badge wo-${w.id}">${w.id}</span>${tag}</span>
-        <strong>${esc(shortName(w))}</strong><small>≈ ${workoutMinutes(w)} min</small>
-      </button>`;
-    }).join('')}</div>
-    <p class="hint">C ou P en plus quand tu veux. Pas la forme ? M suffit à valider « Bouger ».</p>
   </section>`;
 }
 
@@ -957,14 +977,46 @@ function recordsCard() {
     ${wall.length
       ? `<div class="records">${wall.map((r) => `<div class="record wo-${r.workout}${r.fresh ? ' fresh' : ''}"><b>${r.best}</b><span class="rec-unit">${esc(r.unit)}</span><small>${esc(r.label)}</small>${r.fresh ? `<span class="rec-new">Nouveau · +${r.gain}</span>` : ''}</div>`).join('')}</div>
         <p class="hint">Ton meilleur chiffre par exercice, tous tours confondus. Le dernier travaillé d’abord ; une plaque neuve brille 3 jours.</p>`
-      : '<p class="muted">Pendant le repos, note en 2 touches combien tu en as fait : tes meilleurs chiffres s’affichent ici.</p>'}
+      : '<p class="muted">Pendant le repos, touche le nombre que tu as fait : tes meilleurs chiffres s’affichent ici.</p>'}
   </section>`;
 }
 
-// Onglet Manger : des conseils, rien à calculer (protéines et grignotages se
-// notent dans Jour).
+// Ton assiette du jour : touche ce que tu manges (un aliment = une portion),
+// les calories et les protéines du jour s'additionnent, comparées à
+// l'objectif (selon tes pas). Des repères, pas une balance.
+function mealsCard() {
+  const d = state.days[todayKey()] ?? {};
+  const meals = d.meals ?? [];
+  const tot = mealTotals(meals);
+  const target = kcalTarget(d.steps);
+  const left = target - tot.kcal;
+  const cat = FOOD_CATS.some(([c]) => c === foodCat) ? foodCat : 'prot';
+  const half = (n) => (n % 1 ? `${Math.floor(n) || ''}½` : String(n));
+  const status = !tot.kcal ? 'rien de noté pour l’instant'
+    : left > 50 ? `il te reste ≈ ${fmtInt(left)} kcal`
+    : left >= -100 ? 'pile dans l’objectif'
+    : `≈ ${fmtInt(-left)} kcal au-dessus : pas grave, c’est la semaine qui compte`;
+  return `<section class="card meals-card">
+    <div class="card-head"><h2>${icon('utensils')}Ton assiette du jour</h2><span class="pill">≈ ${fmtInt(tot.kcal)} kcal</span></div>
+    <p class="kcal-head"><strong>≈ ${fmtInt(tot.kcal)}</strong> <span class="muted">/ ${fmtInt(target)} kcal${d.steps ? ` · ${fmtInt(d.steps)} pas` : ''}</span></p>
+    <div class="bar kcal-bar${left < -100 ? ' over' : ''}">${tweenBar('kcal', Math.min(100, (tot.kcal / target) * 100))}</div>
+    <p class="hint">${status} · ≈ ${tot.p} g de protéines sur ${PROTEIN_GRAMS}</p>
+    <label class="steps-pick">Tes pas aujourd’hui (l’objectif suit)<select data-field="steps" data-key="${todayKey()}">${STEP_CHOICES.map((n) => `<option value="${n}"${n === nearestSteps(d.steps) ? ' selected' : ''}>${n >= 15000 ? `${fmtInt(n)} ou plus` : `≈ ${fmtInt(n)}`}</option>`).join('')}</select></label>
+    <div class="food-cats" role="group" aria-label="Familles d’aliments">${FOOD_CATS.map(([c, label]) => `<button class="seg ${c === cat ? 'on' : ''}" data-act="food-cat" data-c="${c}" aria-pressed="${c === cat}">${label}</button>`).join('')}</div>
+    <div class="food-grid">${FOODS.filter((f) => f.cat === cat).map((f) => `<button class="food" data-act="meal-add" data-f="${f.id}" aria-label="Noter ${esc(f.name)}, ${esc(f.portion)}, ${f.kcal} kcal"><span class="food-emo" aria-hidden="true">${f.emoji}</span><b>${esc(nbsp(f.name))}</b><small>${esc(nbsp(f.portion))}</small><small class="food-kcal">${f.kcal} kcal</small></button>`).join('')}</div>
+    ${meals.length ? `<ul class="meal-list">${meals.map((m) => {
+      const f = FOODS.find((x) => x.id === m.f);
+      return `<li><span class="meal-name">${f?.emoji ?? '🍽️'} ${esc(nbsp(f?.name ?? m.f))}${m.n !== 1 ? ` <small>×${half(m.n)}</small>` : ''}</span><span class="meal-kcal">${fmtInt(m.n * m.kcal)} kcal</span>
+        <button class="meal-step" data-act="meal-step" data-f="${m.f}" data-v="-0.5" aria-label="Une demi-portion de ${esc(f?.name ?? m.f)} en moins">−</button><button class="meal-step" data-act="meal-step" data-f="${m.f}" data-v="0.5" aria-label="Une demi-portion de ${esc(f?.name ?? m.f)} en plus">+</button></li>`;
+    }).join('')}</ul>` : '<p class="muted">Touche ce que tu manges : un aliment = une portion (− et + par demi-portion ensuite).</p>'}
+    <p class="hint">Des repères, pas une balance : à ±15\u00a0% près, c’est la tendance de la semaine qui compte. L’huile de cuisson compte (90 kcal la cuillère). Les protéines notées ici comptent aussi dans Jour.</p>
+  </section>`;
+}
+
+// Onglet Manger : ton assiette du jour en haut, puis les conseils.
 function viewFood() {
   return `
+  ${mealsCard()}
   <section class="card">
     <div class="card-head"><h2>${icon('clock')}Ta journée type</h2></div>
     <p class="hint">≈ 1 850 kcal avec 8 000 pas (≈ 2 000 les jours à 12 000 pas) et ${PROTEIN_GRAMS} g de protéines. Pas faim le matin ? Le 1er repas glisse vers 11 h : c’est le total du jour qui compte.</p>
@@ -1004,7 +1056,7 @@ function goalBody() {
   const points = [
     ['C', 'Sec avant tout.', 'Abdos et mâchoire se voient quand le taux de gras baisse : protéines, zéro grignotage, 8 000 pas, séance C. C’est l’assiette qui fait le plus gros du travail.'],
     ['A', 'Abdos dessinés.', 'Crunch vélo et roue ×2 (les deux en tête des mesures), crunch inversé pour le V du bas du ventre, Russian twist pieds décollés pour les obliques, planches latérales (main sous le torse) et hollow body pour une taille fine. Deux tours durs valent mieux que trois tours mous.'],
-    ['B', 'Calisthénie : pectoraux, dos en V et bras.', 'Ton corps est l’outil : pompes sur parallettes, pike, diamant et L-sit, plus 2 tirages et un curl à l’élastique pour le dos en V et des bras dessinés. De la force sans gonfler, chaque série finie dure. Les veines se voient quand le gras baisse : c’est l’assiette qui les fait sortir. Rien pour les trapèzes, qui tassent le cou.'],
+    ['B', 'Calisthénie : pectoraux, dos en V et bras.', 'Ton corps est l’outil : pompes sur parallettes, pike, diamant et L-sit, plus 2 tirages, un curl et des élévations latérales à l’élastique pour le dos en V, des épaules un peu plus larges et des bras dessinés. De la force sans gonfler, chaque série finie dure. Les veines se voient quand le gras baisse : c’est l’assiette qui les fait sortir. Rien pour les trapèzes, qui tassent le cou.'],
     ['P', 'Tractions au parc.', 'Une barre de street workout pendant ta marche, à la place d’une C. Tractions par étapes (négatives, élastique, puis vraies), australiennes pour le milieu du dos, relevés de genoux pour le bas du ventre, suspension pour la poigne et les avant-bras. 10 tractions propres, c’est solide ; 15 à 20, c’est très fort.'],
     ['M', 'Grand et droit.', 'Bassin droit (fentes basses, pont fessier), dos fort et épaules ouvertes (superman, tirage superman, écarté et passage d’épaules à l’élastique, étirement des pectoraux debout), tête reculée (chin tucks) : on gagne visuellement quelques centimètres et une démarche plus sûre.'],
     ['M', 'Mâchoire nette.', 'Tête droite et visage sec, sans grossir le cou. L’os ne change pas à l’âge adulte : ce qui la révèle, c’est surtout un visage sec et une tête bien placée. Évite le chewing-gum dur, mauvais pour l’articulation.'],
@@ -1023,32 +1075,47 @@ function stepTarget(s) {
 function speakStep() {
   if (!player || player.done) return;
   const s = player.steps[player.i];
-  say(spokenStep(s, player.steps[player.i + 1], stepTarget(s)));
+  const toNote = loggables().find((l) => !l.noted);
+  say(spokenStep(s, player.steps[player.i + 1], stepTarget(s), toNote?.goal.unit));
 }
 
-// L'effort qu'on peut noter maintenant : celui qui vient de finir (pendant le
-// repos, ou le dernier à la fin de la séance). Pas pour les tenues.
-function loggable() {
-  if (!player?.steps) return null;
-  const idx = player.done ? player.lastWork : player.steps[player.i]?.kind === 'rest' ? player.i - 1 : -1;
-  const s = player.steps[idx];
-  if (s?.kind !== 'work' || player.logged?.has(idx)) return null;
-  const goal = goalOf(s.cue);
-  return goal ? { idx, s, goal, value: player.logVal?.[idx] ?? stepTarget(s).target } : null;
+// Ce qu'on peut noter maintenant : pendant le repos, l'effort qui vient de
+// finir ; à la fin de la séance, tout ce qui n'a pas été noté (les oublis).
+// Pas pour les tenues. noted : déjà noté pendant cette séance (on peut corriger).
+function loggables() {
+  if (!player?.steps) return [];
+  const ids = player.done ? player.doneList ?? [] : player.steps[player.i]?.kind === 'rest' ? [player.i - 1] : [];
+  return ids.flatMap((idx) => {
+    const s = player.steps[idx];
+    const goal = s?.kind === 'work' && goalOf(s.cue);
+    if (!goal) return [];
+    const target = stepTarget(s).target;
+    return [{ idx, s, goal, target, center: player.logVal?.[idx] ?? target, noted: player.noted?.[idx] }];
+  });
 }
 
+// Noter en une touche : 5 nombres autour de l'objectif (‹ › pour aller plus
+// bas ou plus haut). Une fois noté : « Corriger » si on s'est trompé, et la
+// plaque neuve quand c'est un record.
 function logRow() {
-  const l = loggable();
-  if (!l) return '';
-  return `<div class="log-reps">
-    <p>${esc(l.s.name)} : ${esc(combien(l.goal.unit))} ?</p>
-    <div class="log-row">
-      <button class="ctrl small" data-act="reps" data-v="-1" aria-label="Une de moins">−</button>
-      <strong class="log-val" aria-live="polite">${l.value}</strong>
-      <button class="ctrl small" data-act="reps" data-v="1" aria-label="Une de plus">+</button>
-      <button class="btn primary small" data-act="reps-save">Noter</button>
+  const list = loggables();
+  if (!list.length) return '';
+  const name = (l) => (player.done && l.s.rounds > 1 ? `${l.s.name} · tour ${l.s.round}` : l.s.name);
+  const rows = list.map((l) => {
+    if (l.noted) {
+      const fix = `<button class="btn ghost small log-fix" data-act="reps-undo" data-idx="${l.idx}">Corriger</button>`;
+      return player.plaque?.idx === l.idx ? `${plaqueNew()}${fix}` : `<div class="log-done">${icon('check')}<span>${esc(name(l))}\u00a0: ${l.noted.value}\u00a0${esc(l.goal.unit)}</span>${fix}</div>`;
+    }
+    return `<div class="log-reps">
+    <p>${esc(name(l))}\u00a0: ${esc(combien(l.goal.unit))}\u00a0?</p>
+    <div class="log-chips">
+      <button class="log-step" data-act="reps-shift" data-idx="${l.idx}" data-v="-5" aria-label="Nombres plus bas">‹</button>
+      ${logChoices(l.center).map((v) => `<button class="log-chip${v === l.target ? ' aim' : ''}" data-act="reps-pick" data-idx="${l.idx}" data-v="${v}" aria-label="Noter ${v} ${esc(l.goal.unit)}">${v}</button>`).join('')}
+      <button class="log-step" data-act="reps-shift" data-idx="${l.idx}" data-v="5" aria-label="Nombres plus hauts">›</button>
     </div>
   </div>`;
+  });
+  return player.done && list.length > 1 ? `<div class="log-list"><p class="eyebrow">Pas encore noté · si tu t’en souviens</p>${rows.join('')}</div>` : rows.join('');
 }
 
 // Record battu : une plaque de cuivre neuve, gravée, s'allume (un reflet la
@@ -1056,7 +1123,7 @@ function logRow() {
 // si le téléphone demande de les réduire.
 function plaqueNew() {
   const p = player?.plaque;
-  if (!p || p.at !== (player.done ? 'done' : player.i)) return '';
+  if (!p) return '';
   const lit = !p.shown;
   p.shown = true;
   return `<div class="plaque-new${lit ? ' lit' : ''}"${lit ? ' role="status"' : ''}>
@@ -1083,7 +1150,7 @@ function renderPlayer() {
         <h2>${esc(player.workout.name)}</h2>
         ${icon('trophy', 'big-ico')}
         <p class="muted">≈ ${workoutKcal(player.workout)} kcal brûlées (estimation)</p>
-        ${logRow()}${plaqueNew()}
+        ${logRow()}
         <p class="cue">Comment c’était ? Ta réponse sert à ajuster le niveau.</p>
       </div>
       <div class="feel">
@@ -1115,7 +1182,7 @@ function renderPlayer() {
         return t?.best != null ? `<span class="rec-tag">${icon('trophy')}Record ${t.best} · vise ${t.target}</span>` : '';
       })()}
       ${s.why && s.kind === 'work' ? `<p class="why">${esc(s.why)}</p>` : ''}
-      ${s.kind === 'rest' ? logRow() + plaqueNew() : ''}
+      ${s.kind === 'rest' ? logRow() : ''}
       ${stageFig(s.kind === 'work' || s.kind === 'warm' ? figure(s.name, s.target) : figure(next?.name, next?.target), fresh && player.i === 0)}
       <div class="clock huge" id="player-clock">${fmtStep(player.remaining)}</div>
       ${s.kind === 'rest' ? '' : `<p class="cue">${esc(s.cue)}</p>
@@ -1171,7 +1238,8 @@ function finishWorkout() {
   d.workouts = [...(d.workouts ?? []), player.workout.id];
   raiseHabit(today, 'sport', player.workout.id === 'M' ? 1 : 2);
   save();
-  player = { workout: player.workout, done: true, steps: player.steps, lastWork: player.steps.findLastIndex((x) => x.kind === 'work'), logged: player.logged, logVal: player.logVal };
+  // fin : tout ce qui n'a pas été noté peut l'être maintenant (les oublis)
+  player = { workout: player.workout, done: true, steps: player.steps, logged: player.logged, logVal: player.logVal, doneList: toLog(player.steps, player.logged ?? new Set()) };
   keepAwake(false);
   beep(3);
   say('Séance terminée. Bien joué.');
@@ -1532,6 +1600,12 @@ const actions = {
     render();
     if (dayStatus(state, today).valid && chain(state, today).count > before) celebrate('Journée validée 🔥 Chaîne +1');
   },
+  // Salle : toucher un poste le choisit (son bonhomme se met au travail)
+  'gym-pick'(el) {
+    gymPick = el.dataset.id;
+    navigator.vibrate?.(6);
+    render();
+  },
   'start-workout'(el, e) {
     e.preventDefault();
     location.hash = 'sport';
@@ -1580,27 +1654,44 @@ const actions = {
     renderPlayer();
     toast('Record remis à zéro : note ton nouveau chiffre au repos.', 2500);
   },
-  reps(el) {
-    const l = loggable();
+  'reps-shift'(el) {
+    const l = loggables().find((x) => x.idx === Number(el.dataset.idx) && !x.noted);
     if (!l) return;
-    player.logVal = { ...player.logVal, [l.idx]: Math.max(0, l.value + Number(el.dataset.v)) };
+    player.logVal = { ...player.logVal, [l.idx]: Math.max(2, l.center + Number(el.dataset.v)) };
     renderPlayer();
   },
-  'reps-save'() {
-    const l = loggable();
+  // une touche sur un nombre : c'est noté
+  'reps-pick'(el) {
+    const l = loggables().find((x) => x.idx === Number(el.dataset.idx) && !x.noted);
     if (!l) return;
+    const value = Number(el.dataset.v);
     const key = recordKey(l.s.name, l.s.round);
-    const was = state.records?.[key]?.best;
-    const gain = beatBy(state.records?.[key], l.value);
-    state.records = logRecord(state.records, key, l.value, todayKey());
+    const prev = state.records?.[key];
+    const gain = beatBy(prev, value);
+    state.records = logRecord(state.records, key, value, todayKey());
     player.logged = new Set([...(player.logged ?? []), l.idx]);
-    if (gain !== null) player.plaque = { at: player.done ? 'done' : player.i, name: baseName(l.s.name), round: l.s.round ?? 1, value: l.value, unit: l.goal.unit, gain, was };
+    player.noted = { ...player.noted, [l.idx]: { key, prev, value } };
+    if (gain !== null) player.plaque = { idx: l.idx, name: baseName(l.s.name), round: l.s.round ?? 1, value, unit: l.goal.unit, gain, was: prev.best };
+    navigator.vibrate?.(gain !== null ? [12, 60, 18] : 8);
     save();
     renderPlayer();
-    if (gain !== null) {
-      navigator.vibrate?.([12, 60, 18]);
-      say(`Nouveau record : ${l.value} ${l.goal.unit}.`);
-    } else toast(`Noté : ${l.value}. La prochaine fois, vise ${state.records[key].best + 1}.`, 2000);
+    if (gain !== null) say(`Nouveau record : ${value} ${l.goal.unit}.`);
+  },
+  // « Corriger » : on remet le record d'avant et on renote
+  'reps-undo'(el) {
+    const idx = Number(el.dataset.idx);
+    const n = player?.noted?.[idx];
+    if (!n) return;
+    const records = { ...state.records };
+    if (n.prev) records[n.key] = n.prev;
+    else delete records[n.key];
+    state.records = records;
+    player.logged = new Set([...(player.logged ?? [])].filter((x) => x !== idx));
+    const { [idx]: _gone, ...noted } = player.noted;
+    player.noted = noted;
+    if (player.plaque?.idx === idx) player.plaque = null;
+    save();
+    renderPlayer();
   },
   feel(el) {
     state.feels = [...state.feels, { date: todayKey(), id: player.workout.id, v: el.dataset.v }].slice(-60);
@@ -1609,15 +1700,37 @@ const actions = {
     renderPlayer();
     render();
   },
-  'protein-add'(el) {
+  // un aliment touché (Manger, ou les boutons protéines de Jour) : une portion de plus
+  'meal-add'(el) {
+    const food = FOODS.find((f) => f.id === el.dataset.f);
+    if (!food) return;
     const d = day(todayKey());
     const before = proteinGrams(d);
-    proteinUndo = Number(el.dataset.g);
-    d.proteinG = before + proteinUndo;
+    d.meals = addMeal(d.meals, food, 1);
+    mealUndo = food.id;
     navigator.vibrate?.(8);
     save();
     render();
-    if (before < PROTEIN_GRAMS && d.proteinG >= PROTEIN_GRAMS) celebrate('Objectif protéines atteint 💪');
+    if (before < PROTEIN_GRAMS && proteinGrams(d) >= PROTEIN_GRAMS) celebrate('Objectif protéines atteint 💪');
+  },
+  'meal-step'(el) {
+    const d = day(todayKey());
+    d.meals = addMeal(d.meals, { id: el.dataset.f }, Number(el.dataset.v));
+    if (!d.meals.length) delete d.meals;
+    save();
+    render();
+  },
+  'meal-undo'() {
+    const d = day(todayKey());
+    d.meals = addMeal(d.meals, { id: mealUndo }, -1);
+    if (!d.meals.length) delete d.meals;
+    mealUndo = '';
+    save();
+    render();
+  },
+  'food-cat'(el) {
+    foodCat = el.dataset.c;
+    render();
   },
   creatine() {
     const d = day(todayKey());
@@ -1628,13 +1741,6 @@ const actions = {
   },
   'creatine-show'(el) {
     state.settings.creatine = el.dataset.v === '1';
-    save();
-    render();
-  },
-  'protein-undo'() {
-    const d = day(todayKey());
-    d.proteinG = Math.max(0, proteinGrams(d) - proteinUndo);
-    proteinUndo = 0;
     save();
     render();
   },
@@ -1928,6 +2034,7 @@ document.addEventListener('change', (e) => {
     if (v === null) delete d[el.dataset.field];
     else d[el.dataset.field] = v;
     save();
+    if (el.dataset.field === 'steps') render(); // l'objectif de calories suit les pas
     toast('Enregistré.');
   } else if (el.dataset.setting) {
     const k = el.dataset.setting;
@@ -2075,7 +2182,7 @@ function enterGym() {
 
 $('#tabs').innerHTML = `<span class="tab-ind" aria-hidden="true"></span>${TABS.map((t) => `<a href="#${t.id}" data-tab="${t.id}"><span class="tab-ico" aria-hidden="true">${t.icon}</span>${t.label}</a>`).join('')}`;
 $('#tabs').classList.add('has-ind');
-addEventListener('resize', () => moveTabIndicator(true));
+addEventListener('resize', () => { moveTabIndicator(true); hubDeclutter(); });
 state.ui.lastLevel = Math.max(state.ui.lastLevel ?? 1, levelInfo(totalXP(state)).level);
 save();
 render();

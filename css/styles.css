@@ -97,7 +97,8 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 
-html { -webkit-text-size-adjust: 100%; }
+/* touch-action : pas de zoom au double-tap (taper vite sur un bouton ne doit pas zoomer) ; le pincement reste permis */
+html { -webkit-text-size-adjust: 100%; touch-action: manipulation; }
 
 body {
   margin: 0;
@@ -904,11 +905,11 @@ details.card.more .rules { margin-top: 10px; }
 
 /* ---------- v19 : bonshommes animés ---------- */
 .fig { display: block; width: 100%; height: 100%; overflow: visible; }
-/* Mannequin : pièces pleines ombrées par des dégradés (fig-tone), cernées
-   d'un trait fin (--fig-line) pour qu'un bras devant le buste reste net. */
-.fig .fig-skin, .fig .fig-joint, .fig .fig-hand, .fig .fig-head, .fig .fig-hair, .fig .fig-shoe {
-  stroke: var(--fig-line, #0b0916); stroke-width: 0.45; stroke-linejoin: round;
-}
+/* Bonhomme lisse : pièces pleines ombrées par des dégradés (fig-tone), sans
+   trait entre elles ; chaque membre, le buste et la tête ont un seul contour
+   (calque .fig-o dessous) : un bras devant le buste reste net, sans rotules. */
+.fig .fig-skin, .fig .fig-joint, .fig .fig-hand, .fig .fig-head, .fig .fig-hair, .fig .fig-shoe { stroke: none; }
+.fig .fig-o { fill: var(--fig-line, #0b0916); stroke: var(--fig-line, #0b0916); stroke-width: 0.7; stroke-linejoin: round; }
 .fig .fig-muscle { stroke: none; }
 .fig-tone .fig-s1 { stop-color: color-mix(in srgb, var(--figure, #f1f0f7) 86%, #4d4672); }
 .fig-tone .fig-s2 { stop-color: color-mix(in srgb, var(--figure, #f1f0f7) 65%, #ffffff); }
@@ -1071,12 +1072,28 @@ details.card.more .rules { margin-top: 10px; }
 .gym-head { display: grid; grid-template-columns: 56px 1fr; gap: 14px; align-items: center; }
 .gym-head h2 { margin: 0; font-size: 1.3rem; }
 .gym-head p { margin: 0; }
-/* la séance du jour se passe dans la salle (js/room.js) : le bonhomme est
-   posé sur le parquet, au pied du mur */
-.gym-stage { position: relative; height: 220px; margin: 12px 0 2px; border-radius: 16px; overflow: hidden; background: #0f0c0a; }
-.gym-room, .gym-room .room { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.gym-fig { position: absolute; left: 4%; right: 4%; top: 16%; bottom: 6%; display: flex; align-items: flex-end; justify-content: center; }
-.gym-fig .fig { width: 100%; height: auto; max-height: 100%; }
+/* Ta salle (js/gym.js) : un poste par séance. Le décor est un seul dessin ;
+   par-dessus, une zone à toucher par poste, avec sa lettre (ou, pour le poste
+   choisi, sa séance écrite au-dessus du bonhomme). */
+.hub-stage { position: relative; margin: 0 0 14px; border-radius: 16px; overflow: hidden; background: #0f0c0a; }
+.hub-scene { display: block; width: 100%; height: auto; }
+.hub-pool { fill: var(--wo, #dc9a70); fill-opacity: 0.1; }
+.hub-st.on .hub-pool { fill-opacity: 0.34; }
+.hub-st .fig-mat { fill: rgb(255 240 225 / 0.1); }
+.st-M .fig-mat { fill: #8fb08a; fill-opacity: 0.75; } /* tapis de yoga */
+.hub-st:not(.on) > .fig { opacity: 0.85; }
+.hub-rack rect { fill: #4a423d; stroke: #0e0b09; stroke-width: 0.5; }
+.hub-hit { position: absolute; padding: 0; border: 0; border-radius: 14px; background: none; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.hub-hit:focus-visible { outline: 2px solid var(--wo, var(--accent)); outline-offset: 2px; }
+.hub-badge, .hub-tag { position: absolute; left: 50%; top: 0; transform: translate(-50%, -55%); pointer-events: none; white-space: nowrap; }
+.hub-tag.at-l { left: 0; transform: translate(0, -55%); }
+.hub-tag.at-r { left: auto; right: 0; transform: translate(0, -55%); }
+.hub-badge { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 800 0.72rem/1 var(--sans); background: rgb(12 10 9 / 0.72); color: var(--wo); box-shadow: inset 0 0 0 1.5px var(--wo); }
+.hub-badge { transition: opacity 0.2s; }
+.hub-badge.under-tag { opacity: 0; }
+.hub-badge.today { box-shadow: inset 0 0 0 1.5px var(--wo), 0 0 0 3px rgb(220 154 112 / 0.4), 0 0 12px 2px rgb(220 154 112 / 0.45); }
+.hub-tag { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px 5px 6px; border-radius: 999px; font: 700 0.78rem/1.2 var(--sans); background: rgb(12 10 9 / 0.84); color: #f4eee7; box-shadow: inset 0 0 0 1px var(--wo), 0 8px 18px -8px rgb(0 0 0 / 0.8); }
+.hub-tag b { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--wo); color: #14100d; font-size: 0.7rem; }
 /* Séance dans ta salle : le décor passe derrière le bonhomme du lecteur (pieds
    sur le parquet, à un tiers du bas de son cadre). Mêmes proportions que le
    dessin (390 × 210, sol à 60 %), jamais plus large que l'écran (sinon le
@@ -1122,7 +1139,11 @@ details.card.more .rules { margin-top: 10px; }
   #intro .room-logo, #intro .room-name { transform-box: fill-box; transform-origin: 50% 50%; animation: intro-logo 0.9s 0.85s ease-out both; }
   #intro .intro-text { animation: intro-text 0.6s 1.2s ease-out both; }
   /* dans la Salle, la lueur du logo respire doucement */
-  .gym-room .room-glow { animation: room-breathe 6s ease-in-out infinite; }
+  .hub-scene .room-glow { animation: room-breathe 6s ease-in-out infinite; }
+  /* poste choisi : son étiquette se pose, le sac de boxe se balance sous les coups */
+  .hub-tag { animation: hub-tag 0.3s ease-out both; }
+  .hub-tag.at-l, .hub-tag.at-r { animation-name: hub-tag-side; }
+  .hub-st.on .hub-bag { transform-box: fill-box; transform-origin: 50% 0; animation: hub-bag 1s ease-in-out infinite alternate; }
   /* quand la séance démarre, on passe de la salle au lecteur en douceur */
   #player:not([hidden]) { animation: lights-down 0.45s ease-out; }
 }
@@ -1132,6 +1153,9 @@ details.card.more .rules { margin-top: 10px; }
 @keyframes intro-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes intro-logo { from { opacity: 0.12; transform: scale(0.92); } to { opacity: 1; transform: none; } }
 @keyframes intro-text { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes hub-tag { from { opacity: 0; transform: translate(-50%, -25%); } to { opacity: 1; transform: translate(-50%, -55%); } }
+@keyframes hub-tag-side { from { opacity: 0; transform: translate(0, -25%); } to { opacity: 1; transform: translate(0, -55%); } }
+@keyframes hub-bag { from { transform: rotate(-1.6deg); } to { transform: rotate(1.6deg); } }
 @keyframes room-breathe { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
 @keyframes lights-down { from { opacity: 0; transform: scale(1.03); } to { opacity: 1; transform: none; } }
 @keyframes plaque-in { from { opacity: 0; transform: translateY(-10px) scale(0.92); } to { opacity: 1; transform: none; } }
@@ -1139,19 +1163,6 @@ details.card.more .rules { margin-top: 10px; }
 @keyframes plaque-shine { from { transform: translateX(-130%) skewX(-18deg); } to { transform: translateX(260%) skewX(-18deg); } }
 @keyframes plaque-glow { 0% { filter: drop-shadow(0 0 0 rgb(240 180 140 / 0)); } 35% { filter: drop-shadow(0 0 14px rgb(240 180 140 / 0.9)); } 100% { filter: drop-shadow(0 0 5px rgb(240 180 140 / 0.35)); } }
 .gym-level { margin-top: 12px; }
-.postes { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 2px 8px; scrollbar-width: none; }
-.postes::-webkit-scrollbar { display: none; }
-.poste {
-  flex: 0 0 132px; scroll-snap-align: start; display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
-  padding: 10px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface-2);
-  color: var(--text); font: inherit; text-align: left; cursor: pointer;
-}
-.poste-fig { position: relative; width: 100%; height: 70px; padding: 6px 4px 9px; border-radius: 10px; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; }
-.poste-fig .fig { position: relative; z-index: 1; width: 100%; height: auto; max-height: 100%; }
-.poste-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; }
-.poste strong { font-size: 0.86rem; line-height: 1.2; }
-.poste small { color: var(--muted); font-size: 0.75rem; }
-.poste-tag { font-size: 0.68rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--accent-soft); white-space: nowrap; }
 .records { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .record { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; padding: 10px 12px; border-radius: 14px; background: var(--surface-2); }
 .record b { font-size: 1.7rem; line-height: 1; }
@@ -1187,3 +1198,41 @@ details.card.more .rules { margin-top: 10px; }
 .cue-full-fig .fig { width: 100%; height: auto; }
 .cue-full-text { margin: 0; font-size: 1.15rem; line-height: 1.55; color: #f5f5f7; }
 .cue-full .btn { margin-top: auto; min-height: 56px; font-size: 1.05rem; }
+
+/* ---------- Manger : ton assiette du jour (journal des repas) ---------- */
+.kcal-head { margin: 2px 0 0; }
+.kcal-head strong { font: 800 1.7rem/1 var(--rounded, var(--sans)); font-variant-numeric: tabular-nums; }
+.kcal-bar.over span { background: linear-gradient(90deg, var(--warn, #e0a64a), var(--neg, #e05a43)); }
+/* pas du jour : un petit menu, l'objectif de calories suit */
+label.steps-pick { flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0 2px; font-size: 0.85rem; color: var(--text-2); }
+label.steps-pick select { width: auto; min-height: 36px; padding: 0 10px; font-size: 0.85rem; }
+/* familles d'aliments : toutes visibles (sur deux lignes au besoin) */
+.food-cats { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 8px; }
+.food-cats .seg { flex: 0 0 auto; min-width: 0; min-height: 38px; padding: 0 12px; border-radius: 999px; }
+.food-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.food {
+  display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto auto; column-gap: 8px; align-items: center;
+  min-height: 56px; padding: 8px 10px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface-2);
+  color: var(--text); font: inherit; text-align: left; cursor: pointer;
+}
+.food .food-emo { grid-row: span 3; font-size: 1.5rem; line-height: 1; }
+.food b { font-size: 0.86rem; line-height: 1.2; }
+.food small { font-size: 0.72rem; line-height: 1.25; color: var(--muted); }
+.food .food-kcal { color: var(--accent); font-weight: 700; }
+.food b, .food small { overflow-wrap: break-word; }
+/* petits écrans (ou texte agrandi) : l'emoji au-dessus, le texte prend toute
+   la largeur (« Viennoiserie », « Clémentines » ne débordent plus) */
+@media (max-width: 380px) {
+  .food { grid-template-columns: minmax(0, 1fr); align-content: start; padding: 8px 9px; }
+  .food .food-emo { grid-row: auto; font-size: 1.25rem; margin-bottom: 3px; }
+}
+.meal-list { list-style: none; margin: 12px 0 4px; padding: 0; }
+.meal-list li { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 6px; padding: 6px 0; border-top: 1px solid var(--line); }
+.meal-list li:first-child { border-top: 0; }
+.meal-name small { color: var(--muted); }
+.meal-kcal { color: var(--text-2); font-size: 0.85rem; font-variant-numeric: tabular-nums; margin-right: 4px; }
+.meal-step { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font-size: 1.1rem; cursor: pointer; }
+@media (prefers-reduced-motion: no-preference) {
+  .food { transition: transform 0.1s; }
+  .food:active, .meal-step:active { transform: scale(0.96); }
+}

@@ -224,6 +224,18 @@ export function nextTarget(goal, rec) {
   return { target: rec.best + 1, best: rec.best };
 }
 
+// Noter en une touche : 5 nombres autour de celui qu'on vise (jamais sous 0).
+export function logChoices(center, n = 5) {
+  const start = Math.max(0, Math.round(center) - Math.floor(n / 2));
+  return Array.from({ length: n }, (_, i) => start + i);
+}
+
+// Ce qui reste à noter dans une séance : les efforts avec un objectif chiffré
+// (pas les tenues) pas encore notés. steps : étapes ; logged : index déjà notés.
+export function toLog(steps = [], logged = new Set()) {
+  return steps.flatMap((s, i) => (s?.kind === 'work' && goalOf(s.cue) && !logged.has(i) ? [i] : []));
+}
+
 // Version plus dure : on repart de zéro pour cet exercice, à tous les tours.
 export function dropRecords(records, name) {
   return Object.fromEntries(Object.entries(records ?? {}).filter(([k]) => !k.startsWith(`${name}#`)));
@@ -275,12 +287,14 @@ export function recordWall(records, exercises, limit = 6, today = null) {
 // Coach vocal : la phrase dite au début de chaque étape de la séance. Courte,
 // sans parenthèses ni « (1/2) », avec ton record quand tu en as un.
 const sayName = (name = '') => name.replace(/\s*\(\d\/\d\)/, '').replace(/[()]/g, '').trim();
-export function spokenStep(step, next, target) {
+// noteUnit : au repos, l'unité de l'effort qui vient de finir s'il reste à
+// noter (« Note tes touches. »), pour ne plus oublier.
+export function spokenStep(step, next, target, noteUnit = '') {
   if (!step) return '';
   const after = next ? sayName(next.name) : '';
   if (step.kind === 'prep') return `Prépare-toi.${after ? ` On commence par ${after}.` : ''}`;
   if (step.kind === 'warm') return `${sayName(step.name)}.`;
-  if (step.kind === 'rest') return `${step.name === 'Fin du tour' ? 'Fin du tour' : 'Repos'}.${after ? ` Ensuite : ${after}.` : ''}`;
+  if (step.kind === 'rest') return `${step.name === 'Fin du tour' ? 'Fin du tour' : 'Repos'}.${noteUnit ? ` Note tes ${noteUnit}.` : ''}${after ? ` Ensuite : ${after}.` : ''}`;
   const goal = target?.harder
     ? 'Passe à la version plus dure.'
     : target?.best != null
@@ -292,8 +306,48 @@ export function spokenStep(step, next, target) {
 // Protéines du jour en grammes. Les anciens jours comptaient en « portions »
 // (champ protein) : une portion vaut 25 g.
 export const PROTEIN_PORTION_G = 25;
+// Avec le journal des repas : les protéines des repas notés s'ajoutent.
 export function proteinGrams(d) {
-  return Number.isFinite(d?.proteinG) ? d.proteinG : (d?.protein ?? 0) * PROTEIN_PORTION_G;
+  const manual = Number.isFinite(d?.proteinG) ? d.proteinG : (d?.protein ?? 0) * PROTEIN_PORTION_G;
+  return manual + mealTotals(d?.meals).p;
+}
+
+// Journal des repas. Objectif du jour selon les pas : 1 850 kcal à 8 000 pas,
+// ≈ 0,04 kcal par pas en plus ou en moins, entre 1 650 et 2 150 (≈ 2 000 à
+// 12 000 pas). Sans pas notés : 1 850.
+export const KCAL_BASE = 1850;
+export function kcalTarget(steps) {
+  if (!Number.isFinite(steps) || steps <= 0) return KCAL_BASE;
+  return Math.round(Math.min(2150, Math.max(1650, KCAL_BASE + 0.04 * (steps - 8000))) / 10) * 10;
+}
+
+// « 5 % », « 100 g », « 2 œufs » : un nombre reste collé au mot qui le suit
+// (espace insécable), jamais seul en fin de ligne.
+export const nbsp = (text) => String(text).replace(/([\d¼½]) (?=\S)/g, '$1\u00a0');
+
+// Pas du jour (comptés par une autre appli) : un petit menu de valeurs rondes,
+// la plus proche est cochée (8 000 sans pas notés, comme l'objectif).
+export const STEP_CHOICES = [3000, 5000, 8000, 10000, 12000, 15000];
+export function nearestSteps(steps) {
+  const v = Number.isFinite(steps) && steps > 0 ? steps : 8000;
+  return STEP_CHOICES.reduce((a, b) => (Math.abs(b - v) < Math.abs(a - v) ? b : a));
+}
+
+// Total des repas notés : kcal et protéines (g), arrondis.
+export function mealTotals(meals) {
+  const t = (Array.isArray(meals) ? meals : []).reduce((s, m) => ({ kcal: s.kcal + m.n * m.kcal, p: s.p + m.n * m.p }), { kcal: 0, p: 0 });
+  return { kcal: Math.round(t.kcal), p: Math.round(t.p) };
+}
+
+// Ajoute (delta > 0) ou retire des portions d'un aliment, par demi-portion.
+// Une entrée par aliment et par jour, avec ses kcal et protéines par portion
+// du moment : changer la table plus tard ne réécrit pas les jours passés.
+export function addMeal(meals, food, delta = 1) {
+  const list = Array.isArray(meals) ? meals : [];
+  const i = list.findIndex((m) => m.f === food.id);
+  if (i < 0) return delta > 0 ? [...list, { f: food.id, n: delta, kcal: food.kcal, p: food.p }] : list;
+  const n = Math.round((list[i].n + delta) * 2) / 2;
+  return n <= 0 ? list.filter((_, k) => k !== i) : list.map((m, k) => (k === i ? { ...m, n } : m));
 }
 
 // Créatine : une case par jour, à part des habitudes (un oubli ne rate pas la

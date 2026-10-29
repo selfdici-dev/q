@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { WORKOUTS, WEEK_PLAN, WARMUP, HELP, demoUrl, baseName, DAY_PLAN, FOOD_COLORS, FOOD_TREATS, FOOD_RULES, DEFAULT_RULES, PROTEIN_FOODS, SNACKS, SNACK_TEST, TEA_TIPS } from '../js/data.js';
+import { WORKOUTS, WEEK_PLAN, WARMUP, HELP, demoUrl, baseName, DAY_PLAN, FOOD_COLORS, FOOD_TREATS, FOOD_RULES, DEFAULT_RULES, PROTEIN_CHIPS, FOODS, FOOD_CATS, SNACKS, SNACK_TEST, TEA_TIPS } from '../js/data.js';
 import { goalOf } from '../js/logic.js';
 
 test('séances : les IDs stockés dans l’historique ne changent pas', () => {
@@ -8,6 +8,17 @@ test('séances : les IDs stockés dans l’historique ne changent pas', () => {
   assert.deepEqual(WORKOUTS.map((w) => w.id), ['A', 'B', 'C', 'P', 'M']);
   for (const id of Object.values(WEEK_PLAN)) assert.ok(WORKOUTS.some((w) => w.id === id), id);
   assert.deepEqual(Object.keys(WEEK_PLAN).map(Number).sort(), [0, 1, 2, 3, 4, 5, 6]);
+});
+
+test('semaine type : B trois fois, A deux fois, cardio C le mercredi, M le dimanche', () => {
+  // revue après un mois : 3 séances d'abdos, c'était trop (la sèche montre les abdos) ;
+  // le mercredi devait passer aux tractions, mais pas de barre : ce sera la C
+  const count = (id) => Object.values(WEEK_PLAN).filter((x) => x === id).length;
+  assert.deepEqual([count('A'), count('B'), count('C'), count('M'), count('P')], [2, 3, 1, 1, 0]);
+  assert.equal(WEEK_PLAN[3], 'C');
+  assert.equal(WEEK_PLAN[0], 'M');
+  // jamais la même séance deux jours de suite : chaque muscle a 48 h pour récupérer
+  for (let d = 0; d < 7; d++) assert.notEqual(WEEK_PLAN[d], WEEK_PLAN[(d + 1) % 7], `jour ${d}`);
 });
 
 test('chaque exercice a une durée, une consigne et un objectif', () => {
@@ -83,14 +94,22 @@ test('objectif fin et élancé : roue ×2, burpees sans saut, posture et mâchoi
   assert.ok(ex('B').filter((e) => /dos/i.test(e.target)).length >= 2);
   for (const e of ex('B').filter((x) => /élastique/i.test(x.name))) assert.match(e.cue, /Sans élastique : /, e.name);
   // B v3 : l'élastique pour les 2 tirages et un curl biceps (il aime les curls, les biceps n'avaient rien de direct)
-  assert.equal(ex('B').filter((e) => /élastique/i.test(e.name)).length, 3);
+  // B v4 : + les élévations latérales (après un mois, il veut le V : épaules un peu plus larges)
+  assert.equal(ex('B').filter((e) => /élastique/i.test(e.name)).length, 4);
   assert.ok(ex('B').some((e) => e.name === 'Curl biceps à l’élastique'));
   for (const e of ex('B').filter((x) => /parallettes/i.test(x.cue))) assert.match(e.cue, /Sans parallettes : /, e.name);
   assert.ok(ex('B').some((e) => /^Pompes pike/.test(e.name)) && ex('B').some((e) => /^L-sit/.test(e.name)));
   // B : deux exercices pour des pectoraux fermes (pompes et pompes serrées)
   assert.ok(ex('B').filter((e) => /pectoraux/i.test(e.target)).length >= 2);
-  // rien ne vise la largeur : pas d'exercice d'épaules latérales ni de trapèzes
-  for (const w of WORKOUTS) for (const e of w.exercises) assert.doesNotMatch(`${e.name} ${e.target}`, /latérales|trapèze|largeur/i);
+  // trapèzes : jamais (ils tassent le cou). Largeur : seulement les élévations latérales de la B,
+  // choisies après un mois pour le V (avant : « rien ne vise la largeur »)
+  for (const w of WORKOUTS) for (const e of w.exercises) assert.doesNotMatch(`${e.name} ${e.target}`, /trapèze/i);
+  const wide = WORKOUTS.flatMap((w) => w.exercises.map((e) => [w.id, e.name])).filter(([, n]) => /latérales/i.test(n) && !/^Planche/.test(n));
+  assert.deepEqual(wide, [['B', 'Élévations latérales à l’élastique']]);
+  // juste après le curl : même élastique (le noir, le plus léger), même position
+  const names = ex('B').map((e) => e.name);
+  assert.equal(names.indexOf('Élévations latérales à l’élastique'), names.indexOf('Curl biceps à l’élastique') + 1);
+  assert.match(ex('B').find((e) => /^Élévations/.test(e.name)).cue, /élastique noir/);
 });
 
 test('A v4 : 2 tours durs plutôt que 3 mous, et une version plus dure quand la fourchette est atteinte', () => {
@@ -217,7 +236,7 @@ test('manger : journée type du réveil au coucher, et 3 couleurs où rien n’e
   // 3 couleurs : vert tous les jours (toutes les protéines des boutons, sauf le jambon), jaune un peu, rouge prévu
   assert.deepEqual(FOOD_COLORS.map((c) => c.id), ['vert', 'jaune', 'rouge']);
   const green = FOOD_COLORS[0].items.join(' ').toLowerCase();
-  for (const [food] of PROTEIN_FOODS.filter(([f]) => f !== 'Jambon')) assert.ok(green.includes(food.replace(/^\d+ /, '').toLowerCase()), food);
+  for (const id of PROTEIN_CHIPS.filter((f) => f !== 'jambon')) assert.ok(green.includes(FOODS.find((f) => f.id === id).name.split(' ')[0].toLowerCase()), id);
   const red = FOOD_COLORS[2];
   assert.match(red.title, /^Prévu, 2 ou 3 fois par semaine/);
   assert.ok(/Gâteaux/.test(red.items.join(' ')) && /Fast-food/.test(red.items.join(' ')));
@@ -246,4 +265,25 @@ test('manger : collations protéinées d’abord, test de la pomme, thé loin de
   assert.match(tea, /fer/);
   assert.match(tea, /détox/);
   for (const t of TEA_TIPS) assert.ok(t.length <= 110, t);
+});
+
+test('journal des repas : des aliments courants, en portions, avec des repères crédibles', () => {
+  const ids = FOODS.map((f) => f.id);
+  assert.equal(new Set(ids).size, ids.length);
+  const cats = FOOD_CATS.map(([c]) => c);
+  for (const c of cats) assert.ok(FOODS.some((f) => f.cat === c), c);
+  for (const f of FOODS) {
+    assert.ok(cats.includes(f.cat), f.id);
+    assert.ok(f.emoji && f.name && f.portion, f.id);
+    assert.ok(Number.isInteger(f.kcal) && f.kcal >= 0 && f.kcal <= 1000, f.id);
+    // les protéines ne peuvent pas apporter plus de calories que l'aliment (4 kcal par g)
+    assert.ok(f.p >= 0 && f.p * 4 <= f.kcal, f.id);
+  }
+  // ce qu'il demandait : patate douce et poulet ; et les boutons protéines de Jour existent tous
+  assert.ok(ids.includes('patate-douce') && ids.includes('poulet'));
+  for (const id of PROTEIN_CHIPS) assert.ok(ids.includes(id), id);
+  // cohérent avec les conseils de Manger : skyr 150 g = 90 kcal, 15 g ; amandes 25 g = 150 kcal
+  const by = (id) => FOODS.find((f) => f.id === id);
+  assert.deepEqual([by('skyr').kcal, by('skyr').p], [90, 15]);
+  assert.equal(by('amandes').kcal, 150);
 });

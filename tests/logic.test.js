@@ -483,3 +483,70 @@ test('« combien de touches ? », « combien d’allers-retours ? »', async () 
   assert.equal(combien('allers-retours'), 'combien d’allers-retours');
   assert.equal(combien('esquives'), 'combien d’esquives');
 });
+
+test('noter en une touche : 5 nombres autour de l’objectif, les oublis rattrapés à la fin, le coach le rappelle', async () => {
+  const { logChoices, toLog, spokenStep } = await import('../js/logic.js');
+  assert.deepEqual(logChoices(22), [20, 21, 22, 23, 24]);
+  assert.deepEqual(logChoices(1), [0, 1, 2, 3, 4]); // jamais sous 0
+  assert.deepEqual(logChoices(7.4), [5, 6, 7, 8, 9]);
+  const steps = [
+    { kind: 'prep', name: 'Prépare-toi' },
+    { kind: 'work', name: 'Crunch vélo', cue: 'Objectif : 20 à 24 touches.' },
+    { kind: 'rest', name: 'Récupère' },
+    { kind: 'work', name: 'Planche latérale (droite)', cue: 'Objectif : 1 seule tenue jusqu’au bip.' },
+    { kind: 'rest', name: 'Récupère' },
+    { kind: 'work', name: 'Roue abdominale à genoux (1/2)', cue: 'Objectif : 8 allers-retours.' },
+  ];
+  assert.deepEqual(toLog(steps), [1, 5]); // pas les tenues, pas les repos
+  assert.deepEqual(toLog(steps, new Set([1])), [5]);
+  assert.deepEqual(toLog(), []);
+  // au repos, s'il reste un chiffre à noter
+  assert.equal(spokenStep({ kind: 'rest', name: 'Récupère' }, { name: 'Pompes pike' }, null, 'touches'), 'Repos. Note tes touches. Ensuite : Pompes pike.');
+  assert.equal(spokenStep({ kind: 'rest', name: 'Récupère' }, { name: 'Pompes pike' }), 'Repos. Ensuite : Pompes pike.');
+});
+
+test('séance : taper vite sur un nombre ne zoome pas (pas de zoom au double-tap)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const css = readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
+  assert.match(css, /html \{[^}]*touch-action: manipulation/);
+});
+
+test('repas : objectif selon les pas, total kcal et protéines, une entrée par aliment', async () => {
+  const { kcalTarget, mealTotals, addMeal, proteinGrams, KCAL_BASE } = await import('../js/logic.js');
+  assert.equal(KCAL_BASE, 1850);
+  assert.equal(kcalTarget(undefined), 1850);
+  assert.equal(kcalTarget(8000), 1850);
+  assert.equal(kcalTarget(12000), 2010); // ≈ 2 000 les jours à 12 000 pas
+  assert.equal(kcalTarget(3000), 1650); // jamais sous 1 650
+  assert.equal(kcalTarget(30000), 2150); // ni au-dessus de 2 150
+  // le menu des pas coche la valeur ronde la plus proche
+  const { nearestSteps, STEP_CHOICES } = await import('../js/logic.js');
+  assert.equal(nearestSteps(undefined), 8000);
+  assert.equal(nearestSteps(0), 8000);
+  assert.equal(nearestSteps(11200), 12000);
+  assert.equal(nearestSteps(2000), 3000);
+  assert.equal(nearestSteps(25000), 15000);
+  assert.ok(STEP_CHOICES.every((n) => kcalTarget(n) >= 1650 && kcalTarget(n) <= 2150));
+  // un nombre ne finit jamais seul en bout de ligne : « 5 % », « 100 g »
+  const { nbsp } = await import('../js/logic.js');
+  assert.equal(nbsp('Steak haché 5 %'), 'Steak haché 5\u00a0%');
+  assert.equal(nbsp('1 steak (100 g cru)'), '1\u00a0steak (100\u00a0g cru)');
+  assert.equal(nbsp('½ avocat'), '½\u00a0avocat');
+  assert.equal(nbsp('Poulet'), 'Poulet');
+  const poulet = { id: 'poulet', kcal: 190, p: 37 };
+  const riz = { id: 'riz', kcal: 260, p: 5 };
+  let m = addMeal(undefined, poulet);
+  m = addMeal(m, riz);
+  m = addMeal(m, poulet); // même aliment : une seule entrée, 2 portions
+  assert.deepEqual(m, [{ f: 'poulet', n: 2, kcal: 190, p: 37 }, { f: 'riz', n: 1, kcal: 260, p: 5 }]);
+  assert.deepEqual(mealTotals(m), { kcal: 640, p: 79 });
+  m = addMeal(m, riz, -0.5);
+  assert.equal(m[1].n, 0.5);
+  m = addMeal(m, riz, -0.5); // plus rien : l'entrée disparaît
+  assert.deepEqual(m.map((x) => x.f), ['poulet']);
+  assert.deepEqual(addMeal(m, { id: 'pomme' }, -1), m); // retirer ce qui n'est pas noté : rien ne change
+  assert.deepEqual(mealTotals(undefined), { kcal: 0, p: 0 });
+  // les protéines des repas comptent dans le total du jour, en plus des anciens boutons
+  assert.equal(proteinGrams({ meals: m }), 74);
+  assert.equal(proteinGrams({ proteinG: 20, meals: m }), 94);
+});

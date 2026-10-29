@@ -973,21 +973,9 @@ details.more:not(.card) > summary::after { content: ""; position: absolute; inse
 }
 .gym-hero h2 { font: 700 1.375rem/1.2 var(--sans); letter-spacing: -0.015em; }
 .gym-hero .eyebrow { margin-bottom: 2px; color: var(--wo, var(--accent)); }
-.gym-stage {
-  background: var(--fig-tile);
-  box-shadow: inset 0 0 0 1px var(--divider), 0 18px 40px -22px color-mix(in srgb, var(--wo, var(--accent)) 80%, transparent);
-}
-.poste { background: var(--tile); border-color: var(--divider); }
-.poste .poste-fig { background: var(--fig-tile); }
-.poste.planned { border-color: color-mix(in srgb, var(--wo, var(--accent)) 60%, transparent); box-shadow: 0 10px 26px -16px var(--wo, var(--accent)); }
-.poste-tag { background: color-mix(in srgb, var(--wo, var(--accent)) 18%, transparent); color: var(--wo, var(--accent)); }
-.poste-tag.done { background: color-mix(in srgb, var(--pos) 18%, transparent); color: var(--pos); }
+.hub-stage { box-shadow: inset 0 0 0 1px var(--divider), 0 18px 40px -22px color-mix(in srgb, var(--wo, var(--accent)) 80%, transparent); }
 .record { background: var(--tile); box-shadow: inset 3px 0 0 var(--wo, var(--accent)); }
 .record b { font-family: var(--rounded); font-weight: 800; color: var(--wo, var(--text)); }
-@media (prefers-reduced-motion: no-preference) {
-  .poste { transition: transform 0.15s; }
-  .poste:active { transform: scale(0.97); }
-}
 
 /* Sous-onglets (Moi) et filtre des livres : une capsule de verre collante */
 .subtabs, .book-filter {
@@ -1143,9 +1131,24 @@ input.task { text-align: center; margin: 4px 0 10px; border-radius: 999px; }
 .player .rec-reset { margin: 4px auto 0; min-height: 34px; font-size: 0.78rem; }
 .log-reps { margin: 8px auto 2px; padding: 10px 12px; border-radius: 18px; background: rgb(255 255 255 / 0.08); max-width: 22rem; }
 .log-reps p { margin: 0 0 6px; font-size: 0.9rem; color: rgb(245 245 250 / 0.85); }
-.log-row { display: flex; align-items: center; justify-content: center; gap: 12px; }
-.log-row .ctrl.small { width: 44px; height: 44px; font-size: 1.2rem; }
-.log-val { min-width: 2.2ch; font: 800 1.7rem/1 var(--rounded); color: #fff; font-variant-numeric: tabular-nums; }
+/* noter en une touche : 5 nombres (l'objectif cerclé), ‹ › pour décaler */
+.log-chips { display: flex; align-items: center; justify-content: center; gap: 5px; }
+.log-chip {
+  min-width: 44px; height: 46px; padding: 0 6px; border-radius: 14px; cursor: pointer;
+  border: 1px solid rgb(255 255 255 / 0.16); background: rgb(255 255 255 / 0.1); color: #fff;
+  font: 800 1.15rem/1 var(--rounded); font-variant-numeric: tabular-nums; transition: transform 0.1s;
+}
+.log-chip.aim { border-color: var(--phase-ink, #fff); box-shadow: inset 0 0 0 1px var(--phase-ink, #fff); }
+.log-chip:active { transform: scale(0.92); }
+.log-step { width: 30px; height: 46px; border: 0; background: none; color: rgb(245 245 250 / 0.7); font-size: 1.5rem; cursor: pointer; }
+.log-done { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px 10px; margin: 8px auto 2px; font-size: 0.9rem; color: rgb(245 245 250 / 0.85); }
+.log-done .ico { width: 18px; height: 18px; color: var(--phase-ink, #fff); }
+.log-fix { min-height: 34px; font-size: 0.78rem; }
+.plaque-new + .log-fix { display: block; margin: 2px auto 0; }
+/* fin de séance : les oublis, dans une liste qui défile */
+.log-list { max-height: 38vh; overflow-y: auto; margin: 6px auto 0; padding: 0 2px; -webkit-overflow-scrolling: touch; }
+.log-list .eyebrow { margin: 0 0 4px; }
+.log-list .log-reps { margin: 6px auto; }
 /* Petits écrans : la démo reste dans la liste, la place va au « pourquoi » et à « Ensuite » */
 @media (max-height: 800px) { .player .demo { display: none; } }
 .player .player-fig { flex-shrink: 1; min-height: 40px; }
@@ -1213,8 +1216,8 @@ input.task { text-align: center; margin: 4px 0 10px; border-radius: 999px; }
    opacité, pour qu'un muscle travaillé de ce côté reste net */
 .fig .fig-far { opacity: 1; }
 /* vignettes de la liste (84 × 56) : le bonhomme seul, trait plus fin */
-.ex-fig .fig-ghost, .ex-fig .fig-move, .ex-fig .fig-joint, .ex-fig .fig-shadow { display: none; }
-.ex-fig .fig .fig-skin, .ex-fig .fig .fig-hand, .ex-fig .fig .fig-head, .ex-fig .fig .fig-hair, .ex-fig .fig .fig-shoe { stroke-width: 0.35; }
+.ex-fig .fig-ghost, .ex-fig .fig-move, .ex-fig .fig-shadow { display: none; }
+.ex-fig .fig .fig-o { stroke-width: 0.55; }
 
 /* ——— Bilan, sprints, tableaux ——— */
 .sprints li.current { background: var(--seg-on); box-shadow: inset 0 0 0 1px var(--seg-on-line); border-radius: 12px; }

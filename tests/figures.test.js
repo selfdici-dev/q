@@ -442,6 +442,23 @@ test('Russian twist de face : pieds décollés, mains d’un côté du bassin pu
   assert.ok(cow.shoulder[1] - cat.shoulder[1] >= 1, 'vache : la poitrine ne descend pas');
 });
 
+test('élévations latérales de face : bras le long du corps, puis à hauteur d’épaules, les coudes mènent', () => {
+  const lat = POSES['Élévations latérales à l’élastique'];
+  assert.equal(lat.front, true);
+  assert.deepEqual(lat.tempo, [1, 2]); // montée 1 s, descente 2 s (la consigne)
+  assert.deepEqual(lat.band, [['footN', 'handN'], ['footF', 'handF']]); // sous les pieds, une boucle par main
+  const [down, up] = lat.frames.map(solve);
+  for (const k of ['handN', 'handF']) {
+    assert.ok(down[k][1] >= down.hip[1] - 1, `${k} : bras le long du corps`);
+    assert.ok(Math.abs(up[k][1] - up.shoulder[1]) <= 3, `${k} : à hauteur d’épaules`);
+    assert.ok(Math.abs(up[k][0] - up.shoulder[0]) >= 18, `${k} : bras sur le côté`);
+  }
+  // les coudes mènent : en haut, ils sont au-dessus des mains ; les deux bras pareils
+  assert.ok(up.elbowN[1] < up.handN[1] && up.elbowF[1] < up.handF[1]);
+  assert.ok(Math.abs(up.handN[0] + up.handF[0] - 2 * up.shoulder[0]) < 0.5);
+  for (const j of [down, up]) assert.ok(Math.max(j.footN[1], j.footF[1]) >= VIEW.floor - 0.5, 'pieds au sol');
+});
+
 test('tête : angle propre facultatif (tilt) ; chin tucks : la tête recule sans tourner', () => {
   assert.equal(solve(standing).tilt, undefined); // sans tilt : la tête suit le cou, rien ne change
   assert.equal(solve({ ...standing, tilt: -80 }).tilt, -80);
@@ -505,4 +522,18 @@ test('rythme : le bonhomme suit le tempo de la consigne (descente lente, montée
   assert.match(figureSVG(POSES['Pompes (sur parallettes)']), /dur="3.6s"/);
   // chaque pose qui a un tempo en donne un par passage (aller et retour)
   for (const [name, fig] of Object.entries(POSES)) if (fig.tempo) assert.doesNotThrow(() => beats(fig), name);
+});
+
+test('style lisse : un seul contour par membre, par buste et par tête ; aucun trait entre les pièces', () => {
+  for (const name of ['Pompes', 'Shadow boxing (esquives et crochets)', 'Crunch vélo']) {
+    const svg = figureSVG(POSES[name], { animate: false });
+    // 4 membres + buste + tête, chacun son calque de contour (sous ses pièces pleines)
+    assert.equal(count(svg, /<g class="fig-o">/g), 6, name);
+    // le fantôme (aide) reste un simple contour, sans calque en double
+    const defs = svg.slice(svg.indexOf('<defs>'), svg.indexOf('</defs>'));
+    assert.doesNotMatch(defs, /fig-o/, name);
+  }
+  const css = readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
+  assert.match(css, /\.fig \.fig-skin, \.fig \.fig-joint, \.fig \.fig-hand, \.fig \.fig-head, \.fig \.fig-hair, \.fig \.fig-shoe \{ stroke: none; \}/);
+  assert.match(css, /\.fig \.fig-o \{[^}]*stroke-width: 0\.7/);
 });

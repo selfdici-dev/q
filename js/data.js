@@ -50,7 +50,7 @@ export const WORKOUTS = [
     star: 'Pompes (sur parallettes)',
     name: 'B · Pectoraux, dos et bras',
     met: 4,
-    desc: 'Calisthénie : ton corps est l’outil. Pompes profondes et L-sit sur parallettes, pompes pike et diamant, plus 2 tirages et un curl à l’élastique pour un dos en V et des bras dessinés. Poussée et tirage alternés : chaque muscle souffle avant de repartir. ≈ 16 min. Chaque série va jusqu’au bip, quitte à finir sur les genoux. 2 tours.',
+    desc: 'Calisthénie : ton corps est l’outil. Pompes profondes et L-sit sur parallettes, pompes pike et diamant, plus 2 tirages, un curl et des élévations latérales à l’élastique pour un dos en V, des épaules un peu plus larges et des bras dessinés. Poussée et tirage alternés : chaque muscle souffle avant de repartir. ≈ 16 min. Chaque série va jusqu’au bip, quitte à finir sur les genoux. 2 tours.',
     rounds: 2,
     rest: 15,
     roundRest: 60,
@@ -61,6 +61,7 @@ export const WORKOUTS = [
       { name: 'Tirage assis à l’élastique', work: 40, why: 'Les omoplates se serrent et les épaules s’ouvrent : tu te tiens droit, tu parais plus grand.', target: 'Dos et biceps · dos en V', cue: 'Objectif : 10 à 12 tirages. 1. Assis, genoux un peu pliés, élastique vert autour du milieu des pieds. 2. Attrape chaque côté assez près des pieds pour qu’il soit tendu bras tendus. 3. Tire les coudes jusqu’aux côtes, serre 1 s, reviens en 2 s. Plus de 12 faciles : orange. Sans élastique : tirage superman de la séance M (vise 8).' },
       { name: 'Pompes serrées (diamant)', work: 35, why: 'Le triceps fait les deux tiers du bras : c’est lui qui dessine un bras sec, sans gros biceps.', target: 'Triceps et pectoraux · arrière des bras dessiné', cue: 'Objectif : 6 à 10. 1. Mains au sol sous la poitrine, pouces et index qui se touchent. 2. Coudes collés aux côtes, descends en 2 s, remonte en 1 s. 3. Tu cales : finis sur les genoux. Plus de 10 : descends en 3 s.' },
       { name: 'Curl biceps à l’élastique', work: 35, why: 'Le biceps donne le relief du bras vu de face : avec le triceps, un bras sec et veiné, pas massif.', target: 'Biceps et avant-bras · bras dessinés', cue: 'Objectif : 10 à 12 curls. 1. Debout en chaussures sur le milieu de l’élastique noir, une boucle dans chaque main, sans l’enrouler. 2. Coudes collés aux côtes, monte les mains aux épaules en 1 s. 3. Redescends en 2 s, buste immobile. Plus de 12 faciles : violet. Sans élastique : tirage superman de la séance M (vise 8).' },
+      { name: 'Élévations latérales à l’élastique', work: 35, why: 'Le côté de l’épaule s’élargit un peu : au-dessus d’une taille fine, c’est le V vu de face.', target: 'Épaules (le côté) · le V vu de face', cue: 'Objectif : 10 à 12 élévations. 1. Debout en chaussures sur le milieu de l’élastique noir, une boucle dans chaque main. 2. Monte les bras sur les côtés à hauteur d’épaules en 1 s, coudes un peu pliés, épaules basses. 3. Redescends en 2 s. Trop dur : plie les coudes. Plus de 12 faciles : violet. Sans élastique : à vide, lentement.' },
       { name: 'L-sit (genoux groupés)', work: 35, why: 'Les abdos serrent fort en tenue : ils deviennent durs. C’est la sèche qui les rend visibles.', target: 'Abdos, triceps et avant-bras · abdos taillés', cue: 'Objectif : 4 tenues de 5 s. Parallettes parallèles, de chaque côté des hanches. Étape 1 : talons au sol, bras tendus, décolle les fesses. Étape 2 : décolle aussi un pied. Étape 3 : les deux pieds, genoux vers la poitrine. Sans parallettes : poings au sol.' },
     ],
   },
@@ -124,11 +125,12 @@ export const WORKOUTS = [
   },
 ];
 
-// Semaine type (choisie par l'utilisateur) : A et B en alternance du lundi au samedi
-// (48 h de repos pour chaque muscle), le cardio C en plus quand il veut (ou les
-// tractions P au parc à la place), mobilité et repos le dimanche.
-// La mobilité M reste le minimum de reprise n'importe quel jour.
-export const WEEK_PLAN = { 1: 'A', 2: 'B', 3: 'A', 4: 'B', 5: 'A', 6: 'B', 0: 'M' };
+// Semaine type (choisie par l'utilisateur, revue après un mois) : B trois fois
+// (mardi, jeudi, samedi : 48 h de repos pour chaque muscle), A deux fois (lundi
+// et vendredi : 32 séries d'abdos par semaine suffisent, c'est la sèche qui les
+// montre), le cardio C le mercredi (pas de tractions : pas de barre), mobilité
+// et repos le dimanche. La mobilité M reste le minimum de reprise n'importe quel jour.
+export const WEEK_PLAN = { 1: 'A', 2: 'B', 3: 'C', 4: 'B', 5: 'A', 6: 'B', 0: 'M' };
 
 // Échauffement ajouté avant A, B et C.
 export const WARMUP = [
@@ -142,7 +144,54 @@ export const WARMUP = [
 export const PROTEIN_TARGET = 4; // portions par jour, ≈ 25-30 g de protéines chacune
 // Protéines en grammes (depuis la v53) : objectif du jour et boutons rapides [aliment, g].
 export const PROTEIN_GRAMS = 120; // ≈ 1,7 g par kg pour ~70 kg
-export const PROTEIN_FOODS = [['2 œufs', 13], ['Skyr', 15], ['Fromage blanc', 15], ['Steak haché', 25], ['Thon', 25], ['Poulet', 30], ['Jambon', 10], ['Lentilles', 15]];
+// Boutons protéines de Jour : ils notent l'aliment dans le journal des repas.
+export const PROTEIN_CHIPS = ['oeufs', 'skyr', 'fromage-blanc', 'steak', 'thon', 'poulet', 'jambon', 'lentilles'];
+
+// Journal des repas (onglet Manger) : des aliments courants, en portions
+// faciles à estimer à l'œil. kcal et protéines (p, en g) par portion,
+// d'après la table Ciqual (Anses), arrondis : des repères, à ±15 % près.
+// short : nom court des boutons protéines de Jour (sinon le premier mot).
+export const FOOD_CATS = [['prot', 'Protéines'], ['fec', 'Féculents'], ['vert', 'Fruits et légumes'], ['lait', 'Laitiers'], ['extra', 'Extras'], ['boire', 'Boissons']];
+export const FOODS = [
+  { id: 'poulet', cat: 'prot', emoji: '🍗', name: 'Poulet', portion: '1 filet cuit (120 g)', kcal: 190, p: 37 },
+  { id: 'steak', cat: 'prot', emoji: '🥩', name: 'Steak haché 5 %', short: 'Steak haché', portion: '1 steak (100 g cru)', kcal: 130, p: 21 },
+  { id: 'thon', cat: 'prot', emoji: '🐟', name: 'Thon au naturel', portion: '1 boîte égouttée (110 g)', kcal: 120, p: 27 },
+  { id: 'oeufs', cat: 'prot', emoji: '🥚', name: 'Œufs', portion: '2 œufs', kcal: 150, p: 13 },
+  { id: 'jambon', cat: 'prot', emoji: '🍖', name: 'Jambon blanc', portion: '2 tranches (80 g)', kcal: 90, p: 16 },
+  { id: 'saumon', cat: 'prot', emoji: '🍣', name: 'Saumon', portion: '1 pavé cuit (120 g)', kcal: 250, p: 27 },
+  { id: 'lentilles', cat: 'prot', emoji: '🫘', name: 'Lentilles ou pois chiches', portion: '1 assiette cuite (200 g)', kcal: 230, p: 17 },
+  { id: 'patate-douce', cat: 'fec', emoji: '🍠', name: 'Patate douce', portion: '1 grosse cuite (250 g)', kcal: 215, p: 4 },
+  { id: 'riz', cat: 'fec', emoji: '🍚', name: 'Riz', portion: '1 assiette cuite (200 g)', kcal: 260, p: 5 },
+  { id: 'pates', cat: 'fec', emoji: '🍝', name: 'Pâtes', portion: '1 assiette cuite (200 g)', kcal: 300, p: 10 },
+  { id: 'pdt', cat: 'fec', emoji: '🥔', name: 'Pommes de terre', portion: '1 assiette (250 g)', kcal: 210, p: 5 },
+  { id: 'pain', cat: 'fec', emoji: '🥖', name: 'Pain', portion: '¼ de baguette (60 g)', kcal: 160, p: 5 },
+  { id: 'avoine', cat: 'fec', emoji: '🌾', name: 'Flocons d’avoine', portion: '40 g', kcal: 150, p: 5 },
+  { id: 'legumes', cat: 'vert', emoji: '🥦', name: 'Légumes', portion: '1 assiette (250 g)', kcal: 70, p: 4 },
+  { id: 'banane', cat: 'vert', emoji: '🍌', name: 'Banane', portion: '1 banane', kcal: 100, p: 1 },
+  { id: 'pomme', cat: 'vert', emoji: '🍎', name: 'Pomme', portion: '1 pomme', kcal: 80, p: 0 },
+  { id: 'clementines', cat: 'vert', emoji: '🍊', name: 'Clémentines', portion: '2 clémentines', kcal: 70, p: 1 },
+  { id: 'avocat', cat: 'vert', emoji: '🥑', name: 'Avocat', portion: '½ avocat', kcal: 120, p: 1 },
+  { id: 'amandes', cat: 'vert', emoji: '🥜', name: 'Amandes ou noix', portion: '1 poignée (25 g)', kcal: 150, p: 5 },
+  { id: 'skyr', cat: 'lait', emoji: '🫙', name: 'Skyr nature', portion: '1 pot (150 g)', kcal: 90, p: 15 },
+  { id: 'fromage-blanc', cat: 'lait', emoji: '🥣', name: 'Fromage blanc 0 %', short: 'Fromage blanc', portion: '1 bol (200 g)', kcal: 100, p: 15 },
+  { id: 'yaourt', cat: 'lait', emoji: '🥄', name: 'Yaourt nature', portion: '1 pot (125 g)', kcal: 65, p: 5 },
+  { id: 'fromage', cat: 'lait', emoji: '🧀', name: 'Fromage', portion: '1 portion (30 g)', kcal: 110, p: 7 },
+  { id: 'lait', cat: 'lait', emoji: '🥛', name: 'Lait demi-écrémé', portion: '1 verre (25 cl)', kcal: 115, p: 8 },
+  { id: 'huile', cat: 'extra', emoji: '🫒', name: 'Huile ou beurre', portion: '1 cuillère à soupe', kcal: 90, p: 0 },
+  { id: 'mayo', cat: 'extra', emoji: '🥫', name: 'Mayonnaise', portion: '1 cuillère à soupe', kcal: 100, p: 0 },
+  { id: 'chocolat', cat: 'extra', emoji: '🍫', name: 'Chocolat', portion: '2 carrés (20 g)', kcal: 110, p: 1 },
+  { id: 'biscuits', cat: 'extra', emoji: '🍪', name: 'Biscuits ou gâteau', portion: '3 biscuits (40 g)', kcal: 190, p: 2 },
+  { id: 'viennoiserie', cat: 'extra', emoji: '🥐', name: 'Viennoiserie', portion: '1 croissant', kcal: 230, p: 5 },
+  { id: 'chips', cat: 'extra', emoji: '🍿', name: 'Chips ou pop-corn', portion: '1 petit paquet (30 g)', kcal: 160, p: 2 },
+  { id: 'pizza', cat: 'extra', emoji: '🍕', name: 'Pizza', portion: '½ pizza', kcal: 550, p: 22 },
+  { id: 'burger', cat: 'extra', emoji: '🍔', name: 'Burger', portion: '1 burger', kcal: 500, p: 25 },
+  { id: 'frites', cat: 'extra', emoji: '🍟', name: 'Frites', portion: '1 portion moyenne', kcal: 340, p: 4 },
+  { id: 'kebab', cat: 'extra', emoji: '🌯', name: 'Kebab ou tacos', portion: '1 sandwich', kcal: 850, p: 35 },
+  { id: 'sandwich', cat: 'extra', emoji: '🥪', name: 'Sandwich', portion: '1 jambon-beurre', kcal: 400, p: 18 },
+  { id: 'soda', cat: 'boire', emoji: '🥤', name: 'Soda', portion: '1 canette (33 cl)', kcal: 140, p: 0 },
+  { id: 'jus', cat: 'boire', emoji: '🧃', name: 'Jus de fruits', portion: '1 verre (25 cl)', kcal: 110, p: 1 },
+  { id: 'biere', cat: 'boire', emoji: '🍺', name: 'Bière', portion: '1 demi (25 cl)', kcal: 110, p: 1 },
+];
 export const PROTEIN_EXAMPLES = '1 portion ≈ 3 œufs, 1 filet de poulet, 1 boîte de thon, 200 g de skyr ou 1 boîte de lentilles + 1 yaourt.';
 
 // Déclencheurs de grignotage : les repérer compte plus que de les compter.

@@ -17,6 +17,7 @@ import { quoteOfDay } from './quotes.js';
 import { daySummary, weekSummary } from './summary.js';
 import { backupStatus, validateBackup } from './backup.js';
 import { figureFor, figureSVG, focusFor } from './figures.js';
+import { drawingSVG } from './drawings.js';
 import { icon } from './icons.js';
 import { roomSVG } from './room.js';
 import { hubSVG, hubLayout, HUB, covers } from './gym.js';
@@ -330,7 +331,11 @@ const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matche
 // or (immobile si le téléphone demande de réduire les animations).
 // help=false (vignettes de la liste) : sans contour d'arrivée ni flèche, trop
 // petits pour être lus et plus longs à calculer.
+// Si l'exercice a son dessin au crayon (muscles travaillés en rouge), c'est
+// lui qu'on montre, au même rythme ; en vignette, sa pose de départ seule.
 function figure(name, target, help = true) {
+  const draw = name && drawingSVG(name, { animate: help && !reduceMotion(), ghost: help });
+  if (draw) return draw;
   const f = name && figureFor(name);
   return f ? figureSVG(f.fig, { mirror: f.mirror, fit: true, animate: !reduceMotion(), focus: focusFor(target), help }) : '';
 }

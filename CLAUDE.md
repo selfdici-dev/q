@@ -17,6 +17,8 @@ L'utilisateur est débutant : explique simplement, en français.
 - `js/room.js` : décor de la salle vue de face (lecteur de séance, entrée) ; `js/gym.js` :
   la salle de l'onglet Salle, en maquette vue de dessus façon jeu vidéo (une plateforme
   par séance) ; `js/icons.js` : icônes au trait.
+- `js/games.js` : règles des jeux de la borne d'arcade (Blocs, Calcul éclair), logique pure ;
+  `js/arcade.js` : leur écran (`#jeux`, ouvert depuis la borne de la Salle), records dans `state.games`.
 - `js/drawings.js` : dessins au crayon des exercices (corps en 3D, muscles travaillés
   en rouge), joués au rythme du bonhomme ; sans dessin, le bonhomme reste.
   `js/drawings-data.js` (leur manifeste) et `img/ex/*.webp` (leurs images) sont

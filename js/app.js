@@ -13,6 +13,7 @@ import {
 } from './data.js';
 import { ALL_LESSONS } from './finance-data.js';
 import { createMoney, DEFAULT_CALC, DEFAULT_WEALTH } from './money.js';
+import { createArcade } from './arcade.js';
 import { quoteOfDay } from './quotes.js';
 import { daySummary, weekSummary } from './summary.js';
 import { backupStatus, validateBackup } from './backup.js';
@@ -20,7 +21,7 @@ import { figureFor, figureSVG, focusFor } from './figures.js';
 import { drawingSVG } from './drawings.js';
 import { icon } from './icons.js';
 import { roomSVG } from './room.js';
-import { hubSVG, hubLayout, HUB, covers } from './gym.js';
+import { hubSVG, hubLayout, arcadeZone, HUB, covers } from './gym.js';
 import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS } from './avatar.js';
 import { treeSVG, seedOf } from './tree.js';
 
@@ -64,6 +65,7 @@ function freshState() {
     records: {},
     srs: {},
     myCards: [],
+    games: { blocs: { best: 0, plays: 0, lines: 0, cur: null }, calc: { best: 0, plays: 0, streak: 0 } }, // records de la borne d'arcade
     ui: { moneyTab: 'parcours', meTab: 'programme', lesson: null, lastLevel: 1 },
     timers: { pomo: { mode: 'work', endAt: null, remaining: POMO_WORK, label: '' }, urge: { endAt: null } },
   };
@@ -82,6 +84,7 @@ function load() {
       calc: { ...base.calc, ...s.calc },
       wealth: { ...base.wealth, ...s.wealth },
       ui: { ...base.ui, ...s.ui, lesson: null },
+      games: { ...base.games, ...s.games },
     };
     // Données d'avant la v2 : on fige la liste d'habitudes des jours passés.
     const ids = st.habits.map((h) => h.id);
@@ -308,6 +311,15 @@ async function keepAwake(on) {
 
 // ---------- vues ----------
 
+// La borne d'arcade de la Salle (#jeux) : Blocs et Calcul éclair.
+const arcade = createArcade({
+  get state() { return state; },
+  save: () => save(),
+  render: () => render(),
+  celebrate: (m) => celebrate(m),
+  reduceMotion: () => reduceMotion(),
+});
+
 const money = createMoney({
   get state() { return state; },
   save: () => save(),
@@ -428,7 +440,7 @@ const TABS = [
 // Pages sans onglet, et l'onglet allumé quand on y est : Argent et ses
 // révisions vivent dans Moi ; le minuteur de focus (onglet retiré) reste
 // joignable par #focus, ses données sont intactes.
-const HIDDEN_TABS = { argent: 'moi', revision: 'moi', focus: 'jour' };
+const HIDDEN_TABS = { argent: 'moi', revision: 'moi', focus: 'jour', jeux: 'sport' };
 
 function currentTab() {
   const h = location.hash.slice(1) === 'bilan' ? 'moi' : location.hash.slice(1);
@@ -440,7 +452,7 @@ let renders = 0; // nombre d'affichages : distingue un réaffichage sur place d'
 function render() {
   renders++;
   const tab = currentTab();
-  const views = { jour: viewToday, focus: viewFocus, sport: viewSport, manger: viewFood, argent: viewMe, moi: viewMe, revision: viewRevision };
+  const views = { jour: viewToday, focus: viewFocus, sport: viewSport, manger: viewFood, argent: viewMe, moi: viewMe, revision: viewRevision, jeux: () => arcade.view() };
   const me = ['Moi', 'Programme, bilan, argent, livres, réglages'];
   const heads = {
     focus: ['Focus', 'Une seule chose à la fois'],
@@ -449,9 +461,10 @@ function render() {
     argent: me,
     moi: me,
     revision: ['Révisions', 'Chaque carte revient juste avant l’oubli'],
+    jeux: ['Arcade', 'Des jeux pour occuper tes mains, sans pub ni internet'],
   };
   const h = heads[tab];
-  const helpKey = HIDDEN_TABS[tab] ?? tab;
+  const helpKey = HELP[tab] ? tab : HIDDEN_TABS[tab] ?? tab;
   const head = h && tab !== 'sport' && !(tab === 'argent' && state.ui.lesson) ? `<header class="page-head"><div class="page-title"><h1>${h[0]}</h1>${HELP[helpKey] ? helpBtn(helpKey) : ''}</div><p>${h[1]}</p></header>` : '';
   $('#view').innerHTML = head + views[tab]();
   $('#view').dataset.tab = tab;
@@ -947,7 +960,11 @@ function gymHub(planned, done, lvl) {
       ? `<span class="hub-tag${side}"><b>${id}</b>${esc(shortName(wo))}</span>`
       : `<span class="hub-badge${id === planned && !done.includes(id) ? ' today' : ''}${done.includes(id) ? ' done' : ''}">${done.includes(id) ? '✓' : id}</span>`;
     return `<button class="hub-hit wo-${id}${on ? ' on' : ''}" style="left:${pctOf(x - 6, HUB.w)};top:${pctOf(y - 6, HUB.h)};width:${pctOf(bw + 12, HUB.w)};height:${pctOf(bh + 12, HUB.h)}" data-act="gym-pick" data-id="${id}" aria-pressed="${on}" aria-label="Séance ${id} : ${esc(shortName(wo))}${id === planned ? ', celle du jour' : ''}${done.includes(id) ? ', faite aujourd’hui' : ''}">${label}</button>`;
-  }).join('');
+  }).join('') + (() => {
+    // la borne d'arcade : elle ouvre les jeux
+    const [x, y, bw, bh] = arcadeZone();
+    return `<button class="hub-hit hub-arc" style="left:${pctOf(x - 6, HUB.w)};top:${pctOf(y - 6, HUB.h)};width:${pctOf(bw + 12, HUB.w)};height:${pctOf(bh + 12, HUB.h)}" data-act="arcade" aria-label="Borne d’arcade : les jeux"><span class="hub-badge arc">Jeux</span></button>`;
+  })();
   // la salle prend tout le haut de l'écran : on y entre. En haut, le HUD (niveau,
   // XP) et l'aide ; en bas, la séance choisie et son bouton, comme dans un jeu.
   return `<section class="gym-hero hub immersive wo-${w.id}">
@@ -1608,6 +1625,8 @@ const actions = {
     render();
     if (dayStatus(state, today).valid && chain(state, today).count > before) celebrate('Journée validée 🔥 Chaîne +1');
   },
+  // Salle : la borne d'arcade ouvre les jeux
+  arcade() { location.hash = 'jeux'; },
   // Salle : toucher un poste le choisit (son bonhomme se met au travail)
   'gym-pick'(el) {
     gymPick = el.dataset.id;
@@ -2028,9 +2047,11 @@ const actions = {
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-act]');
   if (!el) return;
-  const fn = actions[el.dataset.act] ?? money.actions[el.dataset.act];
+  const fn = actions[el.dataset.act] ?? money.actions[el.dataset.act] ?? arcade.actions[el.dataset.act];
   if (fn) fn(el, e);
 });
+// Blocs : on glisse les pièces au doigt.
+document.addEventListener('pointerdown', (e) => arcade.pointerDown(e));
 
 document.addEventListener('change', (e) => {
   const el = e.target;

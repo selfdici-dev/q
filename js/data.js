@@ -495,6 +495,14 @@ export const HELP = {
       'Un jour raté ? Jamais deux fois de suite. Envie d’ouvrir Snap ? « J’attends 10 min ».',
     ],
   },
+  jeux: {
+    title: 'Comment marche l’Arcade',
+    lines: [
+      'Blocs : glisse les pièces sur la grille. Une ligne ou une colonne pleine disparaît et rapporte des points.',
+      'Calcul éclair : 60 s, une réponse sur quatre. 3 bonnes d’affilée : ça monte ; une erreur : ça redescend.',
+      'Tes records restent sur le téléphone, et ils comptent pour débloquer des décors de la Salle.',
+    ],
+  },
   sport: {
     title: 'Comment marche la Salle',
     lines: [

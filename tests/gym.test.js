@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { hubSVG, hubLayout, HUB, STATIONS, covers } from '../js/gym.js';
+import { hubSVG, hubLayout, arcadeZone, HUB, STATIONS, covers } from '../js/gym.js';
 import { WORKOUTS } from '../js/data.js';
 import { figureFor } from '../js/figures.js';
 
@@ -64,4 +64,17 @@ test('ta salle : l’étiquette du poste choisi efface seulement les pastilles q
   assert.equal(covers(tag, [150, 150, 24, 24]), false); // plus haut (un poste du fond)
   assert.equal(covers(tag, [282, 202, 24, 24]), true); // à 2 px : la lueur toucherait
   assert.equal(covers(tag, [282, 202, 24, 24], 0), false);
+});
+
+test('ta salle : la borne d’arcade est dessinée, et sa zone ne mord sur aucun poste', () => {
+  assert.match(hubSVG({ pick: 'A' }), /class="hub-arcade"/);
+  const grow = ([x, y, w, h]) => [x - 6, y - 6, w + 12, h + 12];
+  const arc = grow(arcadeZone());
+  assert.ok(arc[2] >= 40 && arc[3] >= 40, 'assez grande pour un doigt');
+  assert.ok(arc[0] >= 0 && arc[1] >= 0 && arc[0] + arc[2] <= HUB.w && arc[1] + arc[3] <= HUB.h);
+  for (const { id, box } of hubLayout()) {
+    const b = grow(box);
+    const over = Math.min(arc[0] + arc[2], b[0] + b[2]) - Math.max(arc[0], b[0]) > 0 && Math.min(arc[1] + arc[3], b[1] + b[3]) - Math.max(arc[1], b[1]) > 0;
+    assert.ok(!over, `la borne chevauche le poste ${id}`);
+  }
 });

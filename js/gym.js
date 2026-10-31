@@ -82,6 +82,34 @@ export function hubLayout() {
   return zones.map((z) => ({ id: z.id, box: [r1(z.x), r1(z.top), ZW, r1(z.bottom - z.top)] }));
 }
 
+// La borne d'arcade, contre le mur de gauche entre P et M : elle ouvre les jeux.
+// Face avant (vers la salle) : écran, tableau de commande, fronton doré.
+const ARC = { X: 0.15, Y: 3.1, w: 0.75, d: 0.8, h: 2.3 };
+function arcadeCab(animate) {
+  const { X, Y, w, d, h } = ARC;
+  const fx = X + w + 0.002; // la face avant
+  const face = (y0, y1, z0, z1, fill, extra = '') => poly([P(fx, y0, z0), P(fx, y1, z0), P(fx, y1, z1), P(fx, y0, z1)], fill, extra);
+  const blink = animate ? '<animate attributeName="opacity" values="1;0.55;1" dur="2.4s" repeatCount="indefinite"/>' : '';
+  // petites cases de couleur à l'écran (un air de Blocs)
+  const bits = [[0.25, 1.45, '#7cc4e4'], [0.4, 1.45, '#7cc4e4'], [0.4, 1.3, '#e98a6b'], [0.55, 1.3, '#9fd08f'], [0.25, 1.15, '#e7c76b'], [0.55, 1.15, '#c3a3e0']]
+    .map(([dy, z, col]) => face(Y + dy, Y + dy + 0.13, z, z + 0.13, col)).join('');
+  return `<g class="hub-arcade">${box(X, Y, 0, w, d, h, ['#2a1f45', '#140e24', '#21183a'])}`
+    + `${box(X - 0.03, Y - 0.03, h, w + 0.06, d + 0.06, 0.26, ['#ffd27a', '#a8721c', '#e3a33a'])}`
+    + `${face(Y + 0.1, Y + d - 0.1, 1.0, 1.75, '#0b1424', ' stroke="#3a2f5c" stroke-width="0.8"')}<g>${bits}${blink}</g>`
+    + `${box(X + w, Y + 0.06, 0.78, 0.22, d - 0.12, 0.1, ['#3a2d63', '#1a1330', '#2b2150'])}`
+    + `<circle cx="${r1(P(X + w + 0.12, Y + 0.3, 0.98)[0])}" cy="${r1(P(X + w + 0.12, Y + 0.3, 0.98)[1])}" r="1.6" fill="#e98a6b"/>`
+    + `<circle cx="${r1(P(X + w + 0.12, Y + 0.55, 0.92)[0])}" cy="${r1(P(X + w + 0.12, Y + 0.55, 0.92)[1])}" r="1.2" fill="#7cc4e4"/>`
+    + `<circle cx="${r1(P(X + w + 0.12, Y + 0.68, 0.92)[0])}" cy="${r1(P(X + w + 0.12, Y + 0.68, 0.92)[1])}" r="1.2" fill="#9fd08f"/></g>`;
+}
+
+// Zone à toucher de la borne (unités de la salle) : son fronton et le haut de
+// son écran, sans mordre sur les zones des postes.
+export function arcadeZone() {
+  const [cx] = P(ARC.X + ARC.w, ARC.Y + ARC.d / 2, 0);
+  const [, top] = P(ARC.X + ARC.w, ARC.Y + ARC.d / 2, ARC.h + 0.26);
+  return [r1(cx - 22), r1(top - 8), 34, 30];
+}
+
 // L'étiquette du poste choisi cache-t-elle la pastille d'un autre poste ?
 // Rectangles [gauche, haut, largeur, hauteur] ; pad : marge (la lueur de la
 // pastille du jour dépasse un peu).
@@ -173,7 +201,7 @@ export function hubSVG({ pick = 'A', animate = true, id = 'hub' } = {}) {
     + `${poly([P(0, 0, 0.1), P(0, N, 0.1), P(0, N, 0.2), P(0, 0, 0.2)], '#f6d2b6', ' opacity="0.9"')}${poly([P(0, 0, 0.1), P(N, 0, 0.1), P(N, 0, 0.2), P(0, 0, 0.2)], '#f6d2b6', ' opacity="0.9"')}</g>`;
   const cap = `<path d="M${pts([P(0, N, HW), P(0, 0, HW), P(N, 0, HW)])}" stroke="#5a4a3e" stroke-width="2.2" stroke-linecap="round" fill="none"/>`;
   // décor : banc contre le mur gauche, tapis de course contre le mur droit, logo au sol
-  const decor = `<g class="hub-decor">${box(0.3, 2.95, 0, 0.55, 1.1, 0.42, ['#3a3330', '#1c1816', '#2a2522'])}${box(0.35, 3.0, 0.42, 0.45, 0.6, 0.04, ['#efe7dd', '#efe7dd', '#efe7dd'])}`
+  const decor = `<g class="hub-decor">${arcadeCab(animate)}`
     + `${box(2.85, 0.35, 0, 1.3, 0.75, 0.2, ['#2a2522', '#1a1614', '#221d1a'])}${box(2.87, 0.4, 0.2, 1.22, 0.65, 0.03, ['#111', '#111', '#111'])}${box(2.8, 0.3, 0.2, 0.12, 0.85, 1.3, ['#3a3532', '#2a2522', '#332d2a'])}${box(2.76, 0.35, 1.45, 0.2, 0.75, 0.24, ['#1c1816', '#151210', '#1c1816'])}</g>`;
   const f = (dx, dy) => P(4 + dx, 4 + dy, 0.01);
   const floorLogo = `<g opacity="0.35">${poly([f(-0.9, -0.9), f(0, 0), f(0.9, -0.9)], '#d9956b')}${poly([f(0.9, -0.9), f(0, 0), f(0.9, 0.9)], '#b8714c')}${poly([f(0.9, 0.9), f(0, 0), f(-0.9, 0.9)], '#8f5232')}${poly([f(-0.9, 0.9), f(0, 0), f(-0.9, -0.9)], '#f3c9a8')}</g>`;

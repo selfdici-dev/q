@@ -5,15 +5,20 @@
 // stockés). Logique pure : des chaînes SVG, testées par tests/decors.test.js.
 import { HUB, N, HW, P, SKEW, r1, pts, poly, flat, box, lw, rw, onL, onR } from './iso.js';
 import { levelInfo, totalXP } from './logic.js';
+import { routineStatus } from './routines.js';
 
 // Du plus facile au plus dur.
 export const DECORS = [
   { id: 'salle', name: 'La salle', desc: 'Mur sombre, grille et logo de cuivre, bandes LED.', need: null },
   { id: 'grec', name: 'Temple grec', desc: 'Marbre et colonnes au-dessus des nuages, au coucher du soleil.', need: { kind: 'workouts', n: 15 } },
+  { id: 'foret', name: 'Forêt au crépuscule', desc: 'Un ponton de bois sous les arbres, des lucioles, une guirlande.', need: { kind: 'routines', n: 20 } },
   { id: 'dojo', name: 'Dojo', desc: 'Bois, papier de riz, tatamis, lanternes et pétales de cerisier.', need: { kind: 'blocs', n: 3000 } },
   { id: 'toit', name: 'Toit de la ville', desc: 'En haut d’une tour, la nuit, au milieu des gratte-ciel.', need: { kind: 'calc', n: 30 } },
+  { id: 'ocean', name: 'Fond marin', desc: 'Des vitres sur la mer, des poissons, des bulles et un trésor.', need: { kind: 'sudoku', n: 10 } },
   { id: 'medieval', name: 'Grand hall', desc: 'Pierre, feu de cheminée, torches, blason noir et or.', need: { kind: 'workouts', n: 40 } },
+  { id: 'neon', name: 'Néon rétro', desc: 'Soleil à rayures, palmiers de néon, sol quadrillé qui défile.', need: { kind: 'gems', n: 8 } },
   { id: 'station', name: 'Station spatiale', desc: 'Hublots sur les étoiles et une planète bleue.', need: { kind: 'level', n: 12 } },
+  { id: 'arene', name: 'Arène romaine', desc: 'Du sable, des arches, la foule qui t’encourage, des braseros.', need: { kind: 'workouts', n: 60 } },
   { id: 'plage', name: 'Ponton sur la mer', desc: 'Le soleil se couche sur l’eau, les mouettes passent.', need: { kind: 'blocs', n: 6000 } },
   { id: 'sommet', name: 'Sommet', desc: 'En haut de la montagne, sous une aurore boréale.', need: { kind: 'level', n: 20 } },
 ];
@@ -24,22 +29,29 @@ const NEED = {
   level: (h, n) => `niveau ${h} / ${n}`,
   blocs: (h, n) => `${fmt(h)} / ${fmt(n)} points aux Blocs`,
   calc: (h, n) => `${fmt(h)} / ${fmt(n)} points au Calcul éclair`,
+  gems: (h, n) => `niveau ${h} / ${n} aux Cristaux`,
+  sudoku: (h, n) => `${fmt(h)} / ${fmt(n)} sudokus résolus`,
+  routines: (h, n) => `${fmt(h)} / ${fmt(n)} matins avec ta routine`,
 };
 
 // Tes chiffres pour les décors, recalculés depuis tes données : séances
-// faites (sans M, chacune une fois par jour), niveau, meilleures parties.
+// faites (sans M, chacune une fois par jour), niveau, meilleures parties,
+// niveaux réussis aux Cristaux, sudokus résolus, matins avec ta routine.
 export function decorStats(state) {
-  const workouts = Object.values(state.days ?? {}).reduce((n, d) => n + new Set((d.workouts ?? []).filter((w) => w !== 'M')).size, 0);
+  const days = Object.values(state.days ?? {});
   const b = state.games?.blocs ?? {};
   return {
-    workouts,
+    workouts: days.reduce((n, d) => n + new Set((d.workouts ?? []).filter((w) => w !== 'M')).size, 0),
     level: levelInfo(totalXP(state)).level,
     blocs: Math.max(b.best ?? 0, b.cur?.score ?? 0),
     calc: state.games?.calc?.best ?? 0,
+    gems: state.games?.cristaux?.top ?? 0,
+    sudoku: Object.values(state.games?.sudoku?.solved ?? {}).reduce((n, x) => n + (Number(x) || 0), 0),
+    routines: days.filter((d) => routineStatus(d.routine, 'matin').complete).length,
   };
 }
 
-// Où tu en es pour chaque décor. stats : { workouts, level, blocs, calc }.
+// Où tu en es pour chaque décor. stats : { workouts, level, blocs, calc, gems, sudoku, routines }.
 export function decorStatus(stats = {}) {
   return DECORS.map((d) => {
     if (!d.need) return { ...d, unlocked: true, pct: 1, label: 'Ouvert dès le départ' };
@@ -499,7 +511,225 @@ function sommet({ u, pick, title, animate }) {
   };
 }
 
-const ART = { salle, grec, medieval, dojo, toit, station, plage, sommet };
+
+// un sapin (aussi pour la forêt) : posé en (x, y), à l'échelle s
+const pineTree = (x, y, s, green = '#1f3b34', snow = '') => `<g transform="translate(${r1(x)} ${r1(y)}) scale(${s})"><rect x="-1.5" y="-6" width="3" height="6" fill="#2a1d14"/>`
+  + [[0, 22, 13], [-9, 18, 10], [-17, 13, 7]].map(([dy, w, h]) => `<path d="M0 ${dy - h - 6}l${w / 2} ${h}h${-w}z" fill="${green}"/>${snow ? `<path d="M0 ${dy - h - 6}l${w / 4} ${h / 2}l${-w / 8} -1l${-w / 8} 2l${-w / 8} -2l${-w / 8} 1z" fill="${snow}"/>` : ''}`).join('') + '</g>';
+// un brasero (ou un trésor) posé au sol, dans les deux trouées de devant
+const FRONT_SPOTS = [[3.4, 6.45], [6.45, 3.4]];
+
+function ocean({ u, pick, title, animate }) {
+  // les murs sont des vitres sur la mer : poissons, algues, rayons de lumière
+  const fishShape = (col) => `<path d="M0 0c-4 -3.4 -10 -3.4 -14 0c4 3.4 10 3.4 14 0z" fill="${col}"/><path d="M-14 0l-5 -3.5v7z" fill="${col}"/><circle cx="-3.6" cy="-0.7" r="0.8" fill="#06202c"/>`;
+  const swim = (wall, z, s, dur, k, col) => {
+    const at = wall === 'L' ? (x) => onLeft(N, z, x) : (x) => onRight(0, z, x);
+    const start = hash(k) * 170;
+    const fish = `<g transform="scale(${s})">${fishShape(col)}</g>`;
+    return at(animate ? `<g>${fish}<animateTransform attributeName="transform" type="translate" values="-30 0;220 0" dur="${dur}s" begin="-${r1(hash(k + 3) * dur)}s" repeatCount="indefinite"/></g>` : `<g transform="translate(${r1(start)} 0)">${fish}</g>`);
+  };
+  const fishes = [['L', 1.2, 1, 19, 1, '#ffb347'], ['L', 2.2, 0.8, 26, 2, '#ffd166'], ['L', 1.7, 0.6, 14, 3, '#9fe8ff'], ['R', 1.05, 1.1, 23, 4, '#ff8a5c'], ['R', 2.35, 0.75, 17, 5, '#ffe08a'], ['R', 1.75, 0.6, 29, 6, '#c3f3ff']];
+  const school = (wall) => fishes.filter(([w]) => w === wall).map(([w, z, sc, d, k, c]) => swim(w, z, sc, d, k, c)).join('');
+  const kelp = (wall, t, h, k) => {
+    const q = wall === 'L' ? lw : rw;
+    const [x, y] = q(t, 0.25);
+    const top = y - h;
+    const path = `<path d="M${r1(x)} ${r1(y)}C${r1(x - 6)} ${r1(y - h * 0.35)} ${r1(x + 6)} ${r1(y - h * 0.65)} ${r1(x)} ${r1(top)}" stroke="#2f8a5b" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8"/>`;
+    return sway(path, x, y, 5, 4 + (k % 3), animate);
+  };
+  const mullions = (wall) => [1.75, 3.5, 5.25].map((t) => (wall === 'L' ? onL : onR)(t - 0.05, t + 0.05, 0, HW, '#5d7480')).join('');
+  const rays = [[1.2, 0.5], [3.1, 0.35], [5.4, 0.45]].map(([t, w], k) => {
+    const ray = (q) => poly([q(t, HW), q(t + w, HW), q(t + w + 0.6, 0.3), q(t + 0.6, 0.3)], '#e6fbff', ' opacity="0.07"');
+    return `<g>${ray(lw)}${ray(rw)}${pulse('1;0.4;1', 5 + k, animate)}</g>`;
+  }).join('');
+  // sol de sable ridé, coraux, un coffre au trésor
+  const ripples = [0.8, 1.9, 3.0, 4.1, 5.2, 6.3].map((y, k) => `M${pts(Array.from({ length: 15 }, (_, i) => P(i / 2, y + 0.08 * Math.sin(i * 1.3 + k), 0.002)))}`).join('');
+  const coral = (X, Y) => {
+    const [x, y] = P(X, Y, 0);
+    return `<g class="hub-coral"><path d="M${r1(x)} ${r1(y)}l-6 -10l-3 -9M${r1(x - 6)} ${r1(y - 10)}l-7 -4M${r1(x)} ${r1(y)}l3 -14l-2 -8M${r1(x + 3)} ${r1(y - 14)}l6 -5" stroke="#ff7f8a" stroke-width="2.6" stroke-linecap="round" fill="none"/><circle cx="${r1(x + 7)}" cy="${r1(y - 3)}" r="4" fill="#ffb07a"/><circle cx="${r1(x - 9)}" cy="${r1(y - 2)}" r="3" fill="#c78bff"/></g>`;
+  };
+  const [cx, cy] = P(FRONT_SPOTS[0][0] + 0.25, FRONT_SPOTS[0][1] + 0.18, 0.5);
+  const chest = `<g class="hub-chest">${glow(cx, cy, 18, u('gold'), animate, 1)}${box(FRONT_SPOTS[0][0], FRONT_SPOTS[0][1], 0, 0.5, 0.36, 0.26, ['#8a5a2e', '#5a3a1c', '#704a26'])}${box(FRONT_SPOTS[0][0] - 0.02, FRONT_SPOTS[0][1] - 0.02, 0.26, 0.54, 0.4, 0.06, ['#ffd27a', '#b8862a', '#e0a83a'])}${box(FRONT_SPOTS[0][0] + 0.2, FRONT_SPOTS[0][1] + 0.36, 0.1, 0.1, 0.01, 0.12, ['#ffd27a', '#ffd27a', '#ffd27a'])}</g>`;
+  const bubbles = fall(Array.from({ length: 12 }, (_, k) => {
+    const [x, y] = P(0.5 + hash(k + 11) * 6, 0.5 + hash(k + 12) * 6, 0);
+    return [x, y, (hash(k + 13) - 0.5) * 16, -(y + 20), r1(5 + hash(k + 14) * 5), r1(hash(k + 15) * 8)];
+  }), '<circle r="1.6" fill="none" stroke="#dff8ff" stroke-width="0.7" opacity="0.8"/><circle cx="-0.5" cy="-0.5" r="0.4" fill="#fff"/>', animate);
+  return {
+    bg: `url(#${u('deep')})`,
+    defs: lin(u('deep'), [0, 0, 0, 1], [[0, '#0b4a6e'], [0.6, '#062b45'], [1, '#03182a']])
+      + lin(u('glassL'), [0, 0, 1, 0], [[0, '#0c5a7c'], [1, '#13789c']]) + lin(u('glassR'), [0, 0, 1, 0], [[0, '#1580a6'], [1, '#0e6184']])
+      + lin(u('floor'), [0, 0, 0, 1], [[0, '#d9c08c'], [1, '#c6a86f']]) + rad(u('gold'), [[0, '#ffe08a', 0.6], [1, '#ffb347', 0]])
+      + `<clipPath id="${u('clipL')}">${wallL('#000')}</clipPath><clipPath id="${u('clipR')}">${wallR('#000')}</clipPath>`,
+    back: `${wallL(`url(#${u('glassL')})`)}${wallR(`url(#${u('glassR')})`)}`
+      + `<g clip-path="url(#${u('clipL')})">${kelp('L', 0.9, 34, 0)}${kelp('L', 4.6, 46, 1)}${kelp('L', 6.2, 28, 2)}</g><g clip-path="url(#${u('clipR')})">${kelp('R', 1.2, 30, 3)}${kelp('R', 6.3, 40, 4)}</g>`
+      + `<g class="hub-fish"><g clip-path="url(#${u('clipL')})">${school('L')}</g><g clip-path="url(#${u('clipR')})">${school('R')}</g></g>`
+      + rays + mullions('L') + mullions('R') + onL(0, N, 0, 0.3, '#5d7480') + onR(0, N, 0, 0.3, '#5d7480') + onL(0, N, HW - 0.18, HW, '#5d7480') + onR(0, N, HW - 0.18, HW, '#5d7480')
+      + `<g class="hub-screen">${onR(1.95, 4.15, 1.3, 2.45, '#06222e', ' stroke="#c9a25a" stroke-width="1.4"')}${onRight(2.15, 2.15, say(pick, title, { fill: '#9fe8ff', sub: '#e6fbff' }))}</g>`,
+    floor: `${floorPoly(`url(#${u('floor')})`)}<path d="${ripples}" stroke="#a88a55" stroke-opacity="0.45" stroke-width="0.8" fill="none"/>`,
+    edge: cap('#5d7480', 2.6),
+    props: `${coral(FRONT_SPOTS[1][0] + 0.2, FRONT_SPOTS[1][1] + 0.2)}${coral(3.4, 0.25)}${chest}`,
+    over: bubbles,
+    beam: ['#d6fbff', '#9fe8ff'], dust: '#cff6ff',
+    plat: ['#2c5a6a', '#173540', '#204754'], vig: 0.5,
+  };
+}
+
+function neon({ u, pick, title, animate }) {
+  // murs sombres quadrillés de néon, soleil à rayures, palmiers de néon
+  const grid = (q) => {
+    const d = [];
+    for (let t = 0.5; t < N; t += 0.5) d.push(`M${pts([q(t, 0), q(t, HW)])}`);
+    for (let z = 0.5; z < HW; z += 0.5) d.push(`M${pts([q(0, z), q(N, z)])}`);
+    return `<path d="${d.join('')}" stroke="#ff4fd8" stroke-opacity="0.22" stroke-width="0.6" fill="none"/>`;
+  };
+  const bands = [6, 11, 15.5, 19.5].map((y, k) => `<rect x="-30" y="${y}" width="60" height="${1.6 + k * 0.7}" fill="#1a0b2e"/>`).join('');
+  const sun = onLeft(5.4, 1.95, `<circle r="25" fill="url(#${u('sun')})"/>${bands}<circle r="30" fill="none" stroke="#ff7ad9" stroke-opacity="0.25" stroke-width="5"/>`);
+  const palm = (y, flip) => onLeft(y, 0.3, `<g transform="scale(${flip ? -0.9 : 0.9} 0.9)"><path d="M0 0c2 -14 -1 -30 6 -44M6 -44c-8 -4 -16 -2 -21 4M6 -44c-2 -7 -10 -11 -17 -9M6 -44c4 -8 12 -9 18 -6M6 -44c9 -2 15 3 17 9M6 -44c6 3 7 10 6 15" stroke="#36f3ff" stroke-width="5" stroke-opacity="0.18" fill="none" stroke-linecap="round"/><path d="M0 0c2 -14 -1 -30 6 -44M6 -44c-8 -4 -16 -2 -21 4M6 -44c-2 -7 -10 -11 -17 -9M6 -44c4 -8 12 -9 18 -6M6 -44c9 -2 15 3 17 9M6 -44c6 3 7 10 6 15" stroke="#7ff9ff" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>`);
+  // sol quadrillé qui défile vers toi, découpé à la forme du sol
+  const lines = [];
+  for (let i = -1; i <= N; i++) lines.push(`M${pts([P(i, -1, 0.003), P(i, N, 0.003)])}M${pts([P(-1, i, 0.003), P(N, i, 0.003)])}`);
+  const step = r1(P(1, 1)[1] - P(0, 0)[1]);
+  const floorGrid = `<g clip-path="url(#${u('clipF')})"><g><path d="${lines.join('')}" stroke="#ff4fd8" stroke-width="1" stroke-opacity="0.75" fill="none"/>${animate ? `<animateTransform attributeName="transform" type="translate" values="0 ${-step};0 0" dur="1.6s" repeatCount="indefinite"/>` : ''}</g></g>`;
+  const tube = (z, col, w = 1.6) => `<path d="M${pts([P(0, N, z), P(0, 0, z), P(N, 0, z)])}" stroke="${col}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
+  const sign = onRight(2.1, 2.3, '<rect x="-5" y="-9" width="62" height="22" rx="3" fill="#0d0518" stroke="#36f3ff" stroke-width="1.4"/>'
+    + `<rect x="-7" y="-11" width="66" height="26" rx="4" fill="none" stroke="#36f3ff" stroke-opacity="0.25" stroke-width="3">${pulse('1;1;0.2;1;0.6;1', 7, animate, ' keyTimes="0;0.8;0.82;0.85;0.88;1"')}</rect>`
+    + say(pick, title, { fill: '#ff6ee0', sub: '#c9fbff', size: 5.4 }));
+  return {
+    bg: `url(#${u('night')})`,
+    defs: lin(u('night'), [0, 0, 0, 1], [[0, '#0b0217'], [0.6, '#1f0838'], [1, '#2a0b46']]) + lin(u('wall'), [0, 0, 0, 1], [[0, '#1a0b2e'], [1, '#100620']])
+      + lin(u('sun'), [0, 0, 0, 1], [[0, '#ffe66b'], [0.55, '#ff8a5c'], [1, '#ff3fa4']]) + `<clipPath id="${u('clipF')}">${floorPoly('#000')}</clipPath>`,
+    back: `${wallL(`url(#${u('wall')})`)}${wallR(`url(#${u('wall')})`)}${grid(lw)}${grid(rw)}${sun}${palm(4.15, false)}${palm(6.75, true)}${tube(HW, '#ff4fd8', 2.2)}`
+      + `<g class="hub-screen">${sign}</g>`,
+    floor: `${floorPoly('#0d0718')}${floorGrid}`,
+    edge: `${tube(0.12, '#36f3ff')}${tube(0.12, '#36f3ff', 5).replace('stroke-width="5"', 'stroke-width="5" stroke-opacity="0.2"')}`,
+    props: '',
+    beam: ['#ffd1f7', '#ff7ad9'], dust: '#ff9be6',
+    plat: ['#24133d', '#120a22', '#1b0e30'], vig: 0.5,
+  };
+}
+
+function arene({ u, pick, title, animate }) {
+  // murs de pierre claire : deux étages d'arches, la foule en haut, des fanions
+  const arch = (x, y, w, h, fill) => `<path d="M${x} ${y}v${-(h - w / 2)}a${w / 2} ${w / 2} 0 0 1 ${w} 0v${h - w / 2}z" fill="${fill}"/>`;
+  const tier = (wall, z, h, crowd) => {
+    const at = wall === 'L' ? onLeft : onRight;
+    const len = 189;
+    const arches = [];
+    for (let x = 6, k = 0; x < len - 12; x += 19, k++) {
+      arches.push(arch(x, 0, 12, h, '#4a3522'));
+      if (crowd) {
+        const heads = [0, 1, 2].map((j) => {
+          const col = ['#c98a5a', '#8a5a3a', '#e0b08a', '#5a3a2a'][(k + j) % 4];
+          const shirt = ['#c0392b', '#2e6fb3', '#e0b030', '#f4eee7', '#3a8a4a'][(k * 3 + j) % 5];
+          const bob = animate ? `<animateTransform attributeName="transform" type="translate" values="0 0;0 -1.6;0 0" dur="${r1(0.7 + hash(k * 3 + j) * 0.8)}s" begin="${r1(hash(k + j) * 2)}s" repeatCount="indefinite"/>` : '';
+          return `<g><rect x="${x + 1 + j * 3.6}" y="-5" width="3" height="5" rx="1" fill="${shirt}"/><circle cx="${x + 2.5 + j * 3.6}" cy="-6.6" r="1.6" fill="${col}"/>${bob}</g>`;
+        }).join('');
+        arches.push(heads);
+      }
+    }
+    // on part du coin du fond : le mur de gauche se dessine depuis son bout avant
+    return wall === 'L' ? at(N, z, arches.join('')) : at(0, z, arches.join(''));
+  };
+  const flags = (q) => {
+    const d = [];
+    for (let t = 0.1; t < N - 0.2; t += 0.35) {
+      const a = q(t, HW - 0.05), b = q(t + 0.35, HW - 0.05), m = q(t + 0.175, HW - 0.45);
+      d.push(poly([a, b, m], Math.round(t / 0.35) % 2 ? '#e0b030' : '#b8322a'));
+    }
+    return d.join('');
+  };
+  const ring = Array.from({ length: 41 }, (_, k) => P(3.5 + 2.9 * Math.cos((k / 40) * Math.PI * 2), 3.5 + 2.9 * Math.sin((k / 40) * Math.PI * 2), 0.003));
+  // l'arène tient sur sa façade d'arches, posée sur le sable
+  const B = 1.3;
+  const facade = (face) => {
+    const list = [];
+    for (let t = 0.15; t < N + 0.2; t += 0.62) {
+      const q = face === 'L' ? (a, z) => P(a, N + 0.3, z) : (a, z) => P(N + 0.3, a, z);
+      const [x0, y0] = q(t, -B + 0.12);
+      const pt = q(t + 0.34, -B + 0.12);
+      const top = q(t + 0.17, -0.25);
+      list.push(`<path d="M${r1(x0)} ${r1(y0)}L${r1(pt[0])} ${r1(pt[1])}L${r1(pt[0])} ${r1(top[1] + (pt[1] - y0) / 2 + 6)}Q${r1(top[0])} ${r1(top[1] - 2)} ${r1(x0)} ${r1(top[1] - (pt[1] - y0) / 2 + 6)}Z" fill="#5a4128"/>`);
+    }
+    return list.join('');
+  };
+  const left = P(-0.3, N + 0.3, -B), corner = P(N + 0.3, N + 0.3, -B), right = P(N + 0.3, -0.3, -B);
+  const ground = `<path d="M${r1(left[0] - 40)} ${r1(left[1] - 24)}L${pts([corner])}L${r1(right[0] + 40)} ${r1(right[1] - 24)}V${HUB.h}H${r1(left[0] - 40)}Z" fill="url(#${u('sand')})"/>`;
+  const brazier = ([X, Y], k) => {
+    const [x, y] = P(X + 0.18, Y + 0.18, 0.75);
+    return `${glow(x, y - 4, 20, u('fire'), animate, k)}${box(X + 0.13, Y + 0.13, 0, 0.1, 0.1, 0.6, ['#6a5030', '#3a2a18', '#50402a'])}${box(X, Y, 0.6, 0.36, 0.36, 0.14, ['#c08a3a', '#7a5520', '#9a6d2a'])}${flame(x, y, 1.2, animate, k)}`;
+  };
+  return {
+    bg: `url(#${u('sky')})`,
+    defs: lin(u('sky'), [0, 0, 0, 1], [[0, '#2f6fb3'], [0.6, '#7fb4e0'], [1, '#d8ecf8']])
+      + lin(u('wallL'), [0, 0, 1, 0], [[0, '#b99a6a'], [1, '#d4b98a']]) + lin(u('wallR'), [0, 0, 1, 0], [[0, '#dcc396'], [1, '#bfa070']])
+      + lin(u('floor'), [0, 0, 0, 1], [[0, '#e6cd96'], [1, '#d6b87c']]) + rad(u('fire'), [[0, '#ffb347', 0.5], [1, '#ff7a1a', 0]])
+      + lin(u('sand'), [0, 0, 0, 1], [[0, '#d9bd84'], [1, '#b8975e']]),
+    back: `${ground}${box(-0.3, -0.3, -B, N + 0.6, N + 0.6, B, ['#d4b98a', '#b39467', '#c4a678'])}${facade('L')}${facade('R')}${wallL(`url(#${u('wallL')})`)}${wallR(`url(#${u('wallR')})`)}`
+      + tier('L', 1.25, 22, false) + tier('R', 1.25, 22, false) + tier('L', 2.45, 18, true) + tier('R', 2.45, 18, true)
+      + onL(0, N, 1.3, 1.42, '#a88a5a') + onR(0, N, 1.3, 1.42, '#a88a5a') + flags(lw) + flags(rw)
+      + `<g class="hub-screen">${onR(2.0, 4.1, 0.25, 1.05, '#e9dcc0', ' stroke="#8a6a3d" stroke-width="1"')}${onRight(2.2, 0.85, say(pick, title, { fill: '#7a1f1a', sub: '#4a3522', size: 5.6, font: 'Georgia, serif' }))}</g>`,
+    floor: `${floorPoly(`url(#${u('floor')})`)}<path d="M${pts(ring)}" stroke="#b8945a" stroke-width="1.2" fill="none" opacity="0.7"/>`,
+    edge: cap('#a88a5a', 2.6),
+    props: `<g class="hub-brazier">${FRONT_SPOTS.map((spot, k) => brazier(spot, k)).join('')}</g>`,
+    beam: ['#fff6dc', '#ffe0a0'], dust: '#f7e3b5',
+    plat: ['#cfa970', '#8c6a3d', '#a98552'], vig: 0.3,
+  };
+}
+
+function foret({ u, pick, title, animate }) {
+  // ciel du soir entre les arbres, ponton de bois, guirlande, lucioles
+  const blobs = (n, y0, amp, r, col, k0) => Array.from({ length: n }, (_, k) => {
+    const x = (k / (n - 1)) * (HUB.w + 40) - 20;
+    return `<circle cx="${r1(x)}" cy="${r1(y0 + amp * hash(k + k0))}" r="${r1(r * (0.8 + 0.5 * hash(k + k0 + 7)))}" fill="${col}"/>`;
+  }).join('');
+  const far = `${blobs(12, 128, 26, 26, '#2c3a52', 1)}<rect y="140" width="${HUB.w}" height="160" fill="#2c3a52"/>`;
+  const near = `${blobs(9, 168, 30, 30, '#1b2a2c', 20)}<rect y="182" width="${HUB.w}" height="140" fill="#1b2a2c"/>`;
+  const pines = [[18, 252, 1.6], [44, 240, 1.2], [318, 250, 1.6], [346, 236, 1.3], [292, 238, 1.0]].map(([x, y, sc]) => pineTree(x, y, sc, '#132320')).join('');
+  // rambarde au fond, guirlande d'ampoules qui scintillent
+  const posts = [0.1, 1.85, 3.6, 5.35, 6.85];
+  const rail = posts.map((t) => box(-0.12, t - 0.06, 0, 0.12, 0.12, 0.8, ['#6b4a2e', '#3f2a19', '#55391f']) + box(t - 0.06, -0.12, 0, 0.12, 0.12, 0.8, ['#6b4a2e', '#3f2a19', '#55391f'])).join('')
+    + box(-0.1, 0, 0.72, 0.08, N, 0.08, ['#7a5636', '#4a3220', '#5e4228']) + box(0, -0.1, 0.72, N, 0.08, 0.08, ['#7a5636', '#4a3220', '#5e4228']);
+  const garland = (q) => {
+    let d = '', bulbs = '';
+    for (let i = 0; i < posts.length - 1; i++) {
+      const a = q(posts[i], 1.0), b = q(posts[i + 1], 1.0);
+      const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 7];
+      d += `M${r1(a[0])} ${r1(a[1])}Q${r1(m[0])} ${r1(m[1])} ${r1(b[0])} ${r1(b[1])}`;
+      for (const t of [0.2, 0.4, 0.6, 0.8]) {
+        const x = (1 - t) ** 2 * a[0] + 2 * t * (1 - t) * m[0] + t * t * b[0];
+        const y = (1 - t) ** 2 * a[1] + 2 * t * (1 - t) * m[1] + t * t * b[1] + 1.6;
+        bulbs += `<circle cx="${r1(x)}" cy="${r1(y)}" r="1.4" fill="#ffd27a">${pulse('1;0.45;1', r1(1.4 + hash(x) * 2), animate && hash(x + y) > 0.6)}</circle><circle cx="${r1(x)}" cy="${r1(y)}" r="4.5" fill="#ffd27a" opacity="0.18"/>`;
+      }
+    }
+    return `<path d="${d}" stroke="#3a2a1c" stroke-width="0.6" fill="none"/>${bulbs}`;
+  };
+  const planks = [];
+  for (let y = 0.35; y < N; y += 0.35) planks.push(`M${pts([P(0, y, 0.002), P(N, y, 0.002)])}`);
+  // les lucioles : elles flottent et clignotent
+  const flies = Array.from({ length: 14 }, (_, k) => {
+    const x = 20 + hash(k + 40) * (HUB.w - 40), y = 90 + hash(k + 41) * 300;
+    const path = [[0, 0], [hash(k + 42) * 24 - 12, hash(k + 43) * 18 - 9], [hash(k + 44) * 24 - 12, hash(k + 45) * 18 - 9], [0, 0]].map(([a, b]) => `${r1(a)} ${r1(b)}`).join(';');
+    const move = animate ? `<animateTransform attributeName="transform" type="translate" values="${path}" dur="${r1(6 + hash(k + 46) * 6)}s" repeatCount="indefinite"/>` : '';
+    const blink = pulse('0.15;1;0.15', r1(1.6 + hash(k + 47) * 2.4), animate, ` begin="${r1(hash(k + 48) * 3)}s"`);
+    return `<g transform="translate(${r1(x)} ${r1(y)})"><g><circle r="5" fill="#d9ff7a" opacity="0.18"/><circle r="1.3" fill="#f2ffb8"/>${move}</g>${blink ? `<animate attributeName="opacity" values="0.15;1;0.15" dur="${r1(1.6 + hash(k + 47) * 2.4)}s" begin="${r1(hash(k + 48) * 3)}s" repeatCount="indefinite"/>` : ''}</g>`;
+  }).join('');
+  return {
+    bg: `url(#${u('sky')})`,
+    defs: lin(u('sky'), [0, 0, 0, 1], [[0, '#1d1640'], [0.22, '#6a3b6b'], [0.4, '#e0875a'], [0.6, '#1b2a2c'], [1, '#0f1a17']])
+      + lin(u('floor'), [0, 0, 0, 1], [[0, '#7a5636'], [1, '#8a6440']]) + rad(u('dusk'), [[0, '#ffd08a', 0.75], [1, '#ff8a4c', 0]]),
+    back: `<circle cx="196" cy="128" r="60" fill="url(#${u('dusk')})"/>${far}${near}${pines}`
+      + `<rect y="300" width="${HUB.w}" height="${HUB.h - 300}" fill="#13201c"/>`
+      + box(0, 0, -0.2, N, N, 0.2, ['#7a5636', '#4a3220', '#5e4228'])
+      + signboard(1.3, 3.7, 1.05, 1.66, '#a8794a', ['#6b4a2e', '#3f2a19', '#55391f'], onRight(1.5, 1.51, say(pick, title, { fill: '#2a1a0c', sub: '#3a2614', size: 5.6 }))),
+    floor: `${floorPoly(`url(#${u('floor')})`)}<path d="${planks.join('')}" stroke="#4a3220" stroke-opacity="0.6" stroke-width="0.7" fill="none"/>`,
+    edge: `${rail}${garland((t) => P(-0.06, t, 0))}${garland((t) => P(t, -0.06, 0))}`,
+    props: '',
+    over: flies,
+    beam: ['#fff0c8', '#ffd27a'], dust: '#e9ff9a',
+    plat: ['#5e4228', '#3a2717', '#4a3320'], vig: 0.45,
+  };
+}
+
+const ART = { salle, grec, medieval, dojo, toit, station, plage, sommet, ocean, neon, arene, foret };
 
 // L'habillage d'un décor (décor inconnu : la salle). u : préfixe des identifiants.
 export function decorArt(id, { pick = 'A', title = '', animate = true, u = (n) => n } = {}) {

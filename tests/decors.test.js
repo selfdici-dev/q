@@ -20,9 +20,9 @@ test('décors : la salle d’abord, ouverte ; les autres à débloquer, chacun s
   assert.equal(DECORS[0].id, 'salle');
   assert.equal(DECORS[0].need, null);
   assert.equal(new Set(DECORS.map((d) => d.id)).size, DECORS.length);
-  assert.ok(DECORS.length >= 12, 'beaucoup de décors');
+  assert.ok(DECORS.length >= 17, 'beaucoup de décors');
   for (const d of DECORS.slice(1)) {
-    assert.ok(['workouts', 'level', 'blocs', 'calc', 'gems', 'sudoku', 'routines'].includes(d.need.kind), d.id);
+    assert.ok(['workouts', 'level', 'blocs', 'calc', 'gems', 'sudoku', 'routines', 'soirs', 'boxe', 'serpent', 'paires', 'code'].includes(d.need.kind), d.id);
     assert.ok(d.need.n > 0, d.id);
     assert.ok(d.name && d.desc, d.id);
   }
@@ -53,6 +53,16 @@ test('décors : débloqués au seuil exact, la progression s’affiche, les chif
   assert.equal(at({ routines: 20 }, 'foret').unlocked, true);
   assert.equal(at({ workouts: 59 }, 'arene').unlocked, false);
   assert.equal(at({ workouts: 60 }, 'arene').unlocked, true);
+  assert.equal(at({ boxe: 11 }, 'ring').label, '11 / 12 séances C (cardio boxe)');
+  assert.equal(at({ boxe: 12 }, 'ring').unlocked, true);
+  assert.equal(at({ soirs: 19 }, 'desert').label, '19 / 20 soirs avec ta routine');
+  assert.equal(at({ soirs: 20 }, 'desert').unlocked, true);
+  assert.equal(at({ serpent: 39 }, 'jungle').label, '39 / 40 fruits au Serpent');
+  assert.equal(at({ serpent: 40 }, 'jungle').unlocked, true);
+  assert.equal(at({ code: 14 }, 'volcan').label, '14 / 15 codes secrets trouvés');
+  assert.equal(at({ code: 15 }, 'volcan').unlocked, true);
+  assert.equal(at({ paires: 7 }, 'pirate').label, 'niveau 7 / 8 aux Paires');
+  assert.equal(at({ paires: 8 }, 'pirate').unlocked, true);
   // au-delà du seuil, la barre reste pleine ; rien ou n'importe quoi : zéro
   assert.equal(at({ workouts: 99 }, 'grec').pct, 1);
   for (const junk of [{}, { workouts: -5 }, { workouts: 'abc' }, { workouts: NaN }, undefined]) {
@@ -91,18 +101,27 @@ test('décors : tes chiffres viennent de tes données (séances sans M, une fois
     games: { blocs: { best: 2500, cur: { score: 3100, over: false } }, calc: { best: 31 }, cristaux: { top: 8, level: 9 }, sudoku: { solved: { facile: 6, moyen: 3, difficile: 1 } } },
   };
   state.days['2026-10-01'].routine = ['eau', 'douche', 'sourcils', 'cheveux']; // un matin complet
-  state.days['2026-10-02'].routine = ['eau']; // pas complet
+  state.days['2026-10-02'].routine = ['eau', 'vetements', 'lit']; // matin pas complet, soir complet
+  state.days['2026-10-03'].workouts = ['C']; // une séance C (cardio boxe)
+  state.games.serpent = { best: 41 };
+  state.games.paires = { top: 3 };
+  state.games.code = { wins: 7 };
   const stats = decorStats(state);
-  assert.equal(stats.workouts, 2);
+  assert.equal(stats.workouts, 3);
   assert.equal(stats.blocs, 3100); // la partie en cours compte déjà
   assert.equal(stats.calc, 31);
-  assert.equal(stats.level, 2); // 4 séances × 30 XP = 120 XP
+  assert.equal(stats.level, 2); // 5 séances × 30 XP = 150 XP
   assert.equal(stats.gems, 8); // niveaux réussis aux Cristaux
   assert.equal(stats.sudoku, 10);
   assert.equal(stats.routines, 1);
-  assert.deepEqual(decorStatus(stats).filter((d) => d.unlocked).map((d) => d.id), ['salle', 'dojo', 'toit', 'ocean', 'neon']);
+  assert.equal(stats.soirs, 1);
+  assert.equal(stats.boxe, 1);
+  assert.equal(stats.serpent, 41);
+  assert.equal(stats.paires, 3);
+  assert.equal(stats.code, 7);
+  assert.deepEqual(decorStatus(stats).filter((d) => d.unlocked).map((d) => d.id), ['salle', 'dojo', 'toit', 'jungle', 'ocean', 'neon']);
   // sans jeux ni jours : tout à zéro, niveau 1
-  assert.deepEqual(decorStats({ settings: {}, habits: [], days: {} }), { workouts: 0, level: 1, blocs: 0, calc: 0, gems: 0, sudoku: 0, routines: 0 });
+  assert.deepEqual(decorStats({ settings: {}, habits: [], days: {} }), { workouts: 0, level: 1, blocs: 0, calc: 0, gems: 0, sudoku: 0, routines: 0, soirs: 0, boxe: 0, serpent: 0, paires: 0, code: 0 });
 });
 
 test('décors : chaque salle se dessine en entier, avec ses postes, sa borne et la séance affichée', () => {

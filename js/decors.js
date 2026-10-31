@@ -11,12 +11,17 @@ import { routineStatus } from './routines.js';
 export const DECORS = [
   { id: 'salle', name: 'La salle', desc: 'Mur sombre, grille et logo de cuivre, bandes LED.', need: null },
   { id: 'grec', name: 'Temple grec', desc: 'Marbre et colonnes au-dessus des nuages, au coucher du soleil.', need: { kind: 'workouts', n: 15 } },
+  { id: 'ring', name: 'Ring de boxe', desc: 'Projecteurs qui balaient la salle, cordes, la foule et ses flashs.', need: { kind: 'boxe', n: 12 } },
   { id: 'foret', name: 'Forêt au crépuscule', desc: 'Un ponton de bois sous les arbres, des lucioles, une guirlande.', need: { kind: 'routines', n: 20 } },
+  { id: 'desert', name: 'Désert la nuit', desc: 'Dunes, pyramides, une caravane sous les étoiles et la lune.', need: { kind: 'soirs', n: 20 } },
   { id: 'dojo', name: 'Dojo', desc: 'Bois, papier de riz, tatamis, lanternes et pétales de cerisier.', need: { kind: 'blocs', n: 3000 } },
   { id: 'toit', name: 'Toit de la ville', desc: 'En haut d’une tour, la nuit, au milieu des gratte-ciel.', need: { kind: 'calc', n: 30 } },
+  { id: 'jungle', name: 'Temple de la jungle', desc: 'Pierres moussues, cascade, lianes et papillons.', need: { kind: 'serpent', n: 40 } },
   { id: 'ocean', name: 'Fond marin', desc: 'Des vitres sur la mer, des poissons, des bulles et un trésor.', need: { kind: 'sudoku', n: 10 } },
+  { id: 'volcan', name: 'Volcan', desc: 'Une éruption au loin, des coulées de lave, des braises qui montent.', need: { kind: 'code', n: 15 } },
   { id: 'medieval', name: 'Grand hall', desc: 'Pierre, feu de cheminée, torches, blason noir et or.', need: { kind: 'workouts', n: 40 } },
   { id: 'neon', name: 'Néon rétro', desc: 'Soleil à rayures, palmiers de néon, sol quadrillé qui défile.', need: { kind: 'gems', n: 8 } },
+  { id: 'pirate', name: 'Navire pirate', desc: 'Le pont d’un trois-mâts en pleine mer, voiles et drapeau au vent.', need: { kind: 'paires', n: 8 } },
   { id: 'station', name: 'Station spatiale', desc: 'Hublots sur les étoiles et une planète bleue.', need: { kind: 'level', n: 12 } },
   { id: 'arene', name: 'Arène romaine', desc: 'Du sable, des arches, la foule qui t’encourage, des braseros.', need: { kind: 'workouts', n: 60 } },
   { id: 'plage', name: 'Ponton sur la mer', desc: 'Le soleil se couche sur l’eau, les mouettes passent.', need: { kind: 'blocs', n: 6000 } },
@@ -32,11 +37,17 @@ const NEED = {
   gems: (h, n) => `niveau ${h} / ${n} aux Cristaux`,
   sudoku: (h, n) => `${fmt(h)} / ${fmt(n)} sudokus résolus`,
   routines: (h, n) => `${fmt(h)} / ${fmt(n)} matins avec ta routine`,
+  soirs: (h, n) => `${fmt(h)} / ${fmt(n)} soirs avec ta routine`,
+  boxe: (h, n) => `${fmt(h)} / ${fmt(n)} séances C (cardio boxe)`,
+  serpent: (h, n) => `${fmt(h)} / ${fmt(n)} fruits au Serpent`,
+  paires: (h, n) => `niveau ${h} / ${n} aux Paires`,
+  code: (h, n) => `${fmt(h)} / ${fmt(n)} codes secrets trouvés`,
 };
 
 // Tes chiffres pour les décors, recalculés depuis tes données : séances
 // faites (sans M, chacune une fois par jour), niveau, meilleures parties,
-// niveaux réussis aux Cristaux, sudokus résolus, matins avec ta routine.
+// niveaux réussis aux Cristaux et aux Paires, sudokus résolus, codes trouvés,
+// matins et soirs avec ta routine, jours avec une séance C (cardio boxe).
 export function decorStats(state) {
   const days = Object.values(state.days ?? {});
   const b = state.games?.blocs ?? {};
@@ -48,10 +59,15 @@ export function decorStats(state) {
     gems: state.games?.cristaux?.top ?? 0,
     sudoku: Object.values(state.games?.sudoku?.solved ?? {}).reduce((n, x) => n + (Number(x) || 0), 0),
     routines: days.filter((d) => routineStatus(d.routine, 'matin').complete).length,
+    soirs: days.filter((d) => routineStatus(d.routine, 'soir').complete).length,
+    boxe: days.filter((d) => (d.workouts ?? []).includes('C')).length,
+    serpent: state.games?.serpent?.best ?? 0,
+    paires: state.games?.paires?.top ?? 0,
+    code: state.games?.code?.wins ?? 0,
   };
 }
 
-// Où tu en es pour chaque décor. stats : { workouts, level, blocs, calc, gems, sudoku, routines }.
+// Où tu en es pour chaque décor. stats : les chiffres de decorStats.
 export function decorStatus(stats = {}) {
   return DECORS.map((d) => {
     if (!d.need) return { ...d, unlocked: true, pct: 1, label: 'Ouvert dès le départ' };
@@ -517,6 +533,11 @@ const pineTree = (x, y, s, green = '#1f3b34', snow = '') => `<g transform="trans
   + [[0, 22, 13], [-9, 18, 10], [-17, 13, 7]].map(([dy, w, h]) => `<path d="M0 ${dy - h - 6}l${w / 2} ${h}h${-w}z" fill="${green}"/>${snow ? `<path d="M0 ${dy - h - 6}l${w / 4} ${h / 2}l${-w / 8} -1l${-w / 8} 2l${-w / 8} -2l${-w / 8} 1z" fill="${snow}"/>` : ''}`).join('') + '</g>';
 // un brasero (ou un trésor) posé au sol, dans les deux trouées de devant
 const FRONT_SPOTS = [[3.4, 6.45], [6.45, 3.4]];
+// des mouettes qui traversent le ciel (plage, navire)
+const gullsFlying = (animate, color = '#3a2b36') => (animate ? [[-20, 58, 400, -12, 24, 0], [-40, 70, 420, -6, 28, 9]].map(([x, y, dx, dy, d, b]) => `<g opacity="0"><g transform="translate(${x} ${y})"><path d="M-4 0q2 -2.4 4 0q2 -2.4 4 0" stroke="${color}" stroke-width="0.9" fill="none"/></g><animateTransform attributeName="transform" type="translate" values="0 0;${dx} ${dy}" dur="${d}s" begin="${b}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.95;1" dur="${d}s" begin="${b}s" repeatCount="indefinite"/></g>`).join('') : '');
+// une étoile filante, de temps en temps
+const shootingStar = (animate, from = [60, 20], to = [150, 54], dur = 9) => (animate ? `<g opacity="0"><path d="M0 0l-16 -6" stroke="#fff" stroke-width="1" stroke-linecap="round"/><animateTransform attributeName="transform" type="translate" values="${from.join(' ')};${to.join(' ')}" dur="${dur}s" repeatCount="indefinite"/>`
+  + `<animate attributeName="opacity" values="0;0;1;0;0" keyTimes="0;0.02;0.06;0.12;1" dur="${dur}s" repeatCount="indefinite"/></g>` : '');
 
 function ocean({ u, pick, title, animate }) {
   // les murs sont des vitres sur la mer : poissons, algues, rayons de lumière
@@ -729,7 +750,212 @@ function foret({ u, pick, title, animate }) {
   };
 }
 
-const ART = { salle, grec, medieval, dojo, toit, station, plage, sommet, ocean, neon, arene, foret };
+function volcan({ u, pick, title, animate }) {
+  // le volcan au loin : cratère qui crache, coulées de lave, panache de cendres
+  const lava = (d, w, k) => `<path d="${d}" stroke="#ff7a1a" stroke-width="${w + 4}" stroke-opacity="0.25" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#ffb347" stroke-width="${w}" fill="none" stroke-linecap="round">${pulse('1;0.6;1', 2 + k * 0.6, animate)}</path>`;
+  const blobs = animate ? [[-8, 1.4, 0], [4, 1.8, 0.5], [12, 1.2, 1.1], [-2, 2.2, 1.6]].map(([dx, d, b]) => `<circle cx="${195 + dx}" cy="62" r="2.4" fill="#ffd27a"><animate attributeName="cy" values="62;${30 - Math.abs(dx)};62" dur="${d}s" begin="${b}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;0" dur="${d}s" begin="${b}s" repeatCount="indefinite"/></circle>`).join('') : '';
+  const smoke = [[205, 38, 1.1, 30], [180, 22, 0.9, 38], [228, 16, 0.8, 44]].map(([x, y, sc, d], k) => drift(cloud(x, y, sc, '#3a2a2a', '#241818'), k % 2 ? 14 : -14, d, animate, -6)).join('');
+  const cracks = Array.from({ length: 9 }, (_, k) => {
+    const pts0 = Array.from({ length: 4 }, (_, i) => P(0.5 + hash(k + 60) * 6 + i * 0.35 * (hash(k + 61) - 0.5), 0.5 + hash(k + 62) * 6 + i * 0.4, 0.003));
+    return `M${pts(pts0)}`;
+  }).join('');
+  const embers = fall(Array.from({ length: 14 }, (_, k) => [hash(k + 70) * HUB.w, 520, (hash(k + 71) - 0.5) * 40, -(380 + hash(k + 72) * 120), r1(5 + hash(k + 73) * 4), r1(hash(k + 74) * 6)]), '<circle r="1.1" fill="#ffb347"/>', animate);
+  const crust = Array.from({ length: 8 }, (_, k) => drift(`<ellipse cx="${r1(hash(k + 80) * HUB.w)}" cy="${r1(400 + hash(k + 81) * 120)}" rx="${r1(14 + hash(k + 82) * 20)}" ry="${r1(3 + hash(k + 83) * 3)}" fill="#2a0c06" opacity="0.7"/>`, k % 2 ? 10 : -10, 14 + k, animate)).join('');
+  return {
+    bg: `url(#${u('sky')})`,
+    defs: lin(u('sky'), [0, 0, 0, 1], [[0, '#120404'], [0.3, '#3a0e08'], [1, '#1a0705']]) + lin(u('cone'), [0, 0, 0, 1], [[0, '#3a1810'], [1, '#160807']])
+      + rad(u('crater'), [[0, '#ffd27a', 0.9], [0.5, '#ff7a1a', 0.5], [1, '#ff3a00', 0]]) + lin(u('lava'), [0, 0, 0, 1], [[0, '#ff7a1a'], [1, '#b8290a']])
+      + lin(u('floor'), [0, 0, 0, 1], [[0, '#221b1e'], [1, '#2e2427']]),
+    back: `<circle cx="195" cy="70" r="90" fill="url(#${u('crater')})" opacity="0.6"/>${smoke}<path d="M-20 270L150 70q45 -14 90 0L390 270Z" fill="url(#${u('cone')})"/>`
+      + `<ellipse cx="195" cy="66" rx="34" ry="7" fill="url(#${u('crater')})">${pulse('1;0.7;1', 1.6, animate)}</ellipse>${blobs}`
+      + lava('M182 70C170 110 150 130 128 180', 3, 0) + lava('M210 70C222 120 248 140 262 190', 2.6, 1) + lava('M196 72C196 100 188 120 176 150', 2, 2)
+      + `<rect y="300" width="${HUB.w}" height="${HUB.h - 300}" fill="url(#${u('lava')})"/>${crust}`
+      + box(0, 0, -0.8, N, N, 0.8, ['#2a1c1c', '#140c0c', '#1e1414'])
+      + box(-0.18, 0, 0, 0.18, N, 0.35, ['#3a2a2a', '#1a1010', '#2a1d1d']) + box(0, -0.18, 0, N, 0.18, 0.35, ['#3a2a2a', '#1a1010', '#2a1d1d'])
+      + signboard(1.3, 3.7, 1.05, 1.65, '#2a1c1c', ['#3a2a2a', '#1a1010', '#2a1d1d'], onRight(1.5, 1.5, say(pick, title, { fill: '#ffb347', sub: '#ffd9b0', size: 5.6 }))),
+    floor: `${floorPoly(`url(#${u('floor')})`)}${tiles('#000', 0.5, 0.8)}<path d="${cracks}" stroke="#ff7a1a" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.7">${pulse('0.7;0.35;0.7', 3, animate)}</path>`,
+    edge: '',
+    props: '',
+    over: embers,
+    beam: ['#ffd9b0', '#ff9a5c'], dust: '#ffb070',
+    plat: ['#3a2a2a', '#1e1414', '#2c1f1f'], vig: 0.55,
+  };
+}
+
+function jungle({ u, pick, title, animate }) {
+  // un temple oublié : pierres moussues, cascade, lianes, papillons
+  const stones = (q) => {
+    const d = [];
+    for (let k = 1, z = 0.42; z < HW; k++, z += 0.42) {
+      d.push(`M${pts([q(0, z), q(N, z)])}`);
+      for (let t = (k % 2) * 0.5; t < N; t += 1) d.push(`M${pts([q(t, z - 0.42), q(t, z)])}`);
+    }
+    return `<path d="${d.join('')}" stroke="#1d2a1d" stroke-opacity="0.6" stroke-width="0.7" fill="none"/>`;
+  };
+  const moss = (q, k0) => Array.from({ length: 9 }, (_, k) => {
+    const [x, y] = q(hash(k + k0) * N, hash(k + k0 + 1) > 0.5 ? 0.15 : HW - 0.1);
+    return `<ellipse cx="${r1(x)}" cy="${r1(y)}" rx="${r1(6 + hash(k + k0 + 2) * 8)}" ry="${r1(2 + hash(k + k0 + 3) * 2)}" fill="#4f7a3a" opacity="0.8"/>`;
+  }).join('');
+  // la cascade tombe du haut du mur de droite dans un bassin
+  const [w0, w1] = [2.6, 3.6];
+  const streaks = Array.from({ length: 7 }, (_, k) => {
+    const t = w0 + 0.1 + (k / 6) * (w1 - w0 - 0.2);
+    const [x, yTop] = rw(t, HW);
+    const yBot = rw(t, 0.05)[1];
+    return `<path d="M${r1(x)} ${r1(yTop)}V${r1(yBot)}" stroke="#eaffff" stroke-width="1.2" stroke-dasharray="7 9" stroke-opacity="0.75">${animate ? `<animate attributeName="stroke-dashoffset" values="0;-16" dur="${r1(0.5 + hash(k) * 0.3)}s" repeatCount="indefinite"/>` : ''}</path>`;
+  }).join('');
+  const pool = poly([P(w0 - 0.15, 0, 0.004), P(w1 + 0.15, 0, 0.004), P(w1 + 0.1, 0.55, 0.004), P(w0 - 0.1, 0.55, 0.004)], '#5fb8c9', ' opacity="0.85"');
+  const [mx, my] = P((w0 + w1) / 2, 0.2, 0.15);
+  const mist = `<ellipse cx="${r1(mx)}" cy="${r1(my)}" rx="22" ry="6" fill="#fff" opacity="0.35">${pulse('0.35;0.15;0.35', 2.4, animate)}</ellipse>`;
+  // des lianes qui pendent du haut des murs
+  const vine = (q, t, len, k) => {
+    const [x, y] = q(t, HW);
+    const path = `<path d="M${r1(x)} ${r1(y)}c-4 ${r1(len * 0.3)} 5 ${r1(len * 0.6)} 0 ${len}" stroke="#3f6b2c" stroke-width="1.6" fill="none"/>`
+      + [0.3, 0.55, 0.8].map((f) => `<ellipse cx="${r1(x + (f > 0.5 ? 2 : -2))}" cy="${r1(y + len * f)}" rx="3" ry="1.5" fill="#5b8f3c" transform="rotate(${f > 0.5 ? 30 : -30} ${r1(x)} ${r1(y + len * f)})"/>`).join('');
+    return sway(path, x, y, 4, 3 + (k % 3), animate);
+  };
+  const vines = [[lw, 0.8, 34], [lw, 2.2, 22], [lw, 3.6, 40], [lw, 5.9, 28], [rw, 1.4, 30], [rw, 4.4, 38], [rw, 6.2, 24]].map(([q, t, len], k) => vine(q, t, len, k)).join('');
+  const canopy = Array.from({ length: 14 }, (_, k) => `<circle cx="${r1((k / 13) * (HUB.w + 40) - 20)}" cy="${r1(10 + hash(k + 90) * 30)}" r="${r1(26 + hash(k + 91) * 16)}" fill="${k % 2 ? '#14301c' : '#1b3d24'}"/>`).join('');
+  const rays = [[60, 0.06], [140, 0.05], [250, 0.06]].map(([x, o]) => `<path d="M${x} 0l40 0l60 260l-40 0z" fill="#fff6c8" opacity="${o}"/>`).join('');
+  const glyphs = onLeft(6.25, 2.45, `<path d="M0 6${'h3v-6h3v6'.repeat(9)}" stroke="#24331f" stroke-width="1.6" fill="none"/><circle cx="30" cy="-6" r="4.5" fill="none" stroke="#24331f" stroke-width="1.4"/><path d="M30 -13v2.5M30 1v-2.5M23 -6h2.5M37 -6h-2.5" stroke="#24331f" stroke-width="1.4"/>`);
+  const leafPlant = ([X, Y]) => {
+    const [x, y] = P(X + 0.2, Y + 0.2, 0);
+    return [-50, -20, 10, 40, 70].map((a, k) => `<ellipse cx="${r1(x + Math.cos((a - 90) * Math.PI / 180) * 7)}" cy="${r1(y - 8 + Math.sin((a - 90) * Math.PI / 180) * 6)}" rx="8" ry="3.4" transform="rotate(${a - 90} ${r1(x + Math.cos((a - 90) * Math.PI / 180) * 7)} ${r1(y - 8 + Math.sin((a - 90) * Math.PI / 180) * 6)})" fill="${k % 2 ? '#3f7a34' : '#4f9a3f'}"/>`).join('');
+  };
+  const butterfly = (col, path, dur, k) => {
+    const wings = `<g><ellipse cx="-2.4" cy="0" rx="2.6" ry="1.8" fill="${col}"/><ellipse cx="2.4" cy="0" rx="2.6" ry="1.8" fill="${col}"/><rect x="-0.4" y="-1.8" width="0.8" height="3.6" fill="#2a1d14"/>${animate ? `<animateTransform attributeName="transform" type="scale" values="1 1;0.25 1;1 1" dur="0.28s" repeatCount="indefinite"/>` : ''}</g>`;
+    const [x0, y0] = path[0];
+    return animate ? `<g>${wings}<animateTransform attributeName="transform" type="translate" values="${path.map((p) => p.join(' ')).join(';')}" dur="${dur}s" begin="-${k * 3}s" repeatCount="indefinite"/></g>` : `<g transform="translate(${x0} ${y0})">${wings}</g>`;
+  };
+  const flies = butterfly('#ffb347', [[70, 210], [120, 170], [170, 230], [110, 260], [70, 210]], 14, 0) + butterfly('#7cc4e4', [[290, 200], [240, 240], [210, 190], [260, 160], [290, 200]], 12, 1);
+  return {
+    bg: '#0d1f12',
+    defs: lin(u('wallL'), [0, 0, 1, 0], [[0, '#5a6650'], [1, '#6f7c62']]) + lin(u('wallR'), [0, 0, 1, 0], [[0, '#7a876b'], [1, '#5d6a52']])
+      + lin(u('fall'), [0, 0, 0, 1], [[0, '#bdefff'], [1, '#7fd0e6']]) + lin(u('floor'), [0, 0, 0, 1], [[0, '#59654d'], [1, '#6a775c']]),
+    back: `${canopy}${rays}${wallL(`url(#${u('wallL')})`)}${wallR(`url(#${u('wallR')})`)}${stones(lw)}${stones(rw)}${moss(lw, 1)}${moss(rw, 30)}${glyphs}`
+      + `<g class="hub-waterfall">${onR(w0, w1, 0, HW, `url(#${u('fall')})`, ' opacity="0.9"')}${streaks}</g>${vines}`
+      + `<g class="hub-screen">${onL(4.3, 6.3, 1.0, 1.75, '#7d8a6c', ' stroke="#3f4a35" stroke-width="1"')}${onLeft(6.15, 1.62, say(pick, title, { fill: '#1d2a14', sub: '#2a3a20', size: 5.4, font: 'Georgia, serif' }))}</g>`,
+    floor: `${floorPoly(`url(#${u('floor')})`)}${tiles('#2a3424', 0.6, 0.8)}${pool}${mist}`
+      + Array.from({ length: 10 }, (_, k) => { const [x, y] = P(0.4 + hash(k + 40) * 6.2, 0.4 + hash(k + 41) * 6.2, 0.003); return `<ellipse cx="${r1(x)}" cy="${r1(y)}" rx="${r1(5 + hash(k) * 9)}" ry="${r1(2 + hash(k + 1) * 3)}" fill="#4f7a3a" opacity="0.5"/>`; }).join(''),
+    edge: cap('#3f4a35', 2.6),
+    props: FRONT_SPOTS.map(leafPlant).join(''),
+    over: flies,
+    beam: ['#f6ffd8', '#d8f5a0'], dust: '#e9ffb0',
+    plat: ['#5b6a52', '#36402f', '#465240'], vig: 0.5,
+  };
+}
+
+function ring({ u, pick, title, animate }) {
+  // la foule dans le noir, derrière les cordes ; des flashs ; deux projecteurs qui balaient
+  const crowd = [];
+  for (let row = 0; row < 4; row++) {
+    const off = 0.9 + row * 0.75, z = 0.7 + row * 0.75;
+    for (let t = -row * 0.4; t < N + 0.4; t += 0.42) {
+      for (const [X, Y] of [[-off, t], [t, -off]]) {
+        if (X < -off - 0.01 || Y < -off - 0.01) continue;
+        const [x, y] = P(X, Y, z);
+        const k = Math.round((X + 9) * 31 + (Y + 9) * 17);
+        crowd.push(`<circle cx="${r1(x)}" cy="${r1(y)}" r="3.2" fill="${hash(k) > 0.5 ? '#232838' : '#1a1e2b'}"/><path d="M${r1(x - 4.5)} ${r1(y + 9)}q4.5 -6 9 0z" fill="#161925"/>`);
+        if (animate && hash(k + 5) > 0.93) crowd.push(`<circle cx="${r1(x + 2)}" cy="${r1(y - 1)}" r="2.2" fill="#fff" opacity="0"><animate attributeName="opacity" values="0;0;1;0;0" keyTimes="0;0.6;0.62;0.66;1" dur="${r1(4 + hash(k + 6) * 6)}s" begin="${r1(hash(k + 7) * 5)}s" repeatCount="indefinite"/></circle>`);
+      }
+    }
+  }
+  const ropes = [0.45, 0.8, 1.15].map((z, k) => `<path d="M${pts([P(0, N, z), P(0, 0, z), P(N, 0, z)])}" stroke="${['#c0392b', '#f4eee7', '#2e6fb3'][k]}" stroke-width="1.6" fill="none"/>`).join('');
+  const post = (X, Y, pad) => `${box(X - 0.08, Y - 0.08, 0, 0.16, 0.16, 1.35, ['#c9ced8', '#8a919e', '#a9b0bc'])}${box(X - 0.11, Y - 0.11, 0.35, 0.22, 0.22, 0.9, [pad, pad, pad])}`;
+  const spot = (sx, sy, tx, ty, k) => {
+    const cone = `<path d="M${sx - 5} ${sy}L${tx - 55} ${ty}L${tx + 55} ${ty}L${sx + 5} ${sy}Z" fill="url(#${u('spot')})"/>`;
+    return animate ? `<g>${cone}<animateTransform attributeName="transform" type="rotate" values="-7 ${sx} ${sy};7 ${sx} ${sy};-7 ${sx} ${sy}" dur="${7 + k * 2}s" repeatCount="indefinite"/></g>` : cone;
+  };
+  const center = Array.from({ length: 41 }, (_, k) => P(3.5 + 1.2 * Math.cos((k / 40) * Math.PI * 2), 3.5 + 1.2 * Math.sin((k / 40) * Math.PI * 2), 0.003));
+  const screen = `<g class="hub-screen"><path d="M180 6v18" stroke="#3a3f4c" stroke-width="1.2"/><rect x="136" y="24" width="88" height="34" rx="4" fill="#0b0e16" stroke="#3a3f4c" stroke-width="1.2"/>`
+    + `<g transform="translate(180 39)">${say(pick, title, { fill: '#ffd27a', sub: '#f4eee7', size: 6, anchor: 'middle' })}</g></g>`;
+  return {
+    bg: '#050608',
+    defs: lin(u('canvas'), [0, 0, 0, 1], [[0, '#c9ced8'], [1, '#b6bdca']]) + lin(u('spot'), [0, 0, 0, 1], [[0, '#fffbe6', 0.35], [1, '#fffbe6', 0.04]]),
+    back: `<g class="hub-crowd">${crowd.join('')}</g>${screen}`
+      + box(0, 0, -0.5, N, N, 0.5, ['#1a2440', '#121a30', '#16213e']) + poly([P(0, N, -0.32), P(N, N, -0.32), P(N, N, -0.25), P(0, N, -0.25)], '#f4eee7') + poly([P(N, 0, -0.32), P(N, N, -0.32), P(N, N, -0.25), P(N, 0, -0.25)], '#f4eee7')
+      + post(0, 0, '#c0392b') + post(0, N, '#f4eee7') + post(N, 0, '#2e6fb3'),
+    floor: `${floorPoly(`url(#${u('canvas')})`)}<path d="M${pts(center)}" stroke="#d4a63c" stroke-width="1.6" fill="none"/>${tiles('#8a919e', 0.18, 0.6)}`,
+    edge: ropes,
+    props: '',
+    over: `<g class="hub-spots">${spot(40, -10, 150, 330, 0)}${spot(320, -10, 210, 330, 1)}</g>`,
+    beam: ['#ffffff', '#fffbe6'], dust: '#ffffff',
+    plat: ['#2a3550', '#141b2c', '#1e2740'], vig: 0.65,
+  };
+}
+
+function desert({ u, pick, title, animate }) {
+  // la nuit sur les dunes : étoiles, croissant de lune, pyramides, caravane
+  const twinkle = Array.from({ length: 10 }, (_, k) => `<circle cx="${r1(hash(k + 300) * HUB.w)}" cy="${r1(hash(k + 301) * 140)}" r="1.2" fill="#fff">${pulse('1;0.2;1', r1(1.5 + hash(k + 302) * 2), animate)}</circle>`).join('');
+  const moon = `<circle cx="292" cy="48" r="13" fill="#f7f2de" mask="url(#${u('crescent')})"/>`;
+  const pyramid = (x, base, w, h) => `<path d="M${x - w / 2} ${base}L${x} ${base - h}L${x} ${base}Z" fill="#3a3256"/><path d="M${x} ${base - h}L${x + w / 2} ${base}L${x} ${base}Z" fill="#5a4f7a"/>`;
+  const dune = (y, amp, col, k) => `<path d="M-10 ${y}${Array.from({ length: 9 }, (_, i) => `Q${r1(i * 46 + 13)} ${r1(y - amp * (0.5 + hash(i + k)))} ${r1(i * 46 + 36)} ${r1(y + amp * 0.2)}`).join('')}L370 ${HUB.h}L-10 ${HUB.h}Z" fill="${col}"/>`;
+  const camel = '<path d="M0 0c1 -4 3 -6 5 -6c1 -3 4 -3 5 0c2 -2 4 -2 5 0l3 -5c1 -1 3 0 2 1l-2 6l0 4h-1l0 6h-1.2l0 -6h-6l0 6h-1.2l0 -6h-1l0 6h-1.2l0 -6c-2 0 -4 -1 -6.4 0z" fill="#1d1830"/>';
+  const caravan = [0, 22, 44].map((dx) => `<g transform="translate(${dx} 0)">${camel}</g>`).join('');
+  const walk = animate ? `<g>${`<g transform="translate(-80 172) scale(0.9)">${caravan}</g>`}<animateTransform attributeName="transform" type="translate" values="0 0;460 -8" dur="70s" repeatCount="indefinite"/></g>` : `<g transform="translate(60 168) scale(0.9)">${caravan}</g>`;
+  const lantern = (X, Y, k) => {
+    const [x, y] = P(X, Y, 0.62);
+    return `${glow(x, y, 16, u('lamp'), animate, k)}${box(X - 0.06, Y - 0.06, 0.4, 0.12, 0.12, 0.2, ['#ffd27a', '#c08a3a', '#e0a84a'])}`;
+  };
+  return {
+    bg: `url(#${u('sky')})`,
+    defs: lin(u('sky'), [0, 0, 0, 1], [[0, '#070a24'], [0.35, '#1d2457'], [0.6, '#4a3a6e'], [1, '#2a2348']])
+      + lin(u('floor'), [0, 0, 0, 1], [[0, '#c3ad86'], [1, '#d2bd95']]) + rad(u('lamp'), [[0, '#ffd27a', 0.6], [1, '#ff9a3c', 0]])
+      + `<mask id="${u('crescent')}"><circle cx="292" cy="48" r="13" fill="#fff"/><circle cx="298" cy="44" r="12" fill="#000"/></mask>`,
+    back: `${starField(70, 400, 170)}${twinkle}${moon}${shootingStar(animate, [220, 14], [300, 44], 11)}`
+      + pyramid(66, 190, 110, 62) + pyramid(128, 186, 60, 34) + pyramid(306, 192, 96, 54)
+      + dune(196, 16, '#2a2550', 1) + walk + dune(232, 20, '#3a2f5c', 9) + dune(300, 26, '#4a3c6a', 17)
+      + box(0, 0, -0.3, N, N, 0.3, ['#b39d78', '#7a6850', '#968260'])
+      + box(-0.18, 0, 0, 0.18, N, 0.4, ['#cbb58e', '#8a7656', '#a89270']) + box(0, -0.18, 0, N, 0.18, 0.4, ['#cbb58e', '#8a7656', '#a89270'])
+      + lantern(-0.09, 3.95, 0) + lantern(3.95, -0.09, 1)
+      + signboard(1.3, 3.7, 1.05, 1.65, '#d8c49c', ['#8a7656', '#5a4a34', '#6e5c42'], onRight(1.5, 1.5, say(pick, title, { fill: '#3a2614', sub: '#4a3420', size: 5.6, font: 'Georgia, serif' }))),
+    floor: `${floorPoly(`url(#${u('floor')})`)}${tiles('#8a7656', 0.45, 0.7)}`,
+    edge: '',
+    props: '',
+    beam: ['#dfe6ff', '#b9c6ff'], dust: '#e8eaff',
+    plat: ['#b89f75', '#7f6a4a', '#9a8460'], vig: 0.5,
+  };
+}
+
+function pirate({ u, pick, title, animate }) {
+  // en pleine mer : le pont, les voiles, le drapeau, les vagues
+  const H = 150;
+  const clouds = [[60, 40, 1, 40], [250, 28, 0.8, 52], [330, 70, 0.7, 46]].map(([x, y, sc, d], k) => drift(cloud(x, y, sc, '#ffffff', '#dbe9f5'), k % 2 ? -18 : 18, d, animate)).join('');
+  const crests = Array.from({ length: 18 }, (_, k) => {
+    const x = hash(k + 500) * HUB.w, y = H + 10 + hash(k + 501) * 360;
+    return drift(`<path d="M${r1(x)} ${r1(y)}q5 -3 10 0" stroke="#e6f6ff" stroke-width="1.2" fill="none" opacity="${r1(0.4 + hash(k) * 0.4)}"/>`, k % 2 ? 6 : -6, r1(3 + hash(k + 502) * 2), animate);
+  }).join('');
+  const sea = animate ? `<g><rect y="${H}" width="${HUB.w}" height="${HUB.h - H}" fill="url(#${u('sea')})"/>${crests}<animateTransform attributeName="transform" type="translate" values="0 0;0 2.5;0 0" dur="5s" repeatCount="indefinite"/></g>` : `<rect y="${H}" width="${HUB.w}" height="${HUB.h - H}" fill="url(#${u('sea')})"/>${crests}`;
+  // le mât au coin du fond, deux voiles, le drapeau noir
+  const [mx, my] = P(0.2, 0.2, 0);
+  const sails = `<path d="M${r1(mx - 54)} 22q54 -10 108 0q-6 34 0 62q-54 -12 -108 0q6 -28 0 -62z" fill="#f4ecd8" stroke="#c9b991" stroke-width="1"/>`
+    + `<path d="M${r1(mx - 40)} -30q40 -8 80 0q-4 26 0 46q-40 -9 -80 0q4 -20 0 -46z" fill="#efe5cc" stroke="#c9b991" stroke-width="1"/>`;
+  const flagShape = '<path d="M0 0h22v14h-22z" fill="#111"/><circle cx="11" cy="6" r="3" fill="#f4eee7"/><path d="M6 11l10 -3M6 8l10 3" stroke="#f4eee7" stroke-width="1.2"/>';
+  const flag = `<g transform="translate(${r1(mx + 2)} 2)">${animate ? `<g>${flagShape}<animateTransform attributeName="transform" type="skewY" values="0;8;-4;0" dur="1.8s" repeatCount="indefinite"/></g>` : flagShape}</g>`;
+  const rigging = `<path d="M${r1(mx)} 0L${pts([P(0, N, 0.9)])}M${r1(mx)} 0L${pts([P(N, 0, 0.9)])}M${r1(mx)} 40L${pts([P(0, 4, 0.9)])}M${r1(mx)} 40L${pts([P(4, 0, 0.9)])}" stroke="#3a2a1c" stroke-width="0.7" fill="none"/>`;
+  const hoop = (X, Y, z) => poly([P(X, Y + 0.36, z), P(X + 0.36, Y + 0.36, z), P(X + 0.36, Y + 0.36, z + 0.05), P(X, Y + 0.36, z + 0.05)], '#2a2a2a') + poly([P(X + 0.36, Y, z), P(X + 0.36, Y + 0.36, z), P(X + 0.36, Y + 0.36, z + 0.05), P(X + 0.36, Y, z + 0.05)], '#333');
+  const barrel = ([X, Y]) => `${box(X, Y, 0, 0.36, 0.36, 0.5, ['#a8743e', '#5a3a1c', '#704a26'])}${hoop(X, Y, 0.1)}${hoop(X, Y, 0.36)}`;
+  const planks = [];
+  for (let y = 0.35; y < N; y += 0.35) planks.push(`M${pts([P(0, y, 0.002), P(N, y, 0.002)])}`);
+  return {
+    bg: `url(#${u('sky')})`,
+    defs: lin(u('sky'), [0, 0, 0, 1], [[0, '#3d8fd6'], [0.28, '#9fd4f5'], [1, '#9fd4f5']]) + lin(u('sea'), [0, 0, 0, 1], [[0, '#2b78b8'], [0.4, '#1f5f9a'], [1, '#123d6b']])
+      + lin(u('floor'), [0, 0, 0, 1], [[0, '#a8794a'], [1, '#b98a58']]),
+    back: `<rect width="${HUB.w}" height="${H}" fill="url(#${u('sky')})"/><circle cx="64" cy="36" r="16" fill="#fff6c8" opacity="0.9"/>${clouds}${gullsFlying(animate)}${sea}`
+      + box(0, 0, -1.0, N, N, 1.0, ['#4a2f1c', '#2e1d11', '#3b2616']) + poly([P(0, N, -0.8), P(N, N, -0.8), P(N, N, -0.72), P(0, N, -0.72)], '#e8e0cc') + poly([P(N, 0, -0.8), P(N, N, -0.8), P(N, N, -0.72), P(N, 0, -0.72)], '#e8e0cc')
+      + `<path d="M${r1(mx)} ${r1(my)}V-20" stroke="#4a311d" stroke-width="5"/>${rigging}${sails}${flag}`
+      + box(-0.2, 0, 0, 0.2, N, 0.85, ['#6b4a2e', '#3f2a19', '#55391f']) + box(0, -0.2, 0, N, 0.2, 0.85, ['#6b4a2e', '#3f2a19', '#55391f'])
+      + box(-0.24, 0, 0.85, 0.28, N, 0.1, ['#8a5f3a', '#4a311d', '#6b4a2e']) + box(0, -0.24, 0.85, N, 0.28, 0.1, ['#8a5f3a', '#4a311d', '#6b4a2e'])
+      + `<g class="hub-screen">${onR(1.4, 3.8, 1.1, 1.7, '#d9b98a', ' stroke="#4a311d" stroke-width="1"')}${onRight(1.6, 1.56, say(pick, title, { fill: '#3a2210', sub: '#4a3018', size: 5.6, font: 'Georgia, serif' }))}</g>`,
+    floor: `${floorPoly(`url(#${u('floor')})`)}<path d="${planks.join('')}" stroke="#6b4a2e" stroke-opacity="0.55" stroke-width="0.7" fill="none"/>`,
+    edge: '',
+    props: FRONT_SPOTS.map(barrel).join(''),
+    beam: ['#fffbe6', '#ffe9b0'], dust: '#ffffff',
+    plat: ['#7a5232', '#4a311d', '#5f3f26'], vig: 0.35,
+  };
+}
+
+const ART = { salle, grec, medieval, dojo, toit, station, plage, sommet, ocean, neon, arene, foret, volcan, jungle, ring, desert, pirate };
 
 // L'habillage d'un décor (décor inconnu : la salle). u : préfixe des identifiants.
 export function decorArt(id, { pick = 'A', title = '', animate = true, u = (n) => n } = {}) {

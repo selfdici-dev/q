@@ -1,11 +1,11 @@
 // Cache hors ligne. Incrémente VERSION à chaque modification des fichiers.
-const VERSION = 'cap-v111';
+const VERSION = 'cap-v112';
 const FILES = [
   './', './index.html', './css/styles.css', './css/luxe.css', './css/cuivre.css', './manifest.webmanifest',
   './js/app.js', './js/logic.js', './js/data.js',
   './js/money.js', './js/finance-data.js', './js/quotes.js', './js/summary.js',
   './js/backup.js', './js/figures.js', './js/poses.js', './js/avatar.js', './js/tree.js', './js/icons.js', './js/room.js', './js/gym.js',
-  './js/drawings.js', './js/drawings-data.js', './js/games.js', './js/arcade.js', './js/iso.js', './js/decors.js', './js/routines.js',
+  './js/drawings.js', './js/drawings-data.js', './js/games.js', './js/arcade.js', './js/iso.js', './js/decors.js', './js/routines.js', './js/gems.js', './js/sudoku.js',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
 ];
 // Dessins des exercices (img/ex/<slug>-<n>.webp, n images par geste ; liste

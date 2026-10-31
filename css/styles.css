@@ -1296,12 +1296,15 @@ label.steps-pick select { width: auto; min-height: 36px; padding: 0 10px; font-s
   .food:active, .meal-step:active { transform: scale(0.96); }
 }
 
-/* Arcade (js/arcade.js) : Blocs, Cristaux, Calcul éclair, Sudoku. Couleurs des
+/* Arcade (js/arcade.js) : sept jeux en tuiles. Couleurs des
    pièces : celles des séances (A vert, B bleu, C orange, M violet, P or), en relief. */
-.arc-card { display: grid; grid-template-columns: 64px 1fr; gap: 12px 14px; align-items: center; }
-.arc-card h2 { margin: 0 0 2px; }
-.arc-card p { margin: 2px 0; }
-.arc-card .btn { grid-column: 1 / -1; }
+.arc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.arc-tile { display: flex; flex-direction: column; gap: 3px; padding: 12px; border-radius: 20px; background: var(--card, var(--surface)); box-shadow: inset 0 0 0 1px var(--card-line, var(--line)); }
+.arc-tile h3 { margin: 8px 0 0; font-size: 1.02rem; }
+.arc-tag { margin: 0; color: var(--muted); font-size: 0.78rem; line-height: 1.3; }
+.arc-tile .arc-best { flex: 1; margin: 2px 0 8px; }
+.arc-tile .btn { width: 100%; }
+.arc-tile .sd-levels { grid-template-columns: 1fr; gap: 6px; margin-top: 6px; }
 .arc-best { font-size: 0.82rem; color: var(--muted); }
 .arc-best b { color: var(--text); font-variant-numeric: tabular-nums; }
 .arc-art { width: 64px; height: 64px; border-radius: 16px; background: #120f1c; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08); }
@@ -1388,12 +1391,63 @@ label.steps-pick select { width: auto; min-height: 36px; padding: 0 10px; font-s
 @keyframes gm-hint { 0%, 70%, 100% { transform: none; } 80% { transform: scale(1.15) rotate(-6deg); } 90% { transform: scale(1.15) rotate(6deg); } }
 @keyframes gm-pts { from { transform: translateY(6px); opacity: 0; } to { transform: none; opacity: 1; } }
 
+/* Serpent (js/snake.js) : la grille est un dessin redessiné à chaque pas ; on
+   glisse le doigt dessus, ou on touche les flèches. */
+.sn-board { width: min(100%, 420px); aspect-ratio: 1; margin: 0 auto; border-radius: 12px; touch-action: none; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07), 0 18px 40px -24px rgb(0 0 0 / 0.9); }
+.sn-board svg, .sn-art svg { display: block; width: 100%; height: 100%; }
+.sn-art { padding: 6px; }
+.sn-pad { display: grid; grid-template-columns: repeat(3, 64px); grid-template-rows: repeat(2, 50px); justify-content: center; gap: 6px; }
+.sn-key { padding: 0; border: 0; border-radius: 14px; background: var(--card, var(--surface)); color: var(--text); font-size: 1.15rem; box-shadow: inset 0 0 0 1px var(--card-line, var(--line)), inset 0 -3px 0 rgb(0 0 0 / 0.15); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.sn-key:active { transform: translateY(2px); }
+.sn-haut { grid-column: 2; grid-row: 1; } .sn-gauche { grid-column: 1; grid-row: 2; } .sn-bas { grid-column: 2; grid-row: 2; } .sn-droite { grid-column: 3; grid-row: 2; }
+
+/* Paires (js/pairs.js) : des cartes qui se retournent (sauf si on réduit les animations) */
+.pr-grid { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 8px; width: min(100%, 440px); margin: 0 auto; perspective: 800px; }
+.pr-card { aspect-ratio: 1; min-width: 0; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.pr-in { position: relative; display: block; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.35s ease; }
+.pr-card.up .pr-in { transform: rotateY(180deg); }
+.pr-back, .pr-face { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 12px; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+.pr-back { background: repeating-linear-gradient(45deg, #2a1f45 0 6px, #241a3c 6px 12px); box-shadow: inset 0 0 0 1.5px rgb(255 210 122 / 0.5); }
+.pr-face { transform: rotateY(180deg); background: var(--pc); color: #1b1410; box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.18); }
+.pr-face svg { width: 52%; height: auto; }
+.pr-card.found { cursor: default; }
+.pr-card.found .pr-face { box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.18), 0 0 0 2px #fff7e0; }
+.pr-art { display: flex; gap: 4px; padding: 10px 7px; }
+.pr-mini { flex: 1; display: grid; place-items: center; border-radius: 6px; background: repeating-linear-gradient(45deg, #2a1f45 0 4px, #241a3c 4px 8px); }
+.pr-mini.up { background: var(--pc); color: #1b1410; }
+.pr-mini svg { width: 80%; height: auto; }
+@media (prefers-reduced-motion: reduce) { .pr-in { transition: none; } }
+
+/* Code secret (js/code.js) : une forme par couleur, ● bien placée, ○ mal placée */
+.cd-board { display: grid; gap: 5px; }
+.cd-row { display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 10px; padding: 4px 10px; border-radius: 14px; background: var(--card, var(--surface)); }
+.cd-row.now { box-shadow: inset 0 0 0 1.5px var(--accent); }
+.cd-row.later { opacity: 0.4; }
+.cd-n { color: var(--muted); font: 700 0.72rem/1 var(--sans); text-align: center; }
+.cd-pegs { display: flex; gap: 8px; }
+.peg { flex: none; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%; background: var(--pg, transparent); box-shadow: inset 0 3px 0 rgb(255 255 255 / 0.3), inset 0 -3px 0 rgb(0 0 0 / 0.25); }
+.peg.empty { background: rgb(128 128 128 / 0.2); box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.3); }
+.peg.p1 { --pg: #9fd08f; } .peg.p2 { --pg: #7cc4e4; border-radius: 0; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); } .peg.p3 { --pg: #e98a6b; border-radius: 24%; }
+.peg.p4 { --pg: #c3a3e0; border-radius: 0; clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%); } .peg.p5 { --pg: #e7c76b; border-radius: 0; clip-path: polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%); }
+.peg.p6 { --pg: #ef8fc0; border-radius: 0; clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 92%, 50% 70%, 21% 92%, 32% 57%, 2% 35%, 39% 35%); }
+button.peg { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.cd-pins { display: grid; grid-template-columns: repeat(2, 9px); gap: 3px; min-width: 21px; }
+.cd-pins i { width: 9px; height: 9px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--muted); opacity: 0.6; }
+.cd-pins i.b { background: var(--text); box-shadow: none; opacity: 1; }
+.cd-pins i.w { box-shadow: inset 0 0 0 2px var(--text); opacity: 1; }
+.cd-palette { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.cd-palette .peg { width: 44px; height: 44px; }
+.cd-palette .peg:disabled { opacity: 0.35; cursor: default; }
+.cd-secret { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--muted); font-weight: 700; }
+.cd-art { display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; gap: 3px; padding: 8px 6px; }
+.cd-art .peg { width: 100%; height: auto; aspect-ratio: 1; }
+
 /* Sudoku (js/sudoku.js) : traits épais autour des carrés de 3 × 3, chiffres
    donnés en gras, les tiens en couleur, les faux en rouge, notes en petit. */
 .sd-art { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 9px; font: 800 0.72rem/1 var(--sans); color: #f4eee7; }
 .sd-art i { display: grid; place-items: center; border-radius: 4px; background: rgb(255 255 255 / 0.08); font-style: normal; }
 .sd-levels { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.arc-card .sd-levels .btn { grid-column: auto; padding-inline: 6px; }
+
 .sd-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 1px; width: min(100%, 440px); aspect-ratio: 1; margin: 0 auto; padding: 2px; border-radius: 12px; background: var(--muted); }
 .sd { --cell: linear-gradient(var(--card, transparent), var(--card, transparent)), var(--bg); display: grid; place-items: center; min-width: 0; min-height: 0; padding: 0; border: 0; background: var(--cell); color: var(--accent); font: 650 clamp(1rem, 5vw, 1.35rem)/1 var(--sans); font-variant-numeric: tabular-nums; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .sd:first-child { border-top-left-radius: 10px; } .sd:nth-child(9) { border-top-right-radius: 10px; } .sd:nth-child(73) { border-bottom-left-radius: 10px; } .sd:last-child { border-bottom-right-radius: 10px; }

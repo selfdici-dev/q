@@ -514,8 +514,8 @@ export const HELP = {
   jeux: {
     title: 'Comment marche l’Arcade',
     lines: [
-      'Blocs : glisse les pièces sur la grille. Une ligne ou une colonne pleine disparaît et rapporte des points.',
-      'Calcul éclair : 60 s, une réponse sur quatre. 3 bonnes d’affilée : ça monte ; une erreur : ça redescend.',
+      'Blocs : glisse les pièces sur la grille. Cristaux : échange deux voisins pour en aligner trois.',
+      'Calcul éclair : 60 s, une réponse sur quatre. Sudoku : un chiffre par ligne, colonne et carré.',
       'Tes records restent sur le téléphone, et ils comptent pour débloquer des décors de la Salle.',
     ],
   },

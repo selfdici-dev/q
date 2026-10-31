@@ -40,12 +40,14 @@ Sur chaque onglet, le petit « ? » (à côté du titre, ou de la date sur Jour)
 
 ## Arcade
 
-Dans la Salle, une borne d’arcade (marquée « Jeux ») ouvre deux jeux faits pour Cap, sans pub, sans internet et sans son, pour occuper tes mains :
+Dans la Salle, une borne d’arcade (marquée « Jeux ») ouvre quatre jeux faits pour Cap, sans pub, sans internet et sans son, pour occuper tes mains :
 
 - **Blocs** : glisse les pièces sur une grille de 8 × 8 ; une ligne ou une colonne pleine disparaît. Plusieurs lignes d’un coup, ou des lignes à plusieurs coups de suite, rapportent plus. La partie continue tant qu’une pièce rentre, et reprend là où tu l’as laissée.
 - **Calcul éclair** : 60 secondes de calcul utile (soldes, pourcentages, intérêts, prix à l’unité, tables), une réponse parmi quatre ; trois bonnes d’affilée et ça monte d’un niveau, une erreur et ça redescend.
+- **Cristaux** : échange deux cristaux voisins (en les touchant l’un après l’autre, ou en glissant) pour en aligner trois de la même couleur ; ils éclatent, ceux du dessus tombent et ça peut s’enchaîner (points multipliés). Une ligne de quatre laisse un cristal éclair qui, en éclatant, emporte toute sa ligne et sa colonne. Un niveau : un score à atteindre en 20 coups (1 000 points au niveau 1, 400 de plus à chaque niveau), les coups restants rapportent un bonus. Chaque couleur a sa forme (rond, losange, carré, hexagone, pentagone) ; après 6 s sans jouer, un coup possible frétille.
+- **Sudoku** : des grilles fabriquées dans l’appli, à solution unique, en 3 niveaux (38, 31 ou 26 chiffres donnés). Touche une case puis un chiffre ; un chiffre faux s’affiche en rouge et compte une erreur ; mode notes pour les chiffres possibles (ils s’effacent tout seuls quand tu places le bon) ; un chiffre placé 9 fois se grise. Le temps compté est le temps actif (une pause de plus d’une minute ne compte pas).
 
-Tes records (meilleur score, lignes effacées, meilleure série) restent sur le téléphone, dans la sauvegarde.
+Tes records (meilleur score, lignes effacées, meilleure série, niveau des Cristaux, grilles résolues et meilleurs temps) restent sur le téléphone, dans la sauvegarde ; une partie de Blocs, de Cristaux ou de Sudoku en cours reprend là où tu l’as laissée.
 
 ## Décors de la Salle
 

@@ -69,7 +69,11 @@ function freshState() {
     records: {},
     srs: {},
     myCards: [],
-    games: { blocs: { best: 0, plays: 0, lines: 0, cur: null }, calc: { best: 0, plays: 0, streak: 0 } }, // records de la borne d'arcade
+    // records de la borne d'arcade
+    games: {
+      blocs: { best: 0, plays: 0, lines: 0, cur: null }, calc: { best: 0, plays: 0, streak: 0 },
+      cristaux: { level: 1, top: 0, best: 0, plays: 0, cur: null }, sudoku: { solved: { facile: 0, moyen: 0, difficile: 0 }, best: {}, plays: 0, cur: null },
+    },
     ui: { moneyTab: 'parcours', meTab: 'programme', lesson: null, lastLevel: 1 },
     timers: { pomo: { mode: 'work', endAt: null, remaining: POMO_WORK, label: '' }, urge: { endAt: null } },
   };
@@ -316,7 +320,7 @@ async function keepAwake(on) {
 
 // ---------- vues ----------
 
-// La borne d'arcade de la Salle (#jeux) : Blocs et Calcul éclair.
+// La borne d'arcade de la Salle (#jeux) : Blocs, Cristaux, Calcul éclair, Sudoku.
 const arcade = createArcade({
   get state() { return state; },
   save: () => save(),

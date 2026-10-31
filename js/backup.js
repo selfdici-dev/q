@@ -36,6 +36,7 @@ function checkDay(key, d) {
   for (const f of ['workouts', 'snacks']) if (d[f] !== undefined && !Array.isArray(d[f])) return `liste « ${f} » illisible le ${key}`;
   if (d.meals !== undefined && (!Array.isArray(d.meals) || d.meals.some((m) => !isObj(m) || typeof m.f !== 'string' || ![m.n, m.kcal, m.p].every(isNum)))) return `repas du ${key} illisibles`;
   if (d.creatine !== undefined && typeof d.creatine !== 'boolean') return `valeur « creatine » invalide le ${key}`;
+  if (d.routine !== undefined && (!Array.isArray(d.routine) || d.routine.some((x) => typeof x !== 'string'))) return `routine du ${key} illisible`;
   return null;
 }
 

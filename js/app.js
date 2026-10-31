@@ -8,7 +8,7 @@ import {
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl, baseName,
-  DAY_PLAN, FOOD_COLORS, FOOD_TREATS, SNACKS, SNACK_TEST, TEA_TIPS,
+  DAY_PLAN, FOOD_COLORS, FOOD_TREATS, SNACKS, SNACK_TEST, TEA_TIPS, CHOCOLATE,
   WARMUP, PROTEIN_GRAMS, PROTEIN_CHIPS, FOODS, FOOD_CATS, PHASES, MILESTONES, BOOKS, APPS, HELP,
 } from './data.js';
 import { ALL_LESSONS } from './finance-data.js';
@@ -23,6 +23,7 @@ import { icon } from './icons.js';
 import { roomSVG } from './room.js';
 import { hubSVG, hubLayout, arcadeZone, HUB, covers } from './gym.js';
 import { decorStats, decorStatus, decorToShow, decorThumb, newDecors } from './decors.js';
+import { ROUTINES, routineStatus, toggleRoutine, morningTime, wakeAt8 } from './routines.js';
 import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS } from './avatar.js';
 import { treeSVG, seedOf } from './tree.js';
 
@@ -40,7 +41,7 @@ function freshState() {
     settings: {
       startDate: todayKey(),
       bedtimeTarget: '23:30',
-      wakeTarget: '08:30', // réveil visé au bout du réveil progressif
+      wakeTarget: '08:00', // réveil visé au bout du réveil progressif (8 h, 8 h 30 au plus tard)
       wakePlanStart: null, // jour du 1er réveil visé (null : plan pas lancé)
       screenTarget: 180,
       weightTarget: 70,
@@ -89,6 +90,7 @@ function load() {
       ui: { ...base.ui, ...s.ui, lesson: null },
       games: { ...base.games, ...s.games },
     };
+    st.settings = wakeAt8(st.settings); // réveil visé à 8 h, une seule fois
     // Données d'avant la v2 : on fige la liste d'habitudes des jours passés.
     const ids = st.habits.map((h) => h.id);
     for (const d of Object.values(st.days)) d.ids ??= ids;
@@ -670,6 +672,12 @@ function planItems(today) {
   const wo = WORKOUTS.find((w) => w.id === WEEK_PLAN[fromKey(today).getDay()]);
   const done = d.workouts ?? [];
   const items = [];
+  const rm = routineStatus(d.routine, 'matin');
+  const matin = {
+    id: 'matin', ico: icon('sun'), title: ROUTINES.matin.title, sub: rm.complete ? 'Faite' : rm.left.map((x) => x.short).join(' · '),
+    done: rm.complete, past: !morningTime(nowHHMM()), go: { label: 'Cocher', act: 'routine', id: 'matin' },
+  };
+  if (!matin.past) items.push(matin);
   items.push({
     id: 'seance', ico: icon('dumbbell'), title: `Séance ${wo.name.split(' · ')[1] ?? wo.name}`, sub: `≈ ${workoutMinutes(wo)} min · niveau ${state.settings.level}`,
     done: wo.id === 'M' ? done.length > 0 : done.some((x) => x !== 'M'),
@@ -690,6 +698,13 @@ function planItems(today) {
     items.push({ id: 'revision', ico: icon('cards'), title: due ? `Révisions : ${due} carte${due > 1 ? 's' : ''}` : 'Révisions à jour', sub: '≈ 5 min', done: due === 0, go: { label: due ? 'Réviser' : 'Cartes', href: '#revision' } });
   }
   items.push({ id: 'lecture', ico: icon('book-open'), title: 'Lire 10 pages', sub: 'Moi > Livres pour choisir', done: Boolean(d.read), go: { label: d.read ? 'Annuler' : 'Fait', act: 'read-toggle' } });
+  if (matin.past) items.push(matin);
+  // la routine du soir passe en « Maintenant » une heure avant le coucher visé
+  const rs = routineStatus(d.routine, 'soir');
+  items.push({
+    id: 'coucher', ico: icon('moon'), title: ROUTINES.soir.title, sub: rs.complete ? 'Faite' : rs.left.map((x) => (x.id === 'lit' ? `au lit à ${clockFr(bedGoal(state, today))}` : x.short)).join(' · '),
+    done: rs.complete, go: { label: 'Cocher', act: 'routine', id: 'soir' },
+  });
   return items;
 }
 
@@ -707,9 +722,10 @@ const nowHHMM = () => new Date().toTimeString().slice(0, 5);
 function planCard(today) {
   const items = planItems(today);
   const n = items.filter((x) => x.done).length;
-  const now = nextAction(items, nowHHMM(), null);
+  // la routine du matin ne passe plus devant le reste après midi
+  const now = nextAction(items.filter((x) => !x.past), nowHHMM(), bedGoal(state, today));
   // Le gros bouton dit « Lancer la séance », pas juste « Lancer ».
-  const bigLabel = { seance: 'Lancer la séance', lecon: 'Ouvrir la leçon', focus: 'Aller au focus', lecture: 'J’ai lu 10 pages', proteines: '+1 portion', coucher: 'Téléphone posé' };
+  const bigLabel = { seance: 'Lancer la séance', lecon: 'Ouvrir la leçon', focus: 'Aller au focus', lecture: 'J’ai lu 10 pages', proteines: '+1 portion', matin: 'Cocher ma routine', coucher: 'Cocher ma routine' };
   return `<section class="card plan">
     <div class="card-head"><h2>Ton plan du jour</h2><span class="pill">${n}/${items.length}</span></div>
     <div class="bar">${tweenBar('plan', (n / items.length) * 100)}</div>
@@ -1009,6 +1025,18 @@ function gymHub(planned, done, lvl) {
   </section>`;
 }
 
+// Une routine : ses gestes en gros boutons à cocher, hors chaîne.
+function showRoutine(which) {
+  const today = todayKey();
+  const done = state.days[today]?.routine ?? [];
+  openSheet(ROUTINES[which].title, `<ul class="routine-list">${ROUTINES[which].items.map((x) => {
+    const on = done.includes(x.id);
+    const label = x.id === 'lit' ? `Au lit à ${clockFr(bedGoal(state, today))}` : x.label;
+    return `<li><button class="routine-item${on ? ' on' : ''}" data-act="routine-toggle" data-w="${which}" data-id="${x.id}" aria-pressed="${on}"><span class="routine-box" aria-hidden="true">${icon('check')}</span><span class="routine-text"><strong>${esc(label)}</strong><small>${esc(x.sub)}</small></span></button></li>`;
+  }).join('')}</ul>
+    <p class="hint">Hors chaîne : une aide pour bien commencer et bien finir ta journée, pas une obligation.</p>`);
+}
+
 // Les décors de ta salle : ceux débloqués s'installent d'une touche, les
 // autres montrent ce qu'il reste à faire (séances, niveau, records d'arcade).
 function showDecors() {
@@ -1098,6 +1126,12 @@ function viewFood() {
     <p class="hint">${esc(SNACK_TEST)}</p>
     ${SNACKS.map((g) => `<p class="apps-cat">${esc(g.title)}</p><ul class="tight">${g.items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>`).join('')}
     <p class="hint">Une collation prévue (comme celle de 16 h) n’est pas un grignotage : ta case reste validée.</p>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>${icon('refresh')}Remplacer le chocolat</h2></div>
+    <p class="muted">${esc(CHOCOLATE.intro)}</p>
+    <ul class="tight">${CHOCOLATE.swaps.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+    <p class="hint">${esc(CHOCOLATE.plan)}</p>
   </section>
   <section class="card">
     <div class="card-head"><h2>${icon('cup')}Le thé</h2></div>
@@ -2055,6 +2089,22 @@ const actions = {
   },
   decors() {
     showDecors();
+  },
+  routine(el) {
+    showRoutine(el.dataset.id);
+  },
+  'routine-toggle'(el) {
+    const which = el.dataset.w;
+    const d = day(todayKey());
+    const before = routineStatus(d.routine, which).complete;
+    d.routine = toggleRoutine(d.routine, el.dataset.id);
+    save();
+    const on = d.routine.includes(el.dataset.id);
+    el.classList.toggle('on', on);
+    el.setAttribute('aria-pressed', String(on));
+    if (on) navigator.vibrate?.(10);
+    render();
+    if (!before && routineStatus(d.routine, which).complete) celebrate(`${ROUTINES[which].title} faite`);
   },
   'decor-pick'(el) {
     const d = decorStatus(decorStats(state)).find((x) => x.id === el.dataset.id);

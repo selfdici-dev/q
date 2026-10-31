@@ -6,6 +6,7 @@ import {
   wakePlan, bedGoal,
 } from './logic.js';
 import { WORKOUTS, WEEK_PLAN, PROTEIN_GRAMS } from './data.js';
+import { routineStatus } from './routines.js';
 
 const plural = (n, word) => `${n} ${word}${n > 1 ? 's' : ''}`;
 const num = (v) => Number(v).toLocaleString('fr-FR', { maximumFractionDigits: 1 });
@@ -31,6 +32,15 @@ function sessionLine(planned, done) {
   return `Séance : pas faite (prévue : ${workoutName(planned)})`;
 }
 
+// Routines du jour : ce qui est fait, matin et soir.
+function routineLine(done) {
+  const part = (w, name) => {
+    const r = routineStatus(done, w);
+    return `${name} ${r.done}/${r.total}${r.complete ? ' ✓' : ''}`;
+  };
+  return `Routines : ${part('matin', 'matin')} · ${part('soir', 'soir')}`;
+}
+
 export function daySummary(state, key) {
   const d = state.days[key] ?? {};
   const st = dayStatus(state, key);
@@ -49,6 +59,7 @@ export function daySummary(state, key) {
     `Protéines : ${proteinGrams(d)}/${PROTEIN_GRAMS} g`,
     ...(d.meals?.length ? [`Repas notés : ≈ ${mealTotals(d.meals).kcal} kcal (objectif ${kcalTarget(d.steps)})`] : []),
     ...(state.settings?.creatine ? [`Créatine : ${d.creatine ? 'prise ✓' : 'pas encore prise'}`] : []),
+    routineLine(d.routine),
     `Grignotages : ${snacks.length ? `${snacks.length} (${snacks.map((s) => `${s.time} ${s.trigger}`).join(', ')})` : 'aucun'}${resisted ? ` · ${plural(resisted, 'envie')} résistée${resisted > 1 ? 's' : ''}` : ''}`,
     `Coucher visé ce soir : ${bedGoal(state, key)}`,
     ...wakeLines(state, key),
@@ -114,6 +125,7 @@ export function weekSummary(state, first, today) {
     `Protéines : ${Math.round(protein)} g/jour en moyenne · objectif (${PROTEIN_GRAMS} g) atteint ${proteinDays} jour${proteinDays > 1 ? 's' : ''} sur ${n}`,
     ...(eaten.length ? [`Repas notés : ≈ ${Math.round(eaten.reduce((s, [k]) => s + k, 0) / eaten.length)} kcal/jour en moyenne sur ${plural(eaten.length, 'jour')} (objectif ≈ ${Math.round(eaten.reduce((s, [, t]) => s + t, 0) / eaten.length)})`] : []),
     ...(state.settings?.creatine ? [`Créatine : ${days.filter((x) => x.d.creatine === true).length}/${n} jours`] : []),
+    ...(days.some((x) => x.d.routine?.length) ? [`Routines faites : matin ${days.filter((x) => routineStatus(x.d.routine, 'matin').complete).length}/${n} jours · soir ${days.filter((x) => routineStatus(x.d.routine, 'soir').complete).length}/${n} jours`] : []),
     `Grignotages : ${snacks.length || 'aucun'}${top ? ` · déclencheur n° 1 : ${top[0]} (${top[1]} fois)` : ''}${resisted ? ` · ${plural(resisted, 'envie')} résistée${resisted > 1 ? 's' : ''}` : ''}`,
     `Coucher : visé ${bedGoal(state, end)}${beds.length ? ` · réel en moyenne ${minutesToHHMM(avg(beds))} (${plural(beds.length, 'nuit')} notée${beds.length > 1 ? 's' : ''})` : ''}${sleeps.length ? ` · sommeil moyen ${hours(avg(sleeps))}` : ''}`,
     ...wakeLines(state, end),

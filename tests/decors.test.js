@@ -20,9 +20,9 @@ test('décors : la salle d’abord, ouverte ; les autres à débloquer, chacun s
   assert.equal(DECORS[0].id, 'salle');
   assert.equal(DECORS[0].need, null);
   assert.equal(new Set(DECORS.map((d) => d.id)).size, DECORS.length);
-  assert.ok(DECORS.length >= 8, 'beaucoup de décors');
+  assert.ok(DECORS.length >= 12, 'beaucoup de décors');
   for (const d of DECORS.slice(1)) {
-    assert.ok(['workouts', 'level', 'blocs', 'calc'].includes(d.need.kind), d.id);
+    assert.ok(['workouts', 'level', 'blocs', 'calc', 'gems', 'sudoku', 'routines'].includes(d.need.kind), d.id);
     assert.ok(d.need.n > 0, d.id);
     assert.ok(d.name && d.desc, d.id);
   }
@@ -45,6 +45,14 @@ test('décors : débloqués au seuil exact, la progression s’affiche, les chif
   assert.equal(at({ blocs: 3000 }, 'dojo').unlocked, true);
   assert.equal(at({ calc: 30 }, 'toit').unlocked, true);
   assert.equal(at({ calc: 29 }, 'toit').label, '29 / 30 points au Calcul éclair');
+  assert.equal(at({ gems: 7 }, 'neon').label, 'niveau 7 / 8 aux Cristaux');
+  assert.equal(at({ gems: 8 }, 'neon').unlocked, true);
+  assert.equal(at({ sudoku: 9 }, 'ocean').label, '9 / 10 sudokus résolus');
+  assert.equal(at({ sudoku: 10 }, 'ocean').unlocked, true);
+  assert.equal(at({ routines: 19 }, 'foret').label, '19 / 20 matins avec ta routine');
+  assert.equal(at({ routines: 20 }, 'foret').unlocked, true);
+  assert.equal(at({ workouts: 59 }, 'arene').unlocked, false);
+  assert.equal(at({ workouts: 60 }, 'arene').unlocked, true);
   // au-delà du seuil, la barre reste pleine ; rien ou n'importe quoi : zéro
   assert.equal(at({ workouts: 99 }, 'grec').pct, 1);
   for (const junk of [{}, { workouts: -5 }, { workouts: 'abc' }, { workouts: NaN }, undefined]) {
@@ -80,16 +88,21 @@ test('décors : tes chiffres viennent de tes données (séances sans M, une fois
       '2026-10-02': { workouts: ['B'] },
       '2026-10-03': {},
     },
-    games: { blocs: { best: 2500, cur: { score: 3100, over: false } }, calc: { best: 31 } },
+    games: { blocs: { best: 2500, cur: { score: 3100, over: false } }, calc: { best: 31 }, cristaux: { top: 8, level: 9 }, sudoku: { solved: { facile: 6, moyen: 3, difficile: 1 } } },
   };
+  state.days['2026-10-01'].routine = ['eau', 'douche', 'sourcils', 'cheveux']; // un matin complet
+  state.days['2026-10-02'].routine = ['eau']; // pas complet
   const stats = decorStats(state);
   assert.equal(stats.workouts, 2);
   assert.equal(stats.blocs, 3100); // la partie en cours compte déjà
   assert.equal(stats.calc, 31);
   assert.equal(stats.level, 2); // 4 séances × 30 XP = 120 XP
-  assert.deepEqual(decorStatus(stats).filter((d) => d.unlocked).map((d) => d.id), ['salle', 'dojo', 'toit']);
+  assert.equal(stats.gems, 8); // niveaux réussis aux Cristaux
+  assert.equal(stats.sudoku, 10);
+  assert.equal(stats.routines, 1);
+  assert.deepEqual(decorStatus(stats).filter((d) => d.unlocked).map((d) => d.id), ['salle', 'dojo', 'toit', 'ocean', 'neon']);
   // sans jeux ni jours : tout à zéro, niveau 1
-  assert.deepEqual(decorStats({ settings: {}, habits: [], days: {} }), { workouts: 0, level: 1, blocs: 0, calc: 0 });
+  assert.deepEqual(decorStats({ settings: {}, habits: [], days: {} }), { workouts: 0, level: 1, blocs: 0, calc: 0, gems: 0, sudoku: 0, routines: 0 });
 });
 
 test('décors : chaque salle se dessine en entier, avec ses postes, sa borne et la séance affichée', () => {

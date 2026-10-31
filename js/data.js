@@ -278,6 +278,22 @@ export const SNACKS = [
     'Vraiment faim : un bol de popcorn nature fait maison (120 kcal)',
   ] },
 ];
+// Remplacer le chocolat de tous les jours : on garde le moment (après le
+// repas, l'après-midi), on change ce qu'on mange ; se priver d'un coup fait
+// plus craquer (Westenhoefer 1999). Le skyr cale mieux que le chocolat
+// (Ortinau 2014, voir SNACKS).
+export const CHOCOLATE = {
+  intro: 'Garde le moment où tu prends ton chocolat, change seulement ce que tu manges : c’est plus facile que de t’en priver.',
+  swaps: [
+    'La mousse au cacao : 150 g de skyr, 1 cuillère de cacao non sucré, 1 cuillère à café de miel (130 kcal, 16 g de protéines).',
+    'Un chocolat chaud maison : un bol de lait demi-écrémé et 1 cuillère de cacao non sucré (130 kcal).',
+    'Une banane coupée en rondelles et mise au congélateur : elle se mange comme une glace (100 kcal).',
+    '2 dattes et 5 amandes, pour le sucré qui croque.',
+    'Envie du vrai goût : 2 carrés de chocolat noir à 85 %, à laisser fondre, après un repas (60 kcal).',
+    'Après le repas, un thé à la menthe ou un chewing-gum sans sucre : le signal que c’est fini.',
+  ],
+  plan: 'Semaine 1 : remplace-le un jour sur deux. Semaine 2 : tous les jours. Ensuite, le chocolat au lait redevient un plaisir prévu, 2 ou 3 fois par semaine.',
+};
 export const SNACK_TEST = 'Faim ou envie ? Demande-toi si tu mangerais une pomme. Non : c’est l’ennui ou l’écran. Un verre d’eau, 5 minutes dehors, et attends 10 minutes.';
 
 // Le thé : 0 kcal sans sucre, mais de la caféine (≈ 45 mg la tasse de noir,
@@ -491,7 +507,7 @@ export const HELP = {
     title: 'Comment marche Jour',
     lines: [
       'Fais au moins le minimum de chaque habitude : la journée est validée et ta chaîne 🔥 avance.',
-      'Ton plan du jour te dit quoi faire ensuite. Le soir, copie ton bilan pour Claude.',
+      'Ton plan du jour te guide, routines du matin et du soir comprises. Le soir, copie ton bilan pour Claude.',
       'Un jour raté ? Jamais deux fois de suite. Envie d’ouvrir Snap ? « J’attends 10 min ».',
     ],
   },

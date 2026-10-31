@@ -94,3 +94,16 @@ test('créatine : une case vraie ou fausse, rien d’autre', () => {
   assert.equal(r.ok, false);
   assert.match(r.error, /creatine/);
 });
+
+test('routines : une liste de gestes (des mots), rien d’autre', () => {
+  const ok = good();
+  ok.days['2026-09-02'].routine = ['eau', 'douche', 'lit'];
+  assert.equal(validateBackup(ok).ok, true);
+  for (const junk of ['eau', [1, 2], { eau: true }]) {
+    const bad = good();
+    bad.days['2026-09-02'].routine = junk;
+    const r = validateBackup(bad);
+    assert.equal(r.ok, false);
+    assert.match(r.error, /routine/);
+  }
+});

@@ -124,3 +124,15 @@ test('bilans : les repas notés (calories du jour, et moyenne de la semaine)', (
   const week = weekSummary(st, S, '2026-10-07');
   assert.match(week, /Repas notés : ≈ 870 kcal\/jour en moyenne sur 2 jours \(objectif ≈ 1930\)/);
 });
+
+test('bilans : les routines du matin et du soir', () => {
+  const st = base();
+  st.days[S] = { habits: { a: 1 }, routine: ['eau', 'douche', 'sourcils', 'cheveux', 'vetements'] };
+  assert.ok(daySummary(st, S).split('\n').includes('Routines : matin 4/4 ✓ · soir 1/2'));
+  st.days['2026-10-02'] = { habits: {} };
+  assert.ok(daySummary(st, '2026-10-02').split('\n').includes('Routines : matin 0/4 · soir 0/2'));
+  st.days['2026-10-03'] = { routine: ['vetements', 'lit', 'eau'] };
+  assert.ok(weekSummary(st, S, '2026-10-08').split('\n').includes('Routines faites : matin 1/7 jours · soir 1/7 jours'));
+  // une semaine sans routine cochée : pas de ligne
+  assert.ok(!weekSummary(base(), S, '2026-10-08').includes('Routines'));
+});

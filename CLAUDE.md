@@ -16,7 +16,9 @@ L'utilisateur est débutant : explique simplement, en français.
 - `js/tree.js` : arbre du focus qui pousse pendant la session (unique par session, calculé).
 - `js/room.js` : décor de la salle vue de face (lecteur de séance, entrée) ; `js/gym.js` :
   la salle de l'onglet Salle, en maquette vue de dessus façon jeu vidéo (une plateforme
-  par séance) ; `js/icons.js` : icônes au trait.
+  par séance) ; `js/iso.js` : sa projection et ses formes de base ; `js/decors.js` : ses
+  décors à débloquer (salle, temple grec, grand hall…), choix dans `state.settings.decor` ;
+  `js/icons.js` : icônes au trait.
 - `js/games.js` : règles des jeux de la borne d'arcade (Blocs, Calcul éclair), logique pure ;
   `js/arcade.js` : leur écran (`#jeux`, ouvert depuis la borne de la Salle), records dans `state.games`.
 - `js/drawings.js` : dessins au crayon des exercices (corps en 3D, muscles travaillés

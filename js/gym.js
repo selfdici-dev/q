@@ -1,6 +1,7 @@
 // La salle de l'onglet Salle, en maquette vue de dessus, façon jeu vidéo :
-// une pièce en biais (isométrique) aux murs sombres (grille et logo de cuivre,
-// miroir, écran qui affiche la séance choisie, bandes LED au pied des murs),
+// une pièce en biais (isométrique) habillée du décor choisi (decors.js : la
+// salle aux murs sombres, le temple grec, le grand hall…, chacun avec son
+// écran ou sa plaque qui affiche la séance choisie), une borne d'arcade,
 // et une plateforme par séance, chacune avec son matériel et son bonhomme :
 // P à la barre de traction, C au sac de boxe, M sur son tapis de yoga, A sur
 // son tapis avec la roue, B sur ses parallettes. Le poste choisi s'allume
@@ -10,31 +11,12 @@
 // tests/gym.test.js.
 import { figureFor, figureSVG, focusFor, solve, barAt, VIEW } from './figures.js';
 import { WORKOUTS } from './data.js';
+import { HUB, HW, P, r1, pts, poly, flat, box } from './iso.js';
+import { decorArt } from './decors.js';
 
-export const HUB = { w: 360, h: 530 };
+export { HUB };
 // couleurs des séances sur le fond sombre de la salle
 export const COLORS = { A: '#9fd08f', B: '#7cc4e4', C: '#e98a6b', M: '#c3a3e0', P: '#e7c76b' };
-
-// La pièce, vue d'un peu haut, en grand (elle remplit l'écran, ses coins sortent
-// du cadre : on est dedans) : N × N dalles de C px, murs de HW dalles de haut ;
-// K : aplatissement du sol, KZ : des hauteurs ; O : le coin du fond à l'écran.
-// P(X, Y, Z) : un point de la pièce (en dalles) à l'écran. En bas, une bande
-// libre pour la séance choisie et son bouton (posés par l'appli).
-const N = 7, C = 27, HW = 3.0, K = 0.6, KZ = 0.85;
-const O = [180, 72 + HW * C * KZ];
-const P = (X, Y, Z = 0) => [O[0] + (X - Y) * C, O[1] + (X + Y) * C * K - Z * C * KZ];
-const SKEW = Math.round(Math.atan(K) * 180 / Math.PI * 100) / 100; // pente du mur de droite
-const r1 = (v) => Math.round(v * 10) / 10;
-const pts = (list) => list.map((p) => `${r1(p[0])} ${r1(p[1])}`).join('L');
-const poly = (list, fill, extra = '') => `<path d="M${pts(list)}Z" fill="${fill}"${extra}/>`;
-const flat = (X, Y, Z, w, d, fill, extra = '') => poly([P(X, Y, Z), P(X + w, Y, Z), P(X + w, Y + d, Z), P(X, Y + d, Z)], fill, extra);
-// pavé : coin (X, Y, Z), tailles w (X), d (Y), h (Z) ; faces : dessus, gauche, droite
-function box(X, Y, Z, w, d, h, [top, left, right]) {
-  const t = [P(X, Y, Z + h), P(X + w, Y, Z + h), P(X + w, Y + d, Z + h), P(X, Y + d, Z + h)];
-  const l = [P(X, Y + d, Z), P(X + w, Y + d, Z), P(X + w, Y + d, Z + h), P(X, Y + d, Z + h)];
-  const r = [P(X + w, Y, Z), P(X + w, Y + d, Z), P(X + w, Y + d, Z + h), P(X + w, Y, Z + h)];
-  return `${poly(l, left)}${poly(r, right)}${poly(t, top)}`;
-}
 
 // Postes : séance, exercice montré, coin (X, Y) de la plateforme (S × S
 // dalles, PH de haut), échelle du bonhomme. Au fond P, au milieu M, A et C,
@@ -146,12 +128,6 @@ function bag(id, p, st) {
     + `${band(top + (bottom - top) * 0.12)}${band(bottom - (bottom - top) * 0.2)}</g>`;
 }
 
-// Gants de boxe accrochés au mur.
-function gloves(x, y, s) {
-  const g = (dx, rot) => `<g transform="translate(${r1(x + dx * s)} ${r1(y)}) rotate(${rot})"><path d="M${r1(-3 * s)} 0c0 ${r1(-4 * s)} ${r1(6 * s)} ${r1(-4 * s)} ${r1(6 * s)} 0v${r1(5 * s)}c0 ${r1(2 * s)} ${r1(-6 * s)} ${r1(2 * s)} ${r1(-6 * s)} 0z" fill="#9b3b2a"/><rect x="${r1(-2.6 * s)}" y="${r1(5 * s)}" width="${r1(5.2 * s)}" height="${r1(2.4 * s)}" rx="${r1(0.6 * s)}" fill="#efe7dd"/></g>`;
-  return `<g class="hub-gloves"><path d="M${r1(x - 4 * s)} ${r1(y - 3 * s)}L${r1(x)} ${r1(y - 6 * s)}L${r1(x + 4 * s)} ${r1(y - 3 * s)}" stroke="#8a7a6b" stroke-width="${r1(0.5 * s)}" fill="none"/>${g(-3.2, 8)}${g(3.2, -8)}</g>`;
-}
-
 // Porte-élastiques : un montant et tes 4 élastiques (noir, violet, vert, orange).
 function bands(x, y, s) {
   const loops = ['#1b1a1a', '#6d4bb3', '#4f8a43', '#e07a2e'].map((c, i) => {
@@ -173,38 +149,11 @@ function wheel(x, y) {
 }
 
 // La salle entière. pick : poste choisi (son bonhomme bouge si animate) ;
-// id : préfixe des identifiants internes.
-export function hubSVG({ pick = 'A', animate = true, id = 'hub' } = {}) {
+// id : préfixe des identifiants internes ; decor : son habillage (decors.js).
+export function hubSVG({ pick = 'A', animate = true, id = 'hub', decor = 'salle' } = {}) {
   const u = (n) => `${id}-${n}`;
-  // murs : gauche (X = 0) et droit (Y = 0), grille et logo de cuivre, miroir, écran, gants
-  const lw = (y, z) => P(0, y, z);
-  const rw = (x, z) => P(x, 0, z);
-  const walls = poly([P(0, 0), P(0, N), P(0, N, HW), P(0, 0, HW)], `url(#${u('wallL')})`) + poly([P(0, 0), P(N, 0), P(N, 0, HW), P(0, 0, HW)], `url(#${u('wallR')})`);
-  const grid = [];
-  for (let y = 2.3; y <= 4.75; y += 0.48) grid.push(`M${pts([lw(y, 0.9), lw(y, 2.85)])}`);
-  for (let z = 0.9; z <= 2.9; z += 0.48) grid.push(`M${pts([lw(2.3, z), lw(4.7, z)])}`);
-  const lc = [3.5, 1.9];
-  const needle = [[0, 0.75], [0.5, 0], [0, -0.75], [-0.5, 0]].map(([dy, dz]) => lw(lc[0] + dy, lc[1] + dz));
-  const mid = lw(...lc);
-  const facet = (a, b, f) => poly([a, b, mid], f);
-  const logo = `<g class="hub-logo">${facet(needle[2], needle[3], '#f3c9a8')}${facet(needle[2], needle[1], '#d9956b')}${facet(needle[3], needle[0], '#b8714c')}${facet(needle[1], needle[0], '#8f5232')}</g>`;
-  const mirror = poly([rw(4.6, 0.5), rw(6.7, 0.5), rw(6.7, 2.6), rw(4.6, 2.6)], `url(#${u('mirror')})`, ' stroke="#4a3a2e" stroke-width="0.8"');
-  const [tx, ty] = rw(2.1, 2.4);
-  const screen = `<g class="hub-screen">${poly([rw(1.9, 1.5), rw(4.2, 1.5), rw(4.2, 2.75), rw(1.9, 2.75)], '#0a0807', ' stroke="#3a2a20" stroke-width="0.8"')}`
-    + `<g transform="translate(${r1(tx)} ${r1(ty)}) skewY(${SKEW})"><text font-family="system-ui, sans-serif" font-weight="800" font-size="6.4" fill="#e9a87c" letter-spacing="0.6">SÉANCE ${pick}</text>`
-    + `<text y="8.4" font-family="system-ui, sans-serif" font-weight="700" font-size="5.6" fill="#f4eee7">${shortName(pick).replace(/,.*$/, '')}…</text></g></g>`;
-  // sol (dalles), lueur et bandes LED au pied des murs, tranche des murs
-  const lines = [];
-  for (let i = 1; i < N; i++) lines.push(`M${pts([P(i, 0), P(i, N)])}M${pts([P(0, i), P(N, i)])}`);
-  const floor = poly([P(0, 0), P(N, 0), P(N, N), P(0, N)], `url(#${u('floor')})`) + `<path d="${lines.join('')}" stroke="#000" stroke-opacity="0.4" stroke-width="0.6"/>`;
-  const led = `<g class="hub-led">${poly([P(0, 0), P(0, N), P(0.9, N), P(0.9, 0)], `url(#${u('ledL')})`)}${poly([P(0, 0), P(N, 0), P(N, 0.9), P(0, 0.9)], `url(#${u('ledR')})`)}`
-    + `${poly([P(0, 0, 0.1), P(0, N, 0.1), P(0, N, 0.2), P(0, 0, 0.2)], '#f6d2b6', ' opacity="0.9"')}${poly([P(0, 0, 0.1), P(N, 0, 0.1), P(N, 0, 0.2), P(0, 0, 0.2)], '#f6d2b6', ' opacity="0.9"')}</g>`;
-  const cap = `<path d="M${pts([P(0, N, HW), P(0, 0, HW), P(N, 0, HW)])}" stroke="#5a4a3e" stroke-width="2.2" stroke-linecap="round" fill="none"/>`;
-  // décor : banc contre le mur gauche, tapis de course contre le mur droit, logo au sol
-  const decor = `<g class="hub-decor">${arcadeCab(animate)}`
-    + `${box(2.85, 0.35, 0, 1.3, 0.75, 0.2, ['#2a2522', '#1a1614', '#221d1a'])}${box(2.87, 0.4, 0.2, 1.22, 0.65, 0.03, ['#111', '#111', '#111'])}${box(2.8, 0.3, 0.2, 0.12, 0.85, 1.3, ['#3a3532', '#2a2522', '#332d2a'])}${box(2.76, 0.35, 1.45, 0.2, 0.75, 0.24, ['#1c1816', '#151210', '#1c1816'])}</g>`;
-  const f = (dx, dy) => P(4 + dx, 4 + dy, 0.01);
-  const floorLogo = `<g opacity="0.35">${poly([f(-0.9, -0.9), f(0, 0), f(0.9, -0.9)], '#d9956b')}${poly([f(0.9, -0.9), f(0, 0), f(0.9, 0.9)], '#b8714c')}${poly([f(0.9, 0.9), f(0, 0), f(-0.9, 0.9)], '#8f5232')}${poly([f(-0.9, 0.9), f(0, 0), f(-0.9, -0.9)], '#f3c9a8')}</g>`;
+  // murs, sol, lumière et objets : ceux du décor ; la borne d'arcade est dans tous
+  const art = decorArt(decor, { pick, title: shortName(pick), animate, u });
 
   // les postes, du fond vers l'avant : plateforme bordée de la couleur de la
   // séance, matériel, bonhomme
@@ -217,7 +166,7 @@ export function hubSVG({ pick = 'A', animate = true, id = 'hub' } = {}) {
     const col = COLORS[st.id];
     const pulse = on && animate ? '<animate attributeName="stroke-opacity" values="1;0.45;1" dur="1.8s" repeatCount="indefinite"/>' : '';
     const edge = `<path class="hub-edge" d="M${pts([P(st.X + 0.08, st.Y + 0.08, PH), P(st.X + S - 0.08, st.Y + 0.08, PH), P(st.X + S - 0.08, st.Y + S - 0.08, PH), P(st.X + 0.08, st.Y + S - 0.08, PH)])}Z" fill="none" stroke="${col}" stroke-width="${on ? 1.6 : 0.8}" stroke-opacity="${on ? 1 : 0.5}"${on ? ` filter="url(#${u('glow')})"` : ''}>${pulse}</path>`;
-    const plat = `<g class="hub-plat">${box(st.X, st.Y, 0, S, S, PH, ['#2b2523', '#171311', '#1f1a18'])}${edge}</g>`;
+    const plat = `<g class="hub-plat">${box(st.X, st.Y, 0, S, S, PH, art.plat)}${edge}</g>`;
     const gear = {
       P: () => tower(id, p, st, P(cx, cy, PH)[1]),
       M: () => flat(cx - 0.9, cy - 0.45, PH + 0.01, 1.8, 0.9, '#7f9f78'),
@@ -239,27 +188,22 @@ export function hubSVG({ pick = 'A', animate = true, id = 'hub' } = {}) {
   const top = P(bx, by, HW + 1.2), left = P(bx - 1.0, by + 1.0, PH), right = P(bx + 1.0, by - 1.0, PH);
   const beam = `<path class="hub-beam" d="M${r1(top[0] - 6)} ${r1(top[1])}L${r1(top[0] + 6)} ${r1(top[1])}L${r1(right[0])} ${r1(right[1])}L${r1(left[0])} ${r1(left[1])}Z" fill="url(#${u('beam')})"/>`;
   const [fx, fy] = P(bx, by, PH);
-  const dust = animate ? `<g class="hub-dust" fill="#ffe2c4">${[[-14, 0, 2.6], [-6, 0.9, 3.4], [3, 0.3, 2.9], [10, 1.6, 3.8], [16, 1.1, 3.1], [-1, 2.2, 4.2]].map(([dx, delay, dur]) => `<circle cx="${r1(fx + dx)}" cy="${r1(fy - 6)}" r="0.9" opacity="0"><animate attributeName="cy" values="${r1(fy - 6)};${r1(fy - 78)}" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.8;0" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/></circle>`).join('')}</g>` : '';
+  const dust = animate ? `<g class="hub-dust" fill="${art.dust}">${[[-14, 0, 2.6], [-6, 0.9, 3.4], [3, 0.3, 2.9], [10, 1.6, 3.8], [16, 1.1, 3.1], [-1, 2.2, 4.2]].map(([dx, delay, dur]) => `<circle cx="${r1(fx + dx)}" cy="${r1(fy - 6)}" r="0.9" opacity="0"><animate attributeName="cy" values="${r1(fy - 6)};${r1(fy - 78)}" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.8;0" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/></circle>`).join('')}</g>` : '';
 
-  return `<svg class="hub-scene" viewBox="0 0 ${HUB.w} ${HUB.h}" aria-hidden="true"><defs>
-<linearGradient id="${u('floor')}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d1917"/><stop offset="1" stop-color="#2a2420"/></linearGradient>
-<linearGradient id="${u('wallL')}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#120f0d"/><stop offset="1" stop-color="#1c1714"/></linearGradient>
-<linearGradient id="${u('wallR')}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#211b17"/><stop offset="1" stop-color="#16120f"/></linearGradient>
-<linearGradient id="${u('ledL')}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f2c3a3" stop-opacity="0.22"/><stop offset="1" stop-color="#f2c3a3" stop-opacity="0"/></linearGradient>
-<linearGradient id="${u('ledR')}" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#f2c3a3" stop-opacity="0.22"/><stop offset="1" stop-color="#f2c3a3" stop-opacity="0"/></linearGradient>
+  const [c1, c2] = art.beam;
+  return `<svg class="hub-scene" viewBox="0 0 ${HUB.w} ${HUB.h}" aria-hidden="true"><defs>${art.defs}
 <linearGradient id="${u('wood')}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a5f3e"/><stop offset="1" stop-color="#5e3d26"/></linearGradient>
-<linearGradient id="${u('mirror')}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a2a2e"/><stop offset="0.5" stop-color="#17181b"/><stop offset="1" stop-color="#222326"/></linearGradient>
-<linearGradient id="${u('beam')}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe2c4" stop-opacity="0.02"/><stop offset="0.7" stop-color="#ffd2a8" stop-opacity="0.12"/><stop offset="1" stop-color="#ffd2a8" stop-opacity="0.3"/></linearGradient>
+<linearGradient id="${u('beam')}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}" stop-opacity="0.02"/><stop offset="0.7" stop-color="${c2}" stop-opacity="0.12"/><stop offset="1" stop-color="${c2}" stop-opacity="0.3"/></linearGradient>
 <linearGradient id="${u('metal')}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1d1a18"/><stop offset="0.45" stop-color="#5a524c"/><stop offset="1" stop-color="#211d1b"/></linearGradient>
 <linearGradient id="${u('metalh')}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6a615a"/><stop offset="1" stop-color="#26211f"/></linearGradient>
 <linearGradient id="${u('bag')}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1c120c"/><stop offset="0.38" stop-color="#6b4430"/><stop offset="1" stop-color="#20140e"/></linearGradient>
 <linearGradient id="${u('pad')}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3330"/><stop offset="1" stop-color="#1c1816"/></linearGradient>
 <radialGradient id="${u('leaf')}" cx="0.4" cy="0.3" r="0.8"><stop offset="0" stop-color="#7fae6b"/><stop offset="1" stop-color="#2f5a2c"/></radialGradient>
-<radialGradient id="${u('vig')}" cx="0.5" cy="0.42" r="0.75"><stop offset="0.55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.55"/></radialGradient>
+<radialGradient id="${u('vig')}" cx="0.5" cy="0.42" r="0.75"><stop offset="0.55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="${art.vig}"/></radialGradient>
 <filter id="${u('glow')}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
 </defs>
-<rect width="${HUB.w}" height="${HUB.h}" fill="#0c0a09"/>
-${walls}<path d="${grid.join('')}" stroke="#dc9a70" stroke-opacity="0.18" stroke-width="0.5"/>${logo}${mirror}${screen}${gloves(...rw(6.85, 1.9), 1)}
-${floor}${led}${cap}${decor}${floorLogo}
-${stations}<g class="hub-light">${beam}${dust}</g><rect class="hub-vig" width="${HUB.w}" height="${HUB.h}" fill="url(#${u('vig')})"/></svg>`;
+<rect width="${HUB.w}" height="${HUB.h}" fill="${art.bg}"/>
+${art.back}
+${art.floor}${art.edge}<g class="hub-decor">${art.props}${arcadeCab(animate)}</g>
+${stations}${art.over}<g class="hub-light">${beam}${dust}</g><rect class="hub-vig" width="${HUB.w}" height="${HUB.h}" fill="url(#${u('vig')})"/></svg>`;
 }

@@ -22,6 +22,7 @@ import { drawingSVG } from './drawings.js';
 import { icon } from './icons.js';
 import { roomSVG } from './room.js';
 import { hubSVG, hubLayout, arcadeZone, HUB, covers } from './gym.js';
+import { decorStats, decorStatus, decorToShow, decorThumb, newDecors } from './decors.js';
 import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS } from './avatar.js';
 import { treeSVG, seedOf } from './tree.js';
 
@@ -49,6 +50,8 @@ function freshState() {
       voice: false, // coach vocal pendant la séance
       voiceURI: 'auto',
       creatine: true, // case « Créatine » sous les habitudes, hors chaîne
+      decor: 'salle', // décor de la Salle (decors.js), parmi ceux débloqués
+      decorsSeen: ['salle'], // décors débloqués déjà annoncés
     },
     habits: structuredClone(DEFAULT_HABITS),
     rules: [...DEFAULT_RULES],
@@ -475,11 +478,32 @@ function render() {
     save();
     celebrate(`Niveau ${lv.level} atteint : ${lv.rank}${grew ? ' · ton double évolue' : ''}`);
   }
+  if (newDecors(state.settings.decorsSeen, decorStats(state)).length) announceDecors();
   document.querySelectorAll('#tabs a').forEach((a) => a.setAttribute('aria-current', a.dataset.tab === (HIDDEN_TABS[tab] ?? tab) ? 'page' : 'false'));
   moveTabIndicator();
   hubDeclutter();
   runTweens();
   tick();
+}
+
+// Un décor qui se débloque est fêté une fois, après les autres messages (fin
+// de séance, niveau, entrée dans la salle) pour ne pas les cacher.
+let decorTimer = null;
+function announceDecors() {
+  if (decorTimer) return;
+  decorTimer = setTimeout(function go() {
+    if (!$('#toast').hidden || $('#intro')) {
+      decorTimer = setTimeout(go, 800);
+      return;
+    }
+    decorTimer = null;
+    const fresh = newDecors(state.settings.decorsSeen, decorStats(state));
+    if (!fresh.length) return;
+    const seen = Array.isArray(state.settings.decorsSeen) ? state.settings.decorsSeen : ['salle'];
+    state.settings.decorsSeen = [...seen, ...fresh.map((d) => d.id)];
+    save();
+    celebrate(fresh.length > 1 ? `${fresh.length} décors débloqués\u00a0: touche « Décor » dans la Salle` : `Décor débloqué\u00a0: ${fresh[0].name}`);
+  }, 400);
 }
 
 function dots(days) {
@@ -968,8 +992,9 @@ function gymHub(planned, done, lvl) {
   // la salle prend tout le haut de l'écran : on y entre. En haut, le HUD (niveau,
   // XP) et l'aide ; en bas, la séance choisie et son bouton, comme dans un jeu.
   return `<section class="gym-hero hub immersive wo-${w.id}">
-    <div class="hub-stage">${hubSVG({ pick, animate: !reduceMotion() })}${hits}
+    <div class="hub-stage">${hubSVG({ pick, animate: !reduceMotion(), decor: decorToShow(state.settings.decor, decorStats(state)) })}${hits}
       <div class="hub-hud" aria-label="Niveau ${lv.level}, ${lv.into} sur ${lv.span} XP"><b>Niv. ${lv.level}</b><span class="hud-rank">${esc(lv.rank)}</span><span class="hud-bar">${tweenBar('gym-xp', (lv.into / lv.span) * 100)}</span><span class="hud-xp">${lv.into}/${lv.span} XP</span></div>
+      <button class="hub-decor-btn" data-act="decors" aria-label="Décors de ta salle">${icon('sparkles')}Décor</button>
       ${HELP.sport ? `<span class="hub-help">${helpBtn('sport')}</span>` : ''}
       <div class="hub-panel">
         <div class="gym-head">
@@ -982,6 +1007,21 @@ function gymHub(planned, done, lvl) {
     </div>
     <p class="hint">Touche un poste pour changer de séance. Pas la forme ? M suffit à valider « Bouger ».</p>
   </section>`;
+}
+
+// Les décors de ta salle : ceux débloqués s'installent d'une touche, les
+// autres montrent ce qu'il reste à faire (séances, niveau, records d'arcade).
+function showDecors() {
+  const list = decorStatus(decorStats(state));
+  const cur = decorToShow(state.settings.decor, decorStats(state));
+  openSheet('Décors de ta salle', `<p class="hint">${list.filter((d) => d.unlocked).length} sur ${list.length} débloqués. Touche un décor débloqué pour l’installer.</p>
+    <div class="decor-grid">${list.map((d) => `<button class="decor-card${d.unlocked ? '' : ' locked'}${d.id === cur ? ' on' : ''}" data-act="decor-pick" data-id="${d.id}"${d.unlocked ? '' : ' disabled'} aria-pressed="${d.id === cur}">
+      ${decorThumb(d.id)}
+      <span class="decor-name">${d.unlocked ? '' : icon('lock')}${esc(d.name)}</span>
+      <small>${d.id === cur ? 'Installé' : esc(d.unlocked ? d.desc : d.label)}</small>
+      ${d.unlocked ? '' : `<span class="decor-bar" aria-hidden="true"><i style="width:${Math.round(d.pct * 100)}%"></i></span>`}
+    </button>`).join('')}</div>
+    <p class="hint">Une séance compte une fois par jour, sans compter M. Pour les jeux, c’est ta meilleure partie.</p>`);
 }
 
 // Mur des records : tes meilleurs chiffres, notés au repos pendant les séances.
@@ -2012,6 +2052,20 @@ const actions = {
   },
   help(el) {
     showHelp(el.dataset.id);
+  },
+  decors() {
+    showDecors();
+  },
+  'decor-pick'(el) {
+    const d = decorStatus(decorStats(state)).find((x) => x.id === el.dataset.id);
+    if (!d?.unlocked) return;
+    state.settings.decor = d.id;
+    save();
+    actions['sheet-close']();
+    render();
+    // on entre dans le nouveau décor
+    if (!reduceMotion()) $('.hub-stage')?.classList.add('arrive');
+    $('.hub-decor-btn')?.focus({ preventScroll: true });
   },
   'sheet-close'() {
     $('#sheet').hidden = true;

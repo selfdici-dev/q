@@ -514,8 +514,8 @@ export const HELP = {
   jeux: {
     title: 'Comment marche l’Arcade',
     lines: [
-      'Blocs : glisse les pièces sur la grille. Cristaux : échange deux voisins pour en aligner trois.',
-      'Calcul éclair : 60 s, une réponse sur quatre. Sudoku : un chiffre par ligne, colonne et carré.',
+      'Sept jeux : Blocs, Cristaux, Serpent et Paires pour les mains ; Calcul, Code secret et Sudoku pour la tête.',
+      'La règle s’affiche sous chaque jeu. Blocs, Cristaux, Paires, Code et Sudoku reprennent où tu les as laissés.',
       'Tes records restent sur le téléphone, et ils comptent pour débloquer des décors de la Salle.',
     ],
   },

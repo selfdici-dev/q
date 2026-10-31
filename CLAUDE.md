@@ -21,7 +21,8 @@ L'utilisateur est débutant : explique simplement, en français.
   décors à débloquer (salle, temple grec, grand hall…), choix dans `state.settings.decor` ;
   `js/icons.js` : icônes au trait.
 - `js/games.js` : règles des jeux de la borne d'arcade (Blocs, Calcul éclair), logique pure ;
-  `js/gems.js` (Cristaux) et `js/sudoku.js` (Sudoku) : les deux autres jeux, logique pure ;
+  `js/gems.js` (Cristaux), `js/sudoku.js` (Sudoku), `js/snake.js` (Serpent), `js/pairs.js` (Paires),
+  `js/code.js` (Code secret) : les autres jeux, logique pure ;
   `js/arcade.js` : leur écran (`#jeux`, ouvert depuis la borne de la Salle), records dans `state.games`.
 - `js/drawings.js` : dessins au crayon des exercices (corps en 3D, muscles travaillés
   en rouge), joués au rythme du bonhomme ; sans dessin, le bonhomme reste.

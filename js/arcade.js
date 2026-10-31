@@ -5,10 +5,20 @@
 import { SIZE, SHAPES, newBlocks, placeBlock, canPlace, CALC_TIME, newCalc, answerCalc } from './games.js';
 import { GEM_SIZE, colorOf, isBolt, adjacent, findMove, newGems, playSwap } from './gems.js';
 import { PEERS, newSudoku, sdPlace, sdNote, sdCounts } from './sudoku.js';
+import { SN, snakeDelay, newSnake, turnSnake, stepSnake } from './snake.js';
+import { pairsCols, newPairs, flipCard, hidePairs, pairsStars } from './pairs.js';
+import { CODE_LEN, CODE_COLORS, CODE_TRIES, newCode, playGuess } from './code.js';
+import { icon } from './icons.js';
 
 const fmt = (n) => Number(n).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
 const GEM_NAMES = ['', 'vert', 'bleu', 'orange', 'violet', 'or'];
 const SD_NAMES = { facile: 'Facile', moyen: 'Moyen', difficile: 'Difficile' };
+// dessins des Paires (icônes de l'appli) et leurs couleurs
+const PAIR_ICONS = ['dumbbell', 'flame', 'flag', 'trophy', 'target', 'sun', 'moon', 'sparkles', 'apple', 'cup', 'books', 'compass', 'coin', 'lightbulb', 'map', 'waves', 'sprout', 'shield', 'alarm', 'pin'];
+const PAIR_NAMES = ['haltère', 'flamme', 'drapeau', 'trophée', 'cible', 'soleil', 'lune', 'étincelles', 'pomme', 'tasse', 'livres', 'boussole', 'pièce', 'ampoule', 'carte', 'vagues', 'pousse', 'bouclier', 'réveil', 'épingle'];
+const PAIR_COLORS = ['#9fd08f', '#7cc4e4', '#e98a6b', '#c3a3e0', '#e7c76b', '#ef8fc0'];
+const CODE_NAMES = ['', 'vert', 'bleu', 'orange', 'violet', 'or', 'rose'];
+const ARROWS = { haut: '▲', gauche: '◀', droite: '▶', bas: '▼' };
 const minutes = (secs) => (secs < 60 ? `${Math.max(1, Math.round(secs))} s` : `${Math.round(secs / 60)} min`);
 const EURO = new Set(['sale', 'interest', 'unit']);
 const seed = () => (Date.now() ^ Math.floor(Math.random() * 2 ** 31)) | 0;
@@ -35,6 +45,17 @@ export function createArcade(ctx) {
   const C = () => (games().calc ??= { best: 0, plays: 0, streak: 0 });
   const G = () => (games().cristaux ??= { level: 1, top: 0, best: 0, plays: 0, cur: null });
   const S = () => (games().sudoku ??= { solved: { facile: 0, moyen: 0, difficile: 0 }, best: {}, plays: 0, cur: null });
+  const SK = () => (games().serpent ??= { best: 0, plays: 0 });
+  const PR = () => (games().paires ??= { level: 1, top: 0, best: {}, plays: 0, cur: null });
+  const CD = () => (games().code ??= { wins: 0, plays: 0, best: 0, cur: null });
+  // Serpent : la partie (en mémoire), son minuteur, en pause ou non
+  let snake = null;
+  let snTimer = null;
+  let snPaused = false;
+  // Paires : le minuteur qui referme deux cartes différentes
+  let prTimer = null;
+  // Code secret : l'essai en cours de composition
+  let codeDraft = [];
   // Cristaux : le cristal choisi, l'animation en cours (grille montrée, cases
   // qui éclatent, qui tombent), les deux qui refusent de s'échanger
   let gemSel = null;
@@ -52,35 +73,31 @@ export function createArcade(ctx) {
     const c = C();
     const g = G();
     const sd = S();
+    const sk = SK();
+    const pr = PR();
+    const cd = CD();
     const going = b.cur && !b.cur.over;
     const gemGoing = g.cur && !g.cur.won && !g.cur.over;
     const sdGoing = sd.cur && !sd.cur.done;
+    const prGoing = pr.cur && !pr.cur.done;
+    const cdGoing = cd.cur && !cd.cur.won && !cd.cur.over;
     const solved = Object.values(sd.solved).reduce((a, n) => a + n, 0);
-    return `<section class="card arc-card">
-      <div class="arc-art bl-art" aria-hidden="true">${[3, 1, 5, 2].map((k) => `<i class="c${k}"></i>`).join('')}</div>
-      <div><h2>Blocs</h2><p class="muted">Pose les pièces sur la grille : une ligne ou une colonne pleine disparaît. Tant qu’il reste de la place, ça continue.</p>
-        <p class="arc-best">Record <b>${fmt(b.best)}</b> · ${fmt(b.lines)} lignes effacées en tout</p></div>
-      <button class="btn primary wide" data-act="arc-play" data-id="blocs">${going ? `Reprendre (${fmt(b.cur.score)} points)` : 'Jouer'}</button>
-    </section>
-    <section class="card arc-card">
-      <div class="arc-art cc-art" aria-hidden="true"><b>25 %</b><b>× 7</b><b>−30 %</b></div>
-      <div><h2>Calcul éclair</h2><p class="muted">60 secondes de calcul utile : soldes, pourcentages, intérêts, prix à l’unité. Plus tu enchaînes, plus ça monte.</p>
-        <p class="arc-best">Record <b>${fmt(c.best)}</b> · meilleure série ${fmt(c.streak)}</p></div>
-      <button class="btn primary wide" data-act="arc-play" data-id="calc">Jouer</button>
-    </section>
-    <section class="card arc-card">
-      <div class="arc-art gm-art" aria-hidden="true">${[2, 5, 1, 4].map((k) => `<span class="gm c${k}"><i></i></span>`).join('')}</div>
-      <div><h2>Cristaux</h2><p class="muted">Échange deux cristaux voisins pour en aligner trois. Une ligne de quatre laisse un éclair qui fait tout sauter. Un score à battre par niveau.</p>
-        <p class="arc-best">Niveau <b>${g.level}</b> · record ${fmt(g.best)} points</p></div>
-      <button class="btn primary wide" data-act="arc-play" data-id="cristaux">${gemGoing ? `Reprendre le niveau ${g.cur.level}` : `Jouer le niveau ${g.level}`}</button>
-    </section>
-    <section class="card arc-card">
-      <div class="arc-art sd-art" aria-hidden="true">${['5', '', '3', '', '7', '', '1', '', '9'].map((d) => `<i>${d}</i>`).join('')}</div>
-      <div><h2>Sudoku</h2><p class="muted">Remplis la grille : chaque ligne, colonne et carré contient une fois chaque chiffre de 1 à 9. Des notes pour réfléchir, à ton rythme.</p>
-        <p class="arc-best"><b>${fmt(solved)}</b> grille${solved > 1 ? 's' : ''} résolue${solved > 1 ? 's' : ''}${sd.best.difficile ? ` · difficile en ${minutes(sd.best.difficile)}` : ''}</p></div>
-      ${sdGoing ? `<button class="btn primary wide" data-act="arc-play" data-id="sudoku">Reprendre (${SD_NAMES[sd.cur.level].toLowerCase()})</button>` : ''}
-      <div class="sd-levels">${Object.entries(SD_NAMES).map(([lv, name]) => `<button class="btn${sdGoing ? '' : ' primary'}" data-act="arc-play" data-id="sudoku" data-lv="${lv}">${name}</button>`).join('')}</div>
-    </section>
+    const tile = (id, name, tag, art, best, play) => `<section class="arc-tile">
+      <div class="arc-art ${art[0]}" aria-hidden="true">${art[1]}</div>
+      <h3>${name}</h3><p class="arc-tag">${tag}</p><p class="arc-best">${best}</p>${play}
+    </section>`;
+    const go = (id, label, extra = '') => `<button class="btn primary small" data-act="arc-play" data-id="${id}"${extra}>${label}</button>`;
+    const snakeArt = '<svg viewBox="0 0 40 40"><rect x="6" y="22" width="7" height="7" rx="2" fill="#9fd08f"/><rect x="13" y="22" width="7" height="7" rx="2" fill="#9fd08f"/><rect x="20" y="22" width="7" height="7" rx="2" fill="#9fd08f"/><rect x="20" y="15" width="7" height="7" rx="2.5" fill="#d6f5c4"/><circle cx="30" cy="9" r="3.4" fill="#e98a6b"/></svg>';
+    return `<div class="arc-grid">
+      ${tile('blocs', 'Blocs', 'Pose, aligne, efface', ['bl-art', [3, 1, 5, 2].map((k) => `<i class="c${k}"></i>`).join('')], `Record <b>${fmt(b.best)}</b>`, go('blocs', going ? 'Reprendre' : 'Jouer'))}
+      ${tile('cristaux', 'Cristaux', 'Échange, fais éclater', ['gm-art', [2, 5, 1, 4].map((k) => `<span class="gm c${k}"><i></i></span>`).join('')], `Niveau <b>${g.level}</b>`, go('cristaux', gemGoing ? 'Reprendre' : 'Jouer'))}
+      ${tile('serpent', 'Serpent', 'Mange, grandis, accélère', ['sn-art', snakeArt], `Record <b>${fmt(sk.best)}</b>`, go('serpent', 'Jouer'))}
+      ${tile('calc', 'Calcul éclair', '60 s de calcul utile', ['cc-art', '<b>25 %</b><b>× 7</b><b>−30 %</b>'], `Record <b>${fmt(c.best)}</b>`, go('calc', 'Jouer'))}
+      ${tile('paires', 'Paires', 'Retrouve les jumelles', ['pr-art', `<span class="pr-mini up" style="--pc:${PAIR_COLORS[1]}">${icon('flame')}</span><span class="pr-mini"></span>`], `Niveau <b>${pr.level}</b>`, go('paires', prGoing ? 'Reprendre' : 'Jouer'))}
+      ${tile('code', 'Code secret', 'Devine les 4 couleurs', ['cd-art', [2, 5, 3, 6].map((k) => `<span class="peg p${k}"></span>`).join('')], `<b>${fmt(cd.wins)}</b> code${cd.wins > 1 ? 's' : ''} trouvé${cd.wins > 1 ? 's' : ''}`, go('code', cdGoing ? 'Reprendre' : 'Jouer'))}
+      ${tile('sudoku', 'Sudoku', 'Un chiffre par ligne', ['sd-art', ['5', '', '3', '', '7', '', '1', '', '9'].map((d) => `<i>${d}</i>`).join('')], `<b>${fmt(solved)}</b> grille${solved > 1 ? 's' : ''}${sd.best.difficile ? ` · ${minutes(sd.best.difficile)}` : ''}`,
+        `${sdGoing ? go('sudoku', 'Reprendre') : ''}<div class="sd-levels">${Object.entries(SD_NAMES).map(([lv, name]) => `<button class="btn small${sdGoing ? '' : ' primary'}" data-act="arc-play" data-id="sudoku" data-lv="${lv}">${name}</button>`).join('')}</div>`)}
+    </div>
     <p class="hint">Les jeux comptent aussi pour débloquer des décors de la Salle. Sans pub, sans internet, sans son.</p>`;
   }
 
@@ -139,7 +156,7 @@ export function createArcade(ctx) {
   // Glisser une pièce : elle suit le doigt un peu au-dessus (pour la voir),
   // la grille montre où elle tomberait.
   function pointerDown(e) {
-    if (gemDown(e)) return;
+    if (gemDown(e) || snakeDown(e)) return;
     const btn = e.target.closest?.('.bl-piece[data-piece]');
     if (!btn || mode !== 'blocs' || B().cur.over) return;
     const grid = document.getElementById('bl-grid');
@@ -387,6 +404,155 @@ export function createArcade(ctx) {
     return true;
   }
 
+  // ---------- Serpent ----------
+  function snakeSVG(g) {
+    const body = g.snake.map(([r, c], i) => `<rect x="${c * 10 + 0.6}" y="${r * 10 + 0.6}" width="8.8" height="8.8" rx="${i ? 2.6 : 3.6}" fill="${i ? (i % 2 ? '#8fc47f' : '#9fd08f') : '#d6f5c4'}"/>`).reverse().join('');
+    const fruit = g.food ? `<circle cx="${g.food[1] * 10 + 5}" cy="${g.food[0] * 10 + 5.4}" r="3.7" fill="#e98a6b"/><path d="M${g.food[1] * 10 + 5} ${g.food[0] * 10 + 1.8}q1.6 -1.6 3 -0.6" stroke="#9fd08f" stroke-width="1.1" fill="none"/>` : '';
+    const [hr, hc] = g.snake[0];
+    const eye = { droite: [[6.6, 3.2], [6.6, 6.8]], gauche: [[3.4, 3.2], [3.4, 6.8]], haut: [[3.2, 3.4], [6.8, 3.4]], bas: [[3.2, 6.6], [6.8, 6.6]] }[g.dir]
+      .map(([x, y]) => `<circle cx="${hc * 10 + x}" cy="${hr * 10 + y}" r="1" fill="#1b2a16"/>`).join('');
+    return `<svg viewBox="0 0 ${SN * 10} ${SN * 10}" aria-hidden="true"><rect width="${SN * 10}" height="${SN * 10}" rx="6" fill="#100c14"/>${fruit}${body}${eye}</svg>`;
+  }
+
+  function snakeView() {
+    const g = snake;
+    const best = SK().best;
+    return `<section class="arcade sn-wrap">
+      <div class="arc-top"><button class="btn small" data-act="arc-menu">‹ Arcade</button>
+        <div class="arc-score"><b id="sn-score">${g.score}</b><small>Record ${fmt(Math.max(best, g.score))}</small></div></div>
+      <div class="sn-board" id="sn-board">${snakeSVG(g)}</div>
+      ${g.over ? `<div class="arc-over"><p class="arc-big">${g.food ? 'Aïe' : 'Grille remplie !'}</p><p class="muted">${g.score} fruit${g.score > 1 ? 's' : ''}${g.score > 0 && g.score >= best ? ' · nouveau record' : ''}</p>
+          <button class="btn primary" data-act="arc-play" data-id="serpent">Rejouer</button></div>`
+      : snPaused ? '<div class="arc-over"><p class="arc-big">En pause</p><button class="btn primary" data-act="sn-resume">Reprendre</button></div>'
+      : `<div class="sn-pad">${Object.entries(ARROWS).map(([d, a]) => `<button class="sn-key sn-${d}" data-act="sn-dir" data-d="${d}" aria-label="${d}">${a}</button>`).join('')}</div>
+        <p class="hint center">Glisse le doigt sur la grille, ou touche les flèches.</p>`}
+    </section>`;
+  }
+
+  function startSnake() {
+    clearTimeout(snTimer);
+    snake = newSnake(seed());
+    SK().plays += 1;
+    snPaused = false;
+    mode = 'serpent';
+    ctx.save();
+    snTimer = setTimeout(snTick, 700);
+  }
+
+  // Un pas toutes les quelques dizaines de millisecondes ; seule la grille est redessinée.
+  function snTick() {
+    if (mode !== 'serpent' || !snake || snake.over) return;
+    if (location.hash !== '#jeux' || document.hidden) { snPaused = true; return; }
+    snake = stepSnake(snake);
+    if (snake.over) {
+      const sk = SK();
+      const rec = snake.score > sk.best;
+      sk.best = Math.max(sk.best, snake.score);
+      navigator.vibrate?.(40);
+      ctx.save();
+      ctx.render();
+      if (rec) ctx.celebrate(`Nouveau record au Serpent : ${snake.score} fruits`);
+      return;
+    }
+    const board = document.getElementById('sn-board');
+    if (board) board.innerHTML = snakeSVG(snake);
+    const sc = document.getElementById('sn-score');
+    if (sc) sc.textContent = snake.score;
+    snTimer = setTimeout(snTick, snakeDelay(snake.score));
+  }
+
+  // Glisser sur la grille tourne le serpent (plusieurs fois dans le même geste).
+  function snakeDown(e) {
+    if (mode !== 'serpent' || !snake || snake.over || !e.target.closest?.('#sn-board')) return false;
+    e.preventDefault();
+    let [x0, y0] = [e.clientX, e.clientY];
+    const id = e.pointerId;
+    const move = (ev) => {
+      if (ev.pointerId !== id) return;
+      const dx = ev.clientX - x0, dy = ev.clientY - y0;
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 18) return;
+      snake = turnSnake(snake, Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'droite' : 'gauche') : (dy > 0 ? 'bas' : 'haut'));
+      [x0, y0] = [ev.clientX, ev.clientY];
+    };
+    const up = (ev) => {
+      if (ev.pointerId !== id) return;
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+    };
+    window.addEventListener('pointermove', move, { passive: false });
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+    return true;
+  }
+
+  // ---------- Paires ----------
+  function pairsView() {
+    const pr = PR();
+    const g = pr.cur;
+    const cards = g.cards.map((k, i) => {
+      const found = g.found.includes(i);
+      const up = found || g.open.includes(i);
+      return `<button class="pr-card${up ? ' up' : ''}${found ? ' found' : ''}" data-act="pr-flip" data-i="${i}" aria-label="${up ? `Carte ${PAIR_NAMES[g.syms[k]]}` : 'Carte cachée'}"${found ? ' disabled' : ''}>`
+        + `<span class="pr-in"><span class="pr-back"></span><span class="pr-face" style="--pc:${PAIR_COLORS[k % PAIR_COLORS.length]}">${icon(PAIR_ICONS[g.syms[k]])}</span></span></button>`;
+    }).join('');
+    const stars = g.done ? pairsStars(g) : 0;
+    return `<section class="arcade pr-wrap">
+      <div class="arc-top"><button class="btn small" data-act="arc-menu">‹ Arcade</button>
+        <div class="arc-score"><b>${g.moves}</b><small>Niveau ${g.level} · coups${pr.best[g.level] ? ` · record ${pr.best[g.level]}` : ''}</small></div></div>
+      <div class="pr-grid" style="--cols:${pairsCols(g.cards.length)}">${cards}</div>
+      ${g.done ? `<div class="arc-over"><p class="arc-big">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</p><p class="muted">Niveau ${g.level} en ${g.moves} coups</p>
+          <button class="btn primary" data-act="pr-next">Niveau ${g.level + 1}</button></div>`
+      : '<p class="hint center">Retourne deux cartes : si elles sont pareilles, elles restent. Moins de coups, plus d’étoiles.</p>'}
+    </section>`;
+  }
+
+  function startPairs(level) {
+    clearTimeout(prTimer);
+    const pr = PR();
+    if (level || !pr.cur || pr.cur.done) {
+      pr.cur = newPairs(seed(), level || pr.level);
+      pr.plays += 1;
+    }
+    mode = 'paires';
+  }
+
+  // ---------- Code secret ----------
+  const peg = (c, extra = '') => `<span class="peg${c ? ` p${c}` : ' empty'}"${extra}></span>`;
+  function codeView() {
+    const cd = CD();
+    const g = cd.cur;
+    const done = g.won || g.over;
+    const rows = Array.from({ length: CODE_TRIES }, (_, k) => {
+      const past = g.guesses[k];
+      const now = !done && k === g.guesses.length;
+      const pegs = past ? past.guess.map((c) => peg(c)).join('') : now ? Array.from({ length: CODE_LEN }, (_, j) => (codeDraft[j] ? `<button class="peg p${codeDraft[j]}" data-act="code-del" data-j="${j}" aria-label="Enlever ${CODE_NAMES[codeDraft[j]]}"></button>` : peg(0))).join('') : Array.from({ length: CODE_LEN }, () => peg(0)).join('');
+      const pins = past ? `<span class="cd-pins" aria-label="${past.black} bien placées, ${past.white} mal placées">${Array.from({ length: CODE_LEN }, (_, j) => `<i class="${j < past.black ? 'b' : j < past.black + past.white ? 'w' : ''}"></i>`).join('')}</span>` : '<span class="cd-pins"></span>';
+      return `<div class="cd-row${now ? ' now' : ''}${!past && !now ? ' later' : ''}"><span class="cd-n">${k + 1}</span><span class="cd-pegs">${pegs}</span>${pins}</div>`;
+    }).reverse().join('');
+    return `<section class="arcade cd-wrap">
+      <div class="arc-top"><button class="btn small" data-act="arc-menu">‹ Arcade</button>
+        <div class="arc-score"><b>${g.guesses.length}/${CODE_TRIES}</b><small>essais${cd.best ? ` · record ${cd.best}` : ''}</small></div></div>
+      ${done ? `<div class="cd-secret"><span>Le code :</span>${g.secret.map((c) => peg(c)).join('')}</div>` : ''}
+      <div class="cd-board">${rows}</div>
+      ${done ? `<div class="arc-over"><p class="arc-big">${g.won ? `Trouvé en ${g.guesses.length} essai${g.guesses.length > 1 ? 's' : ''}` : 'Raté, pour cette fois'}</p>
+          <button class="btn primary" data-act="arc-play" data-id="code" data-new="1">Un autre code</button></div>`
+      : `<div class="cd-palette">${Array.from({ length: CODE_COLORS }, (_, k) => `<button class="peg p${k + 1}" data-act="code-color" data-c="${k + 1}" aria-label="${CODE_NAMES[k + 1]}"${codeDraft.length >= CODE_LEN ? ' disabled' : ''}></button>`).join('')}</div>
+        <div class="sd-tools"><button class="btn small" data-act="code-del"${codeDraft.length ? '' : ' disabled'}>Effacer</button><button class="btn primary small" data-act="code-ok"${codeDraft.length === CODE_LEN ? '' : ' disabled'}>Valider</button></div>
+        <p class="hint center">● bonne couleur à la bonne place · ○ bonne couleur, mauvaise place. Une couleur peut revenir.</p>`}
+    </section>`;
+  }
+
+  function startCode(fresh) {
+    const cd = CD();
+    if (fresh || !cd.cur || cd.cur.won || cd.cur.over) {
+      cd.cur = newCode(seed());
+      cd.plays += 1;
+    }
+    codeDraft = [];
+    mode = 'code';
+  }
+
   // ---------- Calcul éclair ----------
   const left = () => Math.max(0, calcEnd - Date.now());
   function calcView() {
@@ -440,6 +606,9 @@ export function createArcade(ctx) {
       if (el.dataset.id === 'calc') startCalc();
       else if (el.dataset.id === 'cristaux') startGems(Boolean(el.dataset.new));
       else if (el.dataset.id === 'sudoku') startSudoku(el.dataset.lv);
+      else if (el.dataset.id === 'serpent') startSnake();
+      else if (el.dataset.id === 'paires') startPairs();
+      else if (el.dataset.id === 'code') startCode(Boolean(el.dataset.new));
       else startBlocs(Boolean(el.dataset.new));
       ctx.save();
       ctx.render();
@@ -447,6 +616,8 @@ export function createArcade(ctx) {
     },
     'arc-menu'() {
       clearInterval(timer);
+      clearTimeout(snTimer);
+      clearTimeout(prTimer);
       mode = 'menu';
       ctx.render();
     },
@@ -488,6 +659,72 @@ export function createArcade(ctx) {
       const i = sdSel;
       sdTouch((g) => (g.grid[i] !== '0' ? sdPlace(g, i, 0) : { ...g, notes: g.notes.map((n, k) => (k === i ? 0 : n)) }));
     },
+    'sn-dir'(el) {
+      if (mode !== 'serpent' || !snake) return;
+      snake = turnSnake(snake, el.dataset.d);
+    },
+    'sn-resume'() {
+      if (mode !== 'serpent' || !snake || snake.over) return;
+      snPaused = false;
+      ctx.render();
+      clearTimeout(snTimer);
+      snTimer = setTimeout(snTick, 500);
+    },
+    'pr-flip'(el) {
+      const pr = PR();
+      if (mode !== 'paires' || !pr.cur || pr.cur.done) return;
+      clearTimeout(prTimer);
+      const before = pr.cur;
+      pr.cur = flipCard(before, Number(el.dataset.i));
+      if (pr.cur === before) return;
+      const g = pr.cur;
+      if (g.done) {
+        const rec = !pr.best[g.level] || g.moves < pr.best[g.level];
+        if (rec) pr.best[g.level] = g.moves;
+        pr.top = Math.max(pr.top, g.level);
+        pr.level = Math.max(pr.level, g.level + 1);
+        ctx.save();
+        ctx.render();
+        ctx.celebrate(`Paires : niveau ${g.level} en ${g.moves} coups ${'★'.repeat(pairsStars(g))}`);
+        return;
+      }
+      ctx.save();
+      ctx.render();
+      if (g.open.length === 2) prTimer = setTimeout(() => { pr.cur = hidePairs(pr.cur); if (mode === 'paires') ctx.render(); }, 850);
+    },
+    'pr-next'() {
+      startPairs(PR().level);
+      ctx.save();
+      ctx.render();
+    },
+    'code-color'(el) {
+      if (mode !== 'code' || codeDraft.length >= CODE_LEN) return;
+      codeDraft = [...codeDraft, Number(el.dataset.c)];
+      ctx.render();
+    },
+    'code-del'(el) {
+      if (mode !== 'code') return;
+      const j = el.dataset.j === undefined ? codeDraft.length - 1 : Number(el.dataset.j);
+      codeDraft = codeDraft.filter((_, k) => k !== j);
+      ctx.render();
+    },
+    'code-ok'() {
+      const cd = CD();
+      if (mode !== 'code' || codeDraft.length !== CODE_LEN) return;
+      cd.cur = playGuess(cd.cur, codeDraft);
+      codeDraft = [];
+      if (cd.cur.won) {
+        cd.wins += 1;
+        const rec = !cd.best || cd.cur.guesses.length < cd.best;
+        if (rec) cd.best = cd.cur.guesses.length;
+        ctx.save();
+        ctx.render();
+        ctx.celebrate(`Code trouvé en ${cd.cur.guesses.length} essai${cd.cur.guesses.length > 1 ? 's' : ''}${rec ? ' · record' : ''}`);
+        return;
+      }
+      ctx.save();
+      ctx.render();
+    },
     'sd-notes'() {
       sdNotesMode = !sdNotesMode;
       ctx.render();
@@ -508,10 +745,20 @@ export function createArcade(ctx) {
       if (mode === 'calc' && calc) return calcView();
       if (mode === 'cristaux' && G().cur) return gemsView();
       if (mode === 'sudoku' && S().cur) return sudokuView();
+      if (mode === 'serpent' && snake) return snakeView();
+      if (mode === 'paires' && PR().cur) return pairsView();
+      if (mode === 'code' && CD().cur) return codeView();
       mode = 'menu';
       return menuView();
     },
     actions,
     pointerDown,
+    // les flèches du clavier dirigent le serpent
+    keyDown(e) {
+      const d = { ArrowUp: 'haut', ArrowDown: 'bas', ArrowLeft: 'gauche', ArrowRight: 'droite' }[e.key];
+      if (!d || mode !== 'serpent' || !snake || snake.over || location.hash !== '#jeux') return;
+      e.preventDefault();
+      snake = turnSnake(snake, d);
+    },
   };
 }

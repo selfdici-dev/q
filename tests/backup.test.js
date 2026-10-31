@@ -35,6 +35,11 @@ test('sauvegarde valide : acceptée, avec un résumé', () => {
   assert.deepEqual(r.info, { days: 2, habits: 2, first: '2026-09-01', last: '2026-09-02' });
 });
 
+test('records de la borne d’arcade : acceptés', () => {
+  const r = validateBackup({ ...good(), games: { blocs: { best: 540, plays: 3, lines: 21, cur: null }, calc: { best: 18, plays: 2, streak: 9 } } });
+  assert.equal(r.ok, true);
+});
+
 test('ancienne sauvegarde (sans ids ni réglages) : acceptée', () => {
   const r = validateBackup({ habits: [{ id: 'a', name: 'Lire' }], days: { '2026-09-01': { habits: { a: 1 } } } });
   assert.equal(r.ok, true);
@@ -62,6 +67,7 @@ test('fichiers invalides : refusés avec une raison', () => {
     { ...good(), rules: 'une règle' },
     { ...good(), trades: {} },
     { ...good(), wealth: [] },
+    { ...good(), games: [] },
   ];
   for (const data of broken) {
     const r = validateBackup(data);

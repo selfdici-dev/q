@@ -54,18 +54,23 @@ Tes records (meilleur score, lignes effacées, meilleure série, niveau des Cris
 
 ## Décors de la Salle
 
-Le bouton « Décor », en haut de la Salle, change l’habillage de la pièce : les mêmes postes, les mêmes bonshommes et la même borne, dans un autre monde. Douze décors, à choisir librement parmi ceux que tu as débloqués, et durs à débloquer :
+Le bouton « Décor », en haut de la Salle, change l’habillage de la pièce : les mêmes postes, les mêmes bonshommes et la même borne, dans un autre monde. Dix-sept décors, à choisir librement parmi ceux que tu as débloqués, et durs à débloquer :
 
 | Décor | Pour le débloquer |
 | --- | --- |
 | La salle (murs sombres, grille et logo de cuivre, LED) | ouvert dès le départ |
 | Temple grec (marbre et colonnes au-dessus des nuages, au coucher du soleil) | 15 séances |
+| Ring de boxe (projecteurs qui balaient la salle, cordes, la foule et ses flashs, écran géant) | 12 séances C (cardio boxe) |
 | Forêt au crépuscule (ponton de bois sous les arbres, guirlande, lucioles) | 20 matins avec ta routine complète |
+| Désert la nuit (dunes, pyramides, caravane qui passe, croissant de lune, étoiles filantes) | 20 soirs avec ta routine complète |
 | Dojo (bois, papier de riz, tatamis, lanternes, pétales de cerisier qui tombent) | 3 000 points aux Blocs |
 | Toit de la ville (en haut d’une tour, la nuit, néon « CAP » qui grésille) | 30 points au Calcul éclair |
+| Temple de la jungle (pierres moussues, cascade, lianes, papillons) | 40 fruits au Serpent |
 | Fond marin (vitres sur la mer, poissons qui passent, algues, bulles, coffre au trésor) | 10 sudokus résolus |
+| Volcan (éruption au loin, coulées de lave, lac de lave, braises qui montent) | 15 codes secrets trouvés |
 | Grand hall (pierre, feu de cheminée et braises, torches, blason noir et or) | 40 séances |
 | Néon rétro (soleil à rayures, palmiers de néon, sol quadrillé qui défile) | niveau 8 réussi aux Cristaux |
+| Navire pirate (pont, voiles, drapeau au vent, vagues, mouettes, tonneaux) | niveau 8 réussi aux Paires |
 | Station spatiale (hublots, planète bleue, écran holographique) | niveau 12 |
 | Arène romaine (arches et foule qui t’encourage, fanions, braseros, sable) | 60 séances |
 | Ponton sur la mer (soleil couchant, île à palmiers, voilier, mouettes) | 6 000 points aux Blocs |

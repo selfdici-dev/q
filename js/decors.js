@@ -1097,44 +1097,84 @@ function noel({ u, pick, title, animate }) {
 }
 
 function printemps({ u, pick, title, animate }) {
-  // un jardin au printemps : ciel clair, arc-en-ciel léger, collines vertes,
-  // cerisiers en fleurs, barrière blanche, tulipes, pétales et papillons
-  const clouds = [[70, 46, 0.9, 44], [270, 34, 1, 52], [200, 76, 0.6, 38]].map(([x, y, sc, d], k) => drift(cloud(x, y, sc, '#ffffff', '#e4f2fb'), k % 2 ? -16 : 16, d, animate)).join('');
-  const rainbow = ['#ff6b6b', '#ffb347', '#ffe66b', '#7ad97a', '#6bb8ff', '#a98bff'].map((c, k) => `<path d="M${40 + k * 5} 200A${140 - k * 5} ${120 - k * 5} 0 0 1 ${320 - k * 5} 200" stroke="${c}" stroke-width="5" fill="none"/>`).join('');
-  const hills = `<path d="M-10 186Q60 150 130 172T260 162T372 176V330H-10Z" fill="#a8d98c"/><path d="M-10 206Q70 180 150 198T290 192T372 202V330H-10Z" fill="#8cc96f"/>`;
-  const blossom = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-1.6 0V-16M0 -10l7 -7M0 -12l-6 -6" stroke="#6b4a3a" stroke-width="2.4" stroke-linecap="round" fill="none"/>`
-    + [[-8, -22, 9], [4, -26, 10], [12, -18, 8], [-12, -14, 7], [0, -16, 8], [8, -30, 7]].map(([dx, dy, r], k) => `<circle cx="${dx}" cy="${dy}" r="${r}" fill="${['#ffc0d9', '#ff9ec4', '#ffe0ec'][k % 3]}"/>`).join('') + '</g>';
-  const trees = blossom(26, 228, 1.6) + blossom(76, 196, 1.2) + blossom(286, 196, 1.2) + blossom(336, 226, 1.6) + blossom(134, 168, 0.9) + blossom(232, 166, 0.9);
-  // barrière blanche et tulipes le long des deux bords du fond
-  const posts = [0.1, 1.25, 2.4, 3.55, 4.7, 5.85, 6.9];
-  const fence = posts.map((t) => box(-0.1, t - 0.05, 0, 0.1, 0.1, 0.7, ['#ffffff', '#c9cfd6', '#e4e8ec']) + box(t - 0.05, -0.1, 0, 0.1, 0.1, 0.7, ['#ffffff', '#c9cfd6', '#e4e8ec'])).join('')
-    + [0.25, 0.5].map((z) => box(-0.08, 0, z, 0.06, N, 0.07, ['#ffffff', '#d4d9de', '#eef1f4']) + box(0, -0.08, z, N, 0.06, 0.07, ['#ffffff', '#d4d9de', '#eef1f4'])).join('');
+  // un jardin au printemps : un matin clair, des champs de tulipes en bandes
+  // de couleur sur les collines, un moulin dont les ailes tournent, de grands
+  // cerisiers en fleurs, des haies taillées, une fontaine, un massif de fleurs,
+  // des papillons, des oiseaux et des pétales au vent
+  const clouds = [[66, 40, 0.9, 46], [262, 26, 1.05, 54], [190, 72, 0.6, 40]].map(([x, y, sc, d], k) => drift(cloud(x, y, sc, '#ffffff', '#f6e6ef'), k % 2 ? -16 : 16, d, animate)).join('');
+  const sun = `<circle cx="306" cy="58" r="60" fill="url(#${u('sunhaze')})"/><circle cx="306" cy="58" r="15" fill="#fff6d6"/>`;
+  // les champs de tulipes : des bandes de couleur qui suivent la colline
+  const hill = 'M-10 122Q90 90 180 112T372 98V260H-10Z';
+  const bands = ['#ff5a6e', '#ffd23a', '#ff9ec4', '#ff8a3a', '#b48cff', '#ff5a6e', '#ffd23a', '#fff4f8'].map((c, k) => {
+    const y = 112 + k * 11;
+    return `<path d="M-10 ${y + 14}Q90 ${y - 16} 180 ${y + 6}T372 ${y - 6}" stroke="${c}" stroke-width="6" fill="none"/><path d="M-10 ${y + 19}Q90 ${y - 11} 180 ${y + 11}T372 ${y - 1}" stroke="#7fbf62" stroke-width="2.2" fill="none"/>`;
+  }).join('');
+  const fields = `<path d="${hill}" fill="#9fd283"/><g clip-path="url(#${u('field')})">${bands}</g>`;
+  // le moulin, sur la colline de gauche : ses ailes tournent doucement
+  const blade = (rot) => `<g transform="rotate(${rot})"><rect x="-1.6" y="-30" width="3.2" height="30" fill="#7a5a3a"/><rect x="1.6" y="-29" width="7" height="22" fill="#f4ede0" stroke="#b9a07e" stroke-width="0.6"/><path d="M1.6 -22h7M1.6 -15h7" stroke="#b9a07e" stroke-width="0.5"/></g>`;
+  const blades = `<g>${[0, 90, 180, 270].map(blade).join('')}${animate ? '<animateTransform attributeName="transform" type="rotate" values="0;360" dur="14s" repeatCount="indefinite"/>' : ''}</g>`;
+  const mill = `<g transform="translate(52 100) scale(1.15)"><path d="M-9 34L-6 0h12l3 34z" fill="#f2e9da"/><path d="M-6 0h12l3 34" fill="none" stroke="#d6c7ad" stroke-width="0.8"/><path d="M-10 1L0 -10L10 1z" fill="#c8513e"/><rect x="-2.4" y="20" width="4.8" height="14" rx="2" fill="#7a5a3a"/><rect x="-3" y="8" width="6" height="5" rx="1" fill="#9fd0ff"/><g transform="translate(0 -3)">${blades}<circle r="2.4" fill="#5a4030"/></g></g>`;
+  // des oiseaux qui passent
+  const birds = animate ? [[-30, 60, 420, -16, 22, 2], [-20, 86, 400, -30, 27, 11]].map(([x, y, dx, dy, d, b]) => `<g opacity="0"><g transform="translate(${x} ${y})"><path d="M-4 0q2 -2.4 4 0q2 -2.4 4 0" stroke="#4a5a7a" stroke-width="0.9" fill="none"/></g><animateTransform attributeName="transform" type="translate" values="0 0;${dx} ${dy}" dur="${d}s" begin="${b}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.95;1" dur="${d}s" begin="${b}s" repeatCount="indefinite"/></g>`).join('') : '';
+  // les cerisiers : un tronc et un grand nuage de fleurs, plus clair en haut
+  const tree = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-2 0C-1 -10 -3 -18 -1 -24M-1 -16C3 -20 7 -22 10 -26M-1 -20C-5 -24 -8 -26 -11 -29" stroke="#6b4a3a" stroke-width="2.6" stroke-linecap="round" fill="none"/>`
+    + [[-12, -30, 10, '#f7a8c8'], [10, -32, 11, '#f7a8c8'], [-1, -40, 12, '#ffc4dc'], [-16, -40, 8, '#ffc4dc'], [16, -42, 8, '#ffd6e6'], [2, -50, 9, '#ffe3ee'], [-8, -48, 7, '#ffe3ee']].map(([cx, cy, r, c]) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${c}"/>`).join('')
+    + [[-6, -36], [6, -44], [-14, -34], [12, -36], [0, -30], [4, -52]].map(([cx, cy]) => `<circle cx="${cx}" cy="${cy}" r="1.3" fill="#ffffff" opacity="0.85"/>`).join('') + '</g>';
+  const trees = tree(18, 250, 1.55) + tree(344, 246, 1.55) + tree(74, 206, 1.0) + tree(290, 200, 1.0);
+  // haies taillées le long des deux bords du fond, fleurs dessus et devant
+  const hedge = box(-0.34, 0, 0, 0.34, N, 0.55, ['#5fa04a', '#3f7a32', '#4b8c3c']) + box(0, -0.34, 0, N, 0.34, 0.55, ['#5fa04a', '#3f7a32', '#4b8c3c']);
+  const dots = (q) => Array.from({ length: 22 }, (_, k) => {
+    const [x, y] = q(0.15 + k * 0.31);
+    return `<circle cx="${r1(x)}" cy="${r1(y)}" r="1.1" fill="${['#ffffff', '#ffc4dc', '#ffe066'][k % 3]}"/>`;
+  }).join('');
   const tulips = (q) => Array.from({ length: 13 }, (_, k) => {
     const [x, y] = q(0.3 + k * 0.5);
     const c = ['#ff5a7a', '#ffd23a', '#ff8a3a', '#c86bff'][k % 4];
     return `<path d="M${r1(x)} ${r1(y)}v-6" stroke="#4a8a3a" stroke-width="0.9"/><path d="M${r1(x - 2)} ${r1(y - 6)}q0 -3.6 2 -4q2 0.4 2 4q-2 1.2 -4 0z" fill="${c}"/>`;
   }).join('');
-  const butterflies = animate ? [[60, 250, '#ffb347', 0], [250, 220, '#6bb8ff', 3], [300, 300, '#ff7ab8', 6]].map(([x, y, c, b]) => {
+  // la fontaine (devant à droite) et le massif de fleurs (devant à gauche)
+  const fountain = (() => {
+    const [X, Y] = FRONT_SPOTS[1];
+    const [x, y] = P(X + 0.25, Y + 0.25, 0);
+    const drops = animate ? [[-3, 0], [0, 0.4], [3, 0.8]].map(([dx, b]) => `<circle cx="${r1(x + dx)}" cy="${r1(y - 20)}" r="0.9" fill="#bfe8ff"><animate attributeName="cy" values="${r1(y - 20)};${r1(y - 9)}" dur="1.2s" begin="${b}s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0" dur="1.2s" begin="${b}s" repeatCount="indefinite"/></circle>`).join('') : '';
+    return `<g class="hub-fontaine"><ellipse cx="${r1(x)}" cy="${r1(y - 2)}" rx="15" ry="7.5" fill="#bdb6a8"/><ellipse cx="${r1(x)}" cy="${r1(y - 4)}" rx="13" ry="6" fill="#7cc4e4"/><ellipse cx="${r1(x - 3)}" cy="${r1(y - 5)}" rx="5" ry="1.6" fill="#ffffff" opacity="0.5"/>`
+      + `<rect x="${r1(x - 2)}" y="${r1(y - 20)}" width="4" height="16" rx="1.5" fill="#d9d2c4"/><ellipse cx="${r1(x)}" cy="${r1(y - 20)}" rx="6" ry="2.4" fill="#bdb6a8"/><ellipse cx="${r1(x)}" cy="${r1(y - 21)}" rx="4.6" ry="1.6" fill="#7cc4e4"/>${drops}</g>`;
+  })();
+  const bed = (() => {
+    const [X, Y] = FRONT_SPOTS[0];
+    const soil = box(X - 0.1, Y, 0, 0.75, 0.5, 0.16, ['#7a5636', '#5a3f26', '#6b4a2e']);
+    const flowers = Array.from({ length: 9 }, (_, k) => {
+      const [x, y] = P(X + (k % 3) * 0.22, Y + 0.1 + Math.floor(k / 3) * 0.14, 0.16);
+      return `<path d="M${r1(x)} ${r1(y)}v-4" stroke="#4a8a3a" stroke-width="0.8"/><circle cx="${r1(x)}" cy="${r1(y - 4.6)}" r="1.7" fill="${['#ff5a7a', '#ffd23a', '#c86bff', '#ff8a3a', '#ffffff'][k % 5]}"/>`;
+    }).join('');
+    return `<g class="hub-massif">${soil}${flowers}</g>`;
+  })();
+  const butterflies = animate ? [[60, 250, '#ffb347', 0], [250, 220, '#6bb8ff', 3], [300, 300, '#ff7ab8', 6], [150, 190, '#ffe066', 4]].map(([x, y, c, b]) => {
     const wing = `<g><path d="M0 0c-4 -5 -8 -4 -7 0c-1 3 3 4 7 0zM0 0c4 -5 8 -4 7 0c1 3 -3 4 -7 0z" fill="${c}"/><animateTransform attributeName="transform" type="scale" values="1 1;0.25 1;1 1" dur="0.4s" repeatCount="indefinite"/></g>`;
     return `<g transform="translate(${x} ${y})"><g>${wing}<animateTransform attributeName="transform" type="translate" values="0 0;24 -14;-10 -26;-24 -6;0 0" dur="${9 + b}s" begin="${-b}s" repeatCount="indefinite"/></g></g>`;
   }).join('') : '';
-  const petals = fall(Array.from({ length: 12 }, (_, k) => [hash(k + 740) * HUB.w, -10 + hash(k + 741) * 60, 40 + hash(k + 742) * 50, 420, r1(10 + hash(k + 743) * 7), r1(hash(k + 744) * 9), 360]),
+  const petals = fall(Array.from({ length: 14 }, (_, k) => [hash(k + 740) * HUB.w, -10 + hash(k + 741) * 60, 40 + hash(k + 742) * 50, 420, r1(10 + hash(k + 743) * 7), r1(hash(k + 744) * 9), 360]),
     '<ellipse rx="2.2" ry="1.3" fill="#ffc0d9"/>', animate);
   const stripes = [];
-  for (let i = 0; i < N; i += 2) stripes.push(poly([P(i, 0, 0.002), P(i + 1, 0, 0.002), P(i + 1, N, 0.002), P(i, N, 0.002)], '#ffffff', ' opacity="0.07"'));
+  for (let i = 0; i < N; i += 2) stripes.push(poly([P(i, 0, 0.002), P(i + 1, 0, 0.002), P(i + 1, N, 0.002), P(i, N, 0.002)], '#ffffff', ' opacity="0.08"'));
+  const daisies = Array.from({ length: 16 }, (_, k) => {
+    const [x, y] = P(0.3 + hash(k + 760) * 6.4, 0.3 + hash(k + 761) * 6.4, 0.003);
+    return `<circle cx="${r1(x)}" cy="${r1(y)}" r="0.9" fill="${k % 4 ? '#ffffff' : '#ffe066'}" opacity="0.9"/>`;
+  }).join('');
   return {
     bg: `url(#${u('sky')})`,
-    defs: lin(u('sky'), [0, 0, 0, 1], [[0, '#7cc4f2'], [0.45, '#bfe6fb'], [0.7, '#eef8ff'], [1, '#8cc96f']]) + lin(u('floor'), [0, 0, 0, 1], [[0, '#86c66a'], [1, '#76b85a']]),
-    back: `<g opacity="0.32">${rainbow}</g>${clouds}${hills}${trees}`
+    defs: lin(u('sky'), [0, 0, 0, 1], [[0, '#8ecdf0'], [0.36, '#cfe9fb'], [0.5, '#fde8ef'], [0.62, '#b6dd8f'], [1, '#7ab85e']]) + lin(u('floor'), [0, 0, 0, 1], [[0, '#8ccc6c'], [1, '#79b95a']])
+      + rad(u('sunhaze'), [[0, '#fff3c4', 0.85], [1, '#fff3c4', 0]]) + `<clipPath id="${u('field')}"><path d="${hill}"/></clipPath>`,
+    back: `${sun}${clouds}${birds}${fields}${mill}<path d="M-10 206Q70 184 150 198T290 192T372 200V330H-10Z" fill="#8cc96f"/>${trees}`
       + `<rect y="300" width="${HUB.w}" height="${HUB.h - 300}" fill="#7ab85e"/>`
       + box(0, 0, -0.22, N, N, 0.22, ['#86c66a', '#6b4a2e', '#7a5636'])
-      + signboard(1.3, 3.7, 1.05, 1.66, '#e8cfa0', ['#8a6440', '#5a3f26', '#6e4e30'], onR(1.3, 3.7, 1.66, 1.74, '#ff9ec4') + onRight(1.5, 1.51, say(pick, title, { fill: '#2f5a24', sub: '#3a3020', size: 5.6 }))),
-    floor: `${floorPoly(`url(#${u('floor')})`)}${stripes.join('')}`,
-    edge: `${fence}${tulips((t) => P(0.18, t, 0))}${tulips((t) => P(t, 0.18, 0))}`,
-    props: '',
+      + signboard(1.3, 3.7, 1.05, 1.66, '#e8cfa0', ['#8a6440', '#5a3f26', '#6e4e30'], onR(1.3, 3.7, 1.66, 1.76, '#ff9ec4') + onRight(1.5, 1.51, say(pick, title, { fill: '#2f5a24', sub: '#3a3020', size: 5.6 }))),
+    floor: `${floorPoly(`url(#${u('floor')})`)}${stripes.join('')}${daisies}`,
+    edge: `${hedge}${dots((t) => P(-0.17, t, 0.56))}${dots((t) => P(t, -0.17, 0.56))}${tulips((t) => P(0.16, t, 0))}${tulips((t) => P(t, 0.16, 0))}`,
+    props: `${bed}${fountain}`,
     over: `${petals}${butterflies}`,
     beam: ['#fffbe8', '#fff1c4'], dust: '#ffd6e8',
-    plat: ['#e2ddd0', '#a8a294', '#c5bfb1'], vig: 0.25,
+    plat: ['#e2ddd0', '#a8a294', '#c5bfb1'], vig: 0.22,
   };
 }
 

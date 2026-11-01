@@ -11,7 +11,7 @@
 export const SEASONS = [
   { id: 'halloween', name: 'Nuit d’Halloween', desc: 'Pleine lune, chauves-souris, citrouilles qui luisent et brume au sol.', from: [10, 15], to: [11, 5], n: 6, trophy: 'Esprit d’Halloween', icon: 'moon', tier: 'bronze' },
   { id: 'noel', name: 'Village de Noël', desc: 'Sous la neige, un grand sapin qui scintille et les chalets éclairés.', from: [12, 1], to: [1, 6], n: 10, trophy: 'Lutin d’acier', icon: 'sparkles', tier: 'argent' },
-  { id: 'printemps', name: 'Jardin en fleurs', desc: 'Cerisiers en fleurs, tulipes, papillons et pétales au vent.', from: [3, 20], to: [4, 30], n: 12, trophy: 'Renouveau', icon: 'sprout', tier: 'argent' },
+  { id: 'printemps', name: 'Jardin en fleurs', desc: 'Champs de tulipes, moulin, cerisiers en fleurs, fontaine et papillons.', from: [3, 20], to: [4, 30], n: 12, trophy: 'Renouveau', icon: 'sprout', tier: 'argent' },
   { id: 'ete', name: 'Nuit d’été', desc: 'Un ponton sur le lac, des guirlandes et des feux d’artifice.', from: [7, 1], to: [8, 31], n: 15, trophy: 'Feu d’artifice', icon: 'sun', tier: 'or' },
 ];
 

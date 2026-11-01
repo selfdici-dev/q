@@ -14,8 +14,12 @@ import { WORKOUTS } from './data.js';
 import { HUB, HW, P, r1, pts, poly, flat, box } from './iso.js';
 import { decorArt } from './decors.js';
 import { daylightArt } from './daylight.js';
+import { drawingFor, drawingSVG } from './drawings.js';
 
 export { HUB };
+// Ce qu'on voit de la salle : le dessin sans sa bande du bas (la séance choisie
+// s'y pose). L'appli l'affiche plus grand que l'écran : on la fait glisser.
+export const HUB_VIEW = { x: 0, y: 0, w: HUB.w, h: 452 };
 // couleurs des séances sur le fond sombre de la salle
 export const COLORS = { A: '#9fd08f', B: '#7cc4e4', C: '#e98a6b', M: '#c3a3e0', P: '#e7c76b' };
 
@@ -46,13 +50,45 @@ function place(st, animate) {
   return { f, inner: svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, ''), tx, ty, box: [tx + bx * st.s, ty + by * st.s, bw * st.s, bh * st.s] };
 }
 
+// Les personnages des postes : les dessins 3D des exercices (drawings.js),
+// à la place des bonshommes (gardés si un dessin manque). Mesurés sur leurs
+// images : la largeur à l'écran (unités de la salle, réglée pour que tous
+// aient la même taille de corps), la ligne du sol et le milieu des appuis
+// (part de l'image, de gauche à droite et de haut en bas), le haut du corps.
+// Les tractions ont leur barre dans le dessin ; le sac de boxe se pend devant
+// les poings (bag, part de la largeur).
+export const CAST = {
+  P: { width: 72, ground: 0.987, center: 0.532, top: 0.017 },
+  M: { width: 76, ground: 0.98, center: 0.569, top: 0.018 },
+  A: { width: 92, ground: 0.82, center: 0.5, top: 0.02 },
+  C: { width: 80, ground: 0.978, center: 0.517, top: 0.018, bag: 0.9 },
+  B: { width: 106, ground: 0.837, center: 0.491, top: 0.023 },
+};
+const r4 = (v) => Math.round(v * 1e4) / 1e4;
+export function who(st, animate) {
+  const c = CAST[st.id];
+  const r = c && drawingFor(st.ex);
+  if (!r) return null;
+  const { d, mirror } = r;
+  const s = c.width / d.w;
+  const [x, y] = P(...center(st), PH);
+  const tx = x - (mirror ? 1 - c.center : c.center) * c.width;
+  const ty = y - c.ground * d.h * s;
+  const inner = drawingSVG(st.ex, { animate, ghost: false }).replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
+  return {
+    svg: `<g class="hub-who" transform="translate(${r1(tx)} ${r1(ty)}) scale(${r4(s)})">${inner}</g>`,
+    box: [tx, ty + c.top * d.h * s, c.width, (c.ground - c.top) * d.h * s],
+    tx, ty, w: c.width, h: d.h * s,
+  };
+}
+
 // Zones à toucher (unités de la salle) : de la tête du bonhomme au bord avant
 // de sa plateforme, ZW de large ; une zone ne mord pas sur celle de dessus
 // (13 d'écart, car l'appli les agrandit de 6 de chaque côté).
 const ZW = 80;
 export function hubLayout() {
   const zones = STATIONS.map((st) => {
-    const [, figTop] = place(st, false).box;
+    const [, figTop] = (who(st, false) ?? place(st, false)).box;
     const [x, y] = P(...center(st), PH);
     return { id: st.id, x: x - ZW / 2, top: figTop - 4, bottom: y + 18 };
   });
@@ -61,6 +97,9 @@ export function hubLayout() {
       const sideBySide = Math.abs(u.x - z.x) >= ZW + 12;
       if (u !== z && !sideBySide && u.bottom < z.bottom && z.top < u.bottom + 13) z.top = u.bottom + 13;
     }
+    // la borne d'arcade aussi a sa zone : on ne mord pas dessus
+    const [ax, ay, aw, ah] = arcadeZone();
+    if (z.x < ax + aw + 12 && ax < z.x + ZW + 12 && z.top < ay + ah + 12 && z.bottom > ay + ah) z.top = Math.max(z.top, ay + ah + 13);
   }
   return zones.map((z) => ({ id: z.id, box: [r1(z.x), r1(z.top), ZW, r1(z.bottom - z.top)] }));
 }
@@ -117,10 +156,14 @@ function tower(id, p, st, floorY) {
     + `${dip(x2, y2 + 38 * s, -1)}${post(x1, y1, floorY, 3 * s)}${foot(x1, floorY, 1.8 * s)}${dip(x1, y1 + 38 * s, 1)}</g>`;
 }
 
-// Sac de boxe pendu à une potence fixée au mur, devant les poings du bonhomme C.
-function bag(id, p, st) {
+// Sac de boxe pendu à une potence fixée au mur, devant les poings du
+// personnage C (son dessin) ou de son bonhomme.
+function bag(id, p, st, pers) {
   const s = st.s;
-  const cx = r1(p.tx + 93 * s), top = r1(p.ty + 13 * s), bottom = r1(p.ty + 52 * s), w = r1(13 * s);
+  const cx = r1(pers ? pers.tx + CAST.C.bag * pers.w : p.tx + 93 * s);
+  const top = r1(pers ? pers.ty + 0.12 * pers.h : p.ty + 13 * s);
+  const bottom = r1(pers ? pers.ty + 0.6 * pers.h : p.ty + 52 * s);
+  const w = r1(pers ? 0.17 * pers.w : 13 * s);
   const ceil = r1(P(7.4, 0.2, HW)[1] + 6);
   const band = (y) => `<rect x="${r1(cx - w / 2)}" y="${r1(y)}" width="${w}" height="${r1(w * 0.12)}" fill="#c98059" fill-opacity="0.9"/>`;
   return `<g class="hub-bag"><path d="M${r1(cx - w * 1.4)} ${ceil}H${r1(cx + w * 0.3)}" stroke="#3a3532" stroke-width="${r1(w * 0.22)}" stroke-linecap="round"/>`
@@ -165,17 +208,18 @@ export function hubSVG({ pick = 'A', animate = true, id = 'hub', decor = 'salle'
   const order = [...STATIONS].sort((a, b) => (a.X + a.Y) - (b.X + b.Y));
   const stations = order.map((st) => {
     const on = st.id === pick;
-    const p = place(st, on && animate);
+    const pers = who(st, on && animate); // le personnage (son dessin), sinon le bonhomme
+    const p = place(st, on && animate && !pers);
     const [cx, cy] = center(st);
     const col = COLORS[st.id];
     const pulse = on && animate ? '<animate attributeName="stroke-opacity" values="1;0.45;1" dur="1.8s" repeatCount="indefinite"/>' : '';
     const edge = `<path class="hub-edge" d="M${pts([P(st.X + 0.08, st.Y + 0.08, PH), P(st.X + S - 0.08, st.Y + 0.08, PH), P(st.X + S - 0.08, st.Y + S - 0.08, PH), P(st.X + 0.08, st.Y + S - 0.08, PH)])}Z" fill="none" stroke="${col}" stroke-width="${on ? 1.6 : 0.8}" stroke-opacity="${on ? 1 : 0.5}"${on ? ` filter="url(#${u('glow')})"` : ''}>${pulse}</path>`;
     const plat = `<g class="hub-plat">${box(st.X, st.Y, 0, S, S, PH, art.plat)}${edge}</g>`;
     const gear = {
-      P: () => tower(id, p, st, P(cx, cy, PH)[1]),
+      P: () => (pers ? '' : tower(id, p, st, P(cx, cy, PH)[1])), // le dessin a sa barre
       M: () => flat(cx - 0.9, cy - 0.45, PH + 0.01, 1.8, 0.9, '#7f9f78'),
       A: () => flat(cx - 0.95, cy - 0.5, PH + 0.01, 1.9, 1.0, '#3a3330', ' stroke="#c98059" stroke-width="0.6"'),
-      C: () => bag(id, p, st),
+      C: () => bag(id, p, st, pers),
       B: () => flat(cx - 0.9, cy - 0.55, PH + 0.01, 1.8, 1.1, `url(#${u('wood')})`),
     }[st.id]();
     const after = {
@@ -184,7 +228,8 @@ export function hubSVG({ pick = 'A', animate = true, id = 'hub', decor = 'salle'
       A: wheel(...P(st.X + 1.95, st.Y + 1.7, PH)),
       B: bands(...P(st.X + 2.1, st.Y + 0.25, PH), 0.9),
     }[st.id];
-    return `<g class="hub-st st-${st.id} wo-${st.id}${on ? ' on' : ''}">${plat}${gear}<g class="fig" transform="translate(${r1(p.tx)} ${r1(p.ty)}) scale(${st.s})">${p.inner}</g>${after}</g>`;
+    const body = pers ? pers.svg : `<g class="fig" transform="translate(${r1(p.tx)} ${r1(p.ty)}) scale(${st.s})">${p.inner}</g>`;
+    return `<g class="hub-st st-${st.id} wo-${st.id}${on ? ' on' : ''}">${plat}${gear}${body}${after}</g>`;
   }).join('');
 
   // faisceau de lumière sur le poste choisi, et des poussières qui y montent
@@ -195,7 +240,7 @@ export function hubSVG({ pick = 'A', animate = true, id = 'hub', decor = 'salle'
   const dust = animate ? `<g class="hub-dust" fill="${art.dust}">${[[-14, 0, 2.6], [-6, 0.9, 3.4], [3, 0.3, 2.9], [10, 1.6, 3.8], [16, 1.1, 3.1], [-1, 2.2, 4.2]].map(([dx, delay, dur]) => `<circle cx="${r1(fx + dx)}" cy="${r1(fy - 6)}" r="0.9" opacity="0"><animate attributeName="cy" values="${r1(fy - 6)};${r1(fy - 78)}" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.8;0" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/></circle>`).join('')}</g>` : '';
 
   const [c1, c2] = art.beam;
-  return `<svg class="hub-scene" viewBox="0 0 ${HUB.w} ${HUB.h}" aria-hidden="true"><defs>${art.defs}
+  return `<svg class="hub-scene" viewBox="${HUB_VIEW.x} ${HUB_VIEW.y} ${HUB_VIEW.w} ${HUB_VIEW.h}" aria-hidden="true"><defs>${art.defs}
 <linearGradient id="${u('wood')}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a5f3e"/><stop offset="1" stop-color="#5e3d26"/></linearGradient>
 <linearGradient id="${u('beam')}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}" stop-opacity="0.02"/><stop offset="0.7" stop-color="${c2}" stop-opacity="0.12"/><stop offset="1" stop-color="${c2}" stop-opacity="0.3"/></linearGradient>
 <linearGradient id="${u('metal')}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1d1a18"/><stop offset="0.45" stop-color="#5a524c"/><stop offset="1" stop-color="#211d1b"/></linearGradient>

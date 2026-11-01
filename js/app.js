@@ -74,6 +74,7 @@ function freshState() {
       blocs: { best: 0, plays: 0, lines: 0, cur: null }, calc: { best: 0, plays: 0, streak: 0 },
       cristaux: { level: 1, top: 0, best: 0, plays: 0, cur: null }, sudoku: { solved: { facile: 0, moyen: 0, difficile: 0 }, best: {}, plays: 0, cur: null },
       serpent: { best: 0, plays: 0 }, paires: { level: 1, top: 0, best: {}, plays: 0, cur: null }, code: { wins: 0, plays: 0, best: 0, cur: null },
+      briques: { best: 0, level: 0, plays: 0 }, taquin: { best: {}, plays: 0, cur: null }, echo: { best: 0, plays: 0 },
     },
     ui: { moneyTab: 'parcours', meTab: 'programme', lesson: null, lastLevel: 1 },
     timers: { pomo: { mode: 'work', endAt: null, remaining: POMO_WORK, label: '' }, urge: { endAt: null } },
@@ -321,7 +322,7 @@ async function keepAwake(on) {
 
 // ---------- vues ----------
 
-// La borne d'arcade de la Salle (#jeux) : Blocs, Cristaux, Serpent, Calcul éclair, Paires, Code secret, Sudoku.
+// La borne d'arcade de la Salle (#jeux) : dix jeux (Blocs, Cristaux, Serpent, Casse-briques, Calcul éclair, Paires, Code secret, Écho, Taquin, Sudoku).
 const arcade = createArcade({
   get state() { return state; },
   save: () => save(),

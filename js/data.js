@@ -514,8 +514,8 @@ export const HELP = {
   jeux: {
     title: 'Comment marche l’Arcade',
     lines: [
-      'Sept jeux : Blocs, Cristaux, Serpent et Paires pour les mains ; Calcul, Code secret et Sudoku pour la tête.',
-      'La règle s’affiche sous chaque jeu. Blocs, Cristaux, Paires, Code et Sudoku reprennent où tu les as laissés.',
+      'Dix jeux : Blocs, Cristaux, Serpent, Casse-briques, Paires, Taquin ; Calcul, Code secret, Écho, Sudoku.',
+      'La règle s’affiche sous chaque jeu. Une grille en cours (Blocs, Cristaux, Taquin, Sudoku…) t’attend.',
       'Tes records restent sur le téléphone, et ils comptent pour débloquer des décors de la Salle.',
     ],
   },

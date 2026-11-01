@@ -8,6 +8,9 @@ import { PEERS, newSudoku, sdPlace, sdNote, sdCounts } from './sudoku.js';
 import { SN, snakeDelay, newSnake, turnSnake, stepSnake } from './snake.js';
 import { pairsCols, newPairs, flipCard, hidePairs, pairsStars } from './pairs.js';
 import { CODE_LEN, CODE_COLORS, CODE_TRIES, newCode, playGuess } from './code.js';
+import { BW, BH, PADDLE_Y, BALL_R, newBricks, serve, movePaddle, stepBricks, nextBricks } from './bricks.js';
+import { newTaquin, slide } from './taquin.js';
+import { ECHO_PADS, echoDelay, newEcho, pressEcho } from './echo.js';
 import { icon } from './icons.js';
 
 const fmt = (n) => Number(n).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
@@ -19,6 +22,8 @@ const PAIR_NAMES = ['haltère', 'flamme', 'drapeau', 'trophée', 'cible', 'solei
 const PAIR_COLORS = ['#9fd08f', '#7cc4e4', '#e98a6b', '#c3a3e0', '#e7c76b', '#ef8fc0'];
 const CODE_NAMES = ['', 'vert', 'bleu', 'orange', 'violet', 'or', 'rose'];
 const ARROWS = { haut: '▲', gauche: '◀', droite: '▶', bas: '▼' };
+const PIECE_COLORS = ['', '#9fd08f', '#7cc4e4', '#e98a6b', '#c3a3e0', '#e7c76b'];
+const ECHO_NAMES = ['vert', 'bleu', 'orange', 'violet'];
 const minutes = (secs) => (secs < 60 ? `${Math.max(1, Math.round(secs))} s` : `${Math.round(secs / 60)} min`);
 const EURO = new Set(['sale', 'interest', 'unit']);
 const seed = () => (Date.now() ^ Math.floor(Math.random() * 2 ** 31)) | 0;
@@ -56,6 +61,19 @@ export function createArcade(ctx) {
   let prTimer = null;
   // Code secret : l'essai en cours de composition
   let codeDraft = [];
+  const BR = () => (games().briques ??= { best: 0, level: 0, plays: 0 });
+  const TQ = () => (games().taquin ??= { best: {}, plays: 0, cur: null });
+  const EC = () => (games().echo ??= { best: 0, plays: 0 });
+  // Casse-briques : la partie (en mémoire), la boucle d'images, les éclats
+  let br = null;
+  let brRaf = 0;
+  let brLast = 0;
+  let brPaused = false;
+  let sparks = [];
+  // Écho : la partie, la touche allumée, la phase (démonstration ou à toi)
+  let echo = null;
+  let ecPhase = 'show';
+  let ecTimers = [];
   // Cristaux : le cristal choisi, l'animation en cours (grille montrée, cases
   // qui éclatent, qui tombent), les deux qui refusent de s'échanger
   let gemSel = null;
@@ -87,6 +105,10 @@ export function createArcade(ctx) {
       <h3>${name}</h3><p class="arc-tag">${tag}</p><p class="arc-best">${best}</p>${play}
     </section>`;
     const go = (id, label, extra = '') => `<button class="btn primary small" data-act="arc-play" data-id="${id}"${extra}>${label}</button>`;
+    const brk = BR();
+    const tq = TQ();
+    const ec = EC();
+    const tqGoing = tq.cur && !tq.cur.done;
     const snakeArt = '<svg viewBox="0 0 40 40"><rect x="6" y="22" width="7" height="7" rx="2" fill="#9fd08f"/><rect x="13" y="22" width="7" height="7" rx="2" fill="#9fd08f"/><rect x="20" y="22" width="7" height="7" rx="2" fill="#9fd08f"/><rect x="20" y="15" width="7" height="7" rx="2.5" fill="#d6f5c4"/><circle cx="30" cy="9" r="3.4" fill="#e98a6b"/></svg>';
     return `<div class="arc-grid">
       ${tile('blocs', 'Blocs', 'Pose, aligne, efface', ['bl-art', [3, 1, 5, 2].map((k) => `<i class="c${k}"></i>`).join('')], `Record <b>${fmt(b.best)}</b>`, go('blocs', going ? 'Reprendre' : 'Jouer'))}
@@ -95,6 +117,10 @@ export function createArcade(ctx) {
       ${tile('calc', 'Calcul éclair', '60 s de calcul utile', ['cc-art', '<b>25 %</b><b>× 7</b><b>−30 %</b>'], `Record <b>${fmt(c.best)}</b>`, go('calc', 'Jouer'))}
       ${tile('paires', 'Paires', 'Retrouve les jumelles', ['pr-art', `<span class="pr-mini up" style="--pc:${PAIR_COLORS[1]}">${icon('flame')}</span><span class="pr-mini"></span>`], `Niveau <b>${pr.level}</b>`, go('paires', prGoing ? 'Reprendre' : 'Jouer'))}
       ${tile('code', 'Code secret', 'Devine les 4 couleurs', ['cd-art', [2, 5, 3, 6].map((k) => `<span class="peg p${k}"></span>`).join('')], `<b>${fmt(cd.wins)}</b> code${cd.wins > 1 ? 's' : ''} trouvé${cd.wins > 1 ? 's' : ''}`, go('code', cdGoing ? 'Reprendre' : 'Jouer'))}
+      ${tile('briques', 'Casse-briques', 'Renvoie, casse tout', ['br-art', [1, 2, 3, 4, 5, 2].map((k) => `<i style="background:${PIECE_COLORS[k]}"></i>`).join('') + '<b></b><u></u>'], `Record <b>${fmt(brk.best)}</b>${brk.level ? ` · niv. ${brk.level}` : ''}`, go('briques', 'Jouer'))}
+      ${tile('echo', 'Écho', 'Retiens la suite', ['ec-art', [0, 1, 2, 3].map((k) => `<i class="ec${k}${k === 2 ? ' lit' : ''}"></i>`).join('')], `Record <b>${fmt(ec.best)}</b>`, go('echo', 'Jouer'))}
+      ${tile('taquin', 'Taquin', 'Range les cases', ['tq-art', [1, 2, 3, 4, 5, 6, 7, 8, 0].map((v) => `<i>${v || ''}</i>`).join('')], tq.best[3] || tq.best[4] ? `Record ${tq.best[3] ? `<b>${tq.best[3]}</b> en 3×3` : ''}${tq.best[3] && tq.best[4] ? ' · ' : ''}${tq.best[4] ? `<b>${tq.best[4]}</b> en 4×4` : ''}` : 'Pas encore rangé',
+        `${tqGoing ? go('taquin', 'Reprendre') : ''}<div class="sd-levels">${[3, 4].map((n) => `<button class="btn small${tqGoing ? '' : ' primary'}" data-act="arc-play" data-id="taquin" data-n="${n}">${n} × ${n}</button>`).join('')}</div>`)}
       ${tile('sudoku', 'Sudoku', 'Un chiffre par ligne', ['sd-art', ['5', '', '3', '', '7', '', '1', '', '9'].map((d) => `<i>${d}</i>`).join('')], `<b>${fmt(solved)}</b> grille${solved > 1 ? 's' : ''}${sd.best.difficile ? ` · ${minutes(sd.best.difficile)}` : ''}`,
         `${sdGoing ? go('sudoku', 'Reprendre') : ''}<div class="sd-levels">${Object.entries(SD_NAMES).map(([lv, name]) => `<button class="btn small${sdGoing ? '' : ' primary'}" data-act="arc-play" data-id="sudoku" data-lv="${lv}">${name}</button>`).join('')}</div>`)}
     </div>
@@ -156,7 +182,7 @@ export function createArcade(ctx) {
   // Glisser une pièce : elle suit le doigt un peu au-dessus (pour la voir),
   // la grille montre où elle tomberait.
   function pointerDown(e) {
-    if (gemDown(e) || snakeDown(e)) return;
+    if (gemDown(e) || snakeDown(e) || bricksDown(e)) return;
     const btn = e.target.closest?.('.bl-piece[data-piece]');
     if (!btn || mode !== 'blocs' || B().cur.over) return;
     const grid = document.getElementById('bl-grid');
@@ -553,6 +579,228 @@ export function createArcade(ctx) {
     mode = 'code';
   }
 
+  // ---------- Casse-briques ----------
+  function bricksView() {
+    const g = br;
+    const hearts = `${'♥'.repeat(Math.max(0, g.lives))}${'♡'.repeat(Math.max(0, 3 - g.lives))}`;
+    queueMicrotask(brDraw); // le terrain se redessine dès que l'écran est en place
+    return `<section class="arcade br-wrap">
+      <div class="arc-top"><button class="btn small" data-act="arc-menu">‹ Arcade</button>
+        <div class="arc-score"><b id="br-score">${fmt(g.score)}</b><small>Niveau ${g.level} · <span class="br-hearts" aria-label="${g.lives} vie${g.lives > 1 ? 's' : ''}">${hearts}</span></small></div></div>
+      <canvas class="br-canvas" id="br-canvas" width="${BW * 4}" height="${BH * 4}" role="img" aria-label="Terrain : balle, raquette et briques"></canvas>
+      ${g.over ? `<div class="arc-over"><p class="arc-big">Plus de balles</p><p class="muted">${fmt(g.score)} points · niveau ${g.level}${g.score > 0 && g.score >= BR().best ? ' · nouveau record' : ''}</p>
+          <button class="btn primary" data-act="arc-play" data-id="briques">Rejouer</button></div>`
+      : g.cleared ? `<div class="arc-over"><p class="arc-big">Niveau ${g.level} nettoyé</p><p class="muted">${fmt(g.score)} points</p>
+          <button class="btn primary" data-act="br-next">Niveau ${g.level + 1}</button></div>`
+      : brPaused ? '<div class="arc-over"><p class="arc-big">En pause</p><button class="btn primary" data-act="br-resume">Reprendre</button></div>'
+      : `<p class="hint center">${g.served ? 'Fais glisser le doigt sur le terrain : la raquette suit.' : 'Touche le terrain pour lancer la balle.'}</p>`}
+    </section>`;
+  }
+
+  const roundRect = (c, x, y, w, h, r) => {
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  };
+
+  function brDraw() {
+    const cv = document.getElementById('br-canvas');
+    if (!cv || !br) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = Math.round((cv.clientWidth || 360) * dpr);
+    if (cv.width !== w) { cv.width = w; cv.height = Math.round((w * BH) / BW); }
+    const c = cv.getContext('2d');
+    if (!c) return;
+    const k = cv.width / BW;
+    c.setTransform(k, 0, 0, k, 0, 0);
+    c.fillStyle = '#100c14';
+    c.fillRect(0, 0, BW, BH);
+    for (const b of br.bricks) {
+      if (b.hp <= 0) continue;
+      c.fillStyle = PIECE_COLORS[b.color];
+      roundRect(c, b.x, b.y, b.w, b.h, 1);
+      c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.3)';
+      c.fillRect(b.x + 0.6, b.y + 0.5, b.w - 1.2, 0.8);
+      if (b.hp > 1) { c.strokeStyle = 'rgba(20,12,8,0.75)'; c.lineWidth = 0.6; for (let i = 1; i < b.hp; i++) { c.beginPath(); c.moveTo(b.x + i * 2.4, b.y + b.h - 0.6); c.lineTo(b.x + i * 2.4 + 1.6, b.y + 0.8); c.stroke(); } }
+    }
+    for (const p of sparks) { c.globalAlpha = Math.max(0, p.life / 420); c.fillStyle = p.color; c.fillRect(p.x - 0.5, p.y - 0.5, 1, 1); }
+    c.globalAlpha = 1;
+    const grad = c.createLinearGradient(0, PADDLE_Y, 0, PADDLE_Y + 3);
+    grad.addColorStop(0, '#f3c9a8');
+    grad.addColorStop(1, '#b8714c');
+    c.fillStyle = grad;
+    roundRect(c, br.paddle - br.pw / 2, PADDLE_Y, br.pw, 3, 1.5);
+    c.fill();
+    c.fillStyle = '#fff';
+    c.beginPath();
+    c.arc(br.ball.x, br.ball.y, BALL_R, 0, Math.PI * 2);
+    c.fill();
+  }
+
+  function startBricks() {
+    cancelAnimationFrame(brRaf);
+    br = newBricks(1);
+    BR().plays += 1;
+    brPaused = false;
+    sparks = [];
+    mode = 'briques';
+    ctx.save();
+  }
+
+  function brRun() {
+    cancelAnimationFrame(brRaf);
+    brLast = 0;
+    brRaf = requestAnimationFrame(brLoop);
+  }
+
+  // Une image : la balle avance, les briques cassées lâchent des éclats.
+  function brLoop(t) {
+    if (mode !== 'briques' || !br || !br.served) return;
+    if (location.hash !== '#jeux' || document.hidden) { brPaused = true; return; }
+    const dt = brLast ? Math.min(50, t - brLast) : 16;
+    brLast = t;
+    const before = br;
+    br = stepBricks(br, dt);
+    if (!ctx.reduceMotion()) {
+      br.bricks.forEach((b, i) => {
+        if (before.bricks[i].hp > 0 && b.hp === 0) {
+          for (let k = 0; k < 7; k++) sparks.push({ x: b.x + b.w / 2, y: b.y + b.h / 2, vx: (Math.random() - 0.5) * 0.08, vy: (Math.random() - 0.5) * 0.08, life: 420, color: PIECE_COLORS[b.color] });
+        }
+      });
+    }
+    sparks = sparks.filter((p) => (p.life -= dt) > 0).map((p) => ({ ...p, x: p.x + p.vx * dt, y: p.y + p.vy * dt }));
+    if (br.score !== before.score) {
+      const sc = document.getElementById('br-score');
+      if (sc) sc.textContent = fmt(br.score);
+    }
+    if (br.lives !== before.lives || br.over || br.cleared) {
+      const brk = BR();
+      if (br.over || br.cleared) {
+        const rec = br.score > brk.best;
+        brk.best = Math.max(brk.best, br.score);
+        brk.level = Math.max(brk.level, br.cleared ? br.level : br.level - 1);
+        ctx.save();
+        ctx.render();
+        if (rec && br.over) ctx.celebrate(`Nouveau record au Casse-briques : ${fmt(br.score)}`);
+        else if (br.cleared) ctx.celebrate(`Casse-briques : niveau ${br.level} nettoyé`);
+        return;
+      }
+      navigator.vibrate?.(40);
+      ctx.render(); // une vie de moins : la balle revient sur la raquette
+      return;
+    }
+    brDraw();
+    brRaf = requestAnimationFrame(brLoop);
+  }
+
+  // Le doigt sur le terrain : lance la balle, puis la raquette le suit.
+  function bricksDown(e) {
+    const cv = e.target.closest?.('#br-canvas');
+    if (!cv || mode !== 'briques' || !br || br.over || br.cleared) return false;
+    e.preventDefault();
+    const id = e.pointerId;
+    const toX = (ev) => {
+      const r = cv.getBoundingClientRect();
+      return ((ev.clientX - r.left) / r.width) * BW;
+    };
+    br = movePaddle(br, toX(e));
+    if (!br.served) {
+      br = serve(br);
+      brPaused = false;
+      ctx.render();
+      brRun();
+    }
+    const move = (ev) => {
+      if (ev.pointerId !== id || !br) return;
+      br = movePaddle(br, toX(ev));
+      if (!br.served) brDraw();
+    };
+    const up = (ev) => {
+      if (ev.pointerId !== id) return;
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+    };
+    window.addEventListener('pointermove', move, { passive: false });
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+    return true;
+  }
+
+  // ---------- Taquin ----------
+  function taquinView() {
+    const tq = TQ();
+    const g = tq.cur;
+    const tiles = g.tiles.map((v, i) => (v
+      ? `<button class="tq-tile${v === i + 1 ? ' ok' : ''}" data-act="tq-slide" data-i="${i}" aria-label="Case ${v}">${v}</button>`
+      : '<span class="tq-tile empty" aria-hidden="true"></span>')).join('');
+    return `<section class="arcade tq-wrap">
+      <div class="arc-top"><button class="btn small" data-act="arc-menu">‹ Arcade</button>
+        <div class="arc-score"><b>${g.moves}</b><small>${g.n} × ${g.n} · coups${tq.best[g.n] ? ` · record ${tq.best[g.n]}` : ''}</small></div></div>
+      <div class="tq-grid" style="--n:${g.n}">${tiles}</div>
+      ${g.done ? `<div class="arc-over"><p class="arc-big">Rangé en ${g.moves} coups</p>
+          <div class="row">${[3, 4].map((n) => `<button class="btn${n === g.n ? ' primary' : ''}" data-act="arc-play" data-id="taquin" data-n="${n}">Encore en ${n} × ${n}</button>`).join('')}</div></div>`
+      : '<p class="hint center">Touche une case sur la même ligne ou colonne que la case vide : elle glisse (et celles entre les deux aussi). Range de 1 à la fin.</p>'}
+    </section>`;
+  }
+
+  function startTaquin(n) {
+    const tq = TQ();
+    if (n || !tq.cur || tq.cur.done) {
+      tq.cur = newTaquin(seed(), Number(n) === 4 ? 4 : n ? 3 : tq.cur?.n ?? 3);
+      tq.plays += 1;
+    }
+    mode = 'taquin';
+  }
+
+  // ---------- Écho ----------
+  function echoView() {
+    const g = echo;
+    const best = EC().best;
+    const pads = Array.from({ length: ECHO_PADS }, (_, p) => `<button class="ec-pad ec${p}" data-act="ec-press" data-p="${p}" aria-label="Touche ${ECHO_NAMES[p]}"${ecPhase !== 'play' || g.over ? ' disabled' : ''}><i></i></button>`).join('');
+    return `<section class="arcade ec-wrap">
+      <div class="arc-top"><button class="btn small" data-act="arc-menu">‹ Arcade</button>
+        <div class="arc-score"><b>${g.score}</b><small>Record ${fmt(Math.max(best, g.score))}</small></div></div>
+      <p class="ec-status" aria-live="polite">${g.over ? 'Raté !' : ecPhase === 'play' ? `À toi : ${g.seq.length - g.step} touche${g.seq.length - g.step > 1 ? 's' : ''}` : 'Regarde bien…'}</p>
+      <div class="ec-pads">${pads}</div>
+      ${g.over ? `<div class="arc-over"><p class="arc-big">Suite de ${g.score}</p><p class="muted">${g.score > 0 && g.score >= best ? 'Nouveau record' : `Record : ${best}`}</p>
+          <button class="btn primary" data-act="arc-play" data-id="echo">Rejouer</button></div>`
+      : '<p class="hint center">Les touches s’allument dans un ordre : refais la même suite. À chaque tour, une de plus.</p>'}
+    </section>`;
+  }
+
+  const ecLight = (p, on) => document.querySelector(`.ec-pad[data-p="${p}"]`)?.classList.toggle('lit', on);
+  const ecClear = () => { ecTimers.forEach(clearTimeout); ecTimers = []; };
+
+  // La démonstration : chaque touche de la suite s'allume à son tour.
+  function ecShow() {
+    ecClear();
+    ecPhase = 'show';
+    ctx.render();
+    const d = echoDelay(echo.seq.length);
+    echo.seq.forEach((p, k) => {
+      ecTimers.push(setTimeout(() => ecLight(p, true), 500 + k * (d + 160)));
+      ecTimers.push(setTimeout(() => ecLight(p, false), 500 + k * (d + 160) + d));
+    });
+    ecTimers.push(setTimeout(() => {
+      if (mode !== 'echo' || !echo || echo.over) return;
+      ecPhase = 'play';
+      ctx.render();
+    }, 500 + echo.seq.length * (d + 160)));
+  }
+
+  function startEcho() {
+    echo = newEcho(seed());
+    EC().plays += 1;
+    mode = 'echo';
+    ctx.save();
+  }
+
   // ---------- Calcul éclair ----------
   const left = () => Math.max(0, calcEnd - Date.now());
   function calcView() {
@@ -609,12 +857,17 @@ export function createArcade(ctx) {
       else if (el.dataset.id === 'serpent') startSnake();
       else if (el.dataset.id === 'paires') startPairs();
       else if (el.dataset.id === 'code') startCode(Boolean(el.dataset.new));
+      else if (el.dataset.id === 'briques') startBricks();
+      else if (el.dataset.id === 'taquin') startTaquin(el.dataset.n);
+      else if (el.dataset.id === 'echo') { startEcho(); ctx.render(); window.scrollTo(0, 0); ecShow(); return; }
       else startBlocs(Boolean(el.dataset.new));
       ctx.save();
       ctx.render();
       window.scrollTo(0, 0);
     },
     'arc-menu'() {
+      cancelAnimationFrame(brRaf);
+      ecClear();
       clearInterval(timer);
       clearTimeout(snTimer);
       clearTimeout(prTimer);
@@ -697,6 +950,62 @@ export function createArcade(ctx) {
       ctx.save();
       ctx.render();
     },
+    'br-next'() {
+      if (mode !== 'briques' || !br?.cleared) return;
+      br = nextBricks(br);
+      sparks = [];
+      ctx.render();
+    },
+    'br-resume'() {
+      if (mode !== 'briques' || !br || br.over) return;
+      brPaused = false;
+      ctx.render();
+      if (br.served) brRun();
+    },
+    'tq-slide'(el) {
+      const tq = TQ();
+      if (mode !== 'taquin' || !tq.cur || tq.cur.done) return;
+      const before = tq.cur;
+      tq.cur = slide(before, Number(el.dataset.i));
+      if (tq.cur === before) return;
+      if (tq.cur.done) {
+        const n = tq.cur.n;
+        const rec = !tq.best[n] || tq.cur.moves < tq.best[n];
+        if (rec) tq.best[n] = tq.cur.moves;
+        ctx.save();
+        ctx.render();
+        ctx.celebrate(`Taquin ${n} × ${n} rangé en ${tq.cur.moves} coups${rec ? ' · record' : ''}`);
+        return;
+      }
+      ctx.save();
+      ctx.render();
+    },
+    'ec-press'(el) {
+      if (mode !== 'echo' || !echo || echo.over || ecPhase !== 'play') return;
+      const p = Number(el.dataset.p);
+      ecLight(p, true);
+      ecTimers.push(setTimeout(() => ecLight(p, false), 180));
+      const res = pressEcho(echo, p);
+      echo = res.game;
+      if (echo.over) {
+        const ec = EC();
+        const rec = echo.score > ec.best;
+        ec.best = Math.max(ec.best, echo.score);
+        navigator.vibrate?.(60);
+        ctx.save();
+        ctx.render();
+        if (rec) ctx.celebrate(`Nouveau record à Écho : une suite de ${echo.score}`);
+        return;
+      }
+      if (res.round) {
+        ecPhase = 'show';
+        ecTimers.push(setTimeout(ecShow, 450));
+      }
+      const status = document.querySelector('.ec-status');
+      if (status) status.textContent = res.round ? 'Bien ! Une de plus…' : `À toi : ${echo.seq.length - echo.step} touche${echo.seq.length - echo.step > 1 ? 's' : ''}`;
+      const sc = document.querySelector('.ec-wrap .arc-score b');
+      if (sc) sc.textContent = echo.score;
+    },
     'code-color'(el) {
       if (mode !== 'code' || codeDraft.length >= CODE_LEN) return;
       codeDraft = [...codeDraft, Number(el.dataset.c)];
@@ -748,6 +1057,9 @@ export function createArcade(ctx) {
       if (mode === 'serpent' && snake) return snakeView();
       if (mode === 'paires' && PR().cur) return pairsView();
       if (mode === 'code' && CD().cur) return codeView();
+      if (mode === 'briques' && br) return bricksView();
+      if (mode === 'taquin' && TQ().cur) return taquinView();
+      if (mode === 'echo' && echo) return echoView();
       mode = 'menu';
       return menuView();
     },
@@ -755,6 +1067,14 @@ export function createArcade(ctx) {
     pointerDown,
     // les flèches du clavier dirigent le serpent
     keyDown(e) {
+      // casse-briques : flèches gauche et droite, espace pour lancer
+      if (mode === 'briques' && br && !br.over && !br.cleared && location.hash === '#jeux' && ['ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+        e.preventDefault();
+        if (e.key === ' ') { if (!br.served) { br = serve(br); ctx.render(); brRun(); } return; }
+        br = movePaddle(br, br.paddle + (e.key === 'ArrowLeft' ? -6 : 6));
+        if (!br.served) brDraw();
+        return;
+      }
       const d = { ArrowUp: 'haut', ArrowDown: 'bas', ArrowLeft: 'gauche', ArrowRight: 'droite' }[e.key];
       if (!d || mode !== 'serpent' || !snake || snake.over || location.hash !== '#jeux') return;
       e.preventDefault();

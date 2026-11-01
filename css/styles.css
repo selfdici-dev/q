@@ -1181,6 +1181,19 @@ details.card.more .rules { margin-top: 10px; }
 .decor-card.locked { cursor: default; }
 .decor-card.locked .decor-thumb { filter: saturate(0.35) brightness(0.6); }
 .decor-bar { display: block; height: 5px; margin: 2px 10px 0; border-radius: 999px; background: var(--track, rgb(127 127 127 / 0.2)); overflow: hidden; }
+/* Défis de la semaine (la Salle) */
+.defi-list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.defi { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: rgb(127 127 127 / 0.08); }
+.defi-ico { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; background: var(--tile, var(--surface-2)); color: var(--text-2); }
+.defi-ico .ico { width: 20px; height: 20px; }
+.defi-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.defi-text strong { font-size: 0.9rem; line-height: 1.25; }
+.defi-text small { color: var(--muted); font-size: 0.76rem; }
+.defi-text .decor-bar { margin: 3px 0 0; }
+.defi-xp { font: 800 0.78rem/1 var(--sans); color: var(--accent); font-variant-numeric: tabular-nums; }
+.defi.done .defi-ico { background: var(--accent); color: var(--on-accent, #120f0d); }
+.defi.done .defi-text small { color: var(--accent); font-weight: 700; }
+.defi.done .defi-xp::after { content: ' ✓'; }
 /* Habille ton double : la garde-robe (fiche « Ton double ») et son portrait dans la Salle */
 .gear-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 8px 0 4px; }
 .gear-card { display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--card-line, var(--line)); border-radius: 14px; background: var(--card, var(--surface)); color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: transform 0.12s; }

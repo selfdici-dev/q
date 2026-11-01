@@ -10,6 +10,7 @@ L'utilisateur est débutant : explique simplement, en français.
 - `js/app.js` : vues et événements (DOM). `js/money.js` : onglet Argent.
 - `js/logic.js` : logique pure (dates, chaîne, sprints, XP, finance).
 - `js/summary.js`, `js/backup.js` : bilans à copier, sauvegarde (logique pure).
+- `js/challenges.js` : défis de la semaine (3 par lundi, XP en plus) ; réussis dans `state.challenges[lundi]`.
 - `js/routines.js` : routines du matin et du soir (gestes cochés dans `days[jour].routine`, hors chaîne).
 - `js/trophies.js` : trophées (bronze, argent, or), calculés depuis les données ; ceux annoncés
   (`state.settings.trophiesSeen`) restent gagnés.

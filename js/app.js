@@ -4,7 +4,7 @@ import {
   SPRINT_COUNT, SPRINT_PASS, SPRINT_LENGTH, totalXP, levelInfo, weekNumber, weeklyBedtime, todayNotice,
   dueCards, reviewCard, increased, previous, snackTriggers, regularityGrid, bookShelves, nextAction, retireHabits,
   sessionKcal, lastValue, DEFAULT_WEIGHT, proteinGrams, goalOf, nextTarget, logRecord, beatBy, combien, logChoices, toLog, recordKey, spokenStep, dropRecords, creatineWeek,
-  recordWall, wakePlan, bedGoal, clockFr, WAKE_PLAN, kcalTarget, mealTotals, addMeal, STEP_CHOICES, nearestSteps, nbsp,
+  recordWall, wakePlan, bedGoal, clockFr, WAKE_PLAN, kcalTarget, mealTotals, addMeal, STEP_CHOICES, nearestSteps, nbsp, XP,
 } from './logic.js';
 import {
   DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl, baseName,
@@ -29,6 +29,7 @@ import { dayPhase, nightHint } from './daylight.js';
 import { SEASONS, seasonStatus, newSeason, dateFr } from './seasons.js';
 import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS, gearIcon } from './avatar.js';
 import { SLOTS, gearStats, gearStatus, wornGear, wearGear, newGear } from './outfit.js';
+import { challengeStatus, updateChallenges, challengeNews } from './challenges.js';
 import { treeSVG, seedOf } from './tree.js';
 
 const STORE = 'cap-v1';
@@ -494,6 +495,12 @@ let renders = 0; // nombre d'affichages : distingue un réaffichage sur place d'
 
 function render() {
   renders++;
+  // défis de la semaine : la base des records (lundi) et ce qui vient d'être réussi
+  const defis = updateChallenges(state, todayKey());
+  if (defis) {
+    state.challenges = defis;
+    save();
+  }
   const tab = currentTab();
   const views = { jour: viewToday, focus: viewFocus, sport: viewSport, manger: viewFood, argent: viewMe, moi: viewMe, revision: viewRevision, jeux: () => arcade.view() };
   const me = ['Moi', 'Programme, bilan, argent, livres, réglages'];
@@ -529,7 +536,8 @@ function render() {
 // Un décor qui se débloque, un décor de saison qui arrive (une fois par an),
 // un trophée gagné : fêtés une fois, l'un après l'autre et après les autres
 // messages (fin de séance, niveau, entrée dans la salle) pour ne pas les cacher.
-const somethingToAnnounce = () => newDecors(state.settings.decorsSeen, decorStats(state)).length > 0
+const somethingToAnnounce = () => challengeNews(state, todayKey()).fresh.length > 0
+  || newDecors(state.settings.decorsSeen, decorStats(state)).length > 0
   || Boolean(newSeason(state.settings.decorsSeen, todayKey()))
   || newTrophies(state.settings.trophiesSeen, trophyStats(state, todayKey())).length > 0
   || newGear(state.settings.gearSeen, gearNow().stats).length > 0;
@@ -545,7 +553,15 @@ function announceUnlocks() {
     const fresh = newDecors(state.settings.decorsSeen, decorStats(state));
     const season = newSeason(state.settings.decorsSeen, todayKey());
     const seen = Array.isArray(state.settings.decorsSeen) ? state.settings.decorsSeen : ['salle'];
-    if (fresh.length) {
+    const defis = challengeNews(state, todayKey());
+    if (defis.fresh.length) {
+      const week = challengeStatus(state, todayKey()).week;
+      const rec = state.challenges?.[week] ?? {};
+      state.challenges = { ...state.challenges, [week]: { ...rec, told: [...(Array.isArray(rec.told) ? rec.told : []), ...defis.fresh.map((c) => c.id)] } };
+      save();
+      const xp = defis.fresh.length * XP.challenge + (defis.all ? XP.challengeWeek : 0);
+      celebrate(defis.all ? `Les 3 défis de la semaine réussis\u00a0: +${xp} XP` : defis.fresh.length > 1 ? `${defis.fresh.length} défis réussis\u00a0: +${xp} XP` : `Défi réussi\u00a0: ${defis.fresh[0].text} · +${xp} XP`);
+    } else if (fresh.length) {
       state.settings.decorsSeen = [...seen, ...fresh.map((d) => d.id)];
       save();
       celebrate(fresh.length > 1 ? `${fresh.length} décors débloqués\u00a0: touche « Décor » dans la Salle` : `Décor débloqué\u00a0: ${fresh[0].name}`);
@@ -989,6 +1005,7 @@ function viewSport() {
   ${gymHub(planned, done, lvl)}
   ${backupBanner(today)}
   ${dayLink(today)}
+  ${challengesCard(today)}
   ${suggestUp ? `<div class="banner ok"><strong>2 séances « faciles » de suite.</strong> Il est temps de monter. <button class="btn small primary" data-act="level" data-lvl="${lvl + 1}">Passer au niveau ${lvl + 1}</button></div>` : ''}
   ${suggestDown ? `<div class="banner warn"><strong>2 séances « dures » de suite.</strong> Redescendre d’un niveau n’est pas un échec. <button class="btn small" data-act="level" data-lvl="${lvl - 1}">Revenir au niveau ${lvl - 1}</button></div>` : ''}
   ${recordsCard()}
@@ -1111,6 +1128,20 @@ function dayLink(today) {
     <span class="fold-title"><strong>Ma journée</strong><small>${next ? `Maintenant : ${esc(next.title)}` : 'Tout est fait'} · <span aria-label="${ch.count} jour${ch.count > 1 ? 's' : ''} de chaîne">${icon('flame')}${ch.count}</span></small></span>
     <span class="pill ${st.valid ? 'ok' : ''}">${st.done}/${st.total}</span><span class="chev" aria-hidden="true"></span>
   </a>`;
+}
+
+// Les défis de la semaine : trois, leur avancement, l'XP qu'ils rapportent.
+function challengesCard(today) {
+  const st = challengeStatus(state, today);
+  return `<section class="card defis">
+    <div class="card-head"><h2>${icon('target')}Défis de la semaine</h2><span class="pill ${st.won === 3 ? 'ok' : ''}">${st.won}/3</span></div>
+    <p class="hint">${st.left > 1 ? `Encore ${st.left} jours` : 'Dernier jour'} · +${XP.challenge} XP par défi, +${XP.challengeWeek} de plus pour les trois. De nouveaux défis chaque lundi.</p>
+    <ul class="defi-list">${st.list.map((c) => `<li class="defi${c.done ? ' done' : ''}">
+      <span class="defi-ico" aria-hidden="true">${icon(c.done ? 'check' : c.icon)}</span>
+      <div class="defi-text"><strong>${esc(c.text)}</strong><small>${esc(c.label)}</small>
+        <span class="decor-bar" aria-hidden="true"><i style="width:${Math.round(c.pct * 100)}%"></i></span></div>
+      <span class="defi-xp">+${XP.challenge}</span></li>`).join('')}</ul>
+  </section>`;
 }
 
 // Trophées gagnés, sur le total (« 12 sur 28 »).

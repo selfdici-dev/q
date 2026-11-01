@@ -382,7 +382,8 @@ export function sessionKcal(steps, met, kg = DEFAULT_WEIGHT) {
 // ---------- Points (XP) et niveaux ----------
 // L'XP est recalculée à partir des données, jamais stockée : impossible de la
 // compter deux fois, et elle suit automatiquement les corrections.
-export const XP = { min: 10, full: 20, dayValid: 20, workout: 30, focus: 15, urge: 5, snackResisted: 5, lesson: 40, perfect: 20, trade: 15, book: 50, card: 2 };
+// challenge : chaque défi de la semaine réussi ; challengeWeek : bonus quand les trois le sont (challenges.js).
+export const XP = { min: 10, full: 20, dayValid: 20, workout: 30, focus: 15, urge: 5, snackResisted: 5, lesson: 40, perfect: 20, trade: 15, book: 50, card: 2, challenge: 40, challengeWeek: 60 };
 
 export const RANKS = ['Recrue', 'Apprenti', 'Régulier', 'Solide', 'Discipliné', 'Méthodique', 'Inarrêtable', 'Maître de soi'];
 
@@ -400,6 +401,12 @@ export function totalXP(state) {
   for (const l of Object.values(state.lessons ?? {})) xp += XP.lesson + (l.perfect ? XP.perfect : 0);
   xp += (state.trades ?? []).filter((t) => t.exit !== undefined && t.exit !== null).length * XP.trade;
   xp += Object.values(state.books ?? {}).filter((b) => b.status === 'done').length * XP.book;
+  // défis de la semaine réussis (au plus trois par semaine), et le bonus des trois
+  const weeks = state.challenges && typeof state.challenges === 'object' ? Object.values(state.challenges) : [];
+  for (const w of weeks) {
+    const n = Math.min(3, new Set(Array.isArray(w?.done) ? w.done : []).size);
+    xp += n * XP.challenge + (n === 3 ? XP.challengeWeek : 0);
+  }
   return xp;
 }
 

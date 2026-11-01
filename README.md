@@ -83,6 +83,18 @@ Une séance compte une fois par jour, sans compter M ; pour les jeux, c’est ta
 
 La salle suit l’heure de ton téléphone, quel que soit le décor (js/daylight.js) : lumière dorée et rayons de soleil venus de la gauche le matin (6 h à 11 h), le décor tel quel en journée, coucher de soleil et rayons venus de la droite le soir (17 h à 21 h), heure bleue (21 h à 23 h), puis nuit étoilée après 23 h, avec une lune (sauf sur les décors qui ont déjà la leur ou leur soleil), la borne d’arcade qui luit dans le noir et le poste choisi qui reste éclairé. Le soir et la nuit, un mot doux s’affiche sous la salle (la nuit : ton coucher visé et ton réveil). La lumière change toute seule quand l’heure passe ; les étoiles et les rayons s’arrêtent de bouger si le téléphone demande de réduire les animations.
 
+## Défis de la semaine
+
+Dans la Salle, sous « Ma journée » : chaque lundi, trois nouveaux défis tirés au hasard (js/challenges.js), un par famille, jamais le même que la semaine d’avant dans sa famille. Chacun réussi rapporte 40 XP, et les trois ensemble 60 XP de plus. Un défi réussi est fêté une fois et reste réussi.
+
+| Famille | Défis possibles |
+|---|---|
+| Sport | 4 séances (A, B, C ou P, une par jour) ; 2 séances C ; bouger 6 jours sur 7 (M compte) ; 2 séances M |
+| Vie | 5 matins avec ta routine complète ; 5 soirs avec ta routine complète ; lire 10 pages 4 jours |
+| Arcade | battre ton record au Serpent, aux Blocs, au Calcul éclair ou à Écho (ton record du lundi) ; 2 sudokus résolus ; 3 codes secrets trouvés |
+
+Tout se calcule depuis tes jours de la semaine (du lundi au dimanche) ; pour l’arcade, Cap note tes records la première fois qu’il s’ouvre dans la semaine. Si tu n’ouvres pas Cap le dimanche, ce que tu as réussi compte quand même le lundi.
+
 ## Habille ton double
 
 Ton double (le buste en médaillon qui évolue avec ton niveau) a son portrait dans la Salle, sous ton niveau : touche-le pour ouvrir sa fiche et l’habiller. Huit accessoires, gagnés avec tes trophées (js/outfit.js), un seul par place (la tête, les yeux, le cou, le dos, la taille), mis ou enlevés d’une touche :

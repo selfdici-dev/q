@@ -504,7 +504,7 @@ export const APPS = [
 // ---------- Aide « ? » : comment marche chaque onglet, en 3 phrases ----------
 export const HELP = {
   jour: {
-    title: 'Comment marche Jour',
+    title: 'Comment marche Ma journée',
     lines: [
       'Fais au moins le minimum de chaque habitude : la journée est validée et ta chaîne 🔥 avance.',
       'Ton plan du jour te guide, routines du matin et du soir comprises. Le soir, copie ton bilan pour Claude.',
@@ -532,7 +532,7 @@ export const HELP = {
     lines: [
       'Rien à calculer : ta journée type, ce que tu peux manger en 3 couleurs, et des recettes simples.',
       'Rien n’est interdit : le rouge veut dire « prévu », 2 ou 3 fois par semaine.',
-      'Tes protéines et tes grignotages se notent dans Jour, en 2 touches.',
+      'Tes protéines et tes grignotages se notent dans Ma journée (sous la Salle), en 2 touches.',
     ],
   },
   moi: {

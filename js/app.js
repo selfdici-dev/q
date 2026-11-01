@@ -442,18 +442,18 @@ function greeting() {
   return 'Bonsoir. Dernière ligne droite.';
 }
 
-// 4 onglets, la Salle d'abord (c'est l'onglet le plus utilisé). Les icônes au
+// 3 onglets, la Salle d'abord (c'est l'onglet le plus utilisé). Les icônes au
 // trait sont dessinées dans luxe.css ; l'emoji ne sert que si elle manque.
 const TABS = [
   { id: 'sport', label: 'Salle', icon: '🏋️' },
-  { id: 'jour', label: 'Jour', icon: '☀️' },
   { id: 'manger', label: 'Manger', icon: '🍽️' },
   { id: 'moi', label: 'Moi', icon: '🧭' },
 ];
 // Pages sans onglet, et l'onglet allumé quand on y est : Argent et ses
-// révisions vivent dans Moi ; le minuteur de focus (onglet retiré) reste
-// joignable par #focus, ses données sont intactes.
-const HIDDEN_TABS = { argent: 'moi', revision: 'moi', focus: 'jour', jeux: 'sport' };
+// révisions vivent dans Moi ; « Ma journée » (l'ancien onglet Jour : habitudes,
+// routines, sommeil) s'ouvre depuis la Salle, comme le minuteur de focus
+// (onglet retiré, joignable par #focus) ; leurs données sont intactes.
+const HIDDEN_TABS = { argent: 'moi', revision: 'moi', jour: 'sport', focus: 'sport', jeux: 'sport' };
 
 function currentTab() {
   const h = location.hash.slice(1) === 'bilan' ? 'moi' : location.hash.slice(1);
@@ -545,7 +545,7 @@ const NOTICES = {
   full: [icon('trophy'), 'Tout en complet.', 'Bravo. Maintenant, repose-toi.'],
 };
 
-// Sections repliées de l'onglet Jour. Celles que tu ouvres restent ouvertes
+// Sections repliées de Ma journée (l'ancien onglet Jour). Celles que tu ouvres restent ouvertes
 // d'un affichage à l'autre (mémoire de l'écran seulement, rien n'est stocké).
 const openFolds = new Set();
 
@@ -576,6 +576,7 @@ function viewToday() {
   const grid = regularityGrid(state, today);
   const wake = wakePlan(state.settings.wakePlanStart, today, state.settings.wakeTarget);
   return `
+  <div class="row back-row"><a class="btn ghost small" href="#sport">← Salle</a></div>
   <header class="hero">
     <div class="hero-top">
       <div><p class="eyebrow">${esc(longDate(today))}${helpBtn('jour')}</p><p class="greet">${greeting()}</p></div>
@@ -895,7 +896,7 @@ function viewFocus() {
 }
 
 // « Envie de scroller ? » : 10 minutes d'attente avant d'ouvrir Snap ou
-// TikTok. Dans Jour (et sur l'ancienne page Focus).
+// TikTok. Dans Ma journée (et sur l'ancienne page Focus).
 const urgePill = (d) => `<span class="pill">${d.urges ?? 0} envie${(d.urges ?? 0) > 1 ? 's' : ''} retardée${(d.urges ?? 0) > 1 ? 's' : ''}</span>`;
 function urgeBody(u) {
   return `<p class="muted">Tu n’as pas à résister pour toujours. Juste 10 minutes. Une envie retombe souvent d’elle-même ; si elle est encore là après, ouvre l’appli consciemment, avec un minuteur.</p>
@@ -942,6 +943,8 @@ function viewSport() {
   const todayDow = (fromKey(today).getDay() + 6) % 7;
   return `
   ${gymHub(planned, done, lvl)}
+  ${backupBanner(today)}
+  ${dayLink(today)}
   ${suggestUp ? `<div class="banner ok"><strong>2 séances « faciles » de suite.</strong> Il est temps de monter. <button class="btn small primary" data-act="level" data-lvl="${lvl + 1}">Passer au niveau ${lvl + 1}</button></div>` : ''}
   ${suggestDown ? `<div class="banner warn"><strong>2 séances « dures » de suite.</strong> Redescendre d’un niveau n’est pas un échec. <button class="btn small" data-act="level" data-lvl="${lvl - 1}">Revenir au niveau ${lvl - 1}</button></div>` : ''}
   ${recordsCard()}
@@ -1047,6 +1050,19 @@ function gymHub(planned, done, lvl) {
   </section>`;
 }
 
+// L'entrée de « Ma journée », sous la salle : tes habitudes du jour, ta chaîne
+// et la prochaine chose à faire ; une touche ouvre la page.
+function dayLink(today) {
+  const st = dayStatus(state, today);
+  const ch = chain(state, today);
+  const next = nextAction(planItems(today).filter((x) => !x.past), nowHHMM(), bedGoal(state, today));
+  return `<a class="fold day-link" href="#jour">
+    <span class="fold-ico" aria-hidden="true">${icon('sun')}</span>
+    <span class="fold-title"><strong>Ma journée</strong><small>${next ? `Maintenant : ${esc(next.title)}` : 'Tout est fait'} · <span aria-label="${ch.count} jour${ch.count > 1 ? 's' : ''} de chaîne">${icon('flame')}${ch.count}</span></small></span>
+    <span class="pill ${st.valid ? 'ok' : ''}">${st.done}/${st.total}</span><span class="chev" aria-hidden="true"></span>
+  </a>`;
+}
+
 // Trophées gagnés, sur le total (« 12 sur 28 »).
 function trophyCount() {
   const list = trophyStatus(trophyStats(state, todayKey()), state.settings.trophiesSeen);
@@ -1146,7 +1162,7 @@ function mealsCard() {
       return `<li><span class="meal-name">${f?.emoji ?? '🍽️'} ${esc(nbsp(f?.name ?? m.f))}${m.n !== 1 ? ` <small>×${half(m.n)}</small>` : ''}</span><span class="meal-kcal">${fmtInt(m.n * m.kcal)} kcal</span>
         <button class="meal-step" data-act="meal-step" data-f="${m.f}" data-v="-0.5" aria-label="Une demi-portion de ${esc(f?.name ?? m.f)} en moins">−</button><button class="meal-step" data-act="meal-step" data-f="${m.f}" data-v="0.5" aria-label="Une demi-portion de ${esc(f?.name ?? m.f)} en plus">+</button></li>`;
     }).join('')}</ul>` : '<p class="muted">Touche ce que tu manges : un aliment = une portion (− et + par demi-portion ensuite).</p>'}
-    <p class="hint">Des repères, pas une balance : à ±15\u00a0% près, c’est la tendance de la semaine qui compte. L’huile de cuisson compte (90 kcal la cuillère). Les protéines notées ici comptent aussi dans Jour.</p>
+    <p class="hint">Des repères, pas une balance : à ±15\u00a0% près, c’est la tendance de la semaine qui compte. L’huile de cuisson compte (90 kcal la cuillère). Les protéines notées ici comptent aussi dans Ma journée.</p>
   </section>`;
 }
 
@@ -1469,7 +1485,7 @@ function viewProgram() {
         ${row('Planche', lastTest.plank ?? null, next.plank, (v) => `${v} s`, 'higher')}
         ${row('Leçons de finance', lessons, next.lessons, (v) => v, 'higher')}
       </tbody></table></div>
-    <p class="hint">Le coucher vient de « Nuit dernière » (onglet Jour), les pompes et la planche de tes tests de niveau (onglet Salle).</p>
+    <p class="hint">Le coucher vient de « Nuit dernière » (Ma journée, sous la Salle), les pompes et la planche de tes tests de niveau (onglet Salle).</p>
   </section>
   <section class="card">
     <div class="card-head"><h2>Les 3 phases</h2></div>
@@ -1640,7 +1656,7 @@ function viewSettings() {
       <label>Réveil visé<input type="time" data-setting="wakeTarget" value="${esc(s.wakeTarget)}"></label>
       <label>Date de départ<input type="date" data-setting="startDate" value="${s.startDate}" max="${today}"></label>
     </div>
-    <p class="hint">Le réveil visé est la fin du réveil progressif (Jour > Nuit dernière). Une fois lancé, c’est lui qui fixe ton coucher.</p>
+    <p class="hint">Le réveil visé est la fin du réveil progressif (Ma journée > Nuit dernière). Une fois lancé, c’est lui qui fixe ton coucher.</p>
   </section>
   <section class="card">
     <div class="card-head"><h2>Données</h2></div>

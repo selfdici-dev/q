@@ -179,7 +179,7 @@ test('liens de démo vidéo', () => {
 });
 
 test('aide « ? » : chaque onglet expliqué en 3 phrases courtes', () => {
-  // v4 : 4 onglets (Salle, Jour, Manger, Moi) ; Focus retiré, Argent dans Moi ; l'Arcade (#jeux) a la sienne
+  // v5 : 3 onglets (Salle, Manger, Moi) ; Ma journée (ex-Jour) s'ouvre depuis la Salle et garde son aide ; Focus retiré, Argent dans Moi ; l'Arcade (#jeux) a la sienne
   assert.deepEqual(Object.keys(HELP), ['jour', 'jeux', 'sport', 'manger', 'moi']);
   assert.match(HELP.moi.lines.join(' '), /Argent/);
   for (const [tab, h] of Object.entries(HELP)) {

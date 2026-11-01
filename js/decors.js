@@ -366,6 +366,7 @@ function toit({ u, pick, title, animate }) {
     props: '',
     beam: ['#dbe9ff', '#b9d4ff'], dust: '#dff0ff',
     plat: ['#3a3d46', '#1f2128', '#2c2f37'], vig: 0.45,
+    sky: true, // sa lune : pas de deuxième la nuit (daylight.js)
   };
 }
 
@@ -465,6 +466,7 @@ function plage({ u, pick, title, animate }) {
     props: '',
     beam: ['#ffe9c8', '#ffc98a'], dust: '#ffe2b8',
     plat: ['#8a5a3a', '#5a3a24', '#704a2f'], vig: 0.4,
+    sky: true, // son soleil : pas de lune en plus la nuit (daylight.js)
   };
 }
 
@@ -914,6 +916,7 @@ function desert({ u, pick, title, animate }) {
     props: '',
     beam: ['#dfe6ff', '#b9c6ff'], dust: '#e8eaff',
     plat: ['#b89f75', '#7f6a4a', '#9a8460'], vig: 0.5,
+    sky: true, // sa lune : pas de deuxième la nuit (daylight.js)
   };
 }
 

@@ -25,6 +25,7 @@ import { hubSVG, hubLayout, arcadeZone, HUB, covers } from './gym.js';
 import { decorStats, decorStatus, decorToShow, decorThumb, newDecors } from './decors.js';
 import { ROUTINES, routineStatus, toggleRoutine, morningTime, wakeAt8 } from './routines.js';
 import { trophyStats, trophyStatus, newTrophies } from './trophies.js';
+import { dayPhase, nightHint } from './daylight.js';
 import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS } from './avatar.js';
 import { treeSVG, seedOf } from './tree.js';
 
@@ -987,6 +988,7 @@ const shortName = (w) => w.name.split(' · ')[1] ?? w.name;
 // dessous, prête à lancer. Au départ : celle du jour, marquée comme une
 // quête. En haut, ton niveau et ton XP, comme dans un jeu.
 let gymPick = null;
+let shownPhase = null; // le moment de la journée dessiné dans la salle (matin, soir, nuit…)
 const pctOf = (v, total) => `${Math.round((v / total) * 1000) / 10}%`;
 
 // L'étiquette du poste choisi efface les pastilles qu'elle recouvrirait
@@ -1013,6 +1015,9 @@ function gymHub(planned, done, lvl) {
   const w = WORKOUTS.find((x) => x.id === pick);
   const did = done.includes(w.id);
   const lv = levelInfo(totalXP(state));
+  const today = todayKey();
+  shownPhase = dayPhase(nowHHMM());
+  const late = nightHint(shownPhase, clockFr(bedGoal(state, today)), clockFr(state.settings.wakeTarget));
   const hits = hubLayout().map(({ id, box: [x, y, bw, bh] }) => {
     const on = id === pick;
     const wo = WORKOUTS.find((z) => z.id === id);
@@ -1030,7 +1035,7 @@ function gymHub(planned, done, lvl) {
   // la salle prend tout le haut de l'écran : on y entre. En haut, le HUD (niveau,
   // XP) et l'aide ; en bas, la séance choisie et son bouton, comme dans un jeu.
   return `<section class="gym-hero hub immersive wo-${w.id}">
-    <div class="hub-stage">${hubSVG({ pick, animate: !reduceMotion(), decor: decorToShow(state.settings.decor, decorStats(state)) })}${hits}
+    <div class="hub-stage">${hubSVG({ pick, animate: !reduceMotion(), decor: decorToShow(state.settings.decor, decorStats(state)), phase: shownPhase })}${hits}
       <div class="hub-hud" aria-label="Niveau ${lv.level}, ${lv.into} sur ${lv.span} XP"><b>Niv. ${lv.level}</b><span class="hud-rank">${esc(lv.rank)}</span><span class="hud-bar">${tweenBar('gym-xp', (lv.into / lv.span) * 100)}</span><span class="hud-xp">${lv.into}/${lv.span} XP</span></div>
       <div class="hub-tools">
         <button class="hub-decor-btn hub-trophy-btn" data-act="trophies" aria-label="Tes trophées : ${trophyCount()}">${icon('trophy')}${trophyCount().split(' ')[0]}</button>
@@ -1046,6 +1051,7 @@ function gymHub(planned, done, lvl) {
         <button class="btn primary wide" data-act="start-workout" data-id="${w.id}">${did ? 'Refaire la séance' : `Lancer la séance ${w.id}`}</button>
       </div>
     </div>
+    ${late ? `<p class="hint hub-night">${icon('moon')}${esc(late)}</p>` : ''}
     <p class="hint">Touche un poste pour changer de séance. Pas la forme ? M suffit à valider « Bouger ».</p>
   </section>`;
 }
@@ -2387,13 +2393,15 @@ render();
 moveTabIndicator(true);
 enterGym();
 setInterval(tick, 250);
-// Le changement de jour (4 h) se voit sans recharger.
+// Le changement de jour (4 h) se voit sans recharger, comme la lumière de la
+// salle qui suit l'heure (matin, soir, nuit…).
 let shownDay = todayKey();
 setInterval(() => {
   if (todayKey() !== shownDay) {
     shownDay = todayKey();
     render();
-  } else refreshNow();
+  } else if (currentTab() === 'sport' && shownPhase && dayPhase(nowHHMM()) !== shownPhase && $('#sheet').hidden) render();
+  else refreshNow();
 }, 60000);
 
 navigator.storage?.persist?.();

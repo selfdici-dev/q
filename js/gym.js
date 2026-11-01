@@ -13,6 +13,7 @@ import { figureFor, figureSVG, focusFor, solve, barAt, VIEW } from './figures.js
 import { WORKOUTS } from './data.js';
 import { HUB, HW, P, r1, pts, poly, flat, box } from './iso.js';
 import { decorArt } from './decors.js';
+import { daylightArt } from './daylight.js';
 
 export { HUB };
 // couleurs des séances sur le fond sombre de la salle
@@ -149,11 +150,14 @@ function wheel(x, y) {
 }
 
 // La salle entière. pick : poste choisi (son bonhomme bouge si animate) ;
-// id : préfixe des identifiants internes ; decor : son habillage (decors.js).
-export function hubSVG({ pick = 'A', animate = true, id = 'hub', decor = 'salle' } = {}) {
+// id : préfixe des identifiants internes ; decor : son habillage (decors.js) ;
+// phase : le moment de la journée (daylight.js : matin, soir, nuit…).
+export function hubSVG({ pick = 'A', animate = true, id = 'hub', decor = 'salle', phase = 'jour' } = {}) {
   const u = (n) => `${id}-${n}`;
   // murs, sol, lumière et objets : ceux du décor ; la borne d'arcade est dans tous
   const art = decorArt(decor, { pick, title: shortName(pick), animate, u });
+  // la lumière de l'heure, posée sur tout le décor (rien en journée)
+  const tod = daylightArt(phase, { u, animate, moon: !art.sky });
 
   // les postes, du fond vers l'avant : plateforme bordée de la couleur de la
   // séance, matériel, bonhomme
@@ -201,9 +205,9 @@ export function hubSVG({ pick = 'A', animate = true, id = 'hub', decor = 'salle'
 <radialGradient id="${u('leaf')}" cx="0.4" cy="0.3" r="0.8"><stop offset="0" stop-color="#7fae6b"/><stop offset="1" stop-color="#2f5a2c"/></radialGradient>
 <radialGradient id="${u('vig')}" cx="0.5" cy="0.42" r="0.75"><stop offset="0.55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="${art.vig}"/></radialGradient>
 <filter id="${u('glow')}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-</defs>
+${tod.defs}</defs>
 <rect width="${HUB.w}" height="${HUB.h}" fill="${art.bg}"/>
 ${art.back}
 ${art.floor}${art.edge}<g class="hub-decor">${art.props}${arcadeCab(animate)}</g>
-${stations}${art.over}<g class="hub-light">${beam}${dust}</g><rect class="hub-vig" width="${HUB.w}" height="${HUB.h}" fill="url(#${u('vig')})"/></svg>`;
+${stations}${art.over}${tod.over}<g class="hub-light">${beam}${dust}</g><rect class="hub-vig" width="${HUB.w}" height="${HUB.h}" fill="url(#${u('vig')})"/></svg>`;
 }

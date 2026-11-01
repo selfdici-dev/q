@@ -24,6 +24,7 @@ import { roomSVG } from './room.js';
 import { hubSVG, hubLayout, arcadeZone, HUB, covers } from './gym.js';
 import { decorStats, decorStatus, decorToShow, decorThumb, newDecors } from './decors.js';
 import { ROUTINES, routineStatus, toggleRoutine, morningTime, wakeAt8 } from './routines.js';
+import { trophyStats, trophyStatus, newTrophies } from './trophies.js';
 import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS } from './avatar.js';
 import { treeSVG, seedOf } from './tree.js';
 
@@ -53,6 +54,7 @@ function freshState() {
       creatine: true, // case « Créatine » sous les habitudes, hors chaîne
       decor: 'salle', // décor de la Salle (decors.js), parmi ceux débloqués
       decorsSeen: ['salle'], // décors débloqués déjà annoncés
+      trophiesSeen: [], // trophées gagnés déjà annoncés (ils restent gagnés)
     },
     habits: structuredClone(DEFAULT_HABITS),
     rules: [...DEFAULT_RULES],
@@ -486,7 +488,7 @@ function render() {
     save();
     celebrate(`Niveau ${lv.level} atteint : ${lv.rank}${grew ? ' · ton double évolue' : ''}`);
   }
-  if (newDecors(state.settings.decorsSeen, decorStats(state)).length) announceDecors();
+  if (newDecors(state.settings.decorsSeen, decorStats(state)).length || newTrophies(state.settings.trophiesSeen, trophyStats(state, todayKey())).length) announceUnlocks();
   document.querySelectorAll('#tabs a').forEach((a) => a.setAttribute('aria-current', a.dataset.tab === (HIDDEN_TABS[tab] ?? tab) ? 'page' : 'false'));
   moveTabIndicator();
   hubDeclutter();
@@ -494,23 +496,34 @@ function render() {
   tick();
 }
 
-// Un décor qui se débloque est fêté une fois, après les autres messages (fin
-// de séance, niveau, entrée dans la salle) pour ne pas les cacher.
-let decorTimer = null;
-function announceDecors() {
-  if (decorTimer) return;
-  decorTimer = setTimeout(function go() {
+// Un décor qui se débloque, un trophée gagné : fêtés une fois, l'un après
+// l'autre et après les autres messages (fin de séance, niveau, entrée dans la
+// salle) pour ne pas les cacher.
+let unlockTimer = null;
+function announceUnlocks() {
+  if (unlockTimer) return;
+  unlockTimer = setTimeout(function go() {
     if (!$('#toast').hidden || $('#intro')) {
-      decorTimer = setTimeout(go, 800);
+      unlockTimer = setTimeout(go, 800);
       return;
     }
-    decorTimer = null;
+    unlockTimer = null;
     const fresh = newDecors(state.settings.decorsSeen, decorStats(state));
-    if (!fresh.length) return;
-    const seen = Array.isArray(state.settings.decorsSeen) ? state.settings.decorsSeen : ['salle'];
-    state.settings.decorsSeen = [...seen, ...fresh.map((d) => d.id)];
-    save();
-    celebrate(fresh.length > 1 ? `${fresh.length} décors débloqués\u00a0: touche « Décor » dans la Salle` : `Décor débloqué\u00a0: ${fresh[0].name}`);
+    if (fresh.length) {
+      const seen = Array.isArray(state.settings.decorsSeen) ? state.settings.decorsSeen : ['salle'];
+      state.settings.decorsSeen = [...seen, ...fresh.map((d) => d.id)];
+      save();
+      celebrate(fresh.length > 1 ? `${fresh.length} décors débloqués\u00a0: touche « Décor » dans la Salle` : `Décor débloqué\u00a0: ${fresh[0].name}`);
+    } else {
+      const won = newTrophies(state.settings.trophiesSeen, trophyStats(state, todayKey()));
+      if (!won.length) return;
+      const seen = Array.isArray(state.settings.trophiesSeen) ? state.settings.trophiesSeen : [];
+      state.settings.trophiesSeen = [...seen, ...won.map((t) => t.id)];
+      save();
+      celebrate(won.length > 1 ? `${won.length} trophées gagnés\u00a0: touche le trophée dans la Salle` : `Trophée gagné\u00a0: ${won[0].name}`);
+    }
+    // il reste peut-être de quoi fêter : au prochain tour, après ce message
+    if (newDecors(state.settings.decorsSeen, decorStats(state)).length || newTrophies(state.settings.trophiesSeen, trophyStats(state, todayKey())).length) announceUnlocks();
   }, 400);
 }
 
@@ -1016,8 +1029,11 @@ function gymHub(planned, done, lvl) {
   return `<section class="gym-hero hub immersive wo-${w.id}">
     <div class="hub-stage">${hubSVG({ pick, animate: !reduceMotion(), decor: decorToShow(state.settings.decor, decorStats(state)) })}${hits}
       <div class="hub-hud" aria-label="Niveau ${lv.level}, ${lv.into} sur ${lv.span} XP"><b>Niv. ${lv.level}</b><span class="hud-rank">${esc(lv.rank)}</span><span class="hud-bar">${tweenBar('gym-xp', (lv.into / lv.span) * 100)}</span><span class="hud-xp">${lv.into}/${lv.span} XP</span></div>
-      <button class="hub-decor-btn" data-act="decors" aria-label="Décors de ta salle">${icon('sparkles')}Décor</button>
-      ${HELP.sport ? `<span class="hub-help">${helpBtn('sport')}</span>` : ''}
+      <div class="hub-tools">
+        <button class="hub-decor-btn hub-trophy-btn" data-act="trophies" aria-label="Tes trophées : ${trophyCount()}">${icon('trophy')}${trophyCount().split(' ')[0]}</button>
+        <button class="hub-decor-btn" data-act="decors" aria-label="Décors de ta salle">${icon('sparkles')}Décor</button>
+        ${HELP.sport ? `<span class="hub-help">${helpBtn('sport')}</span>` : ''}
+      </div>
       <div class="hub-panel">
         <div class="gym-head">
           <span class="wo-badge big wo-${w.id}">${w.id}</span>
@@ -1029,6 +1045,28 @@ function gymHub(planned, done, lvl) {
     </div>
     <p class="hint">Touche un poste pour changer de séance. Pas la forme ? M suffit à valider « Bouger ».</p>
   </section>`;
+}
+
+// Trophées gagnés, sur le total (« 12 sur 28 »).
+function trophyCount() {
+  const list = trophyStatus(trophyStats(state, todayKey()), state.settings.trophiesSeen);
+  return `${list.filter((t) => t.earned).length} sur ${list.length}`;
+}
+
+// La vitrine des trophées : par famille, ceux gagnés brillent, les autres
+// montrent ce qu'il reste à faire.
+function showTrophies() {
+  const list = trophyStatus(trophyStats(state, todayKey()), state.settings.trophiesSeen);
+  const got = list.filter((t) => t.earned).length;
+  const tiers = { bronze: 'Bronze', argent: 'Argent', or: 'Or' };
+  openSheet('Tes trophées', `<p class="hint">${got} sur ${list.length} gagnés. Un trophée gagné reste à toi, même si la chaîne casse ensuite.</p>
+    <div class="bar tr-bar"><span style="width:${Math.round((got / list.length) * 100)}%"></span></div>
+    ${[...new Set(list.map((t) => t.group))].map((g) => `<h3 class="tr-group">${esc(g)}</h3>
+      <div class="tr-grid">${list.filter((t) => t.group === g).map((t) => `<div class="tr-card ${t.tier}${t.earned ? ' won' : ''}">
+        <span class="tr-medal" aria-hidden="true">${icon(t.icon)}</span>
+        <b>${esc(t.name)}</b><small>${esc(t.earned ? `${t.desc} · ${tiers[t.tier]}` : t.label)}</small>
+        ${t.earned ? '' : `<span class="decor-bar" aria-hidden="true"><i style="width:${Math.round(t.pct * 100)}%"></i></span>`}
+      </div>`).join('')}</div>`).join('')}`);
 }
 
 // Une routine : ses gestes en gros boutons à cocher, hors chaîne.
@@ -2095,6 +2133,9 @@ const actions = {
   },
   decors() {
     showDecors();
+  },
+  trophies() {
+    showTrophies();
   },
   routine(el) {
     showRoutine(el.dataset.id);

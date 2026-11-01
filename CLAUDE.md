@@ -11,6 +11,8 @@ L'utilisateur est débutant : explique simplement, en français.
 - `js/logic.js` : logique pure (dates, chaîne, sprints, XP, finance).
 - `js/summary.js`, `js/backup.js` : bilans à copier, sauvegarde (logique pure).
 - `js/routines.js` : routines du matin et du soir (gestes cochés dans `days[jour].routine`, hors chaîne).
+- `js/trophies.js` : trophées (bronze, argent, or), calculés depuis les données ; ceux annoncés
+  (`state.settings.trophiesSeen`) restent gagnés.
 - `js/figures.js` : moteur des bonshommes animés (poses en angles → SVG animé) ;
   `js/poses.js` : une pose par exercice (vue de profil, tête à droite, sol à y = 70).
 - `js/avatar.js` : « ton double », personnage qui évolue avec le niveau (calculé, jamais stocké).

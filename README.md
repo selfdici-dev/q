@@ -81,6 +81,10 @@ Le bouton « Décor », en haut de la Salle, change l’habillage de la pièce :
 
 Une séance compte une fois par jour, sans compter M ; pour les jeux, c’est ta meilleure partie. Les décors verrouillés montrent ce qu’il reste à faire, et un décor qui se débloque est fêté. Le choix est gardé dans tes réglages ; ce qui est débloqué est recalculé depuis tes données, jamais stocké. Les animations (sans son) s’arrêtent si le téléphone demande de les réduire.
 
+## Trophées
+
+Le bouton trophée, en haut de la Salle (à côté de « Décor »), ouvre ta vitrine : 28 médailles bronze, argent ou or, rangées par famille (séances, chaîne, niveau, routines, jeux, décors). Celles gagnées brillent ; les autres montrent ce qu’il reste à faire (« 6 / 10 séances »). Exemples : ta première séance, 10 séances C, 7 puis 30 jours de chaîne, niveau 20, 30 matins avec ta routine, une suite de 10 à Écho, un taquin 4 × 4 rangé, les 17 décors. Tout est recalculé depuis tes données ; un trophée gagné est annoncé une fois (après les autres messages) et reste à toi, même si ta chaîne casse ensuite.
+
 ## Dessins des exercices
 
 Chaque exercice des séances a son dessin au crayon, comme dans un livre de musculation : un corps sec et musclé en 3D, posé comme dans la consigne, rendu en croquis (traits fins, hachures en anneaux qui suivent les formes, mèches de cheveux), les muscles travaillés en rouge, le matériel dessiné (parallettes, roue, élastique noir ou vert, barre du parc). Quelques images par mouvement, jouées au rythme exact du bonhomme (mêmes poses clés, même tempo, mêmes arrêts) ; l’autre côté (gauche, droite) est le même dessin en miroir. Si le téléphone demande de réduire les animations : la pose de départ, et l’arrivée en transparence. Les images (`img/ex/`, WebP, ≈ 20 Ko chacune) ont leur propre cache hors ligne, gardé d’une version à l’autre. Elles sont fabriquées par `outils/dessins/` (Python et Blender, sur l’ordi, pas dans l’appli) : voir son README.

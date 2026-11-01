@@ -4,6 +4,7 @@
 // même si une chaîne casse ensuite. Logique pure, testée par tests/trophies.test.js.
 import { chain } from './logic.js';
 import { decorStats, decorStatus } from './decors.js';
+import { SEASONS, seasonWorkouts, dateFr } from './seasons.js';
 
 const T = (id, group, icon, name, desc, tier, kind, n) => ({ id, group, icon, name, desc, tier, need: { kind, n } });
 export const TROPHIES = [
@@ -35,12 +36,15 @@ export const TROPHIES = [
   T('d3', 'Décors', 'map', 'Décorateur', '3 décors débloqués', 'bronze', 'decors', 3),
   T('d8', 'Décors', 'map', 'Collectionneur', '8 décors débloqués', 'argent', 'decors', 8),
   T('d17', 'Décors', 'map', 'Tous les mondes', 'Les 17 décors débloqués', 'or', 'decors', 17),
+  // les saisons : des séances pendant la saison (seasons.js), la même année
+  ...SEASONS.map((s) => T(`saison-${s.id}`, 'Saisons', s.icon, s.trophy, `${s.n} séances pendant « ${s.name} » (du ${dateFr(s.from)} au ${dateFr(s.to)})`, s.tier, s.id, s.n)),
 ];
 
 const fmt = (n) => Number(n).toLocaleString('fr-FR');
 const UNIT = {
   workouts: 'séances', boxe: 'séances C', chain: 'jours de chaîne', routines: 'matins', soirs: 'soirs', blocs: 'points', serpent: 'fruits',
   calc: 'points', code: 'codes', echo: 'touches', sudoku: 'sudokus', decors: 'décors', taquin4: 'taquin 4 × 4',
+  ...Object.fromEntries(SEASONS.map((s) => [s.id, 'séances pendant la saison'])),
 };
 const LEVELS = new Set(['level', 'gems', 'paires', 'briques']);
 
@@ -56,6 +60,7 @@ export function trophyStats(state, today) {
     briques: g.briques?.level ?? 0,
     taquin4: g.taquin?.best?.[4] ? 1 : 0,
     decors: decorStatus(s).filter((d) => d.unlocked).length,
+    ...seasonWorkouts(state.days), // séances pendant Halloween, Noël… (la meilleure année)
   };
 }
 

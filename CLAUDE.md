@@ -22,6 +22,7 @@ L'utilisateur est débutant : explique simplement, en français.
   par séance) ; `js/iso.js` : sa projection et ses formes de base ; `js/decors.js` : ses
   décors à débloquer (salle, temple grec, grand hall…), choix dans `state.settings.decor` ;
   `js/daylight.js` : sa lumière qui suit l'heure (matin, soir, nuit étoilée ; calculée, jamais stockée) ;
+  `js/seasons.js` : les décors de saison (Halloween, Noël, printemps, été : dates, trophées) ;
   `js/icons.js` : icônes au trait.
 - `js/games.js` : règles des jeux de la borne d'arcade (Blocs, Calcul éclair), logique pure ;
   `js/gems.js` (Cristaux), `js/sudoku.js` (Sudoku), `js/snake.js` (Serpent), `js/pairs.js` (Paires),

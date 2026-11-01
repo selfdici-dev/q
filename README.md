@@ -83,9 +83,22 @@ Une séance compte une fois par jour, sans compter M ; pour les jeux, c’est ta
 
 La salle suit l’heure de ton téléphone, quel que soit le décor (js/daylight.js) : lumière dorée et rayons de soleil venus de la gauche le matin (6 h à 11 h), le décor tel quel en journée, coucher de soleil et rayons venus de la droite le soir (17 h à 21 h), heure bleue (21 h à 23 h), puis nuit étoilée après 23 h, avec une lune (sauf sur les décors qui ont déjà la leur ou leur soleil), la borne d’arcade qui luit dans le noir et le poste choisi qui reste éclairé. Le soir et la nuit, un mot doux s’affiche sous la salle (la nuit : ton coucher visé et ton réveil). La lumière change toute seule quand l’heure passe ; les étoiles et les rayons s’arrêtent de bouger si le téléphone demande de réduire les animations.
 
+## Décors de saison
+
+En haut de la fiche « Décor », quatre décors qui reviennent chaque année, le temps de leur saison (js/seasons.js) : rien à débloquer, pendant sa saison il se choisit d’une touche, et à la fin de la saison ton décor d’avant revient tout seul. Quand une saison commence, Cap te l’annonce (une fois par an).
+
+| Décor | Saison | Trophée |
+|---|---|---|
+| Nuit d’Halloween (pleine lune orange, murs de pierre, fenêtres en ogive, toile d’araignée, fanions, citrouilles qui luisent, petit fantôme, chauves-souris, brume et feuilles qui tombent) | du 15 octobre au 5 novembre | « Esprit d’Halloween » (bronze) : 6 séances pendant la saison |
+| Village de Noël (sous la neige, grand sapin aux boules qui scintillent, chalets éclairés, barrière et guirlande, cadeaux, la neige qui tombe) | du 1er décembre au 6 janvier | « Lutin d’acier » (argent) : 10 séances |
+| Jardin en fleurs (cerisiers, arc-en-ciel, barrière blanche, tulipes, papillons, pétales au vent) | du 20 mars au 30 avril | « Renouveau » (argent) : 12 séances |
+| Nuit d’été (ponton sur le lac, guirlande de guinguette, feux d’artifice qui se reflètent dans l’eau) | du 1er juillet au 31 août | « Feu d’artifice » (or) : 15 séances |
+
+Pour les trophées de saison, une séance compte une fois par jour, sans compter M, et toutes doivent tomber pendant la même saison.
+
 ## Trophées
 
-Le bouton trophée, en haut de la Salle (à côté de « Décor »), ouvre ta vitrine : 28 médailles bronze, argent ou or, rangées par famille (séances, chaîne, niveau, routines, jeux, décors). Celles gagnées brillent ; les autres montrent ce qu’il reste à faire (« 6 / 10 séances »). Exemples : ta première séance, 10 séances C, 7 puis 30 jours de chaîne, niveau 20, 30 matins avec ta routine, une suite de 10 à Écho, un taquin 4 × 4 rangé, les 17 décors. Tout est recalculé depuis tes données ; un trophée gagné est annoncé une fois (après les autres messages) et reste à toi, même si ta chaîne casse ensuite.
+Le bouton trophée, en haut de la Salle (à côté de « Décor »), ouvre ta vitrine : 32 médailles bronze, argent ou or, rangées par famille (séances, chaîne, niveau, routines, jeux, décors, saisons). Celles gagnées brillent ; les autres montrent ce qu’il reste à faire (« 6 / 10 séances »). Exemples : ta première séance, 10 séances C, 7 puis 30 jours de chaîne, niveau 20, 30 matins avec ta routine, une suite de 10 à Écho, un taquin 4 × 4 rangé, les 17 décors. Tout est recalculé depuis tes données ; un trophée gagné est annoncé une fois (après les autres messages) et reste à toi, même si ta chaîne casse ensuite.
 
 ## Dessins des exercices
 

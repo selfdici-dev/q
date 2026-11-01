@@ -26,6 +26,7 @@ import { decorStats, decorStatus, decorToShow, decorThumb, newDecors } from './d
 import { ROUTINES, routineStatus, toggleRoutine, morningTime, wakeAt8 } from './routines.js';
 import { trophyStats, trophyStatus, newTrophies } from './trophies.js';
 import { dayPhase, nightHint } from './daylight.js';
+import { SEASONS, seasonStatus, newSeason, dateFr } from './seasons.js';
 import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS } from './avatar.js';
 import { treeSVG, seedOf } from './tree.js';
 
@@ -489,7 +490,7 @@ function render() {
     save();
     celebrate(`Niveau ${lv.level} atteint : ${lv.rank}${grew ? ' · ton double évolue' : ''}`);
   }
-  if (newDecors(state.settings.decorsSeen, decorStats(state)).length || newTrophies(state.settings.trophiesSeen, trophyStats(state, todayKey())).length) announceUnlocks();
+  if (somethingToAnnounce()) announceUnlocks();
   document.querySelectorAll('#tabs a').forEach((a) => a.setAttribute('aria-current', a.dataset.tab === (HIDDEN_TABS[tab] ?? tab) ? 'page' : 'false'));
   moveTabIndicator();
   hubDeclutter();
@@ -497,9 +498,12 @@ function render() {
   tick();
 }
 
-// Un décor qui se débloque, un trophée gagné : fêtés une fois, l'un après
-// l'autre et après les autres messages (fin de séance, niveau, entrée dans la
-// salle) pour ne pas les cacher.
+// Un décor qui se débloque, un décor de saison qui arrive (une fois par an),
+// un trophée gagné : fêtés une fois, l'un après l'autre et après les autres
+// messages (fin de séance, niveau, entrée dans la salle) pour ne pas les cacher.
+const somethingToAnnounce = () => newDecors(state.settings.decorsSeen, decorStats(state)).length > 0
+  || Boolean(newSeason(state.settings.decorsSeen, todayKey()))
+  || newTrophies(state.settings.trophiesSeen, trophyStats(state, todayKey())).length > 0;
 let unlockTimer = null;
 function announceUnlocks() {
   if (unlockTimer) return;
@@ -510,21 +514,26 @@ function announceUnlocks() {
     }
     unlockTimer = null;
     const fresh = newDecors(state.settings.decorsSeen, decorStats(state));
+    const season = newSeason(state.settings.decorsSeen, todayKey());
+    const seen = Array.isArray(state.settings.decorsSeen) ? state.settings.decorsSeen : ['salle'];
     if (fresh.length) {
-      const seen = Array.isArray(state.settings.decorsSeen) ? state.settings.decorsSeen : ['salle'];
       state.settings.decorsSeen = [...seen, ...fresh.map((d) => d.id)];
       save();
       celebrate(fresh.length > 1 ? `${fresh.length} décors débloqués\u00a0: touche « Décor » dans la Salle` : `Décor débloqué\u00a0: ${fresh[0].name}`);
+    } else if (season) {
+      state.settings.decorsSeen = [...seen, season.tag];
+      save();
+      celebrate(`Décor de saison\u00a0: ${season.name}, jusqu’au ${dateFr(season.to)}. Touche « Décor »`);
     } else {
       const won = newTrophies(state.settings.trophiesSeen, trophyStats(state, todayKey()));
       if (!won.length) return;
-      const seen = Array.isArray(state.settings.trophiesSeen) ? state.settings.trophiesSeen : [];
-      state.settings.trophiesSeen = [...seen, ...won.map((t) => t.id)];
+      const known = Array.isArray(state.settings.trophiesSeen) ? state.settings.trophiesSeen : [];
+      state.settings.trophiesSeen = [...known, ...won.map((t) => t.id)];
       save();
       celebrate(won.length > 1 ? `${won.length} trophées gagnés\u00a0: touche le trophée dans la Salle` : `Trophée gagné\u00a0: ${won[0].name}`);
     }
     // il reste peut-être de quoi fêter : au prochain tour, après ce message
-    if (newDecors(state.settings.decorsSeen, decorStats(state)).length || newTrophies(state.settings.trophiesSeen, trophyStats(state, todayKey())).length) announceUnlocks();
+    if (somethingToAnnounce()) announceUnlocks();
   }, 400);
 }
 
@@ -1035,7 +1044,7 @@ function gymHub(planned, done, lvl) {
   // la salle prend tout le haut de l'écran : on y entre. En haut, le HUD (niveau,
   // XP) et l'aide ; en bas, la séance choisie et son bouton, comme dans un jeu.
   return `<section class="gym-hero hub immersive wo-${w.id}">
-    <div class="hub-stage">${hubSVG({ pick, animate: !reduceMotion(), decor: decorToShow(state.settings.decor, decorStats(state)), phase: shownPhase })}${hits}
+    <div class="hub-stage">${hubSVG({ pick, animate: !reduceMotion(), decor: decorToShow(state.settings.decor, decorStats(state), today, state.settings.decorBack), phase: shownPhase })}${hits}
       <div class="hub-hud" aria-label="Niveau ${lv.level}, ${lv.into} sur ${lv.span} XP"><b>Niv. ${lv.level}</b><span class="hud-rank">${esc(lv.rank)}</span><span class="hud-bar">${tweenBar('gym-xp', (lv.into / lv.span) * 100)}</span><span class="hud-xp">${lv.into}/${lv.span} XP</span></div>
       <div class="hub-tools">
         <button class="hub-decor-btn hub-trophy-btn" data-act="trophies" aria-label="Tes trophées : ${trophyCount()}">${icon('trophy')}${trophyCount().split(' ')[0]}</button>
@@ -1106,9 +1115,19 @@ function showRoutine(which) {
 // Les décors de ta salle : ceux débloqués s'installent d'une touche, les
 // autres montrent ce qu'il reste à faire (séances, niveau, records d'arcade).
 function showDecors() {
+  const today = todayKey();
   const list = decorStatus(decorStats(state));
-  const cur = decorToShow(state.settings.decor, decorStats(state));
-  openSheet('Décors de ta salle', `<p class="hint">${list.filter((d) => d.unlocked).length} sur ${list.length} débloqués. Touche un décor débloqué pour l’installer.</p>
+  const cur = decorToShow(state.settings.decor, decorStats(state), today, state.settings.decorBack);
+  const seasons = seasonStatus(today);
+  openSheet('Décors de ta salle', `<h3 class="tr-group">Décors de saison</h3>
+    <p class="hint">Ils reviennent chaque année, le temps de leur saison : pas besoin de les débloquer. À la fin de la saison, ton décor d’avant revient.</p>
+    <div class="decor-grid">${seasons.map((d) => `<button class="decor-card season${d.open ? '' : ' locked'}${d.id === cur ? ' on' : ''}" data-act="decor-pick" data-id="${d.id}"${d.open ? '' : ' disabled'} aria-pressed="${d.id === cur}">
+      ${decorThumb(d.id)}
+      <span class="decor-name">${d.open ? '' : icon('calendar')}${esc(d.name)}</span>
+      <small>${esc(d.id === cur ? `Installé · ${d.label.toLowerCase()}` : d.label)}</small>
+    </button>`).join('')}</div>
+    <h3 class="tr-group">Tes décors</h3>
+    <p class="hint">${list.filter((d) => d.unlocked).length} sur ${list.length} débloqués. Touche un décor débloqué pour l’installer.</p>
     <div class="decor-grid">${list.map((d) => `<button class="decor-card${d.unlocked ? '' : ' locked'}${d.id === cur ? ' on' : ''}" data-act="decor-pick" data-id="${d.id}"${d.unlocked ? '' : ' disabled'} aria-pressed="${d.id === cur}">
       ${decorThumb(d.id)}
       <span class="decor-name">${d.unlocked ? '' : icon('lock')}${esc(d.name)}</span>
@@ -2176,8 +2195,11 @@ const actions = {
     if (!before && routineStatus(d.routine, which).complete) celebrate(`${ROUTINES[which].title} faite`);
   },
   'decor-pick'(el) {
-    const d = decorStatus(decorStats(state)).find((x) => x.id === el.dataset.id);
-    if (!d?.unlocked) return;
+    const season = seasonStatus(todayKey()).find((x) => x.id === el.dataset.id);
+    const d = season ?? decorStatus(decorStats(state)).find((x) => x.id === el.dataset.id);
+    if (!(season ? season.open : d?.unlocked)) return;
+    // un décor de saison : le décor d'avant reviendra à la fin de la saison
+    if (season && !SEASONS.some((x) => x.id === state.settings.decor)) state.settings.decorBack = state.settings.decor ?? 'salle';
     state.settings.decor = d.id;
     save();
     actions['sheet-close']();

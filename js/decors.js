@@ -6,6 +6,7 @@
 import { HUB, N, HW, P, SKEW, r1, pts, poly, flat, box, lw, rw, onL, onR } from './iso.js';
 import { levelInfo, totalXP } from './logic.js';
 import { routineStatus } from './routines.js';
+import { SEASONS, seasonYear } from './seasons.js';
 
 // Du plus facile au plus dur.
 export const DECORS = [
@@ -77,8 +78,12 @@ export function decorStatus(stats = {}) {
   });
 }
 
-// Le décor à montrer : celui choisi s'il est débloqué, sinon la salle.
-export function decorToShow(chosen, stats) {
+// Le décor à montrer : celui choisi s'il est débloqué, sinon la salle. Un
+// décor de saison (seasons.js) se montre pendant sa saison (today : le jour) ;
+// après, c'est le décor d'avant qui revient (back), s'il est débloqué.
+export function decorToShow(chosen, stats, today, back = 'salle') {
+  const season = SEASONS.find((x) => x.id === chosen);
+  if (season) return today && seasonYear(season, today) !== null ? chosen : decorToShow(back, stats);
   return decorStatus(stats).find((d) => d.id === chosen)?.unlocked ? chosen : 'salle';
 }
 
@@ -958,7 +963,240 @@ function pirate({ u, pick, title, animate }) {
   };
 }
 
-const ART = { salle, grec, medieval, dojo, toit, station, plage, sommet, ocean, neon, arene, foret, volcan, jungle, ring, desert, pirate };
+// ---------- les décors de saison (seasons.js : leurs dates) ----------
+// des fanions en triangle le long du haut d'un mur (q : point du mur à (t, z))
+const bunting = (q, colors, z = HW - 0.12) => {
+  let d = '';
+  for (let t = 0.2, k = 0; t < N - 0.3; t += 0.42, k++) d += poly([q(t, z), q(t + 0.3, z), q(t + 0.15, z - 0.36)], colors[k % colors.length]);
+  return `<path d="M${pts([q(0, z), q(N, z)])}" stroke="#2a1d14" stroke-width="0.5" fill="none"/>${d}`;
+};
+
+function halloween({ u, pick, title, animate }) {
+  // nuit violette, grosse lune orange derrière le coin de la salle, murs de
+  // pierre aux fenêtres en ogive, toile d'araignée, fanions, citrouilles qui
+  // luisent, une bougie au rebord, chauves-souris, un petit fantôme, la brume
+  const joints = [];
+  for (let z = 0.5; z < HW; z += 0.5) joints.push(`M${pts([lw(0, z), lw(N, z)])}M${pts([rw(0, z), rw(N, z)])}`);
+  for (let row = 0; row < 6; row++) {
+    for (let t = row % 2 ? 0.55 : 1.1; t < N; t += 1.1) joints.push(`M${pts([lw(t, row * 0.5), lw(t, row * 0.5 + 0.5)])}M${pts([rw(t, row * 0.5), rw(t, row * 0.5 + 0.5)])}`);
+  }
+  // une fenêtre en ogive (repère du mur : x vers la droite, y vers le bas), la nuit derrière
+  const arch = (w, h) => `<path d="M0 ${h}V${r1(h * 0.42)}Q0 ${r1(h * 0.08)} ${r1(w / 2)} 0Q${w} ${r1(h * 0.08)} ${w} ${r1(h * 0.42)}V${h}Z" fill="url(#${u('win')})" stroke="#5a4a5e" stroke-width="1.6"/>`
+    + `<path d="M${r1(w / 2)} 2V${h}M2 ${r1(h * 0.55)}H${w - 2}" stroke="#2a1d2e" stroke-width="1.4"/><circle cx="${r1(w * 0.7)}" cy="${r1(h * 0.3)}" r="2.6" fill="#ffd9a0" opacity="0.8"/>`;
+  const candle = (x, y) => `<rect x="${r1(x - 1.4)}" y="${r1(y - 7)}" width="2.8" height="7" rx="0.6" fill="#efe6d2"/>${flame(x, y - 7, 0.55, animate, Math.round(x))}`;
+  const web = (() => {
+    const [cx, cy] = P(0, 0, HW);
+    const spokes = [[-44, 26], [-30, 34], [-12, 40], [12, 40], [30, 34], [44, 26]];
+    const rings = [0.35, 0.6, 0.85].map((f) => `M${spokes.map(([dx, dy]) => `${r1(cx + dx * f)} ${r1(cy + dy * f)}`).join('Q' + `${r1(cx)} ${r1(cy + 30 * f)} `)}`).join('');
+    return `<g class="hub-web" stroke="#d8d0e4" stroke-opacity="0.35" stroke-width="0.5" fill="none">${spokes.map(([dx, dy]) => `<path d="M${r1(cx)} ${r1(cy)}l${dx} ${dy}"/>`).join('')}<path d="${rings}"/></g>`;
+  })();
+  // citrouilles : un corps à côtes, une queue, un visage qui luit (et vacille)
+  const pumpkin = ([X, Y], s, k) => {
+    const [x, y] = P(X, Y, 0);
+    const lit = animate ? `<animate attributeName="opacity" values="1;0.7;0.95;0.8;1" dur="${r1(1.4 + 0.3 * (k % 3))}s" repeatCount="indefinite"/>` : '';
+    return `<g class="hub-pumpkin"><ellipse cx="${r1(x)}" cy="${r1(y)}" rx="${r1(16 * s)}" ry="${r1(5 * s)}" fill="url(#${u('pglow')})">${lit}</ellipse>`
+      + `<g transform="translate(${r1(x)} ${r1(y - 7 * s)}) scale(${s})"><ellipse cx="-4.5" rx="5" ry="6.5" fill="#d9661c"/><ellipse cx="4.5" rx="5" ry="6.5" fill="#d9661c"/><ellipse rx="5.5" ry="7" fill="#f08a2c"/>`
+      + `<path d="M-1 -6.5q1 -3 3 -3.6" stroke="#4a6b2a" stroke-width="1.8" fill="none" stroke-linecap="round"/>`
+      + `<g fill="#ffd36b">${lit}<path d="M-5 -1.5l2 -2.6l1.6 2.6zM1.4 -1.5l2 -2.6l1.6 2.6z"/><path d="M-5 1.4h10l-1.6 2.6l-1.4 -1.2l-1.4 1.6l-1.6 -1.6l-1.4 1.2z"/></g></g></g>`;
+  };
+  const bats = animate ? [[-30, 64, 420, -18, 15, 0, 1], [390, 40, -430, 34, 19, 5, 0.8], [-20, 108, 410, -46, 24, 11, 0.7]].map(([x, y, dx, dy, d, b, s]) => `<g opacity="0"><g transform="translate(${x} ${y}) scale(${s})"><path d="M0 -1.4c-2.4 -3.2 -6.4 -4 -10 -1.6c2 0.4 2.8 1.6 2.8 3c1.4 -1 3 -1 4 0.2c0.8 -1.2 2 -1.8 3.2 -1.6c1.2 -0.2 2.4 0.4 3.2 1.6c1 -1.2 2.6 -1.2 4 -0.2c0 -1.4 0.8 -2.6 2.8 -3c-3.6 -2.4 -7.6 -1.6 -10 1.6z" fill="#160b1f"><animateTransform attributeName="transform" type="scale" values="1 1;1 0.3;1 1" dur="0.32s" repeatCount="indefinite"/></path></g>`
+    + `<animateTransform attributeName="transform" type="translate" values="0 0;${dx} ${dy}" dur="${d}s" begin="${b}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.95;1" dur="${d}s" begin="${b}s" repeatCount="indefinite"/></g>`).join('') : '';
+  const ghostShape = '<path d="M-7 8v-9a7 7 0 0 1 14 0v9l-2.4 -2l-2.3 2l-2.3 -2l-2.3 2l-2.3 -2z" fill="#f4f0fa" opacity="0.88"/><ellipse cx="-2.4" cy="-1.5" rx="1.1" ry="1.6" fill="#2a1d2e"/><ellipse cx="2.4" cy="-1.5" rx="1.1" ry="1.6" fill="#2a1d2e"/>';
+  const ghost = `<g transform="translate(46 128)">${animate ? `<g>${ghostShape}<animateTransform attributeName="transform" type="translate" values="0 0;0 -6;0 0" dur="3.2s" repeatCount="indefinite"/></g>` : ghostShape}</g>`;
+  const fog = animate ? [[90, 300, 120, 16, 30, 26], [250, 330, 140, 18, -34, 31], [170, 360, 160, 14, 26, 23]].map(([x, y, rx, ry, dx, d]) => drift(`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="#c8b8e8" opacity="0.1"/>`, dx, d, true)).join('') : '';
+  const leaves = fall(Array.from({ length: 9 }, (_, k) => [hash(k + 610) * HUB.w, 40 + hash(k + 611) * 60, (hash(k + 612) - 0.5) * 70, 300, r1(8 + hash(k + 613) * 6), r1(hash(k + 614) * 8), 300]),
+    '<path d="M0 -2.4q2.4 0 2.4 2.4q0 2.4 -2.4 2.4q-2.4 0 -2.4 -2.4q0 -2.4 2.4 -2.4z" fill="#c8641e"/>', animate);
+  const scattered = Array.from({ length: 10 }, (_, k) => {
+    const [x, y] = P(0.3 + hash(k + 620) * 6.4, 0.3 + hash(k + 621) * 6.4, 0.003);
+    return `<ellipse cx="${r1(x)}" cy="${r1(y)}" rx="2.4" ry="1.3" fill="${['#c8641e', '#8a3e16', '#d99a2b'][k % 3]}" opacity="0.7" transform="rotate(${Math.round(hash(k + 622) * 180)} ${r1(x)} ${r1(y)})"/>`;
+  }).join('');
+  const planks = [];
+  for (let y = 0.4; y < N; y += 0.4) planks.push(`M${pts([P(0, y, 0.002), P(N, y, 0.002)])}`);
+  return {
+    bg: `url(#${u('sky')})`,
+    defs: lin(u('sky'), [0, 0, 0, 1], [[0, '#12071f'], [0.35, '#2b1145'], [1, '#160a22']]) + lin(u('wallL'), [0, 0, 1, 0], [[0, '#2a2233'], [1, '#342a3e']]) + lin(u('wallR'), [0, 0, 1, 0], [[0, '#3a2f44'], [1, '#2a2233']])
+      + lin(u('floor'), [0, 0, 0, 1], [[0, '#2c1f2c'], [1, '#3a2934']]) + lin(u('win'), [0, 0, 0, 1], [[0, '#1d0d33'], [1, '#5a2a6e']])
+      + rad(u('moon'), [[0, '#ffe2a8'], [0.7, '#f7a64a'], [1, '#e07a2a']]) + rad(u('moonglow'), [[0, '#ffb25a', 0.45], [1, '#ffb25a', 0]]) + rad(u('pglow'), [[0, '#ffb347', 0.55], [1, '#ffb347', 0]]),
+    back: `${starField(30, 640, 120, '#f3e8ff')}<circle cx="180" cy="40" r="70" fill="url(#${u('moonglow')})"/><circle cx="180" cy="40" r="34" fill="url(#${u('moon')})"/>`
+      + `<circle cx="168" cy="30" r="5" fill="#e8913a" opacity="0.5"/><circle cx="192" cy="50" r="7" fill="#e8913a" opacity="0.4"/><circle cx="186" cy="24" r="3" fill="#e8913a" opacity="0.45"/>`
+      + `${wallL(`url(#${u('wallL')})`)}${wallR(`url(#${u('wallR')})`)}<path d="${joints.join('')}" stroke="#14101a" stroke-opacity="0.55" stroke-width="0.6" fill="none"/>`
+      + onLeft(6.3, 2.65, arch(36, 40)) + onLeft(6.3, 0.95, candle(18, 0)) + onRight(4.9, 2.65, arch(36, 40))
+      + `<g class="hub-screen">${onR(1.9, 4.2, 1.5, 2.75, '#120a14', ' stroke="#ff8a2a" stroke-opacity="0.45" stroke-width="0.8"')}${onRight(2.1, 2.4, say(pick, title, { fill: '#ff9a3c', sub: '#f3e0c8', font: 'Georgia, serif' }))}</g>`
+      + bunting(lw, ['#f08a2c', '#1d1424', '#7a3aa8']) + bunting(rw, ['#7a3aa8', '#f08a2c', '#1d1424']) + web,
+    floor: `${floorPoly(`url(#${u('floor')})`)}<path d="${planks.join('')}" stroke="#140c14" stroke-opacity="0.6" stroke-width="0.7" fill="none"/>${scattered}`,
+    edge: cap('#4a3a50'),
+    props: [[3.0, 0.32, 0.9], [3.75, 0.3, 0.7], [0.32, 2.85, 0.8], ...FRONT_SPOTS.map(([X, Y]) => [X, Y, 1.15])].map(([X, Y, s], k) => pumpkin([X, Y], s, k)).join(''),
+    over: `${fog}${leaves}${ghost}${bats}`,
+    beam: ['#ffd9a0', '#ffa64d'], dust: '#ffbe7a',
+    plat: ['#3a2a3e', '#21162a', '#2d2034'], vig: 0.55,
+    sky: true, // sa lune : pas de deuxième la nuit (daylight.js)
+  };
+}
+
+function noel({ u, pick, title, animate }) {
+  // un village sous la neige, la nuit : collines blanches, chalets aux
+  // fenêtres chaudes, un grand sapin décoré derrière la salle (boules qui
+  // scintillent, étoile au sommet), place enneigée, barrière coiffée de neige
+  // et guirlande, cadeaux, et la neige qui tombe
+  const hills = `<path d="M-10 196Q40 160 100 182T220 176T372 184V330H-10Z" fill="#b9cbe0"/><path d="M-10 214Q60 188 130 206T260 200T372 210V330H-10Z" fill="#dfe9f5"/>`;
+  const chalet = (x, y, w, h, wall, k) => `<g><rect x="${x}" y="${y - h}" width="${w}" height="${h}" fill="${wall}"/><path d="M${x - 4} ${y - h}L${x + w / 2} ${y - h - w * 0.55}L${x + w + 4} ${y - h}Z" fill="#3a2a2a"/>`
+    + `<path d="M${x - 4} ${y - h}L${x + w / 2} ${y - h - w * 0.55}L${x + w + 4} ${y - h}L${x + w + 1} ${y - h + 2}L${x + w / 2} ${y - h - w * 0.55 + 4}L${x - 1} ${y - h + 2}Z" fill="#f4f8fc"/>`
+    + `<rect x="${x + w * 0.2}" y="${y - h * 0.7}" width="${r1(w * 0.22)}" height="${r1(h * 0.32)}" fill="#ffd27a">${pulse('1;0.8;1', 3 + k, animate)}</rect><rect x="${r1(x + w * 0.58)}" y="${y - h * 0.7}" width="${r1(w * 0.22)}" height="${r1(h * 0.32)}" fill="#ffc45e"/></g>`;
+  const village = chalet(8, 212, 30, 22, '#6b3a2e', 0) + chalet(46, 206, 24, 18, '#4a5a7a', 1) + chalet(84, 200, 20, 15, '#7a5a3a', 2)
+    + chalet(260, 200, 20, 15, '#4a5a7a', 1) + chalet(292, 206, 26, 19, '#6b3a2e', 2) + chalet(326, 213, 30, 22, '#3a5a4a', 0);
+  // le grand sapin, derrière le coin de la salle
+  const tiers = [[150, 46, 24], [128, 38, 22], [106, 30, 20], [84, 22, 18], [64, 14, 16]];
+  const tree = `<rect x="174" y="146" width="12" height="14" fill="#3a2414"/>` + tiers.map(([y, w, h]) => `<path d="M180 ${y - h - 16}L${180 + w} ${y}H${180 - w}Z" fill="#1f4a36"/><path d="M180 ${y - h - 16}L${180 + w * 0.5} ${y - h / 2 - 8}L${180 - w * 0.5} ${y - h / 2 - 8}Z" fill="#2c6048" opacity="0.6"/>`).join('')
+    + `<path d="M150 136Q180 146 210 132M156 112Q180 120 204 108M162 90Q180 96 198 86" stroke="#ffd27a" stroke-width="1" fill="none" opacity="0.8"/>`;
+  const balls = [[160, 142, '#e03a3a'], [198, 144, '#3a7ae0'], [172, 126, '#ffd27a'], [188, 118, '#e03a3a'], [166, 104, '#3a7ae0'], [194, 98, '#ffd27a'], [176, 84, '#e03a3a'], [184, 70, '#3a7ae0'], [206, 128, '#ffd27a'], [154, 124, '#3a7ae0']]
+    .map(([x, y, c], k) => `<circle cx="${x}" cy="${y}" r="2.4" fill="${c}">${pulse('1;0.45;1', r1(1.2 + (k % 4) * 0.5), animate)}</circle>`).join('');
+  const star = `<g transform="translate(180 30)"><circle r="12" fill="url(#${u('starglow')})">${pulse('0.7;1;0.7', 2.2, animate)}</circle><path d="M0 -7l2 5h5.4l-4.4 3.2l1.7 5.3l-4.7 -3.3l-4.7 3.3l1.7 -5.3l-4.4 -3.2h5.4z" fill="#ffd94a"/></g>`;
+  // la barrière de bois au bord de la place, coiffée de neige, guirlande de couleurs
+  const posts = [0.1, 1.85, 3.6, 5.35, 6.85];
+  const fence = posts.map((t) => box(-0.12, t - 0.06, 0, 0.12, 0.12, 0.75, ['#f4f8fc', '#4a3220', '#5e4228']) + box(t - 0.06, -0.12, 0, 0.12, 0.12, 0.75, ['#f4f8fc', '#4a3220', '#5e4228'])).join('')
+    + box(-0.1, 0, 0.62, 0.08, N, 0.1, ['#f4f8fc', '#4a3220', '#5e4228']) + box(0, -0.1, 0.62, N, 0.08, 0.1, ['#f4f8fc', '#4a3220', '#5e4228']);
+  const lights = (q) => Array.from({ length: 16 }, (_, k) => {
+    const [x, y] = q(0.2 + k * 0.42, 0.55);
+    const c = ['#ff5a5a', '#ffd27a', '#5ac8ff', '#7aff9a'][k % 4];
+    return `<circle cx="${r1(x)}" cy="${r1(y + 2)}" r="1.3" fill="${c}">${pulse('1;0.3;1', r1(1 + (k % 3) * 0.6), animate)}</circle><circle cx="${r1(x)}" cy="${r1(y + 2)}" r="3.8" fill="${c}" opacity="0.18"/>`;
+  }).join('');
+  // un cadeau : une boîte, son ruban sur chaque face visible, un nœud dessus
+  const gift = ([X, Y], [top, left, right, ribbon], sz) => {
+    const [x, y] = P(X + sz / 2, Y + sz / 2, sz);
+    const band = (list) => poly(list, ribbon);
+    return box(X, Y, 0, sz, sz, sz, [top, left, right])
+      + band([P(X + sz / 2 - 0.04, Y + sz, 0), P(X + sz / 2 + 0.04, Y + sz, 0), P(X + sz / 2 + 0.04, Y + sz, sz), P(X + sz / 2 - 0.04, Y + sz, sz)])
+      + band([P(X + sz, Y + sz / 2 - 0.04, 0), P(X + sz, Y + sz / 2 + 0.04, 0), P(X + sz, Y + sz / 2 + 0.04, sz), P(X + sz, Y + sz / 2 - 0.04, sz)])
+      + band([P(X + sz / 2 - 0.04, Y, sz), P(X + sz / 2 + 0.04, Y, sz), P(X + sz / 2 + 0.04, Y + sz, sz), P(X + sz / 2 - 0.04, Y + sz, sz)])
+      + band([P(X, Y + sz / 2 - 0.04, sz), P(X + sz, Y + sz / 2 - 0.04, sz), P(X + sz, Y + sz / 2 + 0.04, sz), P(X, Y + sz / 2 + 0.04, sz)])
+      + `<path d="M${r1(x)} ${r1(y)}c-4 -4 -7 0 0 0c7 0 4 -4 0 0" stroke="${ribbon}" stroke-width="1.4" fill="none"/>`;
+  };
+  const [g1, g2] = FRONT_SPOTS;
+  const gifts = gift(g1, ['#e04a4a', '#a82a30', '#c8323a', '#ffd27a'], 0.5) + gift([g1[0] - 0.52, g1[1] + 0.05], ['#3a9a5e', '#1f5a36', '#2f7a4a', '#ff5a5a'], 0.42)
+    + gift(g2, ['#5a7ae0', '#2a3a8a', '#3a5ac8', '#f4f8fc'], 0.5) + gift([g2[0] + 0.05, g2[1] - 0.52], ['#ffe08a', '#c8962a', '#e0b04a', '#c8323a'], 0.42);
+  const snowy = Array.from({ length: 12 }, (_, k) => {
+    const [x, y] = P(0.3 + hash(k + 700) * 6.4, 0.3 + hash(k + 701) * 6.4, 0.003);
+    return `<ellipse cx="${r1(x)}" cy="${r1(y)}" rx="${r1(7 + hash(k) * 9)}" ry="${r1(3 + hash(k + 1) * 3)}" fill="#ffffff" opacity="0.45"/>`;
+  }).join('');
+  const flakes = fall(Array.from({ length: 22 }, (_, k) => [hash(k + 720) * HUB.w, -10, (hash(k + 721) - 0.5) * 50, 560, r1(8 + hash(k + 722) * 8), r1(hash(k + 723) * 10)]), '<circle r="1.3" fill="#fff"/>', animate);
+  return {
+    bg: `url(#${u('sky')})`,
+    defs: lin(u('sky'), [0, 0, 0, 1], [[0, '#0a1230'], [0.4, '#1d2c5a'], [0.62, '#3a4a78'], [1, '#2a3a62']]) + lin(u('floor'), [0, 0, 0, 1], [[0, '#c9d6e6'], [1, '#dde6f1']])
+      + rad(u('starglow'), [[0, '#fff3a8', 0.8], [1, '#ffd94a', 0]]),
+    back: `${starField(40, 660, 120)}${hills}${village}${tree}${balls}${star}`
+      + `<rect y="300" width="${HUB.w}" height="${HUB.h - 300}" fill="#dfe9f5"/>`
+      + box(0, 0, -0.18, N, N, 0.18, ['#e8eef7', '#9aa9bd', '#b4c1d2'])
+      + signboard(1.3, 3.7, 1.05, 1.66, '#8a5a36', ['#5a3a22', '#3a2414', '#4a2f1b'], onR(1.3, 3.7, 1.66, 1.74, '#f4f8fc') + onRight(1.5, 1.51, say(pick, title, { fill: '#fff4dc', sub: '#ffe0b0', size: 5.6, font: 'Georgia, serif' }))),
+    floor: `${floorPoly(`url(#${u('floor')})`)}${tiles('#9aa9bd', 0.45, 0.6)}${snowy}`,
+    edge: `${fence}${lights((t, z) => P(-0.06, t, z))}${lights((t, z) => P(t, -0.06, z))}`,
+    props: gifts,
+    over: flakes,
+    beam: ['#fff8e0', '#ffe2a0'], dust: '#ffffff',
+    plat: ['#7a5636', '#4a3220', '#5e4228'], vig: 0.4,
+  };
+}
+
+function printemps({ u, pick, title, animate }) {
+  // un jardin au printemps : ciel clair, arc-en-ciel léger, collines vertes,
+  // cerisiers en fleurs, barrière blanche, tulipes, pétales et papillons
+  const clouds = [[70, 46, 0.9, 44], [270, 34, 1, 52], [200, 76, 0.6, 38]].map(([x, y, sc, d], k) => drift(cloud(x, y, sc, '#ffffff', '#e4f2fb'), k % 2 ? -16 : 16, d, animate)).join('');
+  const rainbow = ['#ff6b6b', '#ffb347', '#ffe66b', '#7ad97a', '#6bb8ff', '#a98bff'].map((c, k) => `<path d="M${40 + k * 5} 200A${140 - k * 5} ${120 - k * 5} 0 0 1 ${320 - k * 5} 200" stroke="${c}" stroke-width="5" fill="none"/>`).join('');
+  const hills = `<path d="M-10 186Q60 150 130 172T260 162T372 176V330H-10Z" fill="#a8d98c"/><path d="M-10 206Q70 180 150 198T290 192T372 202V330H-10Z" fill="#8cc96f"/>`;
+  const blossom = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-1.6 0V-16M0 -10l7 -7M0 -12l-6 -6" stroke="#6b4a3a" stroke-width="2.4" stroke-linecap="round" fill="none"/>`
+    + [[-8, -22, 9], [4, -26, 10], [12, -18, 8], [-12, -14, 7], [0, -16, 8], [8, -30, 7]].map(([dx, dy, r], k) => `<circle cx="${dx}" cy="${dy}" r="${r}" fill="${['#ffc0d9', '#ff9ec4', '#ffe0ec'][k % 3]}"/>`).join('') + '</g>';
+  const trees = blossom(26, 228, 1.6) + blossom(76, 196, 1.2) + blossom(286, 196, 1.2) + blossom(336, 226, 1.6) + blossom(134, 168, 0.9) + blossom(232, 166, 0.9);
+  // barrière blanche et tulipes le long des deux bords du fond
+  const posts = [0.1, 1.25, 2.4, 3.55, 4.7, 5.85, 6.9];
+  const fence = posts.map((t) => box(-0.1, t - 0.05, 0, 0.1, 0.1, 0.7, ['#ffffff', '#c9cfd6', '#e4e8ec']) + box(t - 0.05, -0.1, 0, 0.1, 0.1, 0.7, ['#ffffff', '#c9cfd6', '#e4e8ec'])).join('')
+    + [0.25, 0.5].map((z) => box(-0.08, 0, z, 0.06, N, 0.07, ['#ffffff', '#d4d9de', '#eef1f4']) + box(0, -0.08, z, N, 0.06, 0.07, ['#ffffff', '#d4d9de', '#eef1f4'])).join('');
+  const tulips = (q) => Array.from({ length: 13 }, (_, k) => {
+    const [x, y] = q(0.3 + k * 0.5);
+    const c = ['#ff5a7a', '#ffd23a', '#ff8a3a', '#c86bff'][k % 4];
+    return `<path d="M${r1(x)} ${r1(y)}v-6" stroke="#4a8a3a" stroke-width="0.9"/><path d="M${r1(x - 2)} ${r1(y - 6)}q0 -3.6 2 -4q2 0.4 2 4q-2 1.2 -4 0z" fill="${c}"/>`;
+  }).join('');
+  const butterflies = animate ? [[60, 250, '#ffb347', 0], [250, 220, '#6bb8ff', 3], [300, 300, '#ff7ab8', 6]].map(([x, y, c, b]) => {
+    const wing = `<g><path d="M0 0c-4 -5 -8 -4 -7 0c-1 3 3 4 7 0zM0 0c4 -5 8 -4 7 0c1 3 -3 4 -7 0z" fill="${c}"/><animateTransform attributeName="transform" type="scale" values="1 1;0.25 1;1 1" dur="0.4s" repeatCount="indefinite"/></g>`;
+    return `<g transform="translate(${x} ${y})"><g>${wing}<animateTransform attributeName="transform" type="translate" values="0 0;24 -14;-10 -26;-24 -6;0 0" dur="${9 + b}s" begin="${-b}s" repeatCount="indefinite"/></g></g>`;
+  }).join('') : '';
+  const petals = fall(Array.from({ length: 12 }, (_, k) => [hash(k + 740) * HUB.w, -10 + hash(k + 741) * 60, 40 + hash(k + 742) * 50, 420, r1(10 + hash(k + 743) * 7), r1(hash(k + 744) * 9), 360]),
+    '<ellipse rx="2.2" ry="1.3" fill="#ffc0d9"/>', animate);
+  const stripes = [];
+  for (let i = 0; i < N; i += 2) stripes.push(poly([P(i, 0, 0.002), P(i + 1, 0, 0.002), P(i + 1, N, 0.002), P(i, N, 0.002)], '#ffffff', ' opacity="0.07"'));
+  return {
+    bg: `url(#${u('sky')})`,
+    defs: lin(u('sky'), [0, 0, 0, 1], [[0, '#7cc4f2'], [0.45, '#bfe6fb'], [0.7, '#eef8ff'], [1, '#8cc96f']]) + lin(u('floor'), [0, 0, 0, 1], [[0, '#86c66a'], [1, '#76b85a']]),
+    back: `<g opacity="0.32">${rainbow}</g>${clouds}${hills}${trees}`
+      + `<rect y="300" width="${HUB.w}" height="${HUB.h - 300}" fill="#7ab85e"/>`
+      + box(0, 0, -0.22, N, N, 0.22, ['#86c66a', '#6b4a2e', '#7a5636'])
+      + signboard(1.3, 3.7, 1.05, 1.66, '#e8cfa0', ['#8a6440', '#5a3f26', '#6e4e30'], onR(1.3, 3.7, 1.66, 1.74, '#ff9ec4') + onRight(1.5, 1.51, say(pick, title, { fill: '#2f5a24', sub: '#3a3020', size: 5.6 }))),
+    floor: `${floorPoly(`url(#${u('floor')})`)}${stripes.join('')}`,
+    edge: `${fence}${tulips((t) => P(0.18, t, 0))}${tulips((t) => P(t, 0.18, 0))}`,
+    props: '',
+    over: `${petals}${butterflies}`,
+    beam: ['#fffbe8', '#fff1c4'], dust: '#ffd6e8',
+    plat: ['#e2ddd0', '#a8a294', '#c5bfb1'], vig: 0.25,
+  };
+}
+
+function ete({ u, pick, title, animate }) {
+  // une nuit d'été au bord du lac : ponton de bois, guirlande de guinguette,
+  // feux d'artifice qui éclatent au-dessus de l'eau et s'y reflètent
+  const H = 196;
+  const burst = (x, y, R, c, d, b) => {
+    const sparks = Array.from({ length: 14 }, (_, k) => {
+      const a = (k / 14) * Math.PI * 2;
+      return `<circle cx="${r1(Math.cos(a) * R)}" cy="${r1(Math.sin(a) * R)}" r="1.5" fill="${c}"/><path d="M${r1(Math.cos(a) * R * 0.55)} ${r1(Math.sin(a) * R * 0.55)}L${r1(Math.cos(a) * R * 0.9)} ${r1(Math.sin(a) * R * 0.9)}" stroke="${c}" stroke-width="0.8" stroke-linecap="round"/>`;
+    }).join('');
+    if (!animate) return `<g transform="translate(${x} ${y})" opacity="0.75"><circle r="${r1(R * 1.2)}" fill="${c}" opacity="0.12"/>${sparks}</g>`;
+    return `<g transform="translate(${x} ${y})" opacity="0"><circle r="${r1(R * 1.2)}" fill="${c}" opacity="0.14"/><g>${sparks}<animateTransform attributeName="transform" type="scale" values="0.1;1;1.08" keyTimes="0;0.35;1" dur="${d}s" begin="${b}s" repeatCount="indefinite"/></g>`
+      + `<animate attributeName="opacity" values="0;1;0.9;0;0" keyTimes="0;0.06;0.4;0.62;1" dur="${d}s" begin="${b}s" repeatCount="indefinite"/></g>`;
+  };
+  const fireworks = burst(80, 70, 26, '#ff6b8a', 4.2, 0) + burst(250, 52, 30, '#ffd27a', 5.1, 1.6) + burst(160, 104, 20, '#6bd8ff', 3.8, 2.8) + burst(312, 112, 22, '#9dff7a', 4.6, 0.9);
+  const shore = `<path d="M-10 ${H}Q50 ${H - 20} 110 ${H - 8}T230 ${H - 12}T372 ${H - 4}V${H + 2}H-10Z" fill="#0a0f2a"/>`
+    + Array.from({ length: 9 }, (_, k) => `<circle cx="${r1(20 + k * 40 + hash(k + 760) * 14)}" cy="${r1(H - 4 - hash(k + 761) * 8)}" r="0.9" fill="#ffd27a" opacity="0.8"/>`).join('');
+  const glints = [[80, '#ff6b8a'], [250, '#ffd27a'], [160, '#6bd8ff'], [312, '#9dff7a']].map(([x, c], k) => `<rect x="${x - 6}" y="${H + 8 + k * 6}" width="12" height="40" fill="${c}" opacity="0.12">${pulse('0.05;0.2;0.05', r1(3.5 + k * 0.6), animate)}</rect>`).join('');
+  const water = `<rect y="${H}" width="${HUB.w}" height="${HUB.h - H}" fill="url(#${u('lake')})"/>${glints}`
+    + Array.from({ length: 12 }, (_, k) => drift(`<path d="M${r1(hash(k + 770) * HUB.w)} ${r1(H + 20 + hash(k + 771) * 300)}h${r1(8 + hash(k + 772) * 10)}" stroke="#9fb6ff" stroke-width="0.8" opacity="0.25"/>`, k % 2 ? 6 : -6, r1(4 + hash(k + 773) * 3), animate)).join('');
+  const piles = [0.2, 2.4, 4.6, 6.8].flatMap((t) => [box(t - 0.1, N - 0.1, -2.2, 0.2, 0.2, 2.2, ['#4a311d', '#2e1d11', '#3b2616']), box(N - 0.1, t - 0.1, -2.2, 0.2, 0.2, 2.2, ['#4a311d', '#2e1d11', '#3b2616'])]).join('');
+  const posts = [0.1, 1.85, 3.6, 5.35, 6.85];
+  const rail = posts.map((t) => box(-0.12, t - 0.06, 0, 0.12, 0.12, 0.8, ['#6b4a2e', '#3f2a19', '#55391f']) + box(t - 0.06, -0.12, 0, 0.12, 0.12, 0.8, ['#6b4a2e', '#3f2a19', '#55391f'])).join('')
+    + box(-0.1, 0, 0.72, 0.08, N, 0.08, ['#7a5636', '#4a3220', '#5e4228']) + box(0, -0.1, 0.72, N, 0.08, 0.08, ['#7a5636', '#4a3220', '#5e4228']);
+  // guirlande de guinguette : des ampoules qui pendent entre deux poteaux hauts
+  const mast = (X, Y) => box(X - 0.06, Y - 0.06, 0, 0.12, 0.12, 2.2, ['#5a3a22', '#3a2414', '#4a2f1b']);
+  const masts = mast(-0.1, -0.1) + mast(-0.1, N - 0.2) + mast(N - 0.2, -0.1);
+  const string = (a, b) => {
+    const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 26];
+    let bulbs = '';
+    for (let k = 1; k < 12; k++) {
+      const t = k / 12;
+      const x = (1 - t) ** 2 * a[0] + 2 * t * (1 - t) * m[0] + t * t * b[0];
+      const y = (1 - t) ** 2 * a[1] + 2 * t * (1 - t) * m[1] + t * t * b[1] + 2;
+      bulbs += `<circle cx="${r1(x)}" cy="${r1(y)}" r="1.7" fill="#ffe2a0">${pulse('1;0.6;1', r1(1.6 + (k % 3) * 0.7), animate && k % 2 === 0)}</circle><circle cx="${r1(x)}" cy="${r1(y)}" r="5" fill="#ffd27a" opacity="0.16"/>`;
+    }
+    return `<path d="M${r1(a[0])} ${r1(a[1])}Q${r1(m[0])} ${r1(m[1])} ${r1(b[0])} ${r1(b[1])}" stroke="#2a1d14" stroke-width="0.6" fill="none"/>${bulbs}`;
+  };
+  const corner = P(-0.04, -0.04, 2.2);
+  const planks = [];
+  for (let y = 0.35; y < N; y += 0.35) planks.push(`M${pts([P(0, y, 0.002), P(N, y, 0.002)])}`);
+  const sparksFall = fall(Array.from({ length: 8 }, (_, k) => [40 + hash(k + 780) * 280, 60 + hash(k + 781) * 50, (hash(k + 782) - 0.5) * 20, 110, r1(3 + hash(k + 783) * 2), r1(hash(k + 784) * 5)]), '<circle r="0.9" fill="#ffe2a0"/>', animate);
+  return {
+    bg: `url(#${u('sky')})`,
+    defs: lin(u('sky'), [0, 0, 0, 1], [[0, '#050a24'], [0.6, '#16215a'], [1, '#2b2f6a']]) + lin(u('lake'), [0, 0, 0, 1], [[0, '#1a2458'], [0.4, '#0d1640'], [1, '#060a22']])
+      + lin(u('floor'), [0, 0, 0, 1], [[0, '#8a6440'], [1, '#9a7048']]),
+    back: `${starField(46, 800, 150)}${fireworks}${sparksFall}${shore}${water}${piles}`
+      + box(0, 0, -0.25, N, N, 0.25, ['#8a6440', '#4a3220', '#5e4228'])
+      + `${masts}${string(corner, P(-0.04, N - 0.14, 2.2))}${string(corner, P(N - 0.14, -0.04, 2.2))}`
+      + signboard(1.3, 3.7, 1.0, 1.62, '#1f2b26', ['#5a3a22', '#3a2414', '#4a2f1b'], onRight(1.5, 1.47, say(pick, title, { fill: '#f4f0e6', sub: '#dcd6c8', size: 5.6 }))),
+    floor: `${floorPoly(`url(#${u('floor')})`)}<path d="${planks.join('')}" stroke="#5e4228" stroke-opacity="0.55" stroke-width="0.7" fill="none"/>`,
+    edge: rail,
+    props: '',
+    beam: ['#fff0d0', '#ffd08a'], dust: '#ffe6a8',
+    plat: ['#6b4a2e', '#3f2a19', '#55391f'], vig: 0.45,
+    sky: true, // ses feux d'artifice : pas de lune en plus la nuit (daylight.js)
+  };
+}
+
+const ART = { salle, grec, medieval, dojo, toit, station, plage, sommet, ocean, neon, arene, foret, volcan, jungle, ring, desert, pirate, halloween, noel, printemps, ete };
 
 // L'habillage d'un décor (décor inconnu : la salle). u : préfixe des identifiants.
 export function decorArt(id, { pick = 'A', title = '', animate = true, u = (n) => n } = {}) {

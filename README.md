@@ -122,7 +122,7 @@ En haut de la fiche « Décor », quatre décors qui reviennent chaque année, l
 |---|---|---|
 | Nuit d’Halloween (pleine lune orange, murs de pierre, fenêtres en ogive, toile d’araignée, fanions, citrouilles qui luisent, petit fantôme, chauves-souris, brume et feuilles qui tombent) | du 15 octobre au 5 novembre | « Esprit d’Halloween » (bronze) : 6 séances pendant la saison |
 | Village de Noël (sous la neige, grand sapin aux boules qui scintillent, chalets éclairés, barrière et guirlande, cadeaux, la neige qui tombe) | du 1er décembre au 6 janvier | « Lutin d’acier » (argent) : 10 séances |
-| Jardin en fleurs (cerisiers, arc-en-ciel, barrière blanche, tulipes, papillons, pétales au vent) | du 20 mars au 30 avril | « Renouveau » (argent) : 12 séances |
+| Jardin en fleurs (champs de tulipes en bandes de couleur sur les collines, moulin aux ailes qui tournent, grands cerisiers en fleurs, haies taillées et fleuries, fontaine, massif de fleurs, papillons, oiseaux, pétales au vent) | du 20 mars au 30 avril | « Renouveau » (argent) : 12 séances |
 | Nuit d’été (ponton sur le lac, guirlande de guinguette, feux d’artifice qui se reflètent dans l’eau) | du 1er juillet au 31 août | « Feu d’artifice » (or) : 15 séances |
 
 Pour les trophées de saison, une séance compte une fois par jour, sans compter M, et toutes doivent tomber pendant la même saison.

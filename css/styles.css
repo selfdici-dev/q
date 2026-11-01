@@ -1135,6 +1135,25 @@ details.card.more .rules { margin-top: 10px; }
 .hub-decor-btn svg { width: 14px; height: 14px; color: #e9b897; }
 .hub-decor-btn::before { content: ""; position: absolute; inset: -9px -4px; } /* zone touchable de 44 px */
 .hub-decor-btn:focus-visible { outline: 2px solid #e9b897; outline-offset: 2px; }
+/* en haut à droite de la salle : trophées, décor, aide, côte à côte */
+.hub-tools { position: absolute; top: calc(10px + env(safe-area-inset-top)); right: 12px; display: flex; align-items: center; gap: 8px; }
+.hub-tools .hub-decor-btn, .hub-tools .hub-help { position: relative; top: auto; right: auto; }
+.hub-tools .hub-help .help-btn { margin-left: 0; }
+.hub-trophy-btn svg { color: #ffd27a; }
+/* la vitrine des trophées : médaille bronze, argent ou or quand c'est gagné */
+.tr-bar { height: 8px; border-radius: 999px; background: var(--track, rgb(127 127 127 / 0.2)); overflow: hidden; }
+.tr-bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #c98a5a, #e7c76b); }
+.tr-group { margin: 16px 0 8px; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.tr-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.tr-card { display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 10px; align-items: center; padding: 10px; border-radius: 14px; background: var(--card, var(--surface)); box-shadow: inset 0 0 0 1px var(--card-line, var(--line)); }
+.tr-medal { grid-row: 1 / span 3; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: rgb(128 128 128 / 0.22); color: var(--muted); }
+.tr-medal svg { width: 20px; height: 20px; }
+.tr-card b { font-size: 0.85rem; line-height: 1.2; }
+.tr-card small { color: var(--muted); font-size: 0.72rem; line-height: 1.25; }
+.tr-card .decor-bar { margin: 4px 0 0; }
+.tr-card.won.bronze .tr-medal { background: radial-gradient(circle at 35% 30%, #f3c39a, #b8714c 70%); color: #3a1f0e; box-shadow: 0 0 0 2px #e0a07a; }
+.tr-card.won.argent .tr-medal { background: radial-gradient(circle at 35% 30%, #ffffff, #aab4c2 70%); color: #2a3240; box-shadow: 0 0 0 2px #d6dde6; }
+.tr-card.won.or .tr-medal { background: radial-gradient(circle at 35% 30%, #fff1b8, #d4a63c 70%); color: #3a2605; box-shadow: 0 0 0 2px #f2d27a, 0 0 12px 2px rgb(231 199 107 / 0.45); }
 .decor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 10px 0 12px; }
 .decor-card { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 0 0 10px; border: 1px solid var(--card-line, var(--line)); border-radius: 16px; background: var(--card, var(--surface)); color: var(--text); font: inherit; text-align: left; overflow: hidden; cursor: pointer; transition: transform 0.12s; }
 .decor-card:not(:disabled):active { transform: scale(0.98); }

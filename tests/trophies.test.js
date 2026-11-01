@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { TROPHIES, trophyStats, trophyStatus, newTrophies } from '../js/trophies.js';
 import { DECORS } from '../js/decors.js';
 import { ICONS } from '../js/icons.js';
+import { LESSONS, PUZZLES } from '../js/chess-school.js';
 
 test('trophées : des identifiants uniques, bronze, argent ou or, une icône qui existe', () => {
   assert.equal(new Set(TROPHIES.map((t) => t.id)).size, TROPHIES.length);
@@ -63,4 +64,20 @@ test('trophées : les chiffres viennent de tes données (chaîne, jeux, décors)
   const empty = trophyStats({ settings: {}, habits: [], days: {} }, '2026-10-04');
   assert.equal(empty.chain, 0);
   assert.equal(empty.decors, 1);
+});
+
+test('trophées : les échecs (toutes les leçons, tous les problèmes, Cap battu au niveau Coriace)', () => {
+  const lessons = Object.fromEntries(LESSONS.map((l) => [l.id, true]));
+  const games = { echecs: { lessons: { ...lessons, inconnue: true }, puzzles: { p1: true, p2: true, zz: true }, wins: { moyen: 3 } } };
+  const s = trophyStats({ settings: {}, habits: [], days: {}, games }, '2026-11-01');
+  assert.equal(s.echecsLecons, LESSONS.length); // une leçon inconnue ne compte pas
+  assert.equal(s.echecsPb, 2);
+  assert.equal(s.echecsCoriace, 0);
+  const at = (id, stats) => trophyStatus(stats).find((t) => t.id === id);
+  assert.equal(at('g-ecole', s).earned, true);
+  assert.equal(at('g-tactique', s).earned, false);
+  assert.equal(at('g-tactique', s).label, `2 / ${PUZZLES.length} problèmes`);
+  assert.equal(at('g-coriace', s).earned, false);
+  assert.equal(at('g-coriace', { echecsCoriace: 1 }).earned, true);
+  assert.equal(trophyStats({ settings: {}, habits: [], days: {}, games: { echecs: { wins: { coriace: 2 } } } }, '2026-11-01').echecsCoriace, 2);
 });

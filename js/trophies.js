@@ -5,6 +5,7 @@
 import { chain } from './logic.js';
 import { decorStats, decorStatus } from './decors.js';
 import { SEASONS, seasonWorkouts, dateFr } from './seasons.js';
+import { LESSONS, PUZZLES } from './chess-school.js';
 
 const T = (id, group, icon, name, desc, tier, kind, n) => ({ id, group, icon, name, desc, tier, need: { kind, n } });
 export const TROPHIES = [
@@ -35,6 +36,9 @@ export const TROPHIES = [
   T('g-taquin', 'Jeux', 'grid', 'Grand rangement', 'Un taquin 4 × 4 rangé', 'or', 'taquin4', 1),
   T('g-sprint', 'Jeux', 'trending-up', 'Sprinteur', '1 000 m au Sprint', 'argent', 'sprint', 1000),
   T('g-pixels', 'Jeux', 'search', 'Œil de pixel', '10 dessins trouvés aux Pixels cachés', 'or', 'pixels', 10),
+  T('g-ecole', 'Jeux', 'school', 'Élève d’échecs', `Les ${LESSONS.length} leçons de l’école d’échecs`, 'bronze', 'echecsLecons', LESSONS.length),
+  T('g-tactique', 'Jeux', 'target', 'Tacticien', `Les ${PUZZLES.length} problèmes d’échecs résolus`, 'argent', 'echecsPb', PUZZLES.length),
+  T('g-coriace', 'Jeux', 'knight', 'Échec et mat', 'Cap battu aux échecs au niveau Coriace', 'or', 'echecsCoriace', 1),
   T('d3', 'Décors', 'map', 'Décorateur', '3 décors débloqués', 'bronze', 'decors', 3),
   T('d8', 'Décors', 'map', 'Collectionneur', '8 décors débloqués', 'argent', 'decors', 8),
   T('d17', 'Décors', 'map', 'Tous les mondes', 'Les 17 décors débloqués', 'or', 'decors', 17),
@@ -46,12 +50,14 @@ const fmt = (n) => Number(n).toLocaleString('fr-FR');
 const UNIT = {
   workouts: 'séances', boxe: 'séances C', chain: 'jours de chaîne', routines: 'matins', soirs: 'soirs', blocs: 'points', serpent: 'fruits',
   calc: 'points', code: 'codes', echo: 'touches', sudoku: 'sudokus', decors: 'décors', taquin4: 'taquin 4 × 4', sprint: 'm', pixels: 'dessins',
+  echecsLecons: 'leçons', echecsPb: 'problèmes', echecsCoriace: 'victoire contre Cap (Coriace)',
   ...Object.fromEntries(SEASONS.map((s) => [s.id, 'séances pendant la saison'])),
 };
 const LEVELS = new Set(['level', 'gems', 'paires', 'briques']);
 
 // Tes chiffres pour les trophées : ceux des décors, plus ta chaîne du jour,
-// tes records d'Écho, du Casse-briques, du Taquin 4 × 4 et tes décors débloqués.
+// tes records d'Écho, du Casse-briques, du Taquin 4 × 4, tes échecs (leçons,
+// problèmes, victoires au niveau Coriace) et tes décors débloqués.
 export function trophyStats(state, today) {
   const s = decorStats(state);
   const g = state.games ?? {};
@@ -63,6 +69,9 @@ export function trophyStats(state, today) {
     taquin4: g.taquin?.best?.[4] ? 1 : 0,
     sprint: g.sprint?.best ?? 0,
     pixels: Array.isArray(g.pixels?.done) ? g.pixels.done.length : 0,
+    echecsLecons: LESSONS.filter((l) => g.echecs?.lessons?.[l.id]).length,
+    echecsPb: PUZZLES.filter((p) => g.echecs?.puzzles?.[p.id]).length,
+    echecsCoriace: Number(g.echecs?.wins?.coriace) || 0,
     decors: decorStatus(s).filter((d) => d.unlocked).length,
     ...seasonWorkouts(state.days), // séances pendant Halloween, Noël… (la meilleure année)
   };

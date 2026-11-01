@@ -1373,7 +1373,7 @@ label.steps-pick select { width: auto; min-height: 36px; padding: 0 10px; font-s
   .food:active, .meal-step:active { transform: scale(0.96); }
 }
 
-/* Arcade (js/arcade.js) : dix jeux en tuiles. Couleurs des
+/* Arcade (js/arcade.js) : treize jeux en tuiles (les échecs en large). Couleurs des
    pièces : celles des séances (A vert, B bleu, C orange, M violet, P or), en relief. */
 .arc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .arc-tile { display: flex; flex-direction: column; gap: 3px; padding: 12px; border-radius: 20px; background: var(--card, var(--surface)); box-shadow: inset 0 0 0 1px var(--card-line, var(--line)); }
@@ -1550,6 +1550,81 @@ button.peg { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .px-sw { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgb(127 127 127 / 0.6); }
 .px-sw.fill { background: var(--text); }
 .px-sw.cross { background: linear-gradient(45deg, transparent 42%, var(--muted) 43%, var(--muted) 57%, transparent 58%), linear-gradient(-45deg, transparent 42%, var(--muted) 43%, var(--muted) 57%, transparent 58%); }
+/* Échecs (js/chess-view.js) : l'école, les problèmes, les parties contre Cap.
+   La tuile prend toute la largeur ; le plateau est en bois clair et foncé,
+   les pièces crème et brun foncé, dessinées pour Cap. */
+.arc-wide { grid-column: 1 / -1; display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; column-gap: 12px; }
+.arc-wide h3 { margin: 0; }
+.arc-wide .arc-best { margin: 4px 0 0; }
+.arc-tile.arc-wide .btn { width: auto; min-width: 96px; }
+@media (max-width: 360px) {
+  .arc-wide { grid-template-columns: 64px minmax(0, 1fr); row-gap: 10px; }
+  .arc-tile.arc-wide .btn { grid-column: 1 / -1; width: 100%; }
+}
+.ch-art { padding: 7px; }
+.ch-art svg { display: block; width: 100%; height: 100%; border-radius: 4px; }
+.ch-card { display: grid; gap: 10px; }
+.ch-card h2 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 1.08rem; }
+.ch-card .hint { margin: 0; }
+.ch-card .btn.wide { margin-top: 0; }
+.ch-lessons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.ch-lesson, .ch-pz { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 6px 8px; border: 1px solid var(--card-line, var(--line)); border-radius: 12px; background: var(--chip, transparent); color: var(--text); font: inherit; font-size: 0.84rem; line-height: 1.25; text-align: left; cursor: pointer; }
+.ch-lesson.next { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.ch-num, .ch-pz b { flex: 0 0 auto; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--tone-2, var(--line)); font: 700 0.72rem/1 var(--sans); font-variant-numeric: tabular-nums; }
+.ch-lesson.done .ch-num, .ch-pz.done b { background: var(--pos, var(--accent)); color: #fff; }
+.ch-lesson.next .ch-num { background: var(--accent); color: var(--accent-ink); }
+.ch-pz-grid { display: grid; gap: 6px; }
+.ch-pz { min-height: 48px; }
+.ch-pz small { font-size: 0.84rem; }
+.ch-pick { display: flex; gap: 6px; }
+.ch-pick .seg { flex: 1; min-width: 0; padding: 0 6px; }
+.ch-intro { display: grid; gap: 10px; }
+.ch-intro h2 { margin: 0; }
+.ch-intro p { margin: 0; line-height: 1.5; }
+.ch-intro .btn.wide { margin-top: 4px; }
+.ch-task { margin: 0; font-size: 1rem; line-height: 1.45; }
+.ch-count { margin: -6px 0 0; color: var(--muted); font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+.ch-msg { margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--chip, var(--surface-2)); line-height: 1.4; }
+.ch-msg.ok { background: rgb(79 122 69 / 0.16); box-shadow: inset 0 0 0 1px rgb(79 122 69 / 0.55); }
+.ch-msg.ko { background: rgb(184 69 46 / 0.12); box-shadow: inset 0 0 0 1px rgb(184 69 46 / 0.5); }
+.ch-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.ch-actions:empty { display: none; }
+.ch-actions .btn { flex: 1 1 auto; }
+.ch-choices { display: grid; gap: 8px; }
+.ch-choices .btn { justify-content: flex-start; height: auto; min-height: 44px; padding: 10px 14px; line-height: 1.35; text-align: left; white-space: normal; }
+.ch-choices .btn.ok { box-shadow: inset 0 0 0 2px var(--pos, #4f7a45); }
+.ch-choices .btn.ko { box-shadow: inset 0 0 0 2px var(--neg, #b8452e); opacity: 0.8; }
+.ch-choices .btn.ok:disabled { opacity: 1; color: var(--text); }
+.ch-board { width: 100%; max-width: 440px; margin: 0 auto; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+.ch-board svg { display: block; width: 100%; height: auto; border-radius: 6px; box-shadow: 0 0 0 4px #5a3a24, 0 0 0 5px rgb(255 255 255 / 0.08), 0 18px 40px -22px rgb(0 0 0 / 0.9); }
+.ch-sq.l { fill: #ecdcc4; }
+.ch-sq.d { fill: #b07d55; }
+.ch-last { fill: rgb(236 196 64 / 0.48); }
+.ch-sel { fill: rgb(100 176 220 / 0.62); }
+.ch-mark.ok { fill: rgb(86 168 86 / 0.78); }
+.ch-mark.ko { fill: rgb(220 70 50 / 0.68); }
+.ch-mark.hint { fill: rgb(100 176 220 / 0.55); }
+.ch-check { fill: rgb(230 40 30 / 0.55); }
+.ch-tgt { fill: rgb(40 25 15 / 0.34); }
+.ch-tgt.cap { fill: none; stroke: rgb(40 25 15 / 0.4); stroke-width: 3.5; }
+.ch-co { font: 700 9px/1 var(--sans); }
+.ch-co.l { fill: #9a6a45; }
+.ch-co.d { fill: #f3e6d2; }
+.ch-hit { fill: transparent; cursor: pointer; }
+.pc { stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+.pc.w { fill: #fbf5ea; stroke: #3a2616; }
+.pc.b { fill: #2b1e17; stroke: #0d0805; }
+.pc .ln { fill: none; }
+.pc.w .ln { stroke: #3a2616; }
+.pc.b .ln { stroke: #d9c3a3; }
+.pc.w .eye { fill: #3a2616; stroke: none; }
+.pc.b .eye { fill: #d9c3a3; stroke: none; }
+.ch-promo { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; }
+.ch-promo span { flex-basis: 100%; text-align: center; font-weight: 600; }
+.ch-promo-btn { width: 56px; height: 56px; padding: 4px; border: 1px solid var(--card-line, var(--line)); border-radius: 12px; background: #ecdcc4; cursor: pointer; }
+.ch-promo-btn svg { display: block; width: 100%; height: 100%; }
+.ch-moves { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--chip, var(--surface-2)); list-style: none; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.ch-moves b { color: var(--muted); font-weight: 600; }
 .br-hearts { color: #e98a6b; letter-spacing: 1px; }
 .br-art { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: 7px 7px; gap: 3px; align-content: start; padding: 9px 8px; }
 .br-art i { border-radius: 2px; }

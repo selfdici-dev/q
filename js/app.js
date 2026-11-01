@@ -355,7 +355,7 @@ async function keepAwake(on) {
 
 // ---------- vues ----------
 
-// La borne d'arcade de la Salle (#jeux) : douze jeux (Blocs, Cristaux, Serpent, Casse-briques, Sprint, Calcul éclair, Paires, Code secret, Écho, Taquin, Sudoku, Pixels cachés).
+// La borne d'arcade de la Salle (#jeux) : treize jeux (Échecs, Blocs, Cristaux, Serpent, Casse-briques, Sprint, Calcul éclair, Paires, Code secret, Écho, Taquin, Sudoku, Pixels cachés).
 const arcade = createArcade({
   get state() { return state; },
   save: () => save(),

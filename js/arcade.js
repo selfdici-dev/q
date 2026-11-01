@@ -13,6 +13,8 @@ import { newTaquin, slide } from './taquin.js';
 import { ECHO_PADS, echoDelay, newEcho, pressEcho } from './echo.js';
 import { SW, SH, GROUND, RUNNER_X, newSprint, jumpSprint, stepSprint, sprintScore } from './sprint.js';
 import { PUZZLES, SIZES, sizeOf, clues, newPixels, paint, linesOk } from './pixels.js';
+import { createChess, chessArt } from './chess-view.js';
+import { LESSONS } from './chess-school.js';
 import { icon } from './icons.js';
 
 const fmt = (n) => Number(n).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
@@ -39,7 +41,7 @@ function pieceHTML(p, cls = 'bl-mini') {
 }
 
 export function createArcade(ctx) {
-  let mode = 'menu'; // 'menu' | 'blocs' | 'calc'
+  let mode = 'menu'; // 'menu' | 'blocs' | 'calc' | … | 'echecs'
   let calc = null; // partie de Calcul éclair (en mémoire : 60 s)
   let calcEnd = 0;
   let timer = null;
@@ -91,6 +93,8 @@ export function createArcade(ctx) {
   // Pixels cachés : les dessins trouvés, la grille en cours ; noircir ou poser des croix
   const PX = () => (games().pixels ??= { done: [], plays: 0, cur: null });
   let pxCross = false;
+  // Échecs : l'école, les problèmes et les parties contre Cap (chess-view.js)
+  const chess = createChess(ctx);
   // Sudoku : la case choisie, le mode notes, la dernière action (temps actif)
   let sdSel = null;
   let sdNotesMode = false;
@@ -126,7 +130,16 @@ export function createArcade(ctx) {
     const heart = ['.#.#.', '#####', '#####', '.###.', '..#..'].join('');
     const runArt = '<svg viewBox="0 0 40 40"><path d="M3 35h34" stroke="#3a2f55" stroke-width="1.4"/><g stroke="#f2f0ff" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M17.5 14.5l-2.5 9" stroke-width="3"/><path d="M15 23.5l5.5 3.5l-1.5 7M15 23.5l-4.5 4.5l-4 -1" stroke-width="2.4"/><path d="M17 16l5 2.5l3 -3.5M16.5 16l-4.5 3l-3 -1" stroke-width="2"/></g><circle cx="19.5" cy="9.5" r="3.4" fill="#f2f0ff"/><rect x="27" y="29" width="2.6" height="6" rx="1" fill="#dc9a70"/><rect x="33.6" y="29" width="2.6" height="6" rx="1" fill="#dc9a70"/><path d="M29.6 32h4" stroke="#9aa0b4" stroke-width="1.4"/></svg>';
     const snakeArt = '<svg viewBox="0 0 40 40"><rect x="6" y="22" width="7" height="7" rx="2" fill="#9fd08f"/><rect x="13" y="22" width="7" height="7" rx="2" fill="#9fd08f"/><rect x="20" y="22" width="7" height="7" rx="2" fill="#9fd08f"/><rect x="20" y="15" width="7" height="7" rx="2.5" fill="#d6f5c4"/><circle cx="30" cy="9" r="3.4" fill="#e98a6b"/></svg>';
+    const ch = games().echecs ?? {};
+    const chLessons = LESSONS.filter((l) => ch.lessons?.[l.id]).length;
+    const chWins = Object.values(ch.wins ?? {}).reduce((a, n) => a + (Number(n) || 0), 0);
     return `<div class="arc-grid">
+      <section class="arc-tile arc-wide">
+        <div class="arc-art ch-art" aria-hidden="true">${chessArt()}</div>
+        <div class="arc-wide-text"><h3>Échecs</h3><p class="arc-tag">Apprends pas à pas, puis bats Cap</p>
+          <p class="arc-best"><b>${chLessons}</b> / ${LESSONS.length} leçons${chWins ? ` · <b>${chWins}</b> victoire${chWins > 1 ? 's' : ''}` : ''}</p></div>
+        ${go('echecs', 'Jouer')}
+      </section>
       ${tile('blocs', 'Blocs', 'Pose, aligne, efface', ['bl-art', [3, 1, 5, 2].map((k) => `<i class="c${k}"></i>`).join('')], `Record <b>${fmt(b.best)}</b>`, go('blocs', going ? 'Reprendre' : 'Jouer'))}
       ${tile('cristaux', 'Cristaux', 'Échange, fais éclater', ['gm-art', [2, 5, 1, 4].map((k) => `<span class="gm c${k}"><i></i></span>`).join('')], `Niveau <b>${g.level}</b>`, go('cristaux', gemGoing ? 'Reprendre' : 'Jouer'))}
       ${tile('serpent', 'Serpent', 'Mange, grandis, accélère', ['sn-art', snakeArt], `Record <b>${fmt(sk.best)}</b>`, go('serpent', 'Jouer'))}
@@ -1178,6 +1191,7 @@ export function createArcade(ctx) {
   }
 
   const actions = {
+    ...chess.actions,
     'arc-play'(el) {
       if (el.dataset.id === 'calc') startCalc();
       else if (el.dataset.id === 'cristaux') startGems(Boolean(el.dataset.new));
@@ -1188,6 +1202,7 @@ export function createArcade(ctx) {
       else if (el.dataset.id === 'briques') startBricks();
       else if (el.dataset.id === 'sprint') startSprint();
       else if (el.dataset.id === 'pixels') startPixels(el.dataset.n);
+      else if (el.dataset.id === 'echecs') { mode = 'echecs'; chess.enter(); }
       else if (el.dataset.id === 'taquin') startTaquin(el.dataset.n);
       else if (el.dataset.id === 'echo') { startEcho(); ctx.render(); window.scrollTo(0, 0); ecShow(); return; }
       else startBlocs(Boolean(el.dataset.new));
@@ -1196,6 +1211,7 @@ export function createArcade(ctx) {
       window.scrollTo(0, 0);
     },
     'arc-menu'() {
+      chess.leave();
       cancelAnimationFrame(brRaf);
       cancelAnimationFrame(spRaf);
       ecClear();
@@ -1410,6 +1426,7 @@ export function createArcade(ctx) {
       if (mode === 'echo' && echo) return echoView();
       if (mode === 'sprint' && sp) return sprintView();
       if (mode === 'pixels' && PX().cur) return pixelsView();
+      if (mode === 'echecs') return chess.view();
       mode = 'menu';
       return menuView();
     },

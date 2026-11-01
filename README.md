@@ -40,8 +40,12 @@ Sur chaque onglet, le petit « ? » (à côté du titre, ou de la date sur Ma jo
 
 ## Arcade
 
-Dans la Salle, une borne d’arcade (marquée « Jeux ») ouvre douze jeux faits pour Cap, présentés en tuiles, sans pub, sans internet et sans son, pour occuper tes mains :
+Dans la Salle, une borne d’arcade (marquée « Jeux ») ouvre treize jeux faits pour Cap, présentés en tuiles, sans pub, sans internet et sans son, pour occuper tes mains :
 
+- **Échecs** (la grande tuile du haut) : une école pour apprendre de zéro, des problèmes, et des parties contre Cap.
+  - **Apprendre** : 16 leçons dans l’ordre (le plateau, chaque pièce et sa valeur, prendre et défendre, l’échec, le mat, le pat, le roque et la prise en passant, bien commencer une partie, la fourchette, le clouage et l’enfilade, le mat avec la dame). Chacune : une explication courte, puis des exercices sur le plateau : toucher les cases demandées, attraper des étoiles avec une pièce (en le moins de coups possible), trouver le bon coup, répondre à une question, et finir par mater Cap avec roi et dame en 20 coups au plus. Une erreur est signalée tout de suite (sur les cases, avec la case que tu as touchée) ; « Recommencer » relance l’exercice.
+  - **Problèmes** : 12 positions à résoudre (mats en un coup, mats en deux coups où Cap se défend au mieux, gains de matériel : fourchette, enfilade, pièce gratuite).
+  - **Jouer contre Cap** : 3 niveaux (Débutant : il fait des erreurs ; Moyen : il voit deux coups ; Coriace : il calcule loin), avec les blancs, les noirs ou au hasard. Touche une pièce : ses coups possibles s’affichent. « Indice » te souffle un bon coup, « Annuler » reprend ton dernier coup. Toutes les règles y sont : roque, prise en passant, promotion (tu choisis la pièce), échec et mat, pat, nulle par manque de pièces, par 50 coups ou par trois fois la même position. La partie en cours est gardée et se reprend plus tard ; tes victoires, nulles et défaites sont comptées par niveau. Les règles et Cap sont vérifiés par les tests (comptage des coups sur des positions de référence, chaque exercice et problème résolu par le moteur).
 - **Blocs** : glisse les pièces sur une grille de 8 × 8 ; une ligne ou une colonne pleine disparaît. Plusieurs lignes d’un coup, ou des lignes à plusieurs coups de suite, rapportent plus. La partie continue tant qu’une pièce rentre, et reprend là où tu l’as laissée.
 - **Calcul éclair** : 60 secondes de calcul utile (soldes, pourcentages, intérêts, prix à l’unité, tables), une réponse parmi quatre ; trois bonnes d’affilée et ça monte d’un niveau, une erreur et ça redescend.
 - **Cristaux** : échange deux cristaux voisins (en les touchant l’un après l’autre, ou en glissant) pour en aligner trois de la même couleur ; ils éclatent, ceux du dessus tombent et ça peut s’enchaîner (points multipliés). Une ligne de quatre laisse un cristal éclair qui, en éclatant, emporte toute sa ligne et sa colonne. Un niveau : un score à atteindre en 20 coups (1 000 points au niveau 1, 400 de plus à chaque niveau), les coups restants rapportent un bonus. Chaque couleur a sa forme (rond, losange, carré, hexagone, pentagone) ; après 6 s sans jouer, un coup possible frétille.
@@ -55,7 +59,7 @@ Dans la Salle, une borne d’arcade (marquée « Jeux ») ouvre douze jeux faits
 - **Pixels cachés** : un dessin caché dans une grille de 5 × 5, 10 × 10 ou 15 × 15 (17 dessins : cœur, haltère, trophée, éclair, kettlebell, couronne, fusée, chat, coureur…). Les chiffres au bord de chaque ligne et de chaque colonne disent combien de cases noircir à la suite, dans l’ordre. Glisse le doigt pour noircir plusieurs cases, passe en « Croix » pour marquer celles que tu sais vides ; une ligne juste grise ses chiffres, et le dessin apparaît en couleur quand tout colle. Chaque dessin n’a qu’une solution, trouvable sans deviner (vérifié par les tests).
 - **Sudoku** : des grilles fabriquées dans l’appli, à solution unique, en 3 niveaux (38, 31 ou 26 chiffres donnés). Touche une case puis un chiffre ; un chiffre faux s’affiche en rouge et compte une erreur ; mode notes pour les chiffres possibles (ils s’effacent tout seuls quand tu places le bon) ; un chiffre placé 9 fois se grise. Le temps compté est le temps actif (une pause de plus d’une minute ne compte pas).
 
-Tes records (meilleur score, lignes effacées, meilleure série, niveau des Cristaux et des Paires, fruits du Serpent, codes trouvés, score et niveau du Casse-briques, mètres au Sprint, coups au Taquin, suite la plus longue à Écho, grilles résolues et meilleurs temps, dessins trouvés) restent sur le téléphone, dans la sauvegarde ; une partie de Blocs, Cristaux, Paires, Code secret, Taquin, Sudoku ou Pixels cachés en cours reprend là où tu l’as laissée.
+Tes records (meilleur score, lignes effacées, meilleure série, niveau des Cristaux et des Paires, fruits du Serpent, codes trouvés, score et niveau du Casse-briques, mètres au Sprint, coups au Taquin, suite la plus longue à Écho, grilles résolues et meilleurs temps, dessins trouvés, leçons et problèmes d’échecs réussis, parties contre Cap) restent sur le téléphone, dans la sauvegarde ; une partie de Blocs, Cristaux, Paires, Code secret, Taquin, Sudoku, Pixels cachés ou d’échecs en cours reprend là où tu l’as laissée.
 
 ## Décors de la Salle
 
@@ -93,7 +97,7 @@ Dans la Salle, sous « Ma journée » : chaque lundi, trois nouveaux défis tir�
 |---|---|
 | Sport | 4 séances (A, B, C ou P, une par jour) ; 2 séances C ; bouger 6 jours sur 7 (M compte) ; 2 séances M |
 | Vie | 5 matins avec ta routine complète ; 5 soirs avec ta routine complète ; lire 10 pages 4 jours |
-| Arcade | battre ton record au Serpent, aux Blocs, au Calcul éclair, à Écho ou au Sprint (ton record du lundi) ; 2 sudokus résolus ; 3 codes secrets trouvés ; 2 dessins trouvés aux Pixels cachés |
+| Arcade | battre ton record au Serpent, aux Blocs, au Calcul éclair, à Écho ou au Sprint (ton record du lundi) ; 2 sudokus résolus ; 3 codes secrets trouvés ; 2 dessins trouvés aux Pixels cachés ; battre Cap aux échecs (au niveau de ton choix) |
 
 Tout se calcule depuis tes jours de la semaine (du lundi au dimanche) ; pour l’arcade, Cap note tes records la première fois qu’il s’ouvre dans la semaine. Si tu n’ouvres pas Cap le dimanche, ce que tu as réussi compte quand même le lundi.
 
@@ -129,7 +133,7 @@ Pour les trophées de saison, une séance compte une fois par jour, sans compter
 
 ## Trophées
 
-Le bouton trophée, en haut de la Salle (à côté de « Décor »), ouvre ta vitrine : 34 médailles bronze, argent ou or, rangées par famille (séances, chaîne, niveau, routines, jeux, décors, saisons). Celles gagnées brillent ; les autres montrent ce qu’il reste à faire (« 6 / 10 séances »). Exemples : ta première séance, 10 séances C, 7 puis 30 jours de chaîne, niveau 20, 30 matins avec ta routine, une suite de 10 à Écho, un taquin 4 × 4 rangé, les 17 décors. Tout est recalculé depuis tes données ; un trophée gagné est annoncé une fois (après les autres messages) et reste à toi, même si ta chaîne casse ensuite.
+Le bouton trophée, en haut de la Salle (à côté de « Décor »), ouvre ta vitrine : 37 médailles bronze, argent ou or, rangées par famille (séances, chaîne, niveau, routines, jeux, décors, saisons). Celles gagnées brillent ; les autres montrent ce qu’il reste à faire (« 6 / 10 séances »). Exemples : ta première séance, 10 séances C, 7 puis 30 jours de chaîne, niveau 20, 30 matins avec ta routine, une suite de 10 à Écho, un taquin 4 × 4 rangé, les 16 leçons d’échecs, Cap battu au niveau Coriace, les 17 décors. Tout est recalculé depuis tes données ; un trophée gagné est annoncé une fois (après les autres messages) et reste à toi, même si ta chaîne casse ensuite.
 
 ## Dessins des exercices
 

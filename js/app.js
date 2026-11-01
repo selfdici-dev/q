@@ -21,7 +21,7 @@ import { figureFor, figureSVG, focusFor } from './figures.js';
 import { drawingSVG } from './drawings.js';
 import { icon } from './icons.js';
 import { roomSVG } from './room.js';
-import { hubSVG, hubLayout, arcadeZone, HUB, covers } from './gym.js';
+import { hubSVG, hubLayout, arcadeZone, HUB, HUB_VIEW, covers } from './gym.js';
 import { decorStats, decorStatus, decorToShow, decorThumb, newDecors } from './decors.js';
 import { ROUTINES, routineStatus, toggleRoutine, morningTime, wakeAt8 } from './routines.js';
 import { trophyStats, trophyStatus, newTrophies } from './trophies.js';
@@ -515,6 +515,7 @@ function render() {
   };
   const h = heads[tab];
   const helpKey = HELP[tab] ? tab : HIDDEN_TABS[tab] ?? tab;
+  panKeep = $('.hub-pan')?.scrollLeft ?? null; // la salle reste où tu l'as fait glisser
   const head = h && tab !== 'sport' && !(tab === 'argent' && state.ui.lesson) ? `<header class="page-head"><div class="page-title"><h1>${h[0]}</h1>${HELP[helpKey] ? helpBtn(helpKey) : ''}</div><p>${h[1]}</p></header>` : '';
   $('#view').innerHTML = head + views[tab]();
   $('#view').dataset.tab = tab;
@@ -528,6 +529,7 @@ function render() {
   if (somethingToAnnounce()) announceUnlocks();
   document.querySelectorAll('#tabs a').forEach((a) => a.setAttribute('aria-current', a.dataset.tab === (HIDDEN_TABS[tab] ?? tab) ? 'page' : 'false'));
   moveTabIndicator();
+  hubPan();
   hubDeclutter();
   runTweens();
   tick();
@@ -1048,13 +1050,35 @@ const shortName = (w) => w.name.split(' · ')[1] ?? w.name;
 // dessous, prête à lancer. Au départ : celle du jour, marquée comme une
 // quête. En haut, ton niveau et ton XP, comme dans un jeu.
 let gymPick = null;
+let shownPick = null; // le poste choisi, montré dans la salle
+let panFor = null; // le poste sur lequel la salle est centrée
+let panKeep = null; // où la salle avait été glissée, avant de la redessiner
 let shownPhase = null; // le moment de la journée dessiné dans la salle (matin, soir, nuit…)
 const pctOf = (v, total) => `${Math.round((v / total) * 1000) / 10}%`;
+// Une zone à toucher (unités de la salle, agrandie de 6 de chaque côté), en % de ce qu'on en voit.
+const hitBox = (x, y, w, h) => `left:${pctOf(x - 6 - HUB_VIEW.x, HUB_VIEW.w)};top:${pctOf(y - 6 - HUB_VIEW.y, HUB_VIEW.h)};width:${pctOf(w + 12, HUB_VIEW.w)};height:${pctOf(h + 12, HUB_VIEW.h)}`;
+
+// La salle est plus grande que l'écran : on la fait glisser du doigt. Elle se
+// centre sur le poste choisi quand il change (et à l'arrivée), sinon elle
+// reste où tu l'as laissée.
+function hubPan() {
+  const pan = $('.hub-pan');
+  if (!pan) { panFor = null; return; }
+  const hit = pan.querySelector(`.hub-hit[data-id="${shownPick}"]`);
+  if (!hit) return;
+  if (panFor === shownPick && panKeep !== null) {
+    pan.scrollLeft = panKeep;
+    return;
+  }
+  const left = hit.offsetLeft + hit.offsetWidth / 2 - pan.clientWidth / 2;
+  pan.scrollTo({ left, behavior: panFor === null || reduceMotion() ? 'auto' : 'smooth' });
+  panFor = shownPick;
+}
 
 // L'étiquette du poste choisi efface les pastilles qu'elle recouvrirait
 // (« B · Pectoraux, dos et bras » passe devant le A). Calculé sur la place
-// finale (étiquette et pastilles posées au-dessus de leur zone, remontées de
-// 55 % de leur hauteur, comme dans styles.css), pas pendant leur apparition.
+// finale (posées au-dessus de leur zone : l'étiquette remontée de 85 % de sa
+// hauteur, les pastilles de 95 %, comme dans styles.css), pas pendant leur apparition.
 function hubDeclutter() {
   const tag = $('.hub-stage .hub-tag');
   if (!tag) return;
@@ -1064,7 +1088,7 @@ function hubDeclutter() {
     const x = el.classList.contains('at-l') ? hit.offsetLeft
       : el.classList.contains('at-r') ? hit.offsetLeft + hit.offsetWidth - w
       : hit.offsetLeft + (hit.offsetWidth - w) / 2;
-    return [x, hit.offsetTop - h * 0.55, w, h];
+    return [x, hit.offsetTop - h * (el.classList.contains('hub-badge') ? 0.95 : 0.85), w, h];
   };
   const t = place(tag);
   document.querySelectorAll('.hub-stage .hub-badge').forEach((b) => b.classList.toggle('under-tag', covers(t, place(b))));
@@ -1076,26 +1100,28 @@ function gymHub(planned, done, lvl) {
   const did = done.includes(w.id);
   const lv = levelInfo(totalXP(state));
   const today = todayKey();
+  shownPick = pick;
   shownPhase = dayPhase(nowHHMM());
   const late = nightHint(shownPhase, clockFr(bedGoal(state, today)), clockFr(state.settings.wakeTarget));
   const hits = hubLayout().map(({ id, box: [x, y, bw, bh] }) => {
     const on = id === pick;
     const wo = WORKOUTS.find((z) => z.id === id);
     const mid = x + bw / 2;
-    const side = mid < HUB.w * 0.3 ? ' at-l' : mid > HUB.w * 0.7 ? ' at-r' : '';
+    const side = mid < HUB.w * 0.22 ? ' at-l' : mid > HUB.w * 0.78 ? ' at-r' : '';
     const label = on
       ? `<span class="hub-tag${side}"><b>${id}</b>${esc(shortName(wo))}</span>`
       : `<span class="hub-badge${id === planned && !done.includes(id) ? ' today' : ''}${done.includes(id) ? ' done' : ''}">${done.includes(id) ? '✓' : id}</span>`;
-    return `<button class="hub-hit wo-${id}${on ? ' on' : ''}" style="left:${pctOf(x - 6, HUB.w)};top:${pctOf(y - 6, HUB.h)};width:${pctOf(bw + 12, HUB.w)};height:${pctOf(bh + 12, HUB.h)}" data-act="gym-pick" data-id="${id}" aria-pressed="${on}" aria-label="Séance ${id} : ${esc(shortName(wo))}${id === planned ? ', celle du jour' : ''}${done.includes(id) ? ', faite aujourd’hui' : ''}">${label}</button>`;
+    return `<button class="hub-hit wo-${id}${on ? ' on' : ''}" style="${hitBox(x, y, bw, bh)}" data-act="gym-pick" data-id="${id}" aria-pressed="${on}" aria-label="Séance ${id} : ${esc(shortName(wo))}${id === planned ? ', celle du jour' : ''}${done.includes(id) ? ', faite aujourd’hui' : ''}">${label}</button>`;
   }).join('') + (() => {
     // la borne d'arcade : elle ouvre les jeux
     const [x, y, bw, bh] = arcadeZone();
-    return `<button class="hub-hit hub-arc" style="left:${pctOf(x - 6, HUB.w)};top:${pctOf(y - 6, HUB.h)};width:${pctOf(bw + 12, HUB.w)};height:${pctOf(bh + 12, HUB.h)}" data-act="arcade" aria-label="Borne d’arcade : les jeux"><span class="hub-badge arc">Jeux</span></button>`;
+    return `<button class="hub-hit hub-arc" style="${hitBox(x, y, bw, bh)}" data-act="arcade" aria-label="Borne d’arcade : les jeux"><span class="hub-badge arc">Jeux</span></button>`;
   })();
-  // la salle prend tout le haut de l'écran : on y entre. En haut, le HUD (niveau,
-  // XP) et l'aide ; en bas, la séance choisie et son bouton, comme dans un jeu.
+  // la salle prend tout le haut de l'écran, plus grande que lui : on y entre et
+  // on s'y déplace en la faisant glisser. En haut, le HUD (niveau, XP), ton
+  // double et les boutons ; en bas, la séance choisie et son bouton, comme dans un jeu.
   return `<section class="gym-hero hub immersive wo-${w.id}">
-    <div class="hub-stage">${hubSVG({ pick, animate: !reduceMotion(), decor: decorToShow(state.settings.decor, decorStats(state), today, state.settings.decorBack), phase: shownPhase })}${hits}
+    <div class="hub-stage"><div class="hub-pan"><div class="hub-world">${hubSVG({ pick, animate: !reduceMotion(), decor: decorToShow(state.settings.decor, decorStats(state), today, state.settings.decorBack), phase: shownPhase })}${hits}</div></div>
       <button class="hub-avatar" data-act="avatar" aria-label="Ton double : ${esc(lv.rank)}. Le voir et l’habiller">${avatarSVG(avatarParams(lv.level, chain(state, today).count), { animate: false, gear: myGear(), crop: true })}</button>
       <div class="hub-hud" aria-label="Niveau ${lv.level}, ${lv.into} sur ${lv.span} XP"><b>Niv. ${lv.level}</b><span class="hud-rank">${esc(lv.rank)}</span><span class="hud-bar">${tweenBar('gym-xp', (lv.into / lv.span) * 100)}</span><span class="hud-xp">${lv.into}/${lv.span} XP</span></div>
       <div class="hub-tools">
@@ -1104,16 +1130,14 @@ function gymHub(planned, done, lvl) {
         ${HELP.sport ? `<span class="hub-help">${helpBtn('sport')}</span>` : ''}
       </div>
       <div class="hub-panel">
-        <div class="gym-head">
-          <span class="wo-badge big wo-${w.id}">${w.id}</span>
-          <div><p class="eyebrow">${pick === planned ? 'Aujourd’hui' : `Poste ${w.id}`}${did ? ' · ✓ faite' : ''}</p><h2>${esc(shortName(w))}</h2>
-            <p class="muted">≈ ${workoutMinutes(w)} min · ≈ ${workoutKcal(w)} kcal · ${w.exercises.length} exercices${w.fixed ? '' : ` · niveau ${lvl}`}</p></div>
-        </div>
-        <button class="btn primary wide" data-act="start-workout" data-id="${w.id}">${did ? 'Refaire la séance' : `Lancer la séance ${w.id}`}</button>
+        <span class="wo-badge big wo-${w.id}">${w.id}</span>
+        <div class="hub-panel-text"><p class="eyebrow">${pick === planned ? 'Aujourd’hui' : `Poste ${w.id}`}${did ? ' · ✓ faite' : ''}</p><h2>${esc(shortName(w))}</h2>
+          <p class="muted">≈ ${workoutMinutes(w)} min · ≈ ${workoutKcal(w)} kcal${w.fixed ? '' : ` · niv. ${lvl}`}</p></div>
+        <button class="btn primary" data-act="start-workout" data-id="${w.id}" aria-label="${did ? 'Refaire' : 'Lancer'} la séance ${w.id}">${did ? 'Refaire' : 'Lancer'}</button>
       </div>
     </div>
     ${late ? `<p class="hint hub-night">${icon('moon')}${esc(late)}</p>` : ''}
-    <p class="hint">Touche un poste pour changer de séance. Pas la forme ? M suffit à valider « Bouger ».</p>
+    <p class="hint">Glisse la salle pour t’y déplacer, touche un poste pour changer de séance. Pas la forme ? M suffit à valider « Bouger ».</p>
   </section>`;
 }
 

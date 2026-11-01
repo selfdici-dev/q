@@ -21,7 +21,7 @@ L'utilisateur est débutant : explique simplement, en français.
 - `js/tree.js` : arbre du focus qui pousse pendant la session (unique par session, calculé).
 - `js/room.js` : décor de la salle vue de face (lecteur de séance, entrée) ; `js/gym.js` :
   la salle de l'onglet Salle, en maquette vue de dessus façon jeu vidéo (une plateforme
-  par séance) ; `js/iso.js` : sa projection et ses formes de base ; `js/decors.js` : ses
+  par séance, son personnage : le dessin 3D de l'exercice, réglé par `CAST`) ; `js/iso.js` : sa projection et ses formes de base ; `js/decors.js` : ses
   décors à débloquer (salle, temple grec, grand hall…), choix dans `state.settings.decor` ;
   `js/daylight.js` : sa lumière qui suit l'heure (matin, soir, nuit étoilée ; calculée, jamais stockée) ;
   `js/seasons.js` : les décors de saison (Halloween, Noël, printemps, été : dates, trophées) ;

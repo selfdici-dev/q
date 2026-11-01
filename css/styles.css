@@ -1099,21 +1099,34 @@ details.card.more .rules { margin-top: 10px; }
    écrite au-dessus du bonhomme), et le HUD (niveau, XP). */
 .hub-stage { position: relative; margin: 0 0 14px; border-radius: 16px; overflow: hidden; background: #0f0c0a; }
 .hub-scene { display: block; width: 100%; height: auto; }
+/* la salle, plus grande que l'écran (autant que la hauteur le permet) : on la fait glisser */
+.hub-pan { overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.hub-pan::-webkit-scrollbar { display: none; }
+.hub-world { position: relative; width: clamp(100%, calc(82vh * 360 / 452), 160%); }
 .hub-st .fig-mat { fill: rgb(255 240 225 / 0.1); }
 .st-M .fig-mat { fill: #8fb08a; fill-opacity: 0.75; } /* tapis de yoga */
 .hub-st:not(.on) > .fig { opacity: 0.85; }
+.hub-st:not(.on) > .hub-who { opacity: 0.9; }
 /* Salle en plein écran : elle prend tout le haut, jusque sous la barre d'état ;
    en haut le HUD et l'aide, en bas la séance choisie et son bouton, posés sur la salle */
 .gym-hero.immersive { margin: calc(-16px - env(safe-area-inset-top)) -16px 0; }
 .immersive .hub-stage { margin: 0; border-radius: 0 0 26px 26px; }
 .immersive .hub-hud { top: calc(10px + env(safe-area-inset-top)); bottom: auto; left: 12px; }
 .hub-help { position: absolute; top: calc(10px + env(safe-area-inset-top)); right: 12px; }
-.hub-panel { position: absolute; left: 12px; right: 12px; bottom: 12px; display: grid; gap: 10px; padding: 12px; border-radius: 20px; background: rgb(12 10 9 / 0.74); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 0 0 0 1px rgb(220 154 112 / 0.32), 0 16px 30px -18px rgb(0 0 0 / 0.9); }
-.hub-panel .gym-head { grid-template-columns: 48px 1fr; gap: 12px; }
-.hub-panel .gym-head h2 { font-size: 1.12rem; color: #f4eee7; }
+.hub-panel { position: absolute; left: 12px; right: 12px; bottom: 12px; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 10px 10px 12px; border-radius: 20px; background: rgb(12 10 9 / 0.74); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 0 0 0 1px rgb(220 154 112 / 0.32), 0 16px 30px -18px rgb(0 0 0 / 0.9); }
+.hub-panel-text { min-width: 0; }
+.hub-panel-text p, .hub-panel-text h2 { margin: 0; }
+.hub-panel h2 { font-size: 0.98rem; line-height: 1.2; color: #f4eee7; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hub-panel .eyebrow { font-size: 0.66rem; }
+.hub-panel .btn.primary { padding-inline: 16px; }
 .hub-panel .eyebrow { color: #e9b897; }
-.hub-panel .muted { color: rgb(244 238 231 / 0.72); font-size: 0.8rem; }
-:root .hub-panel .wo-badge.big { width: 48px; height: 48px; border-radius: 15px; font-size: 1.45rem; }
+.hub-panel .muted { color: rgb(244 238 231 / 0.72); font-size: 0.74rem; }
+/* petit écran : le bouton devient un rond ▶, la séance garde la place pour son nom */
+@media (max-width: 360px) {
+  .gym-hero.hub .hub-panel .btn.primary { width: 48px; height: 48px; min-height: 48px; padding: 0; border-radius: 50%; font-size: 0; }
+  .gym-hero.hub .hub-panel .btn.primary::before { margin: 0; font-size: 1.05rem; }
+}
+:root .hub-panel .wo-badge.big { width: 44px; height: 44px; border-radius: 14px; font-size: 1.35rem; }
 .immersive > .hint { margin: 10px 4px 0; }
 /* couleurs des séances sur le fond sombre de la maquette (les mêmes que son dessin) */
 .hub-stage .wo-A { --wo: #9fd08f; } .hub-stage .wo-B { --wo: #7cc4e4; } .hub-stage .wo-C { --wo: #e98a6b; } .hub-stage .wo-M { --wo: #c3a3e0; } .hub-stage .wo-P { --wo: #e7c76b; }
@@ -1126,9 +1139,10 @@ details.card.more .rules { margin-top: 10px; }
 .hud-xp { grid-column: 1 / -1; font: 650 0.6rem/1 var(--sans); color: rgb(244 238 231 / 0.7); font-variant-numeric: tabular-nums; }
 .hub-hit { position: absolute; padding: 0; border: 0; border-radius: 14px; background: none; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .hub-hit:focus-visible { outline: 2px solid var(--wo, var(--accent)); outline-offset: 2px; }
-.hub-badge, .hub-tag { position: absolute; left: 50%; top: 0; transform: translate(-50%, -55%); pointer-events: none; white-space: nowrap; }
-.hub-tag.at-l { left: 0; transform: translate(0, -55%); }
-.hub-tag.at-r { left: auto; right: 0; transform: translate(0, -55%); }
+.hub-badge, .hub-tag { position: absolute; left: 50%; top: 0; transform: translate(-50%, -85%); pointer-events: none; white-space: nowrap; }
+.hub-tag.at-l { left: 0; transform: translate(0, -85%); }
+.hub-tag.at-r { left: auto; right: 0; transform: translate(0, -85%); }
+.hub-badge { transform: translate(-50%, -95%); } /* au-dessus de la tête du personnage */
 .hub-badge { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 800 0.72rem/1 var(--sans); background: rgb(12 10 9 / 0.72); color: var(--wo); box-shadow: inset 0 0 0 1.5px var(--wo); }
 .hub-badge { transition: opacity 0.2s; }
 .hub-badge.under-tag { opacity: 0; }
@@ -1274,10 +1288,10 @@ details.card.more .rules { margin-top: 10px; }
 @keyframes intro-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes intro-logo { from { opacity: 0.12; transform: scale(0.92); } to { opacity: 1; transform: none; } }
 @keyframes intro-text { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-@keyframes hub-tag { from { opacity: 0; transform: translate(-50%, -25%); } to { opacity: 1; transform: translate(-50%, -55%); } }
+@keyframes hub-tag { from { opacity: 0; transform: translate(-50%, -55%); } to { opacity: 1; transform: translate(-50%, -85%); } }
 @keyframes hub-arrive { from { transform: scale(1.35); opacity: 0.2; filter: blur(4px); } to { transform: none; opacity: 1; filter: none; } }
 @keyframes hub-ui-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes hub-tag-side { from { opacity: 0; transform: translate(0, -25%); } to { opacity: 1; transform: translate(0, -55%); } }
+@keyframes hub-tag-side { from { opacity: 0; transform: translate(0, -55%); } to { opacity: 1; transform: translate(0, -85%); } }
 @keyframes hub-bag { from { transform: rotate(-1.6deg); } to { transform: rotate(1.6deg); } }
 @keyframes quest-bob { 0%, 100% { transform: none; } 50% { transform: translateY(-3px); } }
 @keyframes lights-down { from { opacity: 0; transform: scale(1.03); } to { opacity: 1; transform: none; } }

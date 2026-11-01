@@ -97,7 +97,7 @@ test('saisons : chaque décor de saison se dessine en entier, de jour comme de n
       for (const phase of ['jour', 'nuit']) {
         const svg = hubSVG({ pick: 'B', id: `s-${id}`, decor: id, animate, phase });
         assert.ok(wellFormed(svg), `${id} : balises mal fermées`);
-        assert.doesNotMatch(svg, /https?:|<script|<image|\son\w+=|NaN|undefined|Infinity/, id);
+        assert.doesNotMatch(svg, /https?:|<script|\son\w+=|NaN|undefined|Infinity/, id);
         const all = ids(svg);
         assert.equal(new Set(all).size, all.length, `${id} : identifiant en double`);
         assert.ok(refsOk(svg), `${id} : couleur introuvable`);

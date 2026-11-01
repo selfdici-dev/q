@@ -514,8 +514,8 @@ export const HELP = {
   jeux: {
     title: 'Comment marche l’Arcade',
     lines: [
-      'Douze jeux : des réflexes (Blocs, Serpent, Sprint, Casse-briques…) et de la logique (Sudoku, Pixels cachés…).',
-      'La règle s’affiche sous chaque jeu. Une grille en cours (Blocs, Cristaux, Taquin, Sudoku…) t’attend.',
+      'Treize jeux : des réflexes (Blocs, Serpent, Sprint…), de la logique (Sudoku, Pixels…) et les échecs.',
+      'Échecs : l’école t’apprend pas à pas, puis bats Cap. Une grille ou une partie en cours t’attend.',
       'Tes records restent sur le téléphone, et ils comptent pour débloquer des décors de la Salle.',
     ],
   },

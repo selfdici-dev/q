@@ -32,6 +32,10 @@ L'utilisateur est débutant : explique simplement, en français.
   `js/sprint.js` (Sprint), `js/pixels.js` (Pixels cachés, avec un solveur qui vérifie chaque dessin) :
   les autres jeux, logique pure ;
   `js/arcade.js` : leur écran (`#jeux`, ouvert depuis la borne de la Salle), records dans `state.games`.
+- `js/chess.js` : les échecs, logique pure (règles complètes vérifiées par perft, notation
+  française R D T F C, Cap : alpha-bêta en 3 niveaux) ; `js/chess-school.js` : l'école
+  (16 leçons et leurs exercices, 12 problèmes, chacun résolu par le moteur dans les tests) ;
+  `js/chess-view.js` : leur écran dans l'arcade, gardé dans `state.games.echecs`.
 - `js/drawings.js` : dessins au crayon des exercices (corps en 3D, muscles travaillés
   en rouge), joués au rythme du bonhomme ; sans dessin, le bonhomme reste.
   `js/drawings-data.js` (leur manifeste) et `img/ex/*.webp` (leurs images) sont

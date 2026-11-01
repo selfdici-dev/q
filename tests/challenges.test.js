@@ -83,6 +83,22 @@ test('défis : à l’arcade, on bat ses records du début de semaine', () => {
   assert.equal(fresh.text, 'Mange au moins un fruit au Serpent');
 });
 
+test('défis : aux échecs, une victoire contre Cap dans la semaine (à partir du 2 novembre 2026)', () => {
+  assert.ok(!weekChallenges('2026-10-26').some((c) => c.id === 'echecs'));
+  let w = '2026-11-02';
+  while (weekChallenges(w)[2].id !== 'echecs') w = addDays(w, 7);
+  let state = base({ games: { echecs: { wins: { debutant: 2 } } } });
+  const up = updateChallenges(state, w);
+  assert.equal(up[w].base.echecs, 2); // les victoires d'avant ne comptent pas
+  state = { ...state, challenges: up };
+  let c = challengeStatus(state, w).list[2];
+  assert.equal(c.done, false);
+  assert.equal(c.label, '0 / 1');
+  state = { ...state, games: { echecs: { wins: { debutant: 2, moyen: 1 } } } };
+  c = challengeStatus(state, addDays(w, 4)).list[2];
+  assert.equal(c.done, true);
+});
+
 test('défis : réussi le reste, annoncé une fois, et l’XP suit (+ le bonus des trois)', () => {
   const w = '2026-11-02';
   const before = totalXP(base());

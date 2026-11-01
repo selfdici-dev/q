@@ -29,7 +29,7 @@ export const TROPHIES = [
   T('g-calc', 'Jeux', 'coin', 'Calculateur', '20 points au Calcul éclair', 'argent', 'calc', 20),
   T('g-pairs', 'Jeux', 'cards', 'Œil de lynx', 'Niveau 5 réussi aux Paires', 'argent', 'paires', 5),
   T('g-code', 'Jeux', 'lock', 'Décodeur', '5 codes secrets trouvés', 'bronze', 'code', 5),
-  T('g-echo', 'Jeux', 'volume', 'Mémoire d’éléphant', 'Une suite de 10 à Écho', 'argent', 'echo', 10),
+  T('g-echo', 'Jeux', 'lightbulb', 'Mémoire d’éléphant', 'Une suite de 10 à Écho', 'argent', 'echo', 10),
   T('g-sudoku', 'Jeux', 'pencil', 'Logicien', '5 sudokus résolus', 'bronze', 'sudoku', 5),
   T('g-taquin', 'Jeux', 'grid', 'Grand rangement', 'Un taquin 4 × 4 rangé', 'or', 'taquin4', 1),
   T('d3', 'Décors', 'map', 'Décorateur', '3 décors débloqués', 'bronze', 'decors', 3),

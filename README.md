@@ -40,7 +40,7 @@ Sur chaque onglet, le petit « ? » (à côté du titre, ou de la date sur Ma jo
 
 ## Arcade
 
-Dans la Salle, une borne d’arcade (marquée « Jeux ») ouvre dix jeux faits pour Cap, présentés en tuiles, sans pub, sans internet et sans son, pour occuper tes mains :
+Dans la Salle, une borne d’arcade (marquée « Jeux ») ouvre douze jeux faits pour Cap, présentés en tuiles, sans pub, sans internet et sans son, pour occuper tes mains :
 
 - **Blocs** : glisse les pièces sur une grille de 8 × 8 ; une ligne ou une colonne pleine disparaît. Plusieurs lignes d’un coup, ou des lignes à plusieurs coups de suite, rapportent plus. La partie continue tant qu’une pièce rentre, et reprend là où tu l’as laissée.
 - **Calcul éclair** : 60 secondes de calcul utile (soldes, pourcentages, intérêts, prix à l’unité, tables), une réponse parmi quatre ; trois bonnes d’affilée et ça monte d’un niveau, une erreur et ça redescend.
@@ -51,9 +51,11 @@ Dans la Salle, une borne d’arcade (marquée « Jeux ») ouvre dix jeux faits p
 - **Casse-briques** : renvoie la balle avec la raquette (elle suit ton doigt sur le terrain, ou les flèches du clavier) pour casser toutes les briques ; l’angle dépend de l’endroit où la balle touche la raquette. 3 vies ; à chaque niveau, plus de rangées, des briques à 2 ou 3 coups, une raquette plus courte et une balle plus rapide. Les briques cassées lâchent des éclats (pas si le téléphone demande de réduire les animations).
 - **Taquin** : remets les cases dans l’ordre en les faisant glisser vers la case vide (toute une ligne glisse d’un coup) ; en 3 × 3 ou en 4 × 4, les cases bien placées s’éclairent. Grilles mélangées par de vrais coups : toujours faisables.
 - **Écho** : quatre touches (une couleur et une forme chacune) s’allument dans un ordre ; refais la suite. Une touche de plus à chaque tour, de plus en plus vite ; une erreur et c’est fini.
+- **Sprint** : ton bonhomme court dans la salle ; touche l’écran (ou espace, ou la flèche du haut) pour sauter par-dessus les haltères, les disques, les kettlebells, puis les bancs et les doubles haltères après 150 m. De plus en plus vite ; un obstacle touché, c’est fini. Le score : les mètres courus, plus 10 par gourde attrapée en l’air. Tous les obstacles se sautent (un robot du test court 3 000 m sans tomber). La course se met en pause si tu quittes l’arcade.
+- **Pixels cachés** : un dessin caché dans une grille de 5 × 5, 10 × 10 ou 15 × 15 (17 dessins : cœur, haltère, trophée, éclair, kettlebell, couronne, fusée, chat, coureur…). Les chiffres au bord de chaque ligne et de chaque colonne disent combien de cases noircir à la suite, dans l’ordre. Glisse le doigt pour noircir plusieurs cases, passe en « Croix » pour marquer celles que tu sais vides ; une ligne juste grise ses chiffres, et le dessin apparaît en couleur quand tout colle. Chaque dessin n’a qu’une solution, trouvable sans deviner (vérifié par les tests).
 - **Sudoku** : des grilles fabriquées dans l’appli, à solution unique, en 3 niveaux (38, 31 ou 26 chiffres donnés). Touche une case puis un chiffre ; un chiffre faux s’affiche en rouge et compte une erreur ; mode notes pour les chiffres possibles (ils s’effacent tout seuls quand tu places le bon) ; un chiffre placé 9 fois se grise. Le temps compté est le temps actif (une pause de plus d’une minute ne compte pas).
 
-Tes records (meilleur score, lignes effacées, meilleure série, niveau des Cristaux et des Paires, fruits du Serpent, codes trouvés, score et niveau du Casse-briques, coups au Taquin, suite la plus longue à Écho, grilles résolues et meilleurs temps) restent sur le téléphone, dans la sauvegarde ; une partie de Blocs, Cristaux, Paires, Code secret, Taquin ou Sudoku en cours reprend là où tu l’as laissée.
+Tes records (meilleur score, lignes effacées, meilleure série, niveau des Cristaux et des Paires, fruits du Serpent, codes trouvés, score et niveau du Casse-briques, mètres au Sprint, coups au Taquin, suite la plus longue à Écho, grilles résolues et meilleurs temps, dessins trouvés) restent sur le téléphone, dans la sauvegarde ; une partie de Blocs, Cristaux, Paires, Code secret, Taquin, Sudoku ou Pixels cachés en cours reprend là où tu l’as laissée.
 
 ## Décors de la Salle
 
@@ -91,7 +93,7 @@ Dans la Salle, sous « Ma journée » : chaque lundi, trois nouveaux défis tir�
 |---|---|
 | Sport | 4 séances (A, B, C ou P, une par jour) ; 2 séances C ; bouger 6 jours sur 7 (M compte) ; 2 séances M |
 | Vie | 5 matins avec ta routine complète ; 5 soirs avec ta routine complète ; lire 10 pages 4 jours |
-| Arcade | battre ton record au Serpent, aux Blocs, au Calcul éclair ou à Écho (ton record du lundi) ; 2 sudokus résolus ; 3 codes secrets trouvés |
+| Arcade | battre ton record au Serpent, aux Blocs, au Calcul éclair, à Écho ou au Sprint (ton record du lundi) ; 2 sudokus résolus ; 3 codes secrets trouvés ; 2 dessins trouvés aux Pixels cachés |
 
 Tout se calcule depuis tes jours de la semaine (du lundi au dimanche) ; pour l’arcade, Cap note tes records la première fois qu’il s’ouvre dans la semaine. Si tu n’ouvres pas Cap le dimanche, ce que tu as réussi compte quand même le lundi.
 
@@ -127,7 +129,7 @@ Pour les trophées de saison, une séance compte une fois par jour, sans compter
 
 ## Trophées
 
-Le bouton trophée, en haut de la Salle (à côté de « Décor »), ouvre ta vitrine : 32 médailles bronze, argent ou or, rangées par famille (séances, chaîne, niveau, routines, jeux, décors, saisons). Celles gagnées brillent ; les autres montrent ce qu’il reste à faire (« 6 / 10 séances »). Exemples : ta première séance, 10 séances C, 7 puis 30 jours de chaîne, niveau 20, 30 matins avec ta routine, une suite de 10 à Écho, un taquin 4 × 4 rangé, les 17 décors. Tout est recalculé depuis tes données ; un trophée gagné est annoncé une fois (après les autres messages) et reste à toi, même si ta chaîne casse ensuite.
+Le bouton trophée, en haut de la Salle (à côté de « Décor »), ouvre ta vitrine : 34 médailles bronze, argent ou or, rangées par famille (séances, chaîne, niveau, routines, jeux, décors, saisons). Celles gagnées brillent ; les autres montrent ce qu’il reste à faire (« 6 / 10 séances »). Exemples : ta première séance, 10 séances C, 7 puis 30 jours de chaîne, niveau 20, 30 matins avec ta routine, une suite de 10 à Écho, un taquin 4 × 4 rangé, les 17 décors. Tout est recalculé depuis tes données ; un trophée gagné est annoncé une fois (après les autres messages) et reste à toi, même si ta chaîne casse ensuite.
 
 ## Dessins des exercices
 

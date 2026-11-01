@@ -36,8 +36,13 @@ export const CHALLENGES = {
     { id: 'echo', icon: 'lightbulb', record: (g) => g?.echo?.best ?? 0, text: (b) => `Bats ton record à Écho (une suite de ${fmt(b)})`, first: 'Retiens au moins une suite à Écho' },
     { id: 'sudoku', icon: 'pencil', n: 2, total: (g) => sum(g?.sudoku?.solved), text: '2 sudokus résolus' },
     { id: 'code', icon: 'lock', n: 3, total: (g) => g?.code?.wins ?? 0, text: '3 codes secrets trouvés' },
+    // à partir de la semaine du 2 novembre 2026 (ajoutés à la fin : les semaines d'avant ne changent pas)
+    { id: 'sprint', icon: 'trending-up', from: '2026-11-02', record: (g) => g?.sprint?.best ?? 0, text: (b) => `Bats ton record au Sprint (${fmt(b)} m)`, first: 'Cours au Sprint, même quelques mètres' },
+    { id: 'pixels', icon: 'search', from: '2026-11-02', n: 2, total: (g) => (Array.isArray(g?.pixels?.done) ? g.pixels.done.length : 0), text: '2 dessins trouvés aux Pixels cachés' },
   ],
 };
+// les défis d'une famille possibles cette semaine-là
+const pool = (f, week) => CHALLENGES[f].filter((c) => !c.from || week >= c.from);
 const FAMILIES = ['sport', 'vie', 'arcade'];
 
 // Le lundi de la semaine d'un jour (« 2026-10-26 » pour le dimanche 1er novembre).
@@ -55,7 +60,7 @@ const draw = (week) => {
   return FAMILIES.map((f) => {
     const [x, next] = rand(s);
     s = next;
-    return Math.floor(x * CHALLENGES[f].length);
+    return Math.floor(x * pool(f, week).length);
   });
 };
 
@@ -65,17 +70,17 @@ const draw = (week) => {
 const ANCHOR = '2024-01-01';
 const picked = new Map([[ANCHOR, draw(ANCHOR)]]);
 export function weekChallenges(week) {
-  if (week < ANCHOR) return FAMILIES.map((f, i) => CHALLENGES[f][draw(week)[i]]);
+  if (week < ANCHOR) return FAMILIES.map((f, i) => pool(f, week)[draw(week)[i]]);
   let w = ANCHOR;
   while (w < week) {
     const next = addDays(w, 7);
     if (!picked.has(next)) {
       const prev = picked.get(w);
-      picked.set(next, draw(next).map((x, i) => (x === prev[i] ? (x + 1) % CHALLENGES[FAMILIES[i]].length : x)));
+      picked.set(next, draw(next).map((x, i) => (x === prev[i] ? (x + 1) % pool(FAMILIES[i], next).length : x)));
     }
     w = next;
   }
-  return FAMILIES.map((f, i) => CHALLENGES[f][picked.get(w)[i]]);
+  return FAMILIES.map((f, i) => pool(f, w)[picked.get(w)[i]]);
 }
 
 // Tes records d'arcade au début de la semaine (pour « bats ton record »).

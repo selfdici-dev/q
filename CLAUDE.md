@@ -28,7 +28,8 @@ L'utilisateur est débutant : explique simplement, en français.
   `js/icons.js` : icônes au trait.
 - `js/games.js` : règles des jeux de la borne d'arcade (Blocs, Calcul éclair), logique pure ;
   `js/gems.js` (Cristaux), `js/sudoku.js` (Sudoku), `js/snake.js` (Serpent), `js/pairs.js` (Paires),
-  `js/code.js` (Code secret), `js/bricks.js` (Casse-briques), `js/taquin.js` (Taquin), `js/echo.js` (Écho) :
+  `js/code.js` (Code secret), `js/bricks.js` (Casse-briques), `js/taquin.js` (Taquin), `js/echo.js` (Écho),
+  `js/sprint.js` (Sprint), `js/pixels.js` (Pixels cachés, avec un solveur qui vérifie chaque dessin) :
   les autres jeux, logique pure ;
   `js/arcade.js` : leur écran (`#jeux`, ouvert depuis la borne de la Salle), records dans `state.games`.
 - `js/drawings.js` : dessins au crayon des exercices (corps en 3D, muscles travaillés

@@ -11,6 +11,8 @@ import { CODE_LEN, CODE_COLORS, CODE_TRIES, newCode, playGuess } from './code.js
 import { BW, BH, PADDLE_Y, BALL_R, newBricks, serve, movePaddle, stepBricks, nextBricks } from './bricks.js';
 import { newTaquin, slide } from './taquin.js';
 import { ECHO_PADS, echoDelay, newEcho, pressEcho } from './echo.js';
+import { SW, SH, GROUND, RUNNER_X, newSprint, jumpSprint, stepSprint, sprintScore } from './sprint.js';
+import { PUZZLES, SIZES, sizeOf, clues, newPixels, paint, linesOk } from './pixels.js';
 import { icon } from './icons.js';
 
 const fmt = (n) => Number(n).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
@@ -80,6 +82,15 @@ export function createArcade(ctx) {
   let gemAnim = null;
   let gemShake = [];
   let gemTap = 0; // un glissé vient de jouer : on ignore le clic qui suit
+  // Sprint : la course (en mémoire), la boucle d'images, en pause ou non
+  const SP = () => (games().sprint ??= { best: 0, plays: 0 });
+  let sp = null;
+  let spRaf = 0;
+  let spLast = 0;
+  let spPaused = false;
+  // Pixels cachés : les dessins trouvés, la grille en cours ; noircir ou poser des croix
+  const PX = () => (games().pixels ??= { done: [], plays: 0, cur: null });
+  let pxCross = false;
   // Sudoku : la case choisie, le mode notes, la dernière action (temps actif)
   let sdSel = null;
   let sdNotesMode = false;
@@ -109,6 +120,11 @@ export function createArcade(ctx) {
     const tq = TQ();
     const ec = EC();
     const tqGoing = tq.cur && !tq.cur.done;
+    const spr = SP();
+    const px = PX();
+    const pxGoing = px.cur && !px.cur.done;
+    const heart = ['.#.#.', '#####', '#####', '.###.', '..#..'].join('');
+    const runArt = '<svg viewBox="0 0 40 40"><path d="M3 35h34" stroke="#3a2f55" stroke-width="1.4"/><g stroke="#f2f0ff" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M17.5 14.5l-2.5 9" stroke-width="3"/><path d="M15 23.5l5.5 3.5l-1.5 7M15 23.5l-4.5 4.5l-4 -1" stroke-width="2.4"/><path d="M17 16l5 2.5l3 -3.5M16.5 16l-4.5 3l-3 -1" stroke-width="2"/></g><circle cx="19.5" cy="9.5" r="3.4" fill="#f2f0ff"/><rect x="27" y="29" width="2.6" height="6" rx="1" fill="#dc9a70"/><rect x="33.6" y="29" width="2.6" height="6" rx="1" fill="#dc9a70"/><path d="M29.6 32h4" stroke="#9aa0b4" stroke-width="1.4"/></svg>';
     const snakeArt = '<svg viewBox="0 0 40 40"><rect x="6" y="22" width="7" height="7" rx="2" fill="#9fd08f"/><rect x="13" y="22" width="7" height="7" rx="2" fill="#9fd08f"/><rect x="20" y="22" width="7" height="7" rx="2" fill="#9fd08f"/><rect x="20" y="15" width="7" height="7" rx="2.5" fill="#d6f5c4"/><circle cx="30" cy="9" r="3.4" fill="#e98a6b"/></svg>';
     return `<div class="arc-grid">
       ${tile('blocs', 'Blocs', 'Pose, aligne, efface', ['bl-art', [3, 1, 5, 2].map((k) => `<i class="c${k}"></i>`).join('')], `Record <b>${fmt(b.best)}</b>`, go('blocs', going ? 'Reprendre' : 'Jouer'))}
@@ -118,11 +134,14 @@ export function createArcade(ctx) {
       ${tile('paires', 'Paires', 'Retrouve les jumelles', ['pr-art', `<span class="pr-mini up" style="--pc:${PAIR_COLORS[1]}">${icon('flame')}</span><span class="pr-mini"></span>`], `Niveau <b>${pr.level}</b>`, go('paires', prGoing ? 'Reprendre' : 'Jouer'))}
       ${tile('code', 'Code secret', 'Devine les 4 couleurs', ['cd-art', [2, 5, 3, 6].map((k) => `<span class="peg p${k}"></span>`).join('')], `<b>${fmt(cd.wins)}</b> code${cd.wins > 1 ? 's' : ''} trouvé${cd.wins > 1 ? 's' : ''}`, go('code', cdGoing ? 'Reprendre' : 'Jouer'))}
       ${tile('briques', 'Casse-briques', 'Renvoie, casse tout', ['br-art', [1, 2, 3, 4, 5, 2].map((k) => `<i style="background:${PIECE_COLORS[k]}"></i>`).join('') + '<b></b><u></u>'], `Record <b>${fmt(brk.best)}</b>${brk.level ? ` · niv. ${brk.level}` : ''}`, go('briques', 'Jouer'))}
+      ${tile('sprint', 'Sprint', 'Cours, saute, accélère', ['sp-art', runArt], `Record <b>${fmt(spr.best)} m</b>`, go('sprint', 'Jouer'))}
       ${tile('echo', 'Écho', 'Retiens la suite', ['ec-art', [0, 1, 2, 3].map((k) => `<i class="ec${k}${k === 2 ? ' lit' : ''}"></i>`).join('')], `Record <b>${fmt(ec.best)}</b>`, go('echo', 'Jouer'))}
       ${tile('taquin', 'Taquin', 'Range les cases', ['tq-art', [1, 2, 3, 4, 5, 6, 7, 8, 0].map((v) => `<i>${v || ''}</i>`).join('')], tq.best[3] || tq.best[4] ? `Record ${tq.best[3] ? `<b>${tq.best[3]}</b> en 3×3` : ''}${tq.best[3] && tq.best[4] ? ' · ' : ''}${tq.best[4] ? `<b>${tq.best[4]}</b> en 4×4` : ''}` : 'Pas encore rangé',
         `${tqGoing ? go('taquin', 'Reprendre') : ''}<div class="sd-levels">${[3, 4].map((n) => `<button class="btn small${tqGoing ? '' : ' primary'}" data-act="arc-play" data-id="taquin" data-n="${n}">${n} × ${n}</button>`).join('')}</div>`)}
       ${tile('sudoku', 'Sudoku', 'Un chiffre par ligne', ['sd-art', ['5', '', '3', '', '7', '', '1', '', '9'].map((d) => `<i>${d}</i>`).join('')], `<b>${fmt(solved)}</b> grille${solved > 1 ? 's' : ''}${sd.best.difficile ? ` · ${minutes(sd.best.difficile)}` : ''}`,
         `${sdGoing ? go('sudoku', 'Reprendre') : ''}<div class="sd-levels">${Object.entries(SD_NAMES).map(([lv, name]) => `<button class="btn small${sdGoing ? '' : ' primary'}" data-act="arc-play" data-id="sudoku" data-lv="${lv}">${name}</button>`).join('')}</div>`)}
+      ${tile('pixels', 'Pixels cachés', 'Trouve le dessin', ['px-art', [...heart].map((c) => `<i${c === '#' ? ' class="on"' : ''}></i>`).join('')], `<b>${px.done.length}</b> / ${PUZZLES.length} dessins trouvés`,
+        `${pxGoing ? go('pixels', 'Reprendre') : ''}<div class="sd-levels">${SIZES.map((n) => `<button class="btn small${pxGoing ? '' : ' primary'}" data-act="arc-play" data-id="pixels" data-n="${n}">${n} × ${n}</button>`).join('')}</div>`)}
     </div>
     <p class="hint">Les jeux comptent aussi pour débloquer des décors de la Salle. Sans pub, sans internet, sans son.</p>`;
   }
@@ -182,7 +201,7 @@ export function createArcade(ctx) {
   // Glisser une pièce : elle suit le doigt un peu au-dessus (pour la voir),
   // la grille montre où elle tomberait.
   function pointerDown(e) {
-    if (gemDown(e) || snakeDown(e) || bricksDown(e)) return;
+    if (gemDown(e) || snakeDown(e) || bricksDown(e) || sprintDown(e) || pixelsDown(e)) return;
     const btn = e.target.closest?.('.bl-piece[data-piece]');
     if (!btn || mode !== 'blocs' || B().cur.over) return;
     const grid = document.getElementById('bl-grid');
@@ -642,6 +661,315 @@ export function createArcade(ctx) {
     c.fill();
   }
 
+  // ---------- Sprint ----------
+  function sprintView() {
+    const g = sp;
+    const m = sprintScore(g);
+    const best = SP().best;
+    queueMicrotask(spDraw); // la piste se redessine dès que l'écran est en place
+    return `<section class="arcade sp-wrap">
+      <div class="arc-top"><button class="btn small" data-act="arc-menu">‹ Arcade</button>
+        <div class="arc-score"><b id="sp-score">${fmt(m)} m</b><small>Record ${fmt(best)} m</small></div></div>
+      <canvas class="sp-canvas" id="sp-canvas" width="${SW * 4}" height="${SH * 4}" role="img" aria-label="La course : ton bonhomme, les obstacles et les gourdes"></canvas>
+      ${g.over ? `<div class="arc-over"><p class="arc-big">Aïe ! ${fmt(m)} m</p><p class="muted">${g.bonus ? `dont ${fmt(g.bonus)} en gourdes · ` : ''}${m > 0 && m >= best ? 'nouveau record' : `record : ${fmt(best)} m`}</p>
+          <button class="btn primary" data-act="arc-play" data-id="sprint">Rejouer</button></div>`
+      : spPaused ? '<div class="arc-over"><p class="arc-big">En pause</p><button class="btn primary" data-act="sp-resume">Reprendre</button></div>'
+      : `<p class="hint center">${g.started ? 'Touche l’écran pour sauter. Une gourde attrapée : +10.' : 'Touche l’écran pour partir, puis pour sauter par-dessus le matériel.'}</p>`}
+    </section>`;
+  }
+
+  // Le matériel sur la piste : haltères, disque debout, kettlebell, banc.
+  function spObstacle(c, o) {
+    const y = GROUND;
+    const plate = (px, h, w = 2.4) => {
+      c.fillStyle = '#56505f';
+      roundRect(c, px, y - h, w, h, 0.8);
+      c.fill();
+      c.fillStyle = 'rgba(220,154,112,0.85)';
+      c.fillRect(px, y - h, w, 0.6);
+    };
+    const dumbbell = (x0) => {
+      c.fillStyle = '#9aa0b4';
+      c.fillRect(x0 + 2.4, y - 3.6, 4.2, 1.2);
+      plate(x0, 6);
+      plate(x0 + 6.6, 6);
+    };
+    if (o.kind === 'haltere' || o.kind === 'double') {
+      dumbbell(o.x);
+      if (o.kind === 'double') dumbbell(o.x + 10);
+    } else if (o.kind === 'disque') {
+      plate(o.x, o.h, o.w);
+      c.fillStyle = '#9aa0b4';
+      c.beginPath();
+      c.arc(o.x + o.w / 2, y - o.h / 2, 0.8, 0, Math.PI * 2);
+      c.fill();
+    } else if (o.kind === 'kettle') {
+      c.strokeStyle = '#6a6474';
+      c.lineWidth = 1.3;
+      c.beginPath();
+      c.arc(o.x + 3.5, y - 6.4, 2.2, Math.PI, 0);
+      c.stroke();
+      c.fillStyle = '#6a6474';
+      c.beginPath();
+      c.arc(o.x + 3.5, y - 3.3, 3.4, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = 'rgba(220,154,112,0.75)';
+      c.fillRect(o.x + 1.6, y - 4.8, 3.8, 0.6);
+    } else {
+      c.fillStyle = '#a8794a';
+      roundRect(c, o.x, y - o.h, o.w, 2.4, 0.8);
+      c.fill();
+      c.fillStyle = '#56505f';
+      c.fillRect(o.x + 1.6, y - o.h + 2.2, 1.4, o.h - 2.2);
+      c.fillRect(o.x + o.w - 3, y - o.h + 2.2, 1.4, o.h - 2.2);
+    }
+  }
+
+  // Ton bonhomme : il court (bras et jambes en balancier), se groupe en l'air.
+  function spRunner(c, g) {
+    const x = RUNNER_X;
+    const foot = GROUND - g.y;
+    const air = g.y > 0.4;
+    const s = air ? 0 : Math.sin(g.dist * 0.24);
+    const hip = [x, foot - 7];
+    const sh = [x + 1.4, foot - 12];
+    const limb = (a, b, d, w) => {
+      c.lineWidth = w;
+      c.beginPath();
+      c.moveTo(a[0], a[1]);
+      c.lineTo(b[0], b[1]);
+      c.lineTo(d[0], d[1]);
+      c.stroke();
+    };
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+    c.strokeStyle = '#f2f0ff';
+    if (air) {
+      limb(hip, [x + 3.4, foot - 4.6], [x + 1.2, foot - 1.6], 2.3);
+      limb(hip, [x - 1.6, foot - 3.8], [x - 4.2, foot - 2.6], 2.3);
+    } else {
+      limb(hip, [x + 2.6 * s, foot - 3.6], [x + 3.4 * s - 0.6, foot - Math.max(0, s) * 1.6], 2.3);
+      limb(hip, [x - 2.6 * s, foot - 3.6], [x - 3.4 * s - 0.6, foot - Math.max(0, -s) * 1.6], 2.3);
+    }
+    c.lineWidth = 3;
+    c.beginPath();
+    c.moveTo(hip[0], hip[1]);
+    c.lineTo(sh[0], sh[1]);
+    c.stroke();
+    const arm = air ? 1 : s;
+    limb(sh, [x + 1.4 - 2.4 * arm, foot - 9.2], [x + 2.6 - 2.6 * arm, foot - 7.4], 1.9);
+    limb(sh, [x + 1.4 + 2.4 * arm, foot - 9.2], [x + 3 + 2.2 * arm, foot - 8], 1.9);
+    c.fillStyle = '#f2f0ff';
+    c.beginPath();
+    c.arc(x + 2, foot - 14.4, 2.3, 0, Math.PI * 2);
+    c.fill();
+    c.strokeStyle = '#dc9a70'; // le short
+    c.lineWidth = 3.2;
+    c.beginPath();
+    c.moveTo(hip[0] + 0.2, hip[1] - 1.2);
+    c.lineTo(hip[0], hip[1] + 0.6);
+    c.stroke();
+  }
+
+  function spDraw() {
+    const cv = document.getElementById('sp-canvas');
+    if (!cv || !sp) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = Math.round((cv.clientWidth || 360) * dpr);
+    if (cv.width !== w) { cv.width = w; cv.height = Math.round((w * SH) / SW); }
+    const c = cv.getContext('2d');
+    if (!c) return;
+    const k = cv.width / SW;
+    c.setTransform(k, 0, 0, k, 0, 0);
+    // le mur de la salle : fenêtres de nuit et affiches qui défilent plus lentement (profondeur)
+    const wall = c.createLinearGradient(0, 0, 0, GROUND);
+    wall.addColorStop(0, '#15100e');
+    wall.addColorStop(1, '#261c17');
+    c.fillStyle = wall;
+    c.fillRect(0, 0, SW, GROUND);
+    const par = (sp.dist * 0.3) % 70;
+    for (let x = -par; x < SW + 70; x += 70) {
+      c.fillStyle = '#0d1426';
+      roundRect(c, x + 8, 9, 30, 24, 2);
+      c.fill();
+      c.strokeStyle = '#3a2a20';
+      c.lineWidth = 1.2;
+      c.stroke();
+      c.fillStyle = 'rgba(255,240,200,0.5)';
+      c.fillRect(x + 28, 14, 1.2, 1.2);
+      c.fillRect(x + 15, 19, 0.9, 0.9);
+      c.fillStyle = 'rgba(220,154,112,0.16)';
+      roundRect(c, x + 48, 13, 12, 16, 1);
+      c.fill();
+    }
+    c.fillStyle = 'rgba(242,195,163,0.6)'; // la bande LED au pied du mur
+    c.fillRect(0, GROUND - 2.4, SW, 0.7);
+    // le sol : un parquet qui défile
+    c.fillStyle = '#3b2a1f';
+    c.fillRect(0, GROUND, SW, SH - GROUND);
+    c.strokeStyle = 'rgba(0,0,0,0.35)';
+    c.lineWidth = 0.5;
+    const pl = sp.dist % 16;
+    for (let x = -pl; x < SW + 8; x += 16) {
+      c.beginPath();
+      c.moveTo(x, GROUND + 0.5);
+      c.lineTo(x - 7, SH);
+      c.stroke();
+    }
+    // les gourdes à attraper
+    for (const it of sp.items) {
+      if (it.taken) continue;
+      const y = GROUND - it.y - 7;
+      c.fillStyle = 'rgba(90,180,255,0.25)';
+      c.beginPath();
+      c.arc(it.x + 2.5, y + 3.5, 5, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = '#5ab4ff';
+      roundRect(c, it.x, y + 1.6, 5, 5.4, 1.2);
+      c.fill();
+      c.fillStyle = '#e8f4ff';
+      c.fillRect(it.x + 1.4, y, 2.2, 1.8);
+    }
+    for (const o of sp.obstacles) spObstacle(c, o);
+    spRunner(c, sp);
+  }
+
+  function startSprint() {
+    cancelAnimationFrame(spRaf);
+    sp = newSprint(seed());
+    SP().plays += 1;
+    spPaused = false;
+    mode = 'sprint';
+  }
+
+  function spRun() {
+    cancelAnimationFrame(spRaf);
+    spLast = 0;
+    spRaf = requestAnimationFrame(spLoop);
+  }
+
+  // Une image : la course avance ; un choc, et c'est fini.
+  function spLoop(t) {
+    if (mode !== 'sprint' || !sp || !sp.started || sp.over) return;
+    if (location.hash !== '#jeux' || document.hidden) { spPaused = true; return; }
+    const dt = spLast ? Math.min(50, t - spLast) : 16;
+    spLast = t;
+    const before = sprintScore(sp);
+    sp = stepSprint(sp, dt);
+    const m = sprintScore(sp);
+    if (m !== before) {
+      const sc = document.getElementById('sp-score');
+      if (sc) sc.textContent = `${fmt(m)} m`;
+    }
+    if (sp.over) {
+      const s = SP();
+      const rec = m > s.best;
+      s.best = Math.max(s.best, m);
+      navigator.vibrate?.(60);
+      ctx.save();
+      ctx.render();
+      if (rec) ctx.celebrate(`Nouveau record au Sprint : ${fmt(m)} m`);
+      return;
+    }
+    spDraw();
+    spRaf = requestAnimationFrame(spLoop);
+  }
+
+  // Toucher la piste : partir, puis sauter.
+  function sprintDown(e) {
+    if (!e.target.closest?.('.sp-wrap') || e.target.closest('button') || mode !== 'sprint' || !sp || sp.over || spPaused) return false;
+    e.preventDefault();
+    const first = !sp.started;
+    sp = jumpSprint(sp);
+    if (first) {
+      ctx.render();
+      spRun();
+    }
+    return true;
+  }
+
+  // ---------- Pixels cachés ----------
+  function pixelsView() {
+    const px = PX();
+    const g = px.cur;
+    const p = PUZZLES.find((x) => x.id === g.id);
+    const cl = clues(p);
+    const ok = linesOk(g);
+    const n = g.n;
+    const cols = cl.cols.map((cc, k) => `<div class="px-cc${ok.cols[k] ? ' ok' : ''}">${cc.map((v) => `<b>${v}</b>`).join('')}</div>`).join('');
+    const rows = Array.from({ length: n }, (_, r) => `<div class="px-rc${ok.rows[r] ? ' ok' : ''}">${cl.rows[r].map((v) => `<b>${v}</b>`).join('')}</div>`
+      + g.grid.slice(r * n, r * n + n).map((v, j) => `<i class="px-c v${v}${j % 5 === 4 && j < n - 1 ? ' bx' : ''}${r % 5 === 4 && r < n - 1 ? ' by' : ''}" data-i="${r * n + j}"></i>`).join('')).join('');
+    return `<section class="arcade px-wrap">
+      <div class="arc-top"><button class="btn small" data-act="arc-menu">‹ Arcade</button>
+        <div class="arc-score"><b>${n} × ${n}</b><small>${px.done.length} / ${PUZZLES.length} dessins trouvés</small></div></div>
+      <div class="px-board s${n}${g.done ? ' done' : ''}" id="px-board" style="--n:${n};--pc:${p.color}" role="img" aria-label="Grille de ${n} cases sur ${n}${g.done ? ` : ${p.name}` : ''}"><div class="px-corner"></div>${cols}${rows}</div>
+      ${g.done ? `<div class="arc-over"><p class="arc-big">${p.name} !</p><p class="muted">Trouvé en ${g.moves} coups</p>
+          <button class="btn primary" data-act="arc-play" data-id="pixels" data-n="${n}">Dessin suivant</button></div>`
+      : `<div class="px-tools"><button class="seg${pxCross ? '' : ' on'}" data-act="px-mode" data-v="fill" aria-pressed="${!pxCross}"><span class="px-sw fill"></span>Noircir</button><button class="seg${pxCross ? ' on' : ''}" data-act="px-mode" data-v="cross" aria-pressed="${pxCross}"><span class="px-sw cross"></span>Croix</button><button class="btn small" data-act="px-reset">Recommencer</button></div>
+        <p class="hint center">Chaque chiffre : des cases noires à la suite, dans l’ordre, avec au moins un trou entre deux suites. Glisse le doigt pour en faire plusieurs. Une croix : une case que tu sais vide.</p>`}
+    </section>`;
+  }
+
+  function startPixels(n) {
+    const px = PX();
+    if (!n && px.cur && !px.cur.done) { mode = 'pixels'; return; } // reprendre
+    const size = SIZES.includes(Number(n)) ? Number(n) : 5;
+    const list = PUZZLES.filter((p) => sizeOf(p) === size);
+    const next = list.find((p) => !px.done.includes(p.id)) ?? list[Math.floor(Math.random() * list.length)];
+    px.cur = newPixels(next.id);
+    px.plays += 1;
+    mode = 'pixels';
+  }
+
+  // Le doigt sur la grille : noircit (ou croise, ou efface) la case, et
+  // toutes celles où il glisse ; les chiffres se mettent à jour quand il se lève.
+  function pixelsDown(e) {
+    const cell = e.target.closest?.('#px-board .px-c');
+    const px = PX();
+    if (!cell || mode !== 'pixels' || !px.cur || px.cur.done) return false;
+    e.preventDefault();
+    const board = document.getElementById('px-board');
+    const start = Number(cell.dataset.i);
+    const from = px.cur.grid[start];
+    const value = pxCross ? (from === 2 ? 0 : 2) : from === 1 ? 0 : 1;
+    const touched = new Set();
+    const apply = (i) => {
+      if (touched.has(i) || !px.cur || px.cur.done) return;
+      touched.add(i);
+      // en glissant : on n'efface que ce qu'on effaçait, on ne recouvre que du vide
+      if (i !== start && px.cur.grid[i] !== (value === 0 ? from : 0)) return;
+      px.cur = paint(px.cur, i, value);
+      const el = board?.querySelector(`[data-i="${i}"]`);
+      if (el) el.className = el.className.replace(/\bv\d\b/, `v${px.cur.grid[i]}`);
+    };
+    apply(start);
+    const id = e.pointerId;
+    const move = (ev) => {
+      if (ev.pointerId !== id) return;
+      const el = document.elementFromPoint(ev.clientX, ev.clientY)?.closest?.('#px-board .px-c');
+      if (el) apply(Number(el.dataset.i));
+    };
+    const up = (ev) => {
+      if (ev.pointerId !== id) return;
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      if (px.cur?.done && !px.done.includes(px.cur.id)) {
+        px.done = [...px.done, px.cur.id];
+        ctx.save();
+        ctx.render();
+        ctx.celebrate(`Pixels cachés : ${PUZZLES.find((x) => x.id === px.cur.id).name} trouvé !`);
+        return;
+      }
+      ctx.save();
+      ctx.render();
+    };
+    window.addEventListener('pointermove', move, { passive: false });
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+    return true;
+  }
+
   function startBricks() {
     cancelAnimationFrame(brRaf);
     br = newBricks(1);
@@ -858,6 +1186,8 @@ export function createArcade(ctx) {
       else if (el.dataset.id === 'paires') startPairs();
       else if (el.dataset.id === 'code') startCode(Boolean(el.dataset.new));
       else if (el.dataset.id === 'briques') startBricks();
+      else if (el.dataset.id === 'sprint') startSprint();
+      else if (el.dataset.id === 'pixels') startPixels(el.dataset.n);
       else if (el.dataset.id === 'taquin') startTaquin(el.dataset.n);
       else if (el.dataset.id === 'echo') { startEcho(); ctx.render(); window.scrollTo(0, 0); ecShow(); return; }
       else startBlocs(Boolean(el.dataset.new));
@@ -867,6 +1197,7 @@ export function createArcade(ctx) {
     },
     'arc-menu'() {
       cancelAnimationFrame(brRaf);
+      cancelAnimationFrame(spRaf);
       ecClear();
       clearInterval(timer);
       clearTimeout(snTimer);
@@ -954,6 +1285,23 @@ export function createArcade(ctx) {
       if (mode !== 'briques' || !br?.cleared) return;
       br = nextBricks(br);
       sparks = [];
+      ctx.render();
+    },
+    'sp-resume'() {
+      if (mode !== 'sprint' || !sp || sp.over) return;
+      spPaused = false;
+      ctx.render();
+      if (sp.started) spRun();
+    },
+    'px-mode'(el) {
+      pxCross = el.dataset.v === 'cross';
+      ctx.render();
+    },
+    'px-reset'() {
+      const px = PX();
+      if (mode !== 'pixels' || !px.cur || px.cur.done) return;
+      px.cur = newPixels(px.cur.id);
+      ctx.save();
       ctx.render();
     },
     'br-resume'() {
@@ -1060,6 +1408,8 @@ export function createArcade(ctx) {
       if (mode === 'briques' && br) return bricksView();
       if (mode === 'taquin' && TQ().cur) return taquinView();
       if (mode === 'echo' && echo) return echoView();
+      if (mode === 'sprint' && sp) return sprintView();
+      if (mode === 'pixels' && PX().cur) return pixelsView();
       mode = 'menu';
       return menuView();
     },
@@ -1067,6 +1417,14 @@ export function createArcade(ctx) {
     pointerDown,
     // les flèches du clavier dirigent le serpent
     keyDown(e) {
+      // sprint : espace ou flèche du haut pour sauter
+      if (mode === 'sprint' && sp && !sp.over && !spPaused && location.hash === '#jeux' && [' ', 'ArrowUp'].includes(e.key)) {
+        e.preventDefault();
+        const first = !sp.started;
+        sp = jumpSprint(sp);
+        if (first) { ctx.render(); spRun(); }
+        return;
+      }
       // casse-briques : flèches gauche et droite, espace pour lancer
       if (mode === 'briques' && br && !br.over && !br.cleared && location.hash === '#jeux' && ['ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
         e.preventDefault();

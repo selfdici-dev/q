@@ -33,6 +33,8 @@ export const TROPHIES = [
   T('g-echo', 'Jeux', 'lightbulb', 'Mémoire d’éléphant', 'Une suite de 10 à Écho', 'argent', 'echo', 10),
   T('g-sudoku', 'Jeux', 'pencil', 'Logicien', '5 sudokus résolus', 'bronze', 'sudoku', 5),
   T('g-taquin', 'Jeux', 'grid', 'Grand rangement', 'Un taquin 4 × 4 rangé', 'or', 'taquin4', 1),
+  T('g-sprint', 'Jeux', 'trending-up', 'Sprinteur', '1 000 m au Sprint', 'argent', 'sprint', 1000),
+  T('g-pixels', 'Jeux', 'search', 'Œil de pixel', '10 dessins trouvés aux Pixels cachés', 'or', 'pixels', 10),
   T('d3', 'Décors', 'map', 'Décorateur', '3 décors débloqués', 'bronze', 'decors', 3),
   T('d8', 'Décors', 'map', 'Collectionneur', '8 décors débloqués', 'argent', 'decors', 8),
   T('d17', 'Décors', 'map', 'Tous les mondes', 'Les 17 décors débloqués', 'or', 'decors', 17),
@@ -43,7 +45,7 @@ export const TROPHIES = [
 const fmt = (n) => Number(n).toLocaleString('fr-FR');
 const UNIT = {
   workouts: 'séances', boxe: 'séances C', chain: 'jours de chaîne', routines: 'matins', soirs: 'soirs', blocs: 'points', serpent: 'fruits',
-  calc: 'points', code: 'codes', echo: 'touches', sudoku: 'sudokus', decors: 'décors', taquin4: 'taquin 4 × 4',
+  calc: 'points', code: 'codes', echo: 'touches', sudoku: 'sudokus', decors: 'décors', taquin4: 'taquin 4 × 4', sprint: 'm', pixels: 'dessins',
   ...Object.fromEntries(SEASONS.map((s) => [s.id, 'séances pendant la saison'])),
 };
 const LEVELS = new Set(['level', 'gems', 'paires', 'briques']);
@@ -59,6 +61,8 @@ export function trophyStats(state, today) {
     echo: g.echo?.best ?? 0,
     briques: g.briques?.level ?? 0,
     taquin4: g.taquin?.best?.[4] ? 1 : 0,
+    sprint: g.sprint?.best ?? 0,
+    pixels: Array.isArray(g.pixels?.done) ? g.pixels.done.length : 0,
     decors: decorStatus(s).filter((d) => d.unlocked).length,
     ...seasonWorkouts(state.days), // séances pendant Halloween, Noël… (la meilleure année)
   };

@@ -1507,6 +1507,35 @@ button.peg { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 
 /* Casse-briques (js/bricks.js) : un terrain dessiné image par image ; le doigt guide la raquette */
 .br-canvas { display: block; width: min(100%, 420px); aspect-ratio: 100 / 140; height: auto; margin: 0 auto; border-radius: 14px; background: #100c14; touch-action: none; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07), 0 18px 40px -24px rgb(0 0 0 / 0.9); }
+/* Sprint : la piste, large et basse ; on touche n'importe où pour sauter */
+.sp-wrap { touch-action: manipulation; }
+.sp-canvas { display: block; width: 100%; max-width: 560px; aspect-ratio: 128 / 64; height: auto; margin: 0 auto; border-radius: 14px; background: #15100e; touch-action: none; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07), 0 18px 40px -24px rgb(0 0 0 / 0.9); }
+.sp-art { padding: 6px; }
+.sp-art svg { display: block; width: 100%; height: 100%; }
+/* Pixels cachés : les chiffres au bord, la grille, noircir ou croiser */
+.px-art { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.5px; padding: 11px; }
+.px-art i { border-radius: 2px; background: rgb(255 255 255 / 0.08); }
+.px-art i.on { background: #e0453a; }
+.px-board { display: grid; grid-template-columns: auto repeat(var(--n), minmax(0, 1fr)); width: 100%; max-width: 460px; margin: 0 auto; user-select: none; -webkit-user-select: none; touch-action: none; }
+.px-cc { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 2px; padding: 0 0 4px; font: 750 0.72rem/1 var(--sans); color: var(--text); font-variant-numeric: tabular-nums; }
+.px-rc { display: flex; justify-content: flex-end; align-items: center; gap: 4px; padding: 0 6px 0 0; font: 750 0.72rem/1 var(--sans); color: var(--text); font-variant-numeric: tabular-nums; }
+.px-board.s15 .px-cc, .px-board.s15 .px-rc { font-size: 0.6rem; gap: 2px; }
+.px-cc.ok, .px-rc.ok { color: var(--muted); opacity: 0.5; }
+.px-c { aspect-ratio: 1; border: 0.5px solid rgb(127 127 127 / 0.32); background: var(--card, var(--surface)); }
+.px-c.bx { border-right: 1.5px solid rgb(127 127 127 / 0.75); }
+.px-c.by { border-bottom: 1.5px solid rgb(127 127 127 / 0.75); }
+.px-c.v1 { background: var(--text); }
+.px-c.v2 { background: linear-gradient(45deg, transparent 44%, var(--muted) 45%, var(--muted) 55%, transparent 56%), linear-gradient(-45deg, transparent 44%, var(--muted) 45%, var(--muted) 55%, transparent 56%), var(--card, var(--surface)); }
+.px-board.done .px-c { border-color: transparent; }
+.px-board.done .px-c.v1 { background: var(--pc); }
+.px-board.done .px-c.v0 { background: var(--card, var(--surface)); }
+@media (prefers-reduced-motion: no-preference) { .px-board.done .px-c.v1 { animation: px-pop 0.5s cubic-bezier(.2,.8,.2,1) both; } }
+@keyframes px-pop { from { transform: scale(0.6); opacity: 0.4; } }
+.px-tools { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; margin-top: 12px; }
+.px-tools .seg { display: inline-flex; align-items: center; gap: 6px; }
+.px-sw { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgb(127 127 127 / 0.6); }
+.px-sw.fill { background: var(--text); }
+.px-sw.cross { background: linear-gradient(45deg, transparent 42%, var(--muted) 43%, var(--muted) 57%, transparent 58%), linear-gradient(-45deg, transparent 42%, var(--muted) 43%, var(--muted) 57%, transparent 58%); }
 .br-hearts { color: #e98a6b; letter-spacing: 1px; }
 .br-art { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: 7px 7px; gap: 3px; align-content: start; padding: 9px 8px; }
 .br-art i { border-radius: 2px; }

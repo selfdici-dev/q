@@ -425,7 +425,7 @@ export const PHASES = [
     weeks: [1, 4],
     name: 'Fondations',
     focus: [
-      'Lever fixe à 8 h 30, 7 jours sur 7 : c’est le levier n° 1 du sommeil.',
+      'Lever fixe à 8 h (8 h 30 au plus tard), 7 jours sur 7 : c’est le levier n° 1 du sommeil.',
       'Semaine 1 : mesurer écran et grignotages sans rien changer.',
       'Temps d’écran + ScreenZen configurés, objectif < 5 h d’écran en semaine 4.',
       'Mobilité tous les jours, A/B/C selon le planning, 6 000 pas.',
@@ -436,7 +436,7 @@ export const PHASES = [
     weeks: [5, 8],
     name: 'Montée',
     focus: [
-      'Lever à 8 h puis 7 h 30 pour être calé avant l’emploi.',
+      'Lever à 8 h et coucher avant minuit, tenus 7 jours sur 7 : le corps se cale tout seul.',
       'Séances au niveau 2, 8 000 pas, une recette par semaine.',
       'Finir le parcours finance, premiers trades notés dans le journal.',
       'Écran < 3 h 30.',
@@ -446,8 +446,8 @@ export const PHASES = [
     weeks: [9, 12],
     name: 'Nouveau rythme',
     focus: [
-      'Adapter les minimums aux horaires de travail dès le 1er jour.',
-      'Virement automatique vers le PEA le jour de la paie.',
+      'Garder les minimums les jours chargés : c’est le minimum qui tient la chaîne.',
+      'Virement automatique vers le PEA dès qu’un revenu arrive, même petit.',
       '2-3 trades par semaine, revue du journal chaque dimanche.',
       'Écran < 3 h, coucher 23 h 30 tenu.',
     ],

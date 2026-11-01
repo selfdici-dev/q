@@ -1140,6 +1140,8 @@ details.card.more .rules { margin-top: 10px; }
 .hub-tools .hub-decor-btn, .hub-tools .hub-help { position: relative; top: auto; right: auto; }
 .hub-tools .hub-help .help-btn { margin-left: 0; }
 .hub-trophy-btn svg { color: #ffd27a; }
+/* très petits écrans : « Décor » devient une icône seule, pour laisser la place au niveau */
+@media (max-width: 340px) { .hub-decor-btn:not(.hub-trophy-btn) { gap: 0; padding: 0 7px; font-size: 0; } }
 /* la vitrine des trophées : médaille bronze, argent ou or quand c'est gagné */
 .tr-bar { height: 8px; border-radius: 999px; background: var(--track, rgb(127 127 127 / 0.2)); overflow: hidden; }
 .tr-bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #c98a5a, #e7c76b); }

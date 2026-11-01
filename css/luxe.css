@@ -706,6 +706,7 @@ label.radio:has(input:checked) { border-color: var(--seg-on-line); background: v
 /* Ton double : son médaillon (dessiné par avatar.js) flotte dans un halo d'aurore.
    Il ne lit que 4 jetons, réglés ici pour lui : corps clair, anneau lilas → ciel,
    disque de nuit (sombre aussi en thème clair). */
+.hub-avatar { --figure: var(--av-body); --accent: #b69cff; --accent-2: #7dd3fc; --bg: #0a0912; }
 .avatar-btn, .avatar-big {
   --figure: var(--av-body); --accent: #b69cff; --accent-2: #7dd3fc; --bg: #0a0912;
   background: radial-gradient(closest-side at 50% 51%, var(--halo-1), var(--halo-2) 72%, transparent 100%);

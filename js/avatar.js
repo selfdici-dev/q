@@ -102,7 +102,9 @@ function taper([p0, c1, c2, p3], w, dir = 1) {
 
 // SVG du double (viewBox 120 × 160). Couleurs : --figure (corps), --bg (fond,
 // ombres), --accent → --accent-2 (anneau, contre-jour). animate=false : immobile.
-export function avatarSVG(p, { animate = true } = {}) {
+// gear : ses accessoires (outfit.js), dessinés sur lui ; crop : le médaillon
+// seul, sans les paliers (portrait de la Salle).
+export function avatarSVG(p, { animate = true, gear = [], crop = false } = {}) {
   const id = `av${++uid}`;
   const t = p.stage / (STAGES - 1);
   const u = clamp(p.lift / 4); // posture : 0 = tête rentrée, 1 = droit
@@ -186,9 +188,12 @@ export function avatarSVG(p, { animate = true } = {}) {
     return `<rect class="av-pip" x="${x}" y="145" width="6" height="2.2" rx="1.1" ${i <= p.stage ? `fill="url(#${id}-pip)"` : `style="fill:${FIG}" opacity="0.18"`}/>`;
   }).join('');
 
+  // Accessoires : la cape derrière le corps, le reste devant ; ils respirent avec lui.
+  const wear = gearArt(Array.isArray(gear) ? gear : [], { id, hy, sY, S, W, nw, B });
+
   const base = sY + 62; // point fixe de la respiration
-  return `<svg class="avatar" viewBox="0 0 120 160" aria-hidden="true">
-    <defs>
+  return `<svg class="avatar" viewBox="${crop ? '6 0 108 136' : '0 0 120 160'}" aria-hidden="true">
+    <defs>${wear.defs}
       <linearGradient id="${id}-ring" gradientUnits="userSpaceOnUse" x1="${CX - 40}" y1="${CY - 48}" x2="${CX + 40}" y2="${CY + 48}"><stop offset="0" style="stop-color:${A1}"/><stop offset="1" style="stop-color:${A2}"/>${spin}</linearGradient>
       <linearGradient id="${id}-pip" gradientUnits="userSpaceOnUse" x1="${CX - 34}" y1="0" x2="${CX + 34}" y2="0"><stop offset="0" style="stop-color:${A1}"/><stop offset="1" style="stop-color:${A2}"/></linearGradient>
       <radialGradient id="${id}-back" gradientUnits="userSpaceOnUse" cx="${CX}" cy="${CY - 16}" r="52"><stop offset="0" style="stop-color:${A1}" stop-opacity="0.6"/><stop offset="0.55" style="stop-color:${A1}" stop-opacity="0.16"/><stop offset="1" style="stop-color:${A2}" stop-opacity="0"/></radialGradient>
@@ -215,6 +220,7 @@ export function avatarSVG(p, { animate = true } = {}) {
     <g clip-path="url(#${id}-disc)">
       <g transform="translate(${CX} ${TOP_AT}) scale(${ZOOM}) translate(${-CX} ${-TOP})">
       <g transform="translate(${CX} ${base})"><g>${breathe}<g transform="translate(${-CX} ${-base})">
+        ${wear.back}
         <g class="av-body" style="fill:${FIG}">
           <path d="${torso}"/>
           <g clip-path="url(#${id}-torso)">
@@ -255,10 +261,68 @@ export function avatarSVG(p, { animate = true } = {}) {
           <path d="${strands}" fill="none" stroke-linecap="round" stroke-width="0.5" style="stroke:${FIG}" opacity="0.13"/>
         </g>
         <use href="#${id}-sil" fill="url(#${id}-ring)" filter="url(#${id}-rim)" opacity="${op(0.45 + 0.4 * g)}"/>
+        ${wear.front}
       </g></g></g>
       </g>
       <rect x="0" y="${CY}" width="120" height="${RING + 2}" fill="url(#${id}-fade)"/>
     </g>
-    ${pips}
+    ${crop ? '' : pips}
   </svg>`;
 }
+
+// Les accessoires sur le corps (mêmes repères que le dessin : hy la tête, sY
+// les épaules, S les deltoïdes, W la taille, nw le cou, B le bas). Couleurs
+// fixes : elles se voient sur un corps clair comme foncé.
+function gearArt(gear, { id, hy, sY, S, W, nw, B }) {
+  if (!gear.length) return { defs: '', back: '', front: '' };
+  const has = (g) => gear.includes(g);
+  const gold = `url(#${id}-gold)`;
+  const defs = `<linearGradient id="${id}-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0a8"/><stop offset="0.5" stop-color="#f2c14a"/><stop offset="1" stop-color="#c8891e"/></linearGradient>`
+    + `<linearGradient id="${id}-cape" gradientUnits="userSpaceOnUse" x1="0" y1="${round(sY - 4)}" x2="0" y2="${round(B)}"><stop offset="0" stop-color="#d0333b"/><stop offset="1" stop-color="#5a0d14"/></linearGradient>`
+    + `<linearGradient id="${id}-lens" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a3150"/><stop offset="1" stop-color="#07080c"/></linearGradient>`;
+  // derrière : la cape, évasée sous les bras, et son col relevé
+  const back = has('cape') ? `<g class="av-gear av-cape"><path d="M${pt([-(nw + 2), sY - 4])} L${pt([nw + 2, sY - 4])} C${pt([S + 4, sY + 2])} ${pt([S + 10, sY + 30])} ${pt([S + 14, B])} L${pt([-(S + 14), B])} C${pt([-(S + 10), sY + 30])} ${pt([-(S + 4), sY + 2])} ${pt([-(nw + 2), sY - 4])}Z" fill="url(#${id}-cape)"/>`
+    + `<path d="${side(1, [nw + 0.4, sY - 4.4], [[[nw + 7.4, hy + 3]], [[nw + 3.6, sY - 7.8]]], true)} ${side(-1, [nw + 0.4, sY - 4.4], [[[nw + 7.4, hy + 3]], [[nw + 3.6, sY - 7.8]]], true)}" fill="#8a1620"/></g>` : '';
+  const towel = (m) => side(m, [nw + 4.6, sY - 3.6], [[[nw + 5.4, sY + 4], [nw + 5, sY + 14], [nw + 4.6, sY + 24]], [[nw - 1.4, sY + 24.4]], [[nw - 1, sY + 14], [nw - 1.6, sY + 2], [nw - 0.6, sY - 4.8]], [[nw + 2, sY - 6.6], [nw + 4.6, sY - 3.6]]], true);
+  // un gant de boxe pendu par son lacet : poignet foncé (il se voit sur un corps clair), poing rond, pouce
+  const glove = (m) => `<path d="M${pt([3.4, sY + 11.4], m)} C${pt([1.2, sY + 15], m)} ${pt([1.4, sY + 22], m)} ${pt([5.6, sY + 24.6], m)} C${pt([9.6, sY + 26.2], m)} ${pt([12.8, sY + 22], m)} ${pt([12.2, sY + 16.2], m)} C${pt([12, sY + 13.4], m)} ${pt([11.2, sY + 11.8], m)} ${pt([10.4, sY + 11.4], m)}Z" fill="#d6352e" stroke="#8a1a16" stroke-width="0.5"/>`
+    + `<path d="M${pt([3.6, sY + 13.6], m)} C${pt([2.2, sY + 15.6], m)} ${pt([2.4, sY + 19.8], m)} ${pt([4.4, sY + 20.6], m)} C${pt([5.6, sY + 19.4], m)} ${pt([5.4, sY + 15.2], m)} ${pt([3.6, sY + 13.6], m)}Z" fill="#b02a24" stroke="#8a1a16" stroke-width="0.4"/>`
+    + `<ellipse cx="${round(CX + m * 9)}" cy="${round(sY + 16.4)}" rx="1.4" ry="2.8" fill="#fff" opacity="0.3"/>`
+    + `<path d="M${pt([3.2, sY + 8.2], m)} L${pt([10.8, sY + 8.2], m)} L${pt([10.6, sY + 11.8], m)} L${pt([3.4, sY + 11.8], m)}Z" fill="#1d2333"/><path d="M${pt([3.3, sY + 10], m)} L${pt([10.7, sY + 10], m)}" stroke="#f4eee7" stroke-width="0.6"/>`;
+  const lens = (m) => `M${pt([1.3, hy - 2.6], m)} L${pt([7.6, hy - 2.8], m)} Q${pt([8.2, hy - 0.4], m)} ${pt([7, hy + 1.2], m)} L${pt([2.6, hy + 1.4], m)} Q${pt([1, hy + 0.6], m)} ${pt([1.3, hy - 2.6], m)}Z`;
+  const [y0, y1] = [sY + 43.4, sY + 50.2]; // la ceinture
+  const [c0, c1] = [hy - 14.6, hy - 18.2]; // la couronne
+  const front = [
+    has('serviette') ? `<g class="av-gear av-serviette"><path d="${towel(1)} ${towel(-1)}" fill="#2f7ad6" stroke="#1d4f94" stroke-width="0.5"/><path d="${[1, -1].map((m) => `M${pt([nw - 1.2, sY + 19], m)} L${pt([nw + 4.9, sY + 19], m)} M${pt([nw - 1.2, sY + 21.2], m)} L${pt([nw + 4.9, sY + 21.2], m)}`).join(' ')}" stroke="#f4f8fc" stroke-width="0.8"/></g>` : '',
+    has('gants') ? `<g class="av-gear av-gants"><path d="${both([nw - 0.8, sY - 5.4], [[[nw - 1.4, sY + 1], [6.8, sY + 5], [6.8, sY + 8.4]]])}" fill="none" stroke="#2a2030" stroke-width="0.7"/>${glove(1)}${glove(-1)}</g>` : '',
+    has('medaille') ? `<g class="av-gear av-medaille"><path d="M${pt([-(nw + 1.4), sY - 5])} L${pt([-(nw - 1.2), sY - 5.4])} L${pt([1.3, sY + 12.4])} L${pt([-1.3, sY + 12.4])}Z" fill="#2a5cc8"/><path d="M${pt([nw + 1.4, sY - 5])} L${pt([nw - 1.2, sY - 5.4])} L${pt([-1.3, sY + 12.4])} L${pt([1.3, sY + 12.4])}Z" fill="#d6352e"/>`
+      + `<circle cx="${CX}" cy="${round(sY + 16.4)}" r="4.8" fill="${gold}" stroke="#a8721c" stroke-width="0.6"/><circle cx="${CX}" cy="${round(sY + 16.4)}" r="3.3" fill="none" stroke="#a8721c" stroke-width="0.5"/><path d="M${pt([0, sY + 14])} l0.7 1.6h1.7l-1.4 1l0.6 1.7l-1.6 -1l-1.6 1l0.6 -1.7l-1.4 -1h1.7z" fill="#fff3c4"/></g>` : '',
+    has('ceinture') ? `<g class="av-gear av-ceinture"><path d="M${pt([-(W + 1.2), y0])} Q${pt([0, y0 + 1.6])} ${pt([W + 1.2, y0])} L${pt([W + 1.4, y1])} Q${pt([0, y1 + 1.6])} ${pt([-(W + 1.4), y1])}Z" fill="#17171c"/>`
+      + [W - 1.8, W - 4.4].flatMap((x) => [x, -x]).map((x) => `<circle cx="${round(CX + x)}" cy="${round((y0 + y1) / 2 + 0.7)}" r="0.75" fill="${gold}"/>`).join('')
+      + `<rect x="${CX - 6.4}" y="${round(sY + 41.2)}" width="12.8" height="11.2" rx="2.8" fill="${gold}" stroke="#a8721c" stroke-width="0.6"/><ellipse cx="${CX}" cy="${round(sY + 46.8)}" rx="2.6" ry="3" fill="#d6352e" stroke="#7a1018" stroke-width="0.5"/><ellipse cx="${CX - 0.8}" cy="${round(sY + 45.6)}" rx="0.7" ry="1" fill="#fff" opacity="0.6"/></g>` : '',
+    has('cape') ? `<g class="av-gear av-agrafe"><path d="M${pt([-(nw + 2.2), sY - 3.6])} Q${pt([0, sY - 1.2])} ${pt([nw + 2.2, sY - 3.6])}" fill="none" stroke="#c8891e" stroke-width="0.5"/><circle cx="${round(CX - nw - 2.2)}" cy="${round(sY - 3.6)}" r="1.4" fill="${gold}"/><circle cx="${round(CX + nw + 2.2)}" cy="${round(sY - 3.6)}" r="1.4" fill="${gold}"/></g>` : '',
+    has('lunettes') ? `<g class="av-gear av-lunettes"><path d="${lens(1)} ${lens(-1)}" fill="url(#${id}-lens)" stroke="#0b0d12" stroke-width="0.7"/><path d="M${pt([-1.3, hy - 2])} Q${pt([0, hy - 3])} ${pt([1.3, hy - 2])} M${pt([7.6, hy - 2.4])} L${pt([8.8, hy - 2])} M${pt([-7.6, hy - 2.4])} L${pt([-8.8, hy - 2])}" fill="none" stroke="#0b0d12" stroke-width="0.8"/>`
+      + `<path d="M${pt([3, hy - 1.6])} L${pt([4.8, hy + 0.2])} M${pt([-5.6, hy - 1.6])} L${pt([-3.8, hy + 0.2])}" stroke="#fff" stroke-width="0.6" opacity="0.45"/></g>` : '',
+    has('bandeau') ? `<g class="av-gear av-bandeau"><path d="M${pt([-9.2, hy - 7.4])} Q${pt([0, hy - 9.4])} ${pt([9.2, hy - 7.4])} L${pt([9.3, hy - 4.4])} Q${pt([0, hy - 6.2])} ${pt([-9.3, hy - 4.4])}Z`
+      + ` M${pt([8.8, hy - 6.6])} C${pt([12, hy - 6.2])} ${pt([13.4, hy - 3])} ${pt([14.6, hy + 1.4])} L${pt([12.8, hy + 1.8])} C${pt([12, hy - 1.6])} ${pt([10.8, hy - 4])} ${pt([8.8, hy - 5.2])}Z`
+      + ` M${pt([8.8, hy - 6])} C${pt([10.6, hy - 4.6])} ${pt([11, hy - 1])} ${pt([10.4, hy + 3.2])} L${pt([8.8, hy + 2.8])} C${pt([9.4, hy - 0.4])} ${pt([9.2, hy - 3.2])} ${pt([8.8, hy - 4.8])}Z" fill="#e0453a"/>`
+      + `<path d="M${pt([-9.2, hy - 5.9])} Q${pt([0, hy - 7.8])} ${pt([9.2, hy - 5.9])}" fill="none" stroke="#fff" stroke-width="0.55" opacity="0.85"/></g>` : '',
+    has('couronne') ? `<g class="av-gear av-couronne"><path d="M${pt([-8.2, c0])} L${pt([-8.8, c1 - 5])} L${pt([-5, c1 - 0.6])} L${pt([-2.6, c1 - 6.4])} L${pt([0, c1 - 1])} L${pt([2.6, c1 - 6.4])} L${pt([5, c1 - 0.6])} L${pt([8.8, c1 - 5])} L${pt([8.2, c0])} Q${pt([0, c0 + 1.6])} ${pt([-8.2, c0])}Z" fill="${gold}" stroke="#a8721c" stroke-width="0.6"/>`
+      + [[-8.8, c1 - 5.6], [-2.6, c1 - 7], [2.6, c1 - 7], [8.8, c1 - 5.6]].map((q) => `<circle cx="${round(CX + q[0])}" cy="${round(q[1])}" r="0.9" fill="#fff0a8"/>`).join('')
+      + [[-4.6, '#d6352e'], [0, '#3a6fd6'], [4.6, '#2f9a5e']].map(([x, c]) => `<circle cx="${round(CX + x)}" cy="${round(c0 - 1.6)}" r="1" fill="${c}"/>`).join('') + '</g>' : '',
+  ].join('');
+  return { defs, back, front };
+}
+
+// Petite icône d'un accessoire (24 × 24), pour la garde-robe.
+const GEAR_ICONS = {
+  bandeau: '<path d="M3 10q9 -4 18 0v3q-9 -4 -18 0z" fill="#e0453a"/><path d="M19 11.5l3 4l-1.6 0.8l-2.2 -3.6zM18.6 12l1 5l-1.7 0.2l-0.6 -4.6z" fill="#c8322a"/><path d="M3 11.5q9 -4 18 0" stroke="#fff" stroke-width="0.7" fill="none" opacity="0.85"/>',
+  serviette: '<path d="M3 5.5h18" stroke="#a8a39b" stroke-width="1.6" stroke-linecap="round"/><path d="M6 5.5h12v12.5q0 2 -2 2h-8q-2 0 -2 -2z" fill="#2f7ad6" stroke="#1d4f94" stroke-width="0.6"/><path d="M6 14.5h12M6 16.6h12" stroke="#f4f8fc" stroke-width="1"/>',
+  lunettes: '<path d="M2.5 9h8l-0.6 4.6q-0.4 1.6 -2 1.6h-3.2q-1.6 0 -2 -1.6zM13.5 9h8l-0.6 4.6q-0.4 1.6 -2 1.6h-3.2q-1.6 0 -2 -1.6z" fill="#14161f" stroke="#9aa0b4" stroke-width="0.7"/><path d="M10.5 10q1.5 -1 3 0" stroke="#14161f" stroke-width="1.2" fill="none"/><path d="M4.5 10.5l2 2.6M15.5 10.5l2 2.6" stroke="#fff" stroke-width="0.8" opacity="0.5"/>',
+  gants: '<path d="M8 3h8v3.5h-8z" fill="#1d2333"/><path d="M8 4.8h8" stroke="#f4eee7" stroke-width="0.7"/><path d="M8 6.5q-3 6 0.5 12q3.5 3 7 0q3 -6 0.5 -12z" fill="#d6352e"/><ellipse cx="7.6" cy="11" rx="1.8" ry="3" fill="#b02a24"/><ellipse cx="14" cy="11" rx="1.2" ry="2.4" fill="#fff" opacity="0.35"/>',
+  medaille: '<path d="M6 2l4 9h4l4 -9h-3.5l-2.5 6l-2.5 -6z" fill="#2a5cc8"/><path d="M12 8l2.5 -6h3.5l-4 9z" fill="#d6352e"/><circle cx="12" cy="15.5" r="5.5" fill="#f2c14a" stroke="#a8721c" stroke-width="0.8"/><path d="M12 12.5l0.9 2h2.2l-1.8 1.3l0.7 2.1l-2 -1.3l-2 1.3l0.7 -2.1l-1.8 -1.3h2.2z" fill="#fff3c4"/>',
+  ceinture: '<path d="M1 9.5h22v5h-22z" fill="#17171c" stroke="#8a8578" stroke-width="0.6"/><rect x="7" y="7" width="10" height="10" rx="2.4" fill="#f2c14a" stroke="#a8721c" stroke-width="0.8"/><ellipse cx="12" cy="12" rx="2.2" ry="2.6" fill="#d6352e"/><circle cx="3.5" cy="12" r="0.8" fill="#f2c14a"/><circle cx="20.5" cy="12" r="0.8" fill="#f2c14a"/>',
+  cape: '<path d="M9 3h6l5 18h-16z" fill="#c62a32"/><path d="M9 3l-3 -1l1.5 4zM15 3l3 -1l-1.5 4z" fill="#8a1620"/><circle cx="9.5" cy="4" r="1" fill="#f2c14a"/><circle cx="14.5" cy="4" r="1" fill="#f2c14a"/>',
+  couronne: '<path d="M4 18l-1 -10l5 4l4 -7l4 7l5 -4l-1 10z" fill="#f2c14a" stroke="#a8721c" stroke-width="0.8"/><circle cx="12" cy="15" r="1.4" fill="#3a6fd6"/><circle cx="7.5" cy="15.5" r="1.1" fill="#d6352e"/><circle cx="16.5" cy="15.5" r="1.1" fill="#2f9a5e"/>',
+};
+export const gearIcon = (gid) => `<svg class="gear-ico" viewBox="0 0 24 24" aria-hidden="true">${GEAR_ICONS[gid] ?? ''}</svg>`;

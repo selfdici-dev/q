@@ -405,7 +405,7 @@
 }
 
 /* Ton double : anneau cuivre sur son disque de nuit */
-.avatar-btn, .avatar-big { --accent: #dc9a70; --accent-2: #e9b897; --bg: #120f0d; }
+.avatar-btn, .avatar-big, .hub-avatar { --accent: #dc9a70; --accent-2: #e9b897; --bg: #120f0d; }
 .av-ground { fill: rgb(220 154 112 / 0.25); }
 
 /* Salle : la séance du jour s'éclaire en cuivre (sa lettre garde la couleur de la séance) */

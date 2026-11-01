@@ -15,7 +15,8 @@ L'utilisateur est débutant : explique simplement, en français.
   (`state.settings.trophiesSeen`) restent gagnés.
 - `js/figures.js` : moteur des bonshommes animés (poses en angles → SVG animé) ;
   `js/poses.js` : une pose par exercice (vue de profil, tête à droite, sol à y = 70).
-- `js/avatar.js` : « ton double », personnage qui évolue avec le niveau (calculé, jamais stocké).
+- `js/avatar.js` : « ton double », personnage qui évolue avec le niveau (calculé, jamais stocké) ;
+  `js/outfit.js` : ses accessoires gagnés avec les trophées (portés : `state.settings.outfit`).
 - `js/tree.js` : arbre du focus qui pousse pendant la session (unique par session, calculé).
 - `js/room.js` : décor de la salle vue de face (lecteur de séance, entrée) ; `js/gym.js` :
   la salle de l'onglet Salle, en maquette vue de dessus façon jeu vidéo (une plateforme

@@ -27,7 +27,8 @@ import { ROUTINES, routineStatus, toggleRoutine, morningTime, wakeAt8 } from './
 import { trophyStats, trophyStatus, newTrophies } from './trophies.js';
 import { dayPhase, nightHint } from './daylight.js';
 import { SEASONS, seasonStatus, newSeason, dateFr } from './seasons.js';
-import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS } from './avatar.js';
+import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS, gearIcon } from './avatar.js';
+import { SLOTS, gearStats, gearStatus, wornGear, wearGear, newGear } from './outfit.js';
 import { treeSVG, seedOf } from './tree.js';
 
 const STORE = 'cap-v1';
@@ -57,6 +58,8 @@ function freshState() {
       decor: 'salle', // décor de la Salle (decors.js), parmi ceux débloqués
       decorsSeen: ['salle'], // décors débloqués déjà annoncés
       trophiesSeen: [], // trophées gagnés déjà annoncés (ils restent gagnés)
+      outfit: [], // accessoires que porte ton double (outfit.js)
+      gearSeen: [], // accessoires débloqués déjà annoncés
     },
     habits: structuredClone(DEFAULT_HABITS),
     rules: [...DEFAULT_RULES],
@@ -245,17 +248,42 @@ function showHelp(tab) {
   if (h) openSheet(h.title, `<ol class="help-list">${h.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ol>`);
 }
 
-// Fiche « Ton double » : palier, ce qui le fait évoluer, prochain gain.
+// Ses accessoires : débloqués par tes trophées (outfit.js), portés d'une touche.
+function gearNow() {
+  const stats = gearStats(trophyStatus(trophyStats(state, todayKey()), state.settings.trophiesSeen));
+  return { stats, list: gearStatus(stats), worn: wornGear(state.settings.outfit, stats) };
+}
+const myGear = () => gearNow().worn;
+
+// La garde-robe : un bouton par accessoire (porté, à mettre, ou ce qu'il reste à faire).
+function wardrobe() {
+  const { list, worn } = gearNow();
+  return `<div class="gear-grid">${list.map((g) => {
+    const on = worn.includes(g.id);
+    return `<button class="gear-card${g.unlocked ? '' : ' locked'}${on ? ' on' : ''}" data-act="gear" data-id="${g.id}"${g.unlocked ? '' : ' disabled'} aria-pressed="${on}">
+      ${gearIcon(g.id)}<span class="gear-name">${g.unlocked ? '' : icon('lock')}${esc(g.name)}</span>
+      <small>${esc(on ? 'Porté' : g.unlocked ? `Pour ${SLOTS[g.slot]}` : g.label)}</small>
+      ${g.unlocked ? '' : `<span class="decor-bar" aria-hidden="true"><i style="width:${Math.round(g.pct * 100)}%"></i></span>`}
+    </button>`;
+  }).join('')}</div>`;
+}
+
+// Fiche « Ton double » : palier, ce qui le fait évoluer, prochain gain, sa garde-robe.
 function showAvatar() {
   const lv = levelInfo(totalXP(state));
   const ch = chain(state, todayKey()).count;
   const av = avatarParams(lv.level, ch);
+  const { list } = gearNow();
   openSheet('Ton double', `<div class="avatar-sheet">
-      <div class="avatar-big">${avatarSVG(av, { animate: !reduceMotion() })}</div>
+      <div class="avatar-big">${avatarSVG(av, { animate: !reduceMotion(), gear: myGear() })}</div>
       <div><p class="eyebrow">Palier ${av.stage + 1}/${STAGES}</p><p class="avatar-rank">${esc(av.rank)}</p>
         <p class="hint">Niveau ${lv.level} · ${lv.into}/${lv.span} XP · aura ${av.charge} %</p></div>
     </div>
     <p>${av.nextLevel ? `Au niveau ${av.nextLevel} : <strong>${esc(av.nextGain)}</strong>` : '<strong>Dernier palier atteint.</strong> Garde la chaîne pour garder l’aura.'}</p>
+    <h3 class="tr-group">Habille-le</h3>
+    <p class="hint">${list.filter((g) => g.unlocked).length} sur ${list.length} accessoires débloqués, avec tes trophées. Touche-en un pour le mettre ou l’enlever ; un seul par place.</p>
+    ${wardrobe()}
+    <h3 class="tr-group">Ses paliers</h3>
     <ol class="avatar-steps">${STAGE_GAINS.map((g, i) => `<li class="${i <= av.stage ? 'done' : ''}">${esc(g)}</li>`).join('')}</ol>
     <p class="hint">Il évolue avec ton niveau : chaque minimum, séance, session de focus, leçon ou livre lui fait gagner de l’XP. Son aura suit ta chaîne (pleine à 3 semaines). Ce n’est pas une prédiction de ton corps : c’est le reflet de ta régularité.</p>`);
 }
@@ -503,7 +531,8 @@ function render() {
 // messages (fin de séance, niveau, entrée dans la salle) pour ne pas les cacher.
 const somethingToAnnounce = () => newDecors(state.settings.decorsSeen, decorStats(state)).length > 0
   || Boolean(newSeason(state.settings.decorsSeen, todayKey()))
-  || newTrophies(state.settings.trophiesSeen, trophyStats(state, todayKey())).length > 0;
+  || newTrophies(state.settings.trophiesSeen, trophyStats(state, todayKey())).length > 0
+  || newGear(state.settings.gearSeen, gearNow().stats).length > 0;
 let unlockTimer = null;
 function announceUnlocks() {
   if (unlockTimer) return;
@@ -524,13 +553,18 @@ function announceUnlocks() {
       state.settings.decorsSeen = [...seen, season.tag];
       save();
       celebrate(`Décor de saison\u00a0: ${season.name}, jusqu’au ${dateFr(season.to)}. Touche « Décor »`);
-    } else {
+    } else if (newTrophies(state.settings.trophiesSeen, trophyStats(state, todayKey())).length) {
       const won = newTrophies(state.settings.trophiesSeen, trophyStats(state, todayKey()));
-      if (!won.length) return;
       const known = Array.isArray(state.settings.trophiesSeen) ? state.settings.trophiesSeen : [];
       state.settings.trophiesSeen = [...known, ...won.map((t) => t.id)];
       save();
       celebrate(won.length > 1 ? `${won.length} trophées gagnés\u00a0: touche le trophée dans la Salle` : `Trophée gagné\u00a0: ${won[0].name}`);
+    } else {
+      const got = newGear(state.settings.gearSeen, gearNow().stats);
+      if (!got.length) return;
+      state.settings.gearSeen = [...(Array.isArray(state.settings.gearSeen) ? state.settings.gearSeen : []), ...got.map((g) => g.id)];
+      save();
+      celebrate(got.length > 1 ? `${got.length} accessoires pour ton double\u00a0: touche-le dans la Salle` : `Nouvel accessoire pour ton double\u00a0: ${got[0].name}`);
     }
     // il reste peut-être de quoi fêter : au prochain tour, après ce message
     if (somethingToAnnounce()) announceUnlocks();
@@ -593,7 +627,7 @@ function viewToday() {
       <div class="ring-wrap ${st.valid ? 'done' : ''} ${increased(seen, 'valid', st.valid ? 1 : 0) ? 'just' : ''}">${ring(st.done, st.total)}</div>
     </div>
     <div class="hero-main">
-      <button class="avatar-btn ${increased(seen, 'stage', avatarParams(lv.level).stage) ? 'just' : ''}" data-act="avatar" aria-label="Ton double : ${esc(lv.rank)}, voir comment il évolue">${avatarSVG(avatarParams(lv.level, ch.count), { animate: !reduceMotion() })}</button>
+      <button class="avatar-btn ${increased(seen, 'stage', avatarParams(lv.level).stage) ? 'just' : ''}" data-act="avatar" aria-label="Ton double : ${esc(lv.rank)}, voir comment il évolue">${avatarSVG(avatarParams(lv.level, ch.count), { animate: !reduceMotion(), gear: myGear() })}</button>
       <div class="hero-side">
         <div class="hero-stat"><span class="big ${increased(seen, 'chain', ch.count) ? 'bump' : ''}">${icon('flame')}${ch.count}</span><span class="lbl">jour${ch.count > 1 ? 's' : ''} de chaîne${ch.jokers ? ` · ${ch.jokers} reprise${ch.jokers > 1 ? 's' : ''}` : ''}</span></div>
         <div class="hero-stat"><span class="mid">${icon('flag')}Sprint ${sp.current.number}<small>/${SPRINT_COUNT}</small></span><span class="lbl">jour ${sprintDay}/7 · ${sp.current.valid} validé${sp.current.valid > 1 ? 's' : ''}</span></div>
@@ -1045,6 +1079,7 @@ function gymHub(planned, done, lvl) {
   // XP) et l'aide ; en bas, la séance choisie et son bouton, comme dans un jeu.
   return `<section class="gym-hero hub immersive wo-${w.id}">
     <div class="hub-stage">${hubSVG({ pick, animate: !reduceMotion(), decor: decorToShow(state.settings.decor, decorStats(state), today, state.settings.decorBack), phase: shownPhase })}${hits}
+      <button class="hub-avatar" data-act="avatar" aria-label="Ton double : ${esc(lv.rank)}. Le voir et l’habiller">${avatarSVG(avatarParams(lv.level, chain(state, today).count), { animate: false, gear: myGear(), crop: true })}</button>
       <div class="hub-hud" aria-label="Niveau ${lv.level}, ${lv.into} sur ${lv.span} XP"><b>Niv. ${lv.level}</b><span class="hud-rank">${esc(lv.rank)}</span><span class="hud-bar">${tweenBar('gym-xp', (lv.into / lv.span) * 100)}</span><span class="hud-xp">${lv.into}/${lv.span} XP</span></div>
       <div class="hub-tools">
         <button class="hub-decor-btn hub-trophy-btn" data-act="trophies" aria-label="Tes trophées : ${trophyCount()}">${icon('trophy')}${trophyCount().split(' ')[0]}</button>
@@ -2168,6 +2203,17 @@ const actions = {
   },
   avatar() {
     showAvatar();
+  },
+  gear(el) {
+    state.settings.outfit = wearGear(state.settings.outfit, el.dataset.id, gearNow().stats);
+    save();
+    // la fiche reste où elle est : on change le dessin et les boutons sur place
+    const lv = levelInfo(totalXP(state));
+    const big = $('#sheet .avatar-big');
+    if (big) big.innerHTML = avatarSVG(avatarParams(lv.level, chain(state, todayKey()).count), { animate: !reduceMotion(), gear: myGear() });
+    $('#sheet .gear-grid')?.replaceWith(Object.assign(document.createElement('div'), { innerHTML: wardrobe() }).firstElementChild);
+    $(`#sheet .gear-card[data-id="${el.dataset.id}"]`)?.focus({ preventScroll: true });
+    render();
   },
   help(el) {
     showHelp(el.dataset.id);

@@ -257,7 +257,7 @@ summary { cursor: pointer; color: var(--text-2); font-size: 0.9rem; }
 
 #tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  display: grid; grid-template-columns: repeat(3, 1fr);
   background: var(--surface); border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -356,7 +356,7 @@ body { font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Seg
 .btn.primary { box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 35%, transparent); }
 .btn.wide { width: 100%; margin-top: 6px; }
 
-#tabs { grid-template-columns: repeat(4, 1fr); backdrop-filter: blur(12px); background: color-mix(in srgb, var(--surface) 88%, transparent); }
+#tabs { grid-template-columns: repeat(3, 1fr); backdrop-filter: blur(12px); background: color-mix(in srgb, var(--surface) 88%, transparent); }
 #tabs a { font-size: 0.7rem; padding: 7px 0 9px; }
 #tabs .tab-ico { font-size: 1.3rem; filter: grayscale(1); opacity: 0.6; transition: transform 0.2s, filter 0.2s, opacity 0.2s; }
 #tabs a[aria-current="page"] .tab-ico { filter: none; opacity: 1; transform: translateY(-2px) scale(1.12); }
@@ -700,6 +700,16 @@ details.card.more .rules { margin-top: 10px; }
   transform: rotate(45deg); transition: transform 0.3s cubic-bezier(.2,.8,.2,1), margin 0.3s;
 }
 .fold[open] > summary .chev, .wo-fold[open] > summary .chev { transform: rotate(225deg); margin-top: 4px; }
+/* « Ma journée », sous la salle : une ligne comme un titre de section, qui ouvre la page */
+.day-link {
+  display: grid; grid-template-columns: 36px 1fr auto 16px; align-items: center; gap: 10px;
+  min-height: 58px; padding: 10px 12px; color: var(--text); text-decoration: none;
+  -webkit-tap-highlight-color: transparent; transition: background 0.2s;
+}
+.day-link:active { background: var(--surface-2); }
+.day-link .chev { transform: rotate(-45deg); margin-top: 0; }
+.day-link small .ico { width: 1.05em; height: 1.05em; margin-right: 1px; }
+.back-row { margin-top: 0; }
 .fold-body { padding: 2px 14px 14px; }
 .fold-body > .habits { margin-top: 0; }
 .fold-body .quote { border: 0; background: var(--surface-2); }

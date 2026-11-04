@@ -10,25 +10,25 @@ import { SEASONS, seasonYear } from './seasons.js';
 
 // Du plus facile au plus dur.
 export const DECORS = [
-  { id: 'salle', name: 'La salle', desc: 'Mur sombre, grille et logo de cuivre, bandes LED.', need: null },
+  { id: 'salle', name: 'La salle', desc: 'Mur sombre, logo de cuivre, spots et suspensions, kettlebells, bandes LED.', need: null },
   { id: 'grec', name: 'Temple grec', desc: 'Marbre et colonnes au-dessus des nuages, au coucher du soleil.', need: { kind: 'workouts', n: 15 } },
   { id: 'ring', name: 'Ring de boxe', desc: 'Projecteurs qui balaient la salle, cordes, la foule et ses flashs.', need: { kind: 'boxe', n: 12 } },
   { id: 'foret', name: 'Forêt au crépuscule', desc: 'Un ponton de bois sous les arbres, des lucioles, une guirlande.', need: { kind: 'routines', n: 20 } },
-  { id: 'desert', name: 'Désert la nuit', desc: 'Dunes, pyramides, une caravane sous les étoiles et la lune.', need: { kind: 'soirs', n: 20 } },
+  { id: 'desert', name: 'Désert la nuit', desc: 'Pyramides au clair de lune, voie lactée, une oasis et un feu de camp.', need: { kind: 'soirs', n: 20 } },
   { id: 'dojo', name: 'Dojo', desc: 'Bois, papier de riz, tatamis, lanternes et pétales de cerisier.', need: { kind: 'blocs', n: 3000 } },
   { id: 'toit', name: 'Toit de la ville', desc: 'En haut d’une tour, la nuit, au milieu des gratte-ciel.', need: { kind: 'calc', n: 30 } },
   { id: 'jungle', name: 'Temple de la jungle', desc: 'Pierres moussues, cascade, lianes et papillons.', need: { kind: 'serpent', n: 40 } },
   { id: 'ocean', name: 'Fond marin', desc: 'Des vitres sur la mer, des poissons, des bulles et un trésor.', need: { kind: 'sudoku', n: 10 } },
-  { id: 'volcan', name: 'Volcan', desc: 'Une éruption au loin, des coulées de lave, des braises qui montent.', need: { kind: 'code', n: 15 } },
+  { id: 'volcan', name: 'Volcan', desc: 'Une éruption au loin, une falaise de basalte au-dessus d’un lac de lave.', need: { kind: 'code', n: 15 } },
   { id: 'pixel', name: 'Monde en pixels', desc: 'Un monde de jeu 8 bits : blocs d’herbe, nuages en cases, pièces qui tournent.', need: { kind: 'pixels', n: 8 } },
   { id: 'donjon', name: 'Donjon', desc: 'Pierres et torches, bannières, chaînes, un coffre au trésor qui brille.', need: { kind: 'briques', n: 5 } },
-  { id: 'medieval', name: 'Grand hall', desc: 'Pierre, feu de cheminée, torches, blason noir et or.', need: { kind: 'workouts', n: 40 } },
+  { id: 'medieval', name: 'Grand hall', desc: 'Un château sous la pleine lune : créneaux, tours, douves ; cheminée, torches, blason.', need: { kind: 'workouts', n: 40 } },
   { id: 'neon', name: 'Néon rétro', desc: 'Soleil à rayures, palmiers de néon, sol quadrillé qui défile.', need: { kind: 'gems', n: 8 } },
   { id: 'pirate', name: 'Navire pirate', desc: 'Le pont d’un trois-mâts en pleine mer, voiles et drapeau au vent.', need: { kind: 'paires', n: 8 } },
   { id: 'arcade', name: 'Salle d’arcade', desc: 'Des bornes qui clignotent le long des murs, néons, machine à pince.', need: { kind: 'sprint', n: 1500 } },
   { id: 'labo', name: 'Labo secret', desc: 'Tubes lumineux pleins de bulles, grand écran, voyants, un hologramme.', need: { kind: 'echo', n: 12 } },
   { id: 'echiquier', name: 'Échiquier géant', desc: 'Un sol en échiquier, des pièces géantes, la lune aux fenêtres.', need: { kind: 'cap', n: 5 } },
-  { id: 'station', name: 'Station spatiale', desc: 'Hublots sur les étoiles et une planète bleue.', need: { kind: 'level', n: 12 } },
+  { id: 'station', name: 'Station spatiale', desc: 'En orbite : une planète bleue, sa lune, des nébuleuses, des panneaux solaires.', need: { kind: 'level', n: 12 } },
   { id: 'iles', name: 'Îles célestes', desc: 'Une île qui flotte dans le ciel, des cascades, des nuages en dessous.', need: { kind: 'level', n: 15 } },
   { id: 'arene', name: 'Arène romaine', desc: 'Du sable, des arches, la foule qui t’encourage, des braseros.', need: { kind: 'workouts', n: 60 } },
   { id: 'plage', name: 'Ponton sur la mer', desc: 'Le soleil se couche sur l’eau, les mouettes passent.', need: { kind: 'blocs', n: 6000 } },
@@ -116,6 +116,8 @@ export function newDecors(seen, stats) {
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const stops = (list) => list.map(([o, c, a = 1]) => `<stop offset="${o}" stop-color="${c}"${a < 1 ? ` stop-opacity="${a}"` : ''}/>`).join('');
 const lin = (id, [x1, y1, x2, y2], list) => `<linearGradient id="${id}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">${stops(list)}</linearGradient>`;
+// le même, en coordonnées de l'écran (un ciel qui finit juste au-dessus des murs)
+const ulin = (id, [x1, y1, x2, y2], list) => `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">${stops(list)}</linearGradient>`;
 const rad = (id, list, extra = '') => `<radialGradient id="${id}"${extra}>${stops(list)}</radialGradient>`;
 const wallL = (fill) => poly([P(0, 0), P(0, N), P(0, N, HW), P(0, 0, HW)], fill);
 const wallR = (fill) => poly([P(0, 0), P(N, 0), P(N, 0, HW), P(0, 0, HW)], fill);
@@ -134,6 +136,7 @@ const say = (pick, title, { fill = '#e9a87c', sub = '#f4eee7', size = 6.4, font 
   + `<text x="${x}" y="${r1(size * 1.3)}" text-anchor="${anchor}" font-family="${font}" font-weight="700" font-size="${r1(size * 0.875)}" fill="${sub}">${esc(title.replace(/,.*$/, ''))}…</text>`;
 // hasard fixe (pour des fenêtres, des étoiles…) : toujours le même dessin
 const hash = (k) => { const x = Math.sin(k * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+const K6 = (P(0, 1)[1] - P(0, 0)[1]) / (P(0, 0)[0] - P(0, 1)[0]); // la pente des bords du sol, à l'écran
 const flame = (x, y, s, animate, k = 0) => {
   const f = `<path d="M${r1(x)} ${r1(y)}c${r1(-2.4 * s)} ${r1(-2.2 * s)} ${r1(-1.6 * s)} ${r1(-5.2 * s)} 0 ${r1(-8 * s)}c${r1(1.7 * s)} ${r1(2.6 * s)} ${r1(2.6 * s)} ${r1(5.4 * s)} 0 ${r1(8 * s)}z" fill="#ffb347"/>`
     + `<path d="M${r1(x)} ${r1(y)}c${r1(-1.2 * s)} ${r1(-1.3 * s)} ${r1(-0.8 * s)} ${r1(-3.1 * s)} 0 ${r1(-4.6 * s)}c${r1(0.9 * s)} ${r1(1.5 * s)} ${r1(1.3 * s)} ${r1(3.2 * s)} 0 ${r1(4.6 * s)}z" fill="#fff1b8"/>`;
@@ -178,22 +181,67 @@ function salle({ u, pick, title }) {
     return `<g class="hub-gloves"><path d="M${r1(x - 4)} ${r1(y - 3)}L${r1(x)} ${r1(y - 6)}L${r1(x + 4)} ${r1(y - 3)}" stroke="#8a7a6b" stroke-width="0.5" fill="none"/>${g(-3.2, 8)}${g(3.2, -8)}</g>`;
   })();
   const f = (dx, dy) => P(4 + dx, 4 + dy, 0.01);
+  // des spots au plafond qui éclairent les murs en cône, couleur cuivre
+  const wash = (side, t) => {
+    const q = side === 'L' ? lw : rw;
+    const spot = side === 'L' ? onL(t - 0.16, t + 0.16, HW - 0.12, HW, '#2e2622') : onR(t - 0.16, t + 0.16, HW - 0.12, HW, '#2e2622');
+    return poly([q(t - 0.12, HW - 0.12), q(t + 0.12, HW - 0.12), q(t + 0.75, 0.25), q(t - 0.75, 0.25)], `url(#${u('wash')})`) + spot
+      + `<ellipse cx="${r1(q(t, HW - 0.14)[0])}" cy="${r1(q(t, HW - 0.14)[1])}" rx="2.2" ry="1" fill="#ffe2c4"/>`;
+  };
+  // deux suspensions au bout de leur fil, ampoules chaudes
+  const lamp = (x, y) => `<path d="M${x} 0V${y - 7}" stroke="#3a302a" stroke-width="0.8"/><circle cx="${x}" cy="${y + 3}" r="26" fill="url(#${u('bulb')})"/>`
+    + `<path d="M${x - 8} ${y + 2}L${x - 3} ${y - 7}H${x + 3}L${x + 8} ${y + 2}Z" fill="#c98059"/><path d="M${x} ${y - 7}H${x + 3}L${x + 8} ${y + 2}H${x}Z" fill="#8f5232"/>`
+    + `<ellipse cx="${x}" cy="${y + 2}" rx="8" ry="1.8" fill="#5e3a24"/><circle cx="${x}" cy="${y + 3.4}" r="2.6" fill="#fff1d8"/>`;
+  // le socle de béton sous le plancher, une bande de cuivre allumée tout autour
+  const slab = box(0, 0, -0.5, N, N, 0.5, ['#1d1916', '#15110f', '#1b1714'])
+    + poly([P(0, N, -0.16), P(N, N, -0.16), P(N, N, -0.1), P(0, N, -0.1)], '#e9a87c', ' opacity="0.9"')
+    + poly([P(N, 0, -0.16), P(N, N, -0.16), P(N, N, -0.1), P(N, 0, -0.1)], '#e9a87c', ' opacity="0.9"');
+  const [sx, sy] = P(N, N, -0.5);
+  const under = `<ellipse cx="${r1(sx)}" cy="${r1(sy + 6)}" rx="190" ry="34" fill="url(#${u('pool')})"/>`;
+  // des kettlebells devant, à gauche ; des disques et un médecine-ball à droite
+  const kettle = (X, Y, s, c) => {
+    const [x, y] = P(X, Y, 0);
+    return `<g transform="translate(${r1(x)} ${r1(y)}) scale(${s})"><ellipse rx="5.6" ry="2" fill="#000" opacity="0.35"/><circle cy="-5" r="5" fill="${c}"/><path d="M-3.4 -8.4a3.4 3.4 0 0 1 6.8 0" stroke="${c}" stroke-width="1.8" fill="none"/>`
+      + '<path d="M-3.6 -7.6a5 5 0 0 1 3 -2.2" stroke="#fff" stroke-opacity="0.35" stroke-width="1" fill="none"/></g>';
+  };
+  const plates = (() => {
+    const [x, y] = P(6.55, 3.55, 0);
+    return [0, 1, 2].map((k) => `<ellipse cx="${r1(x)}" cy="${r1(y - k * 2.6)}" rx="${9 - k * 1.6}" ry="${r1((9 - k * 1.6) * 0.6)}" fill="#2a2522" stroke="#8f5232" stroke-width="0.8"/>`).join('')
+      + `<ellipse cx="${r1(x)}" cy="${r1(y - 5.2)}" rx="1.6" ry="1" fill="#0c0a09"/>`;
+  })();
+  const mball = (() => {
+    const [x, y] = P(6.3, 3.05, 0);
+    return `<ellipse cx="${r1(x)}" cy="${r1(y)}" rx="6" ry="2.2" fill="#000" opacity="0.35"/><circle cx="${r1(x)}" cy="${r1(y - 5.4)}" r="5.6" fill="#3a2e28"/><path d="M${r1(x - 5.6)} ${r1(y - 5.4)}h11.2" stroke="#c98059" stroke-width="1"/><path d="M${r1(x - 3.6)} ${r1(y - 8.4)}a5 5 0 0 1 3 -2" stroke="#fff" stroke-opacity="0.3" stroke-width="1" fill="none"/>`;
+  })();
+  // le miroir : deux reflets en biais
+  const [m0x, m0y] = rw(5.1, 2.4), [m1x, m1y] = rw(5.6, 2.4);
+  const glare = `<path d="M${r1(m0x)} ${r1(m0y)}l10 0l-14 34l-10 0z" fill="#fff" opacity="0.06"/><path d="M${r1(m1x + 8)} ${r1(m1y + 2)}l4 0l-14 34l-4 0z" fill="#fff" opacity="0.08"/>`;
   return {
-    bg: '#0c0a09',
-    defs: lin(u('wallL'), [0, 0, 1, 0], [[0, '#120f0d'], [1, '#1c1714']]) + lin(u('wallR'), [0, 0, 1, 0], [[0, '#211b17'], [1, '#16120f']])
-      + lin(u('floor'), [0, 0, 0, 1], [[0, '#1d1917'], [1, '#2a2420']])
+    bg: `url(#${u('room')})`,
+    defs: lin(u('wallL'), [0, 0, 1, 0], [[0, '#14110f'], [1, '#201a16']]) + lin(u('wallR'), [0, 0, 1, 0], [[0, '#251e19'], [1, '#18130f']])
+      + lin(u('floor'), [0, 0, 0, 1], [[0, '#211c19'], [1, '#2e2723']])
       + lin(u('ledL'), [0, 0, 1, 0], [[0, '#f2c3a3', 0.22], [1, '#f2c3a3', 0]]) + lin(u('ledR'), [1, 0, 0, 0], [[0, '#f2c3a3', 0.22], [1, '#f2c3a3', 0]])
-      + lin(u('mirror'), [0, 0, 1, 1], [[0, '#2a2a2e'], [0.5, '#17181b'], [1, '#222326']]),
-    back: `${wallL(`url(#${u('wallL')})`)}${wallR(`url(#${u('wallR')})`)}<path d="${grid.join('')}" stroke="#dc9a70" stroke-opacity="0.18" stroke-width="0.5"/>`
+      + lin(u('mirror'), [0, 0, 1, 1], [[0, '#34343a'], [0.5, '#1a1b1f'], [1, '#2a2b30']])
+      + rad(u('room'), [[0, '#30241c'], [0.55, '#17120f'], [1, '#090807']], ' cx="0.5" cy="0.36" r="0.7"')
+      + lin(u('wash'), [0, 0, 0, 1], [[0, '#ffcfa6', 0.3], [0.6, '#e9a87c', 0.08], [1, '#e9a87c', 0]])
+      + rad(u('bulb'), [[0, '#ffdcb0', 0.55], [0.4, '#ffb980', 0.16], [1, '#ffb980', 0]])
+      + rad(u('pool'), [[0, '#e9a87c', 0.2], [0.6, '#b8714c', 0.06], [1, '#b8714c', 0]])
+      + lin(u('sheen'), [0, 0, 1, 0], [[0, '#fff', 0], [0.5, '#ffe2c4', 0.07], [1, '#fff', 0]]),
+    back: `${under}${slab}${wallL(`url(#${u('wallL')})`)}${wallR(`url(#${u('wallR')})`)}<path d="${grid.join('')}" stroke="#dc9a70" stroke-opacity="0.18" stroke-width="0.5"/>`
+      + wash('L', 1.3) + wash('L', 5.3) + wash('R', 1.25) + wash('R', 4.4)
       + `<g class="hub-logo">${facet(needle[2], needle[3], '#f3c9a8')}${facet(needle[2], needle[1], '#d9956b')}${facet(needle[3], needle[0], '#b8714c')}${facet(needle[1], needle[0], '#8f5232')}</g>`
-      + onR(4.6, 6.7, 0.5, 2.6, `url(#${u('mirror')})`, ' stroke="#4a3a2e" stroke-width="0.8"')
-      + `<g class="hub-screen">${onR(1.9, 4.2, 1.5, 2.75, '#0a0807', ' stroke="#3a2a20" stroke-width="0.8"')}${onRight(2.1, 2.4, say(pick, title))}</g>${gloves}`,
-    floor: `${floorPoly(`url(#${u('floor')})`)}${tiles('#000', 0.4)}<g opacity="0.35">${poly([f(-0.9, -0.9), f(0, 0), f(0.9, -0.9)], '#d9956b')}${poly([f(0.9, -0.9), f(0, 0), f(0.9, 0.9)], '#b8714c')}${poly([f(0.9, 0.9), f(0, 0), f(-0.9, 0.9)], '#8f5232')}${poly([f(-0.9, 0.9), f(0, 0), f(-0.9, -0.9)], '#f3c9a8')}</g>`,
+      + onR(4.6, 6.7, 0.5, 2.6, `url(#${u('mirror')})`, ' stroke="#6a5444" stroke-width="0.9"') + glare
+      + `<g class="hub-screen">${onR(1.9, 4.2, 1.5, 2.75, '#0a0807', ' stroke="#3a2a20" stroke-width="0.8"')}${onRight(2.1, 2.4, say(pick, title))}</g>${gloves}`
+      + `<g class="hub-lamps">${lamp(50, 150)}${lamp(310, 150)}</g>`,
+    floor: `${floorPoly(`url(#${u('floor')})`)}${tiles('#000', 0.4)}${poly([P(1.2, 0), P(2.6, 0), P(2.6, N), P(1.2, N)], `url(#${u('sheen')})`)}${poly([P(4.4, 0), P(5.0, 0), P(5.0, N), P(4.4, N)], `url(#${u('sheen')})`)}`
+      + `<g opacity="0.35">${poly([f(-0.9, -0.9), f(0, 0), f(0.9, -0.9)], '#d9956b')}${poly([f(0.9, -0.9), f(0, 0), f(0.9, 0.9)], '#b8714c')}${poly([f(0.9, 0.9), f(0, 0), f(-0.9, 0.9)], '#8f5232')}${poly([f(-0.9, 0.9), f(0, 0), f(-0.9, -0.9)], '#f3c9a8')}</g>`,
     edge: `<g class="hub-led">${poly([P(0, 0), P(0, N), P(0.9, N), P(0.9, 0)], `url(#${u('ledL')})`)}${poly([P(0, 0), P(N, 0), P(N, 0.9), P(0, 0.9)], `url(#${u('ledR')})`)}`
       + `${poly([P(0, 0, 0.1), P(0, N, 0.1), P(0, N, 0.2), P(0, 0, 0.2)], '#f6d2b6', ' opacity="0.9"')}${poly([P(0, 0, 0.1), P(N, 0, 0.1), P(N, 0, 0.2), P(0, 0, 0.2)], '#f6d2b6', ' opacity="0.9"')}</g>${cap('#5a4a3e')}`,
-    props: `<g class="hub-treadmill">${box(2.85, 0.35, 0, 1.3, 0.75, 0.2, ['#2a2522', '#1a1614', '#221d1a'])}${box(2.87, 0.4, 0.2, 1.22, 0.65, 0.03, ['#111', '#111', '#111'])}${box(2.8, 0.3, 0.2, 0.12, 0.85, 1.3, ['#3a3532', '#2a2522', '#332d2a'])}${box(2.76, 0.35, 1.45, 0.2, 0.75, 0.24, ['#1c1816', '#151210', '#1c1816'])}</g>`,
+    props: `<g class="hub-treadmill">${box(2.85, 0.35, 0, 1.3, 0.75, 0.2, ['#3a332f', '#1f1a17', '#2b2521'])}${box(2.87, 0.4, 0.2, 1.22, 0.65, 0.03, ['#141110', '#141110', '#141110'])}${box(2.8, 0.3, 0.2, 0.12, 0.85, 1.3, ['#4a423d', '#2e2824', '#3a332f'])}${box(2.76, 0.35, 1.45, 0.2, 0.75, 0.24, ['#2a2420', '#1c1816', '#24201c'])}`
+      + `${poly([P(2.97, 0.45, 1.69), P(2.97, 0.95, 1.69), P(2.97, 0.95, 1.6), P(2.97, 0.45, 1.6)], '#e9a87c', ' opacity="0.85"')}</g>`
+      + `<g class="hub-weights">${kettle(3.25, 6.35, 0.85, '#4a423d')}${kettle(3.62, 6.62, 1, '#c98059')}${kettle(3.3, 6.85, 0.75, '#4a423d')}${mball}${plates}</g>`,
     beam: ['#ffe2c4', '#ffd2a8'], dust: '#ffe2c4',
-    plat: ['#2b2523', '#171311', '#1f1a18'], vig: 0.55,
+    plat: ['#2b2523', '#171311', '#1f1a18'], vig: 0.5,
   };
 }
 
@@ -281,22 +329,65 @@ function medieval({ u, pick, title, animate }) {
     .map(([dx, dy, mx, my, d, b]) => [fx + dx, fz + dy, mx, my, d, b]), '<circle r="0.9" fill="#ffb347"/>', animate);
   const flagstones = [];
   for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) if (hash(i * 7 + j) > 0.55) flagstones.push(flat(i, j, 0, 1, 1, '#3d342d'));
+  // dehors, la nuit : la pleine lune entre les nuages, les tours du château
+  // (fenêtres allumées, toits pointus, fanions au vent), des créneaux en haut
+  // des murs ; dessous, les fondations de pierre dans les douves
+  const moon = `<circle cx="140" cy="38" r="46" fill="url(#${u('moonglow')})"/><circle cx="140" cy="38" r="15" fill="#f3ead2"/>`
+    + '<circle cx="135" cy="34" r="3.2" fill="#ddd2b6"/><circle cx="145" cy="43" r="2.2" fill="#ddd2b6"/><circle cx="144" cy="31" r="1.4" fill="#ddd2b6"/>';
+  const nightClouds = [[96, 50, 0.7, 46], [196, 30, 0.6, 52], [300, 62, 0.75, 40]].map(([x, y, sc, d], k) => drift(cloud(x, y, sc, '#2c3554', '#1b2240'), k % 2 ? -18 : 18, d, animate)).join('');
+  const win = (x, y, k) => `${glow(x, y, 9, u('tglow'), animate, k)}<path d="M${r1(x - 1.6)} ${r1(y + 4)}v-5.4a1.6 1.6 0 0 1 3.2 0v5.4z" fill="#ffcf6e"/>`;
+  const flag = (x, y, k) => `<path d="M${x} ${y}v-14" stroke="#14110f" stroke-width="1"/>` + sway(`<path d="M${x} ${y - 14}l12 3l-12 3z" fill="#d4a63c"/>`, x, y - 11, 7, 2.4 + k * 0.5, animate);
+  const tower = (x, top, w, roof, k, far = false) => {
+    const body = `<rect x="${r1(x - w / 2)}" y="${top}" width="${w}" height="${200 - top}" fill="url(#${u(far ? 'towerFar' : 'tower')})"/>`;
+    const courses = far ? '' : `<path d="${Array.from({ length: 8 }, (_, i) => `M${r1(x - w / 2)} ${top + 9 + i * 9}h${w}`).join('')}" stroke="#0e1018" stroke-opacity="0.45" stroke-width="0.6"/>`;
+    if (roof) {
+      return `${body}${courses}<path d="M${r1(x - w / 2 - 3)} ${top}L${x} ${top - roof}L${r1(x + w / 2 + 3)} ${top}Z" fill="${far ? '#171b2c' : '#262c44'}"/>`
+        + (far ? '' : `<path d="M${r1(x - w / 2 - 3)} ${top}L${x} ${top - roof}L${r1(x - 2)} ${top}Z" fill="#363e5e"/>`) + flag(x, top - roof, k);
+    }
+    const merl = Array.from({ length: Math.floor(w / 8) + 1 }, (_, i) => `<rect x="${r1(x - w / 2 + i * 8)}" y="${top - 6}" width="4.6" height="6" fill="${far ? '#171b2c' : '#2e3449'}"/>`).join('');
+    return `${body}${courses}${merl}${flag(x + w / 2 - 4, top - 6, k)}`;
+  };
+  const castle = tower(262, 80, 22, 22, 2, true) + tower(96, 102, 16, 16, 3, true)
+    + tower(26, 96, 36, 34, 0) + win(18, 120, 0) + win(34, 140, 1)
+    + tower(330, 104, 34, 0, 1) + win(324, 126, 2) + win(338, 150, 3);
+  // les créneaux en haut des deux murs
+  const merlons = [];
+  for (let t = 0.1; t < N; t += 0.78) {
+    merlons.push(box(-0.22, t, HW, 0.22, 0.4, 0.34, ['#5a4f45', '#3a322b', '#4a4038']));
+    merlons.push(box(t, -0.22, HW, 0.4, 0.22, 0.34, ['#5a4f45', '#463c34', '#2f2823']));
+  }
+  // les fondations, et les douves où brille la lune
+  const blocks = [];
+  for (let z = -0.3, k = 0; z > -0.95; z -= 0.3, k++) {
+    blocks.push(`M${pts([P(0, N, z), P(N, N, z), P(N, 0, z)])}`);
+    for (let t = (k % 2) * 0.45; t < N; t += 0.9) blocks.push(`M${pts([P(t, N, z), P(t, N, z + 0.3)])}M${pts([P(N, t, z), P(N, t, z + 0.3)])}`);
+  }
+  const base = box(0, 0, -0.9, N, N, 0.9, ['#4a4038', '#2e2722', '#3a322b']) + `<path d="${blocks.join('')}" stroke="#14100d" stroke-opacity="0.75" stroke-width="0.7" fill="none"/>`;
+  const shoreL = P(0, N, -0.9), shoreB = P(N, N, -0.9), shoreR = P(N, 0, -0.9);
+  const lap = `<path d="M${pts([[shoreL[0], shoreL[1] - 1], [shoreB[0], shoreB[1] - 1], [shoreR[0], shoreR[1] - 1]])}" stroke="#9fb3d9" stroke-opacity="0.35" stroke-width="1.2" fill="none"/>`;
+  const glints = Array.from({ length: 7 }, (_, k) => `<rect x="${r1(132 - k * 1.2 + hash(k + 40) * 8)}" y="${374 + k * 9}" width="${r1(6 + hash(k + 41) * 10)}" height="1" fill="#f3ead2" opacity="0.6">${pulse('0.7;0.15;0.7', r1(1.8 + k * 0.3), animate)}</rect>`).join('');
+  const ripples = [[30, 330], [60, 360], [24, 404], [252, 400], [300, 368], [330, 420], [210, 436], [90, 432]].map(([x, y]) => `<path d="M${x} ${y}q6 -2 12 0" stroke="#5a6f99" stroke-opacity="0.45" stroke-width="0.8" fill="none"/>`).join('');
+  const moat = `<rect y="240" width="${HUB.w}" height="${HUB.h - 240}" fill="url(#${u('water')})"/>${ripples}${glints}`;
   return {
-    bg: '#0a0705',
+    bg: `url(#${u('sky')})`,
     defs: lin(u('wallL'), [0, 0, 1, 0], [[0, '#221d19'], [1, '#2f2823']]) + lin(u('wallR'), [0, 0, 1, 0], [[0, '#3a322b'], [1, '#27211d']])
       + lin(u('floor'), [0, 0, 0, 1], [[0, '#2a241f'], [1, '#3a3029']])
-      + rad(u('tglow'), [[0, '#ffb347', 0.55], [1, '#ff7a1a', 0]]) + rad(u('fglow'), [[0, '#ff9a3c', 0.42], [1, '#ff6a00', 0]]),
-    back: `${wallL(`url(#${u('wallL')})`)}${wallR(`url(#${u('wallR')})`)}${stones('L')}${stones('R')}`
+      + rad(u('tglow'), [[0, '#ffb347', 0.55], [1, '#ff7a1a', 0]]) + rad(u('fglow'), [[0, '#ff9a3c', 0.42], [1, '#ff6a00', 0]])
+      + ulin(u('sky'), [0, 0, 0, 200], [[0, '#05070f'], [0.5, '#0e1530'], [1, '#1f2a4c']]) + rad(u('moonglow'), [[0, '#f3ead2', 0.32], [1, '#f3ead2', 0]])
+      + lin(u('tower'), [0, 0, 1, 0], [[0, '#3c4258'], [0.55, '#282d40'], [1, '#191c29']]) + lin(u('towerFar'), [0, 0, 1, 0], [[0, '#222738'], [1, '#141724']])
+      + ulin(u('water'), [0, 260, 0, 452], [[0, '#16223f'], [1, '#070b18']]),
+    back: `${starField(60, 2100, 150, '#f3ead2')}${moon}${nightClouds}${castle}${moat}${base}${lap}${wallL(`url(#${u('wallL')})`)}${wallR(`url(#${u('wallR')})`)}${stones('L')}${stones('R')}`
       + banner(1.75) + banner(4.35) + onRight(3.05, 1.82, `<g class="hub-crest">${shield}</g>`)
       + `<g class="hub-screen">${onRight(2.1, 0.66, `<path d="M-2 -2h52l-4 6 4 6h-52l4-6z" fill="#d4a63c"/>${say(pick, title, { fill: '#1a120a', sub: '#2a1d10', size: 5.2, font: 'Georgia, serif', x: 3 })}`)}</g>`
-      + torch('L', 1.6, 0) + torch('L', 4.25, 1) + torch('R', 1.1, 2) + torch('R', 5.6, 3),
+      + torch('L', 1.6, 0) + torch('L', 4.25, 1) + torch('R', 1.1, 2) + torch('R', 5.6, 3) + merlons.join(''),
     floor: `${floorPoly(`url(#${u('floor')})`)}${flagstones.join('')}${tiles('#120d0a', 0.75, 0.9)}`,
     edge: cap('#4a4038', 2.6),
     props: `<g class="hub-fireplace">${box(0, fy0, 0, 0.33, fy1 - fy0, HW, ['#3d352e', '#2a241f', '#352d27'])}${fire}${box(0, fy0 - 0.12, 1.12, 0.48, fy1 - fy0 + 0.24, 0.14, ['#5a3e2a', '#2e1f14', '#47301f'])}</g>`,
     // la lueur du feu déborde sur le poste M, devant la cheminée
     over: `<ellipse class="hub-fireglow" cx="${r1(P(0.9, 5.65)[0])}" cy="${r1(P(0.9, 5.65, 0.6)[1])}" rx="58" ry="34" fill="url(#${u('fglow')})">${pulse('0.8;1;0.7;0.9;0.8', 1.9, animate)}</ellipse>${embers}`,
     beam: ['#ffd9a0', '#ffb860'], dust: '#ffb15a',
-    plat: ['#4a3527', '#2a1d14', '#3a291d'], vig: 0.62,
+    plat: ['#4a3527', '#2a1d14', '#3a291d'], vig: 0.5,
+    sky: true, // sa pleine lune : pas de deuxième la nuit (daylight.js)
   };
 }
 
@@ -326,11 +417,102 @@ function dojo({ u, pick, title, animate }) {
   // pétales de cerisier qui tombent doucement sur la salle
   const petals = fall([[30, -10, 70, 560, 13, 0, 340], [120, -20, 60, 560, 15, 3.5, -300], [210, -10, 80, 560, 12, 6, 280], [300, -30, 50, 560, 16, 1.8, -360], [70, -20, 90, 560, 14, 8, 320], [250, -20, 70, 560, 13.5, 10.5, -290], [160, -10, 60, 560, 15.5, 12, 300]],
     '<path d="M0 0c-2.2-1.6-2.2-4 0-4.6c2.2 0.6 2.2 3 0 4.6z" fill="#f6c3cf" opacity="0.9"/>', animate);
+
+  // dehors, au coucher du soleil : le Fuji, une pagode dans la brume, une
+  // branche de cerisier en fleurs, des oiseaux
+  const sun = `<circle cx="148" cy="46" r="44" fill="url(#${u('sunglow')})"/><circle cx="148" cy="46" r="16" fill="#ef5d4d"/>`;
+  const fuji = `<g transform="translate(70 88)"><path d="M-120 92C-62 54 -27 20 -8 0L8 0C27 20 62 54 120 92Z" fill="url(#${u('fuji')})"/>`
+    + '<path d="M-8 0L8 0C13 5 18 11 24 17L19 15L15 21L9 16L4 23L-1 16L-7 22L-11 15L-17 19L-23 16C-17 11 -12 5 -8 0Z" fill="#fbeff0"/>'
+    + '<path d="M-8 0L0 0L0 18L-1 16L-7 22L-11 15L-17 19L-23 16C-17 11 -12 5 -8 0Z" fill="#cbb6d2"/></g>';
+  const hills = '<path d="M-10 156Q24 132 62 146T140 140T220 136T296 146T370 130V230H-10Z" fill="#7d4a6f" opacity="0.5"/>'
+    + '<path d="M-10 170Q30 152 70 164T150 160T230 156T310 166T370 150V230H-10Z" fill="#5a3559" opacity="0.6"/>';
+  const pagoda = (() => {
+    let d = '', y = 160;
+    for (let i = 0; i < 5; i++) {
+      const w = 15 - i * 1.9, ry = y - 11;
+      d += `M${r1(318 - w * 0.6)} ${y}V${ry}H${r1(318 + w * 0.6)}V${y}Z`
+        + `M${r1(318 - w * 1.3)} ${r1(ry - 1)}Q${r1(318 - w * 0.8)} ${r1(ry + 1.6)} ${r1(318 - w * 0.5)} ${r1(ry - 4)}H${r1(318 + w * 0.5)}Q${r1(318 + w * 0.8)} ${r1(ry + 1.6)} ${r1(318 + w * 1.3)} ${r1(ry - 1)}L${r1(318 + w * 0.9)} ${r1(ry + 1)}H${r1(318 - w * 0.9)}Z`;
+      y = ry - 4;
+    }
+    return `<path d="${d}M317.3 ${y}h1.4v-15h-1.4z" fill="#4a2c52" opacity="0.88"/>`
+      + [3, 7, 11].map((k) => `<rect x="315.6" y="${y - k}" width="4.8" height="1" fill="#4a2c52" opacity="0.88"/>`).join('');
+  })();
+  const mist = [[70, 150, 26], [290, 142, 32]].map(([x, y, d], k) => drift(`<ellipse cx="${x}" cy="${y}" rx="96" ry="5.5" fill="#ffe3d6" opacity="0.18"/>`, k ? -24 : 24, d, animate)).join('');
+  const birds = drift(['M226 30q3 -3 6 0q3 -3 6 0', 'M244 22q2.4 -2.4 4.8 0q2.4 -2.4 4.8 0', 'M212 40q2 -2 4 0q2 -2 4 0'].map((d) => `<path d="${d}" stroke="#3b2747" stroke-width="0.9" fill="none"/>`).join(''), -30, 34, animate, 6);
+  const twigs = 'M-6 6C22 10 44 20 66 24C80 26 92 32 106 31M44 17C50 26 61 33 74 37M22 9C26 2 34 -2 42 -3M68 24C72 16 80 12 88 11';
+  const blooms = [[106, 31], [98, 28], [88, 11], [80, 12], [74, 37], [68, 33], [66, 24], [58, 20], [50, 27], [42, -3], [38, 14], [30, 9], [22, 8], [14, 6], [6, 5], [84, 27], [92, 34], [62, 30], [78, 22], [34, 3]];
+  const blossoms = blooms.map(([x, y], k) => [0, 1, 2].map((j) => {
+    const a = hash(k * 3 + j + 500) * Math.PI * 2;
+    return `<circle cx="${r1(x + Math.cos(a) * 2.6)}" cy="${r1(y + Math.sin(a) * 2.2)}" r="${r1(1.9 + hash(k * 3 + j + 520) * 1.8)}" fill="${['#f7c6d4', '#f2a7bd', '#fde4ec', '#ee93ad'][(k + j) % 4]}"/>`;
+  }).join('') + `<circle cx="${x}" cy="${y}" r="0.8" fill="#c2456b"/>`).join('');
+  const cherry = `<path d="${twigs}" stroke="#3b2430" stroke-width="2.4" stroke-linecap="round" fill="none"/>${blossoms}`;
+
+  // la salle sur pilotis (engawa), une fondation de pierre, et le jardin :
+  // gravier ratissé autour, rochers, lanterne de pierre, bassin à carpes
+  const g = -0.9;
+  const rake = [];
+  for (let k = 1; k <= 9; k++) {
+    const e = N + 0.14 + 0.3 * k;
+    rake.push(`M${pts([P(-4, e, g), P(e, e, g), P(e, -4, g)])}`);
+  }
+  const posts = [0, 1.15, 2.3, 3.45, 4.6, 5.75, 6.88].map((t) => poly([P(t, N, -0.55), P(t + 0.12, N, -0.55), P(t + 0.12, N, 0), P(t, N, 0)], '#5a3a22')
+    + poly([P(N, t, -0.55), P(N, t + 0.12, -0.55), P(N, t + 0.12, 0), P(N, t, 0)], '#6b4529')).join('');
+  const joints = [];
+  for (let t = 0.6; t < N; t += 1.05) joints.push(`M${pts([P(t, N + 0.12, g), P(t, N + 0.12, -0.55)])}M${pts([P(N + 0.12, t + 0.45, g), P(N + 0.12, t + 0.45, -0.55)])}`);
+  const base = box(-0.12, -0.12, g, N + 0.24, N + 0.24, 0.35, ['#9a9486', '#6f6a60', '#7f796d']) + `<path d="${joints.join('')}" stroke="#57524a" stroke-width="0.7"/>`
+    + box(0, 0, -0.55, N, N, 0.55, ['#3a2616', '#24170d', '#2c1c10']) + posts
+    + poly([P(0, N, -0.1), P(N, N, -0.1), P(N, N, 0), P(0, N, 0)], '#7a5233') + poly([P(N, 0, -0.1), P(N, N, -0.1), P(N, N, 0), P(N, 0, 0)], '#8a5f3c');
+  const rock = (X, Y, s, k) => {
+    const [x, y] = P(X, Y, g);
+    const rings = [1.05, 1.5, 1.95].map((m) => `<ellipse cx="${r1(x)}" cy="${r1(y)}" rx="${r1(14 * s * m)}" ry="${r1(8.4 * s * m)}" fill="none" stroke="#a6948a" stroke-opacity="0.75" stroke-width="0.7"/>`).join('');
+    const tuft = `<path d="M${r1(x - 9 * s)} ${r1(y + 1)}l-2 -4.5M${r1(x - 9 * s)} ${r1(y + 1)}l0.4 -5.5M${r1(x - 9 * s)} ${r1(y + 1)}l2.6 -4" stroke="#5c7a3a" stroke-width="0.9"/>`;
+    return `<ellipse cx="${r1(x)}" cy="${r1(y)}" rx="${r1(29 * s)}" ry="${r1(17.5 * s)}" fill="url(#${u('gravel')})"/>${rings}`
+      + `<path d="M${r1(x - 11 * s)} ${r1(y + 1)}C${r1(x - 12 * s)} ${r1(y - 9 * s)} ${r1(x - 3 * s)} ${r1(y - 14 * s)} ${r1(x + 3 * s)} ${r1(y - 12 * s)}C${r1(x + 10 * s)} ${r1(y - 10 * s)} ${r1(x + 12 * s)} ${r1(y - 3 * s)} ${r1(x + 11 * s)} ${r1(y + 1)}Z" fill="#6c675d"/>`
+      + `<path d="M${r1(x - 9 * s)} ${r1(y - 5 * s)}C${r1(x - 7 * s)} ${r1(y - 11 * s)} ${r1(x + 1 * s)} ${r1(y - 13 * s)} ${r1(x + 4 * s)} ${r1(y - 11.5 * s)}C${r1(x + 1 * s)} ${r1(y - 9 * s)} ${r1(x - 4 * s)} ${r1(y - 7 * s)} ${r1(x - 9 * s)} ${r1(y - 5 * s)}Z" fill="#8f897d"/>`
+      + `<ellipse cx="${r1(x - 2 * s)}" cy="${r1(y - 11 * s)}" rx="${r1(4 * s)}" ry="${r1(1.6 * s)}" fill="#6f8a45" opacity="0.85"/>${k ? tuft : ''}`;
+  };
+  const toro = (X, Y, s) => {
+    const [x, y] = P(X, Y, g);
+    return `${glow(x, y - 25 * s, 22, u('lglow'), animate, 2)}<g transform="translate(${r1(x)} ${r1(y)}) scale(${s})">`
+      + '<ellipse rx="12" ry="3.6" fill="#3b3428" opacity="0.25"/><path d="M-8 0h16l-2 -4h-12z" fill="#7a7468"/>'
+      + '<rect x="-3" y="-17" width="6" height="13" fill="#9a9486"/><rect y="-17" width="3" height="13" fill="#857f72"/><path d="M-9 -17h18l-1.5 -3h-15z" fill="#8a8477"/>'
+      + '<rect x="-6.5" y="-29" width="13" height="9" fill="#9a9486"/><rect y="-29" width="6.5" height="9" fill="#857f72"/><rect x="-3.2" y="-27" width="6.4" height="5.5" fill="#ffd27a"/>'
+      + '<path d="M-13 -29q4 -1 7 -6h12q3 5 7 6z" fill="#6f695e"/><circle cy="-36.4" r="2" fill="#6f695e"/></g>';
+  };
+  const [qx, qy] = P(8.7, 4.4, g);
+  const stones = Array.from({ length: 16 }, (_, i) => {
+    const a = (i / 16) * Math.PI * 2;
+    return `<ellipse cx="${r1(qx + Math.cos(a) * 44)}" cy="${r1(qy + Math.sin(a) * 26)}" rx="${r1(4.6 + hash(i + 60) * 2)}" ry="${r1(2.8 + hash(i + 61))}" fill="${hash(i + 62) > 0.5 ? '#9a9486' : '#878175'}"/>`;
+  }).join('');
+  const fish = (c1, c2) => `<path d="M5 0C3 -2.6 -2 -2.4 -4 0C-2 2.4 3 2.6 5 0Z" fill="${c1}"/><path d="M-3.6 0L-7.6 -2.6L-6.6 0L-7.6 2.6Z" fill="${c1}"/><ellipse cx="1.2" cy="-0.4" rx="1.6" ry="1" fill="${c2}"/>`;
+  const loop = (rx, ry) => `M${r1(qx - rx)} ${r1(qy)}a${rx} ${ry} 0 1 0 ${2 * rx} 0a${rx} ${ry} 0 1 0 ${-2 * rx} 0`;
+  const koi = animate
+    ? `<g>${fish('#f2833a', '#fff4e6')}<animateMotion path="${loop(27, 14)}" dur="16s" rotate="auto" repeatCount="indefinite"/></g>`
+      + `<g>${fish('#fbf3ea', '#e2552e')}<animateMotion path="${loop(17, 8)}" dur="11s" begin="-4s" rotate="auto" repeatCount="indefinite"/></g>`
+    : `<g transform="translate(${r1(qx - 12)} ${r1(qy + 5)}) rotate(-15)">${fish('#f2833a', '#fff4e6')}</g><g transform="translate(${r1(qx + 14)} ${r1(qy - 5)}) rotate(160)">${fish('#fbf3ea', '#e2552e')}</g>`;
+  const lily = (dx, dy, r, flower) => `<g transform="translate(${r1(qx + dx)} ${r1(qy + dy)})"><ellipse rx="${r}" ry="${r1(r * 0.6)}" fill="#5f8f4c"/><path d="M0 0L${r} -0.6" stroke="#2f5b4f" stroke-width="0.8"/>`
+    + (flower ? '<ellipse cx="-1.4" cy="-1.6" rx="1.6" ry="2.6" fill="#f6b6c8" transform="rotate(-30 -1.4 -1.6)"/><ellipse cx="1.4" cy="-1.6" rx="1.6" ry="2.6" fill="#f6b6c8" transform="rotate(30 1.4 -1.6)"/><ellipse cy="-2.2" rx="1.4" ry="2.8" fill="#fbd3df"/>' : '') + '</g>';
+  const pond = `<ellipse cx="${r1(qx)}" cy="${r1(qy + 2)}" rx="48" ry="29" fill="#000" opacity="0.12"/><ellipse cx="${r1(qx)}" cy="${r1(qy)}" rx="44" ry="26" fill="url(#${u('pond')})"/>`
+    + `<ellipse cx="${r1(qx - 6)}" cy="${r1(qy - 6)}" rx="22" ry="7" fill="none" stroke="#bfe6e0" stroke-opacity="0.28" stroke-width="1"/>${koi}`
+    + lily(-24, 8, 5, true) + lily(20, 10, 4.2, false) + lily(26, -8, 3.6, false) + stones;
+  const fallen = Array.from({ length: 12 }, (_, k) => {
+    const [X, Y] = k % 2 ? [N + 0.5 + hash(k + 700) * 2.2, hash(k + 701) * 6.5] : [hash(k + 701) * 6.5, N + 0.5 + hash(k + 700) * 2.2];
+    const [x, y] = P(X, Y, g);
+    return `<ellipse cx="${r1(x)}" cy="${r1(y)}" rx="1.6" ry="0.9" fill="#f4b8c8" transform="rotate(${Math.round(hash(k + 702) * 180)} ${r1(x)} ${r1(y)})"/>`;
+  }).join('');
+  const garden = `<rect y="190" width="${HUB.w}" height="${HUB.h - 190}" fill="url(#${u('gravel')})"/><path d="${rake.join('')}" stroke="#a6948a" stroke-opacity="0.75" stroke-width="0.7" fill="none"/>`
+    + rock(5.6, 9.1, 1, 1) + rock(3.6, 10.4, 0.6, 0) + rock(10.1, 6.8, 0.7, 1) + pond + fallen + toro(3.2, 8.8, 0.95) + base;
   return {
-    bg: '#16110c',
+    bg: `url(#${u('sky')})`,
     defs: lin(u('wallL'), [0, 0, 1, 0], [[0, '#e7dcc1'], [1, '#f2e9d3']]) + lin(u('wallR'), [0, 0, 1, 0], [[0, '#f5ecd6'], [1, '#e4d8bc']])
-      + rad(u('lglow'), [[0, '#ffe6a8', 0.55], [1, '#ffcf7a', 0]]),
-    back: `${wallL(`url(#${u('wallL')})`)}${wallR(`url(#${u('wallR')})`)}${shoji('L')}${shoji('R')}`
+      + rad(u('lglow'), [[0, '#ffe6a8', 0.55], [1, '#ffcf7a', 0]])
+      + ulin(u('sky'), [0, 0, 0, 190], [[0, '#2b2452'], [0.42, '#6a3d6e'], [0.74, '#d0687a'], [1, '#f4a582']])
+      + rad(u('sunglow'), [[0, '#ffc19a', 0.8], [0.4, '#ff9474', 0.32], [1, '#ff9474', 0]])
+      + lin(u('fuji'), [0, 0, 1, 0], [[0, '#2f2852'], [0.5, '#4c3b6a'], [1, '#7a5578']])
+      + ulin(u('gravel'), [0, 250, 0, 452], [[0, '#e5d7ca'], [1, '#bcaaa3']])
+      + rad(u('pond'), [[0, '#4f9198'], [1, '#26535f']]),
+    back: `${sun}${hills}${fuji}${pagoda}${mist}${birds}${cherry}${garden}`
+      + `${wallL(`url(#${u('wallL')})`)}${wallR(`url(#${u('wallR')})`)}${shoji('L')}${shoji('R')}`
       + onR(2.75, 3.35, 1.25, 2.6, '#f6efe0', ' stroke="#3b2a1c" stroke-width="0.6"') + onRight(3.05, 2.05, enso)
       + `<g class="hub-screen">${onR(2.1, 4.0, 0.42, 1.02, '#6b4a2e', ' stroke="#3b2717" stroke-width="0.8"')}${onRight(2.25, 0.85, say(pick, title, { fill: '#f6e7c8', sub: '#f1e3c6', size: 5.2 }))}</g>`,
     floor: mats.join(''),
@@ -338,7 +520,8 @@ function dojo({ u, pick, title, animate }) {
     props: `<g class="hub-lantern">${lantern(3.4, 6.45, 0)}${lantern(6.45, 3.4, 1)}</g>`,
     over: petals,
     beam: ['#fffaf0', '#fff1d6'], dust: '#fff8ea',
-    plat: ['#d8b98a', '#9a7850', '#b99467'], vig: 0.42,
+    plat: ['#d8b98a', '#9a7850', '#b99467'], vig: 0.34,
+    sky: true, // son soleil : pas de lune en plus la nuit (daylight.js)
   };
 }
 
@@ -417,13 +600,64 @@ function station({ u, pick, title, animate }) {
     hazard.push(poly([P(0.05, t, 0.002), P(0.05, t + 0.15, 0.002), P(0.35, t + 0.3, 0.002), P(0.35, t + 0.15, 0.002)], '#d9b42a'));
     hazard.push(poly([P(t, 0.05, 0.002), P(t + 0.15, 0.05, 0.002), P(t + 0.3, 0.35, 0.002), P(t + 0.15, 0.35, 0.002)], '#d9b42a'));
   }
+  // dehors, l'espace : nébuleuses, étoiles, une grande planète bleue et sa
+  // lune, un satellite qui passe ; sous le plancher, la coque de la station,
+  // ses feux de position et ses deux ailes de panneaux solaires
+  const nebula = [[250, 64, 130, 'nebA'], [70, 190, 110, 'nebB'], [300, 430, 130, 'nebA'], [50, 420, 120, 'nebB']].map(([x, y, r, id]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="url(#${u(id)})"/>`).join('');
+  const twinkle = Array.from({ length: 14 }, (_, k) => `<circle cx="${r1(hash(k + 950) * HUB.w)}" cy="${r1(hash(k + 951) * 452)}" r="1.1" fill="#dff4ff">${pulse('1;0.25;1', r1(1.8 + hash(k + 952) * 2.4), animate)}</circle>`).join('');
+  const [gx, gy, gr] = [40, 70, 62];
+  const land = [[-28, -22, 22, 12, -20], [10, 4, 26, 14, 25], [-8, 30, 16, 8, 10], [30, -30, 12, 7, -35], [-40, 14, 10, 18, 0]]
+    .map(([dx, dy, rx, ry, rot]) => `<ellipse cx="${gx + dx}" cy="${gy + dy}" rx="${rx}" ry="${ry}" transform="rotate(${rot} ${gx + dx} ${gy + dy})" fill="#4f9a5e" opacity="0.85"/>`).join('');
+  const clouds = drift([[-20, -36, 30, 4], [16, -8, 34, 4.5], [-34, 22, 26, 3.5], [8, 34, 30, 4], [40, 12, 18, 3]]
+    .map(([dx, dy, rx, ry]) => `<ellipse cx="${gx + dx}" cy="${gy + dy}" rx="${rx}" ry="${ry}" transform="rotate(-18 ${gx + dx} ${gy + dy})" fill="#fff" opacity="0.55"/>`).join(''), 14, 40, animate);
+  const planet = `<circle cx="${gx}" cy="${gy}" r="${gr + 12}" fill="url(#${u('atmo')})"/><circle cx="${gx}" cy="${gy}" r="${gr}" fill="url(#${u('ocean')})"/>`
+    + `<g clip-path="url(#${u('pclip')})">${land}${clouds}<circle cx="${gx}" cy="${gy}" r="${gr}" fill="url(#${u('night')})"/></g>`
+    + `<circle cx="${gx}" cy="${gy}" r="${gr}" fill="none" stroke="#9fd8ff" stroke-opacity="0.5" stroke-width="1.2"/>`;
+  const moon = '<circle cx="322" cy="40" r="12" fill="#c9ccd6"/><circle cx="318" cy="37" r="2.6" fill="#a7abb8"/><circle cx="325" cy="45" r="1.8" fill="#a7abb8"/><circle cx="327" cy="34" r="1.3" fill="#a7abb8"/>'
+    + '<path d="M310 40a12 12 0 0 0 12 12a12 12 0 0 1 -6 -12a12 12 0 0 1 6 -12a12 12 0 0 0 -12 12z" fill="#1b1f2c" opacity="0.6"/>';
+  const sat = drift('<g transform="translate(232 26) rotate(-12)"><rect x="-2.4" y="-1.6" width="4.8" height="3.2" fill="#c9ccd6"/><rect x="-11" y="-1.2" width="7.6" height="2.4" fill="#3b6fd0"/><rect x="3.4" y="-1.2" width="7.6" height="2.4" fill="#3b6fd0"/><path d="M0 -1.6v-3" stroke="#c9ccd6" stroke-width="0.6"/></g>', 46, 38, animate, 10);
+  const hullLines = [];
+  for (let t = 1.17; t < N; t += 1.17) hullLines.push(`M${pts([P(t, N, -1.1), P(t, N, 0)])}M${pts([P(N, t, -1.1), P(N, t, 0)])}`);
+  for (const z of [-0.42, -0.78]) hullLines.push(`M${pts([P(0, N, z), P(N, N, z), P(N, 0, z)])}`);
+  const navLights = [[1.2, 'L', '#ff5a5a'], [3.5, 'L', '#ffe6a0'], [5.8, 'L', '#ff5a5a'], [1.2, 'R', '#5aff9c'], [3.5, 'R', '#ffe6a0'], [5.8, 'R', '#5aff9c']].map(([t, side, c], k) => {
+    const [x, y] = side === 'L' ? P(t, N, -0.95) : P(N, t, -0.95);
+    return `<circle cx="${r1(x)}" cy="${r1(y)}" r="1.3" fill="${c}">${pulse('1;0.15;1', r1(1.2 + (k % 3) * 0.5), animate)}</circle>`;
+  }).join('');
+  const [ex, ey] = P(N, N, -1.1);
+  const engine = `<ellipse cx="${r1(ex)}" cy="${r1(ey + 10)}" rx="16" ry="10" fill="url(#${u('thrust')})">${pulse('0.7;1;0.7', 1.6, animate)}</ellipse>`
+    + `<path d="M${r1(ex - 6)} ${r1(ey)}l2 6h8l2 -6z" fill="#3a4558"/>`;
+  // une aile de panneaux solaires, debout à côté de la coque, tenue par une poutre
+  const wing = (side) => {
+    const q = side === 'L' ? (a, b, z) => P(3.5, N + a, z) : (a, b, z) => P(N + a, 3.5, z);
+    const mount = side === 'L' ? box(3.33, N, -0.78, 0.34, 0.14, 0.32, ['#5a6478', '#3a4356', '#4a5468']) : box(N, 3.33, -0.78, 0.14, 0.34, 0.32, ['#5a6478', '#3a4356', '#4a5468']);
+    const truss = `${mount}<path d="M${pts([q(0.1, 0, -0.62), q(0.66, 0, -0.62)])}" stroke="#a6afc2" stroke-width="3"/><path d="M${pts([q(0.1, 0, -0.62), q(0.66, 0, -0.62)])}" stroke="#5a6478" stroke-width="0.8" stroke-dasharray="1.5 1.5"/>`;
+    const panel = (a0, a1) => {
+      const cells = [];
+      for (let a = a0 + 0.27; a < a1; a += 0.27) cells.push(`M${pts([q(a, 0, -1.45), q(a, 0, 0.25)])}`);
+      for (let z = -1.45 + 0.34; z < 0.25; z += 0.34) cells.push(`M${pts([q(a0, 0, z), q(a1, 0, z)])}`);
+      return poly([q(a0, 0, -1.45), q(a1, 0, -1.45), q(a1, 0, 0.25), q(a0, 0, 0.25)], `url(#${u('solar')})`, ' stroke="#c9d3e6" stroke-width="0.9"')
+        + `<path d="${cells.join('')}" stroke="#7fb0ff" stroke-opacity="0.45" stroke-width="0.5"/>`;
+    };
+    return `${truss}${panel(0.62, 1.66)}${panel(1.74, 2.78)}`;
+  };
+  const hull = box(0, 0, -1.1, N, N, 1.1, ['#2a3346', '#1a2131', '#222b3d']) + `<path d="${hullLines.join('')}" stroke="#0b0f17" stroke-width="0.9" fill="none"/>`
+    + poly([P(0, N, -0.08), P(N, N, -0.08), P(N, N, 0), P(0, N, 0)], '#5ff3ff', ' opacity="0.55"') + poly([P(N, 0, -0.08), P(N, N, -0.08), P(N, N, 0), P(N, 0, 0)], '#5ff3ff', ' opacity="0.55"')
+    + navLights + engine + wing('L') + wing('R');
   return {
-    bg: '#04060c',
+    bg: `url(#${u('space')})`,
     defs: lin(u('wallL'), [0, 0, 1, 0], [[0, '#161c29'], [1, '#202838']]) + lin(u('wallR'), [0, 0, 1, 0], [[0, '#263044'], [1, '#18202e']])
       + lin(u('floor'), [0, 0, 0, 1], [[0, '#1f2635'], [1, '#2a3243']]) + lin(u('holo'), [0, 0, 0, 1], [[0, '#0d3a48', 0.85], [1, '#062530', 0.85]])
       + rad(u('planet'), [[0, '#6fb8ff'], [0.6, '#2f6fbf'], [1, '#132a55']], ' cx="0.35" cy="0.35" r="0.75"')
-      + lin(u('ledL'), [0, 0, 1, 0], [[0, '#5ff3ff', 0.22], [1, '#5ff3ff', 0]]) + lin(u('ledR'), [1, 0, 0, 0], [[0, '#5ff3ff', 0.22], [1, '#5ff3ff', 0]]),
-    back: `${wallL(`url(#${u('wallL')})`)}${wallR(`url(#${u('wallR')})`)}${seams('L')}${seams('R')}`
+      + lin(u('ledL'), [0, 0, 1, 0], [[0, '#5ff3ff', 0.22], [1, '#5ff3ff', 0]]) + lin(u('ledR'), [1, 0, 0, 0], [[0, '#5ff3ff', 0.22], [1, '#5ff3ff', 0]])
+      + lin(u('space'), [0, 0, 0, 1], [[0, '#03040d'], [0.5, '#070b1e'], [1, '#04050f']])
+      + rad(u('nebA'), [[0, '#8b4fe0', 0.28], [0.6, '#5a3aa8', 0.1], [1, '#5a3aa8', 0]]) + rad(u('nebB'), [[0, '#2fb3c9', 0.22], [0.6, '#1f6f9a', 0.08], [1, '#1f6f9a', 0]])
+      + rad(u('ocean'), [[0, '#6fbaff'], [0.55, '#2a66c0'], [1, '#0d2350']], ' cx="0.72" cy="0.28" r="0.9"')
+      + rad(u('night'), [[0, '#000', 0], [0.55, '#000', 0], [1, '#02040c', 0.85]], ' cx="0.78" cy="0.2" r="1.05"')
+      + rad(u('atmo'), [[0.8, '#7ec8ff', 0], [0.86, '#7ec8ff', 0.4], [1, '#7ec8ff', 0]])
+      + `<clipPath id="${u('pclip')}"><circle cx="${gx}" cy="${gy}" r="${gr}"/></clipPath>`
+      + lin(u('solar'), [0, 0, 1, 1], [[0, '#2c5bc4'], [0.5, '#163a8a'], [1, '#0f2a66']])
+      + rad(u('thrust'), [[0, '#d6fbff', 0.9], [0.4, '#5ff3ff', 0.5], [1, '#5ff3ff', 0]]),
+    back: `${nebula}${starField(150, 1200, 452, '#e8f4ff')}${twinkle}${planet}${moon}${sat}${hull}${wallL(`url(#${u('wallL')})`)}${wallR(`url(#${u('wallR')})`)}${seams('L')}${seams('R')}`
       + port(1.25, 1.85, false, 3) + port(5.55, 1.85, true, 40)
       + onR(4.7, 6.65, 0.75, 2.3, '#03050c', ' stroke="#3a4558" stroke-width="1.6"') + onRight(4.9, 1.5, starsIn(18, 14, 70, 20))
       + `<g class="hub-screen">${holo}${scan}${onRight(2.15, 2.25, say(pick, title, { fill: '#6ff4ff', sub: '#d6fdff' }))}</g>`,
@@ -432,7 +666,8 @@ function station({ u, pick, title, animate }) {
       + `${poly([P(0, 0, 0.1), P(0, N, 0.1), P(0, N, 0.2), P(0, 0, 0.2)], '#5ff3ff', ' opacity="0.9"')}${poly([P(0, 0, 0.1), P(N, 0, 0.1), P(N, 0, 0.2), P(0, 0, 0.2)], '#5ff3ff', ' opacity="0.9"')}</g>${cap('#3a4558')}`,
     props: '',
     beam: ['#c9fbff', '#7ff0ff'], dust: '#aef6ff',
-    plat: ['#3a4558', '#1e2533', '#2b3446'], vig: 0.55,
+    plat: ['#3a4558', '#1e2533', '#2b3446'], vig: 0.4,
+    sky: true, // sa planète et sa lune : pas de lune en plus la nuit (daylight.js)
   };
 }
 
@@ -786,17 +1021,52 @@ function volcan({ u, pick, title, animate }) {
     return `M${pts(pts0)}`;
   }).join('');
   const embers = fall(Array.from({ length: 14 }, (_, k) => [hash(k + 70) * HUB.w, 520, (hash(k + 71) - 0.5) * 40, -(380 + hash(k + 72) * 120), r1(5 + hash(k + 73) * 4), r1(hash(k + 74) * 6)]), '<circle r="1.1" fill="#ffb347"/>', animate);
-  const crust = Array.from({ length: 8 }, (_, k) => drift(`<ellipse cx="${r1(hash(k + 80) * HUB.w)}" cy="${r1(400 + hash(k + 81) * 120)}" rx="${r1(14 + hash(k + 82) * 20)}" ry="${r1(3 + hash(k + 83) * 3)}" fill="#2a0c06" opacity="0.7"/>`, k % 2 ? 10 : -10, 14 + k, animate)).join('');
+  // la salle sur une falaise d'orgues de basalte, au-dessus d'un lac de lave :
+  // des plaques de croûte noire qui flottent, la lave qui luit entre elles,
+  // des bulles qui éclatent, la falaise éclairée d'en bas
+  const D = 2.2;
+  const edgeY = (x) => (x < 180 ? P(0, N, -D)[1] + (x - P(0, N, -D)[0]) * K6 : P(N, 0, -D)[1] + (P(N, 0, -D)[0] - x) * K6);
+  const cliff = poly([P(0, N, 0), P(N, N, 0), P(N, N, -D), P(0, N, -D)], `url(#${u('cliffL')})`) + poly([P(N, 0, 0), P(N, N, 0), P(N, N, -D), P(N, 0, -D)], `url(#${u('cliffR')})`);
+  const cols = [], joints = [];
+  for (let t = 0.3; t < N; t += 0.34) {
+    cols.push(`M${pts([P(t, N, -0.05), P(t, N, -D)])}M${pts([P(N, N - t, -0.05), P(N, N - t, -D)])}`);
+    const z = -0.4 - hash(t * 7) * 1.4, z2 = -0.5 - hash(t * 7 + 3) * 1.4;
+    joints.push(`M${pts([P(t - 0.34, N, z), P(t, N, z + 0.06)])}M${pts([P(N, N - t + 0.34, z2), P(N, N - t, z2 + 0.06)])}`);
+  }
+  const basalt = `${cliff}<path d="${cols.join('')}" stroke="#0e0606" stroke-width="1"/><path d="${cols.join('')}" stroke="#5a2a1c" stroke-opacity="0.35" stroke-width="0.6" transform="translate(1.1 0)"/><path d="${joints.join('')}" stroke="#0e0606" stroke-width="0.8"/>`;
+  // le bord de la lave contre la falaise : une ligne qui ondule et brille
+  const shore = [];
+  for (let x = -10; x <= 370; x += 10) shore.push([x, edgeY(x) - 2 + Math.sin(x * 0.21) * 1.6]);
+  const shoreD = `M${shore.map(([x, y]) => `${r1(x)} ${r1(y)}`).join('L')}`;
+  const front = `<path d="${shoreD}L370 ${HUB.h}L-10 ${HUB.h}Z" fill="url(#${u('lava')})"/>`;
+  const plates = [];
+  for (let gy = 300, j = 0; gy < 470; gy += 14, j++) {
+    for (let gx = (j % 2) * 16 - 10; gx < 380; gx += 32) {
+      const k = j * 31 + gx;
+      const cx = gx + (hash(k) - 0.5) * 14, cy = gy + (hash(k + 1) - 0.5) * 6;
+      if (cy < edgeY(cx) + 9) continue;
+      const rx = 13 + hash(k + 2) * 8, ry = rx * 0.46;
+      const corners = Array.from({ length: 6 }, (_, i) => {
+        const a = (i / 6) * Math.PI * 2 + hash(k + 3) * 0.6;
+        const m = 0.8 + hash(k + i + 4) * 0.3;
+        return [cx + Math.cos(a) * rx * m, cy + Math.sin(a) * ry * m];
+      });
+      plates.push(`M${pts(corners)}Z`);
+    }
+  }
+  const crust = `<path d="${plates.join('')}" fill="url(#${u('crust')})" stroke="#6a200a" stroke-width="0.8"/>`;
+  const bubbles = animate ? [[40, 352], [118, 412], [262, 400], [330, 344], [80, 430], [300, 432]].map(([x, y], k) => `<circle cx="${x}" cy="${y}" r="0" fill="#ffd27a" stroke="#fff1c4" stroke-width="0.6"><animate attributeName="r" values="0;3.4;0" dur="${r1(2.2 + k * 0.5)}s" begin="${r1(k * 0.7)}s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.8;0" dur="${r1(2.2 + k * 0.5)}s" begin="${r1(k * 0.7)}s" repeatCount="indefinite"/></circle>`).join('') : '';
+  const rim = `<path d="${shoreD}" stroke="#ff7a1a" stroke-opacity="0.45" stroke-width="7" fill="none"/><path d="${shoreD}" stroke="#ffd27a" stroke-width="1.6" fill="none">${pulse('1;0.6;1', 2.4, animate)}</path>`;
   return {
     bg: `url(#${u('sky')})`,
     defs: lin(u('sky'), [0, 0, 0, 1], [[0, '#120404'], [0.3, '#3a0e08'], [1, '#1a0705']]) + lin(u('cone'), [0, 0, 0, 1], [[0, '#3a1810'], [1, '#160807']])
-      + rad(u('crater'), [[0, '#ffd27a', 0.9], [0.5, '#ff7a1a', 0.5], [1, '#ff3a00', 0]]) + lin(u('lava'), [0, 0, 0, 1], [[0, '#ff7a1a'], [1, '#b8290a']])
+      + rad(u('crater'), [[0, '#ffd27a', 0.9], [0.5, '#ff7a1a', 0.5], [1, '#ff3a00', 0]]) + ulin(u('lava'), [0, 290, 0, 452], [[0, '#ffb347'], [0.45, '#ff7a1a'], [1, '#c2300a']])
+      + ulin(u('crust'), [0, 300, 0, 452], [[0, '#3a140a'], [1, '#1e0805']]) + lin(u('cliffL'), [0, 0, 0, 1], [[0, '#1c1212'], [0.55, '#2a1410'], [1, '#8a3210']]) + lin(u('cliffR'), [0, 0, 0, 1], [[0, '#261818'], [0.55, '#341a12'], [1, '#9a3a12']])
       + lin(u('floor'), [0, 0, 0, 1], [[0, '#221b1e'], [1, '#2e2427']]),
     back: `<circle cx="195" cy="70" r="90" fill="url(#${u('crater')})" opacity="0.6"/>${smoke}<path d="M-20 270L150 70q45 -14 90 0L390 270Z" fill="url(#${u('cone')})"/>`
       + `<ellipse cx="195" cy="66" rx="34" ry="7" fill="url(#${u('crater')})">${pulse('1;0.7;1', 1.6, animate)}</ellipse>${blobs}`
       + lava('M182 70C170 110 150 130 128 180', 3, 0) + lava('M210 70C222 120 248 140 262 190', 2.6, 1) + lava('M196 72C196 100 188 120 176 150', 2, 2)
-      + `<rect y="300" width="${HUB.w}" height="${HUB.h - 300}" fill="url(#${u('lava')})"/>${crust}`
-      + box(0, 0, -0.8, N, N, 0.8, ['#2a1c1c', '#140c0c', '#1e1414'])
+      + `<rect y="250" width="${HUB.w}" height="${HUB.h - 250}" fill="url(#${u('lava')})"/>${basalt}${front}${crust}${bubbles}${rim}`
       + box(-0.18, 0, 0, 0.18, N, 0.35, ['#3a2a2a', '#1a1010', '#2a1d1d']) + box(0, -0.18, 0, N, 0.18, 0.35, ['#3a2a2a', '#1a1010', '#2a1d1d'])
       + signboard(1.3, 3.7, 1.05, 1.65, '#2a1c1c', ['#3a2a2a', '#1a1010', '#2a1d1d'], onRight(1.5, 1.5, say(pick, title, { fill: '#ffb347', sub: '#ffd9b0', size: 5.6 }))),
     floor: `${floorPoly(`url(#${u('floor')})`)}${tiles('#000', 0.5, 0.8)}<path d="${cracks}" stroke="#ff7a1a" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.7">${pulse('0.7;0.35;0.7', 3, animate)}</path>`,
@@ -911,27 +1181,88 @@ function ring({ u, pick, title, animate }) {
 }
 
 function desert({ u, pick, title, animate }) {
-  // la nuit sur les dunes : étoiles, croissant de lune, pyramides, caravane
-  const twinkle = Array.from({ length: 10 }, (_, k) => `<circle cx="${r1(hash(k + 300) * HUB.w)}" cy="${r1(hash(k + 301) * 140)}" r="1.2" fill="#fff">${pulse('1;0.2;1', r1(1.5 + hash(k + 302) * 2), animate)}</circle>`).join('');
-  const moon = `<circle cx="292" cy="48" r="13" fill="#f7f2de" mask="url(#${u('crescent')})"/>`;
-  const pyramid = (x, base, w, h) => `<path d="M${x - w / 2} ${base}L${x} ${base - h}L${x} ${base}Z" fill="#3a3256"/><path d="M${x} ${base - h}L${x + w / 2} ${base}L${x} ${base}Z" fill="#5a4f7a"/>`;
-  const dune = (y, amp, col, k) => `<path d="M-10 ${y}${Array.from({ length: 9 }, (_, i) => `Q${r1(i * 46 + 13)} ${r1(y - amp * (0.5 + hash(i + k)))} ${r1(i * 46 + 36)} ${r1(y + amp * 0.2)}`).join('')}L370 ${HUB.h}L-10 ${HUB.h}Z" fill="${col}"/>`;
-  const camel = '<path d="M0 0c1 -4 3 -6 5 -6c1 -3 4 -3 5 0c2 -2 4 -2 5 0l3 -5c1 -1 3 0 2 1l-2 6l0 4h-1l0 6h-1.2l0 -6h-6l0 6h-1.2l0 -6h-1l0 6h-1.2l0 -6c-2 0 -4 -1 -6.4 0z" fill="#1d1830"/>';
+  // la nuit sur les dunes : voie lactée, croissant de lune, pyramides
+  // éclairées par la lune, une caravane au loin ; devant, une oasis sous les
+  // palmiers et un campement, sa tente et son feu
+  const twinkle = Array.from({ length: 12 }, (_, k) => `<circle cx="${r1(hash(k + 300) * HUB.w)}" cy="${r1(hash(k + 301) * 150)}" r="1.2" fill="#fff">${pulse('1;0.2;1', r1(1.5 + hash(k + 302) * 2), animate)}</circle>`).join('');
+  const milky = `<g transform="rotate(-24 180 86)"><ellipse cx="180" cy="86" rx="240" ry="30" fill="url(#${u('milky')})"/><ellipse cx="170" cy="88" rx="190" ry="11" fill="url(#${u('milky')})"/>`
+    + Array.from({ length: 110 }, (_, k) => `<circle cx="${r1(-40 + hash(k + 800) * 440)}" cy="${r1(86 + (hash(k + 801) - 0.5) * 34 * hash(k + 802))}" r="${hash(k + 803) > 0.9 ? 0.9 : 0.45}" fill="#fff" opacity="${r1(0.35 + 0.6 * hash(k + 804))}"/>`).join('') + '</g>';
+  const moon = `<circle cx="292" cy="46" r="48" fill="url(#${u('moonglow')})"/><circle cx="292" cy="46" r="15" fill="#f7f2de" mask="url(#${u('crescent')})"/>`;
+  // une pyramide : la face de droite au clair de lune, l'autre dans l'ombre, des rangées de pierres
+  const pyramid = (x, top, w, h) => {
+    const base = top + h, ridge = x + w * 0.1;
+    const rows = [];
+    for (let t = 0.12; t < 1; t += 0.1) rows.push(`M${r1(x + (ridge - x) * t)} ${r1(top + h * t)}L${r1(x + (w / 2) * t)} ${r1(top + h * t)}`);
+    const shade = [];
+    for (let t = 0.17; t < 1; t += 0.1) shade.push(`M${r1(x - (w / 2) * t)} ${r1(top + h * t)}L${r1(x + (ridge - x) * t)} ${r1(top + h * t)}`);
+    return `<path d="M${r1(x - w / 2)} ${base}L${x} ${top}L${r1(ridge)} ${base}Z" fill="#251f45"/><path d="${shade.join('')}" stroke="#1a1533" stroke-width="0.6"/>`
+      + `<path d="M${x} ${top}L${r1(x + w / 2)} ${base}L${r1(ridge)} ${base}Z" fill="url(#${u('pyr')})"/><path d="${rows.join('')}" stroke="#4f4378" stroke-opacity="0.7" stroke-width="0.6"/>`
+      + `<path d="M${x} ${top}L${r1(ridge)} ${base}" stroke="#b9a9d8" stroke-opacity="0.5" stroke-width="0.8"/>`;
+  };
+  // des dunes au loin : une ligne de crête éclairée
+  const farDune = (y, amp, fill, k) => {
+    const top = `M-10 ${y}${Array.from({ length: 8 }, (_, i) => `Q${r1(i * 50 + 15)} ${r1(y - amp * (0.4 + hash(i + k)))} ${r1(i * 50 + 40)} ${r1(y + amp * 0.15)}`).join('')}`;
+    return `<path d="${top}L390 ${HUB.h}L-10 ${HUB.h}Z" fill="${fill}"/><path d="${top}" stroke="#8d7fbd" stroke-opacity="0.35" stroke-width="0.8" fill="none"/>`;
+  };
+  const camel = '<path d="M0 0c1 -4 3 -6 5 -6c1 -3 4 -3 5 0c2 -2 4 -2 5 0l3 -5c1 -1 3 0 2 1l-2 6l0 4h-1l0 6h-1.2l0 -6h-6l0 6h-1.2l0 -6h-1l0 6h-1.2l0 -6c-2 0 -4 -1 -6.4 0z" fill="#16122a"/>';
   const caravan = [0, 22, 44].map((dx) => `<g transform="translate(${dx} 0)">${camel}</g>`).join('');
-  const walk = animate ? `<g>${`<g transform="translate(-80 172) scale(0.9)">${caravan}</g>`}<animateTransform attributeName="transform" type="translate" values="0 0;460 -8" dur="70s" repeatCount="indefinite"/></g>` : `<g transform="translate(60 168) scale(0.9)">${caravan}</g>`;
+  const walk = animate ? `<g>${`<g transform="translate(-80 184) scale(0.8)">${caravan}</g>`}<animateTransform attributeName="transform" type="translate" values="0 0;470 -6" dur="70s" repeatCount="indefinite"/></g>` : `<g transform="translate(40 182) scale(0.8)">${caravan}</g>`;
   const lantern = (X, Y, k) => {
     const [x, y] = P(X, Y, 0.62);
     return `${glow(x, y, 16, u('lamp'), animate, k)}${box(X - 0.06, Y - 0.06, 0.4, 0.12, 0.12, 0.2, ['#ffd27a', '#c08a3a', '#e0a84a'])}`;
   };
+  // le socle de grès, à moitié pris dans le sable
+  const blocks = [];
+  for (let t = 0.7; t < N; t += 1.4) blocks.push(`M${pts([P(t, N, -0.3), P(t, N, 0)])}M${pts([P(N, t, -0.3), P(N, t, 0)])}`);
+  const drift = (() => {
+    const l = [], r = [];
+    for (let i = 0; i <= 12; i++) {
+      const t = (i / 12) * N;
+      const w = Math.sin(i * 1.7) * 0.06;
+      l.push(P(t, N + 0.05, -0.24 + w));
+      r.push(P(N + 0.05, N - t, -0.24 - w));
+    }
+    return `<path d="M${pts([P(-1, N + 0.05, -0.4), ...l, ...r, P(N + 0.05, -1, -0.4)])}L370 ${HUB.h}L-10 ${HUB.h}Z" fill="url(#${u('sand')})"/>`;
+  })();
+  const ripples = [[20, 352, 30], [44, 362, 34], [8, 418, 26], [30, 412, 30], [118, 430, 22], [236, 436, 26], [262, 426, 30], [318, 412, 28], [340, 402, 22], [312, 352, 26], [334, 344, 22]]
+    .map(([x, y, w]) => `<path d="M${x} ${y}q${w / 2} -4 ${w} 0" stroke="#a894c8" stroke-opacity="0.35" stroke-width="0.8" fill="none"/>`).join('');
+  const tufts = [[60, 350], [150, 392], [214, 380], [282, 340], [16, 396]].map(([x, y]) => `<path d="M${x} ${y}l-3 -4M${x} ${y}l0.5 -5M${x} ${y}l3.4 -3.6" stroke="#2a2246" stroke-width="1"/>`).join('');
+  const nearL = '<path d="M-10 404C24 380 60 372 96 384C124 394 150 420 166 452H-10Z" fill="url(#' + u('dune') + ')"/><path d="M-10 404C24 380 60 372 96 384C124 394 150 420 166 452" stroke="#c4b2e0" stroke-opacity="0.5" stroke-width="1" fill="none"/>';
+  const nearR = '<path d="M190 452C214 424 252 404 300 396C326 392 350 384 370 372V452Z" fill="url(#' + u('dune') + ')"/><path d="M190 452C214 424 252 404 300 396C326 392 350 384 370 372" stroke="#c4b2e0" stroke-opacity="0.5" stroke-width="1" fill="none"/>';
+  // l'oasis : un bassin qui reflète la lune, deux palmiers, des roseaux
+  const palm = (x, y, h, lean) => {
+    const tx = x + lean, ty = y - h;
+    const fronds = [[-26, 6], [-16, -6], [-4, -12], [10, -9], [22, 2], [28, 12], [-30, 16]].map(([dx, dy]) => `<path d="M${r1(tx)} ${r1(ty)}q${r1(dx * 0.5)} ${r1(dy * 0.6 - 7)} ${dx} ${dy}q${r1(-dx * 0.35)} ${r1(-dy * 0.2 - 2)} ${r1(-dx)} ${r1(-dy)}z" fill="#141228"/>`).join('');
+    return `<path d="M${x} ${y}q${r1(lean * 0.2)} ${r1(-h * 0.6)} ${lean} ${-h}" stroke="#141228" stroke-width="3.2" stroke-linecap="round" fill="none"/>${fronds}<circle cx="${r1(tx)}" cy="${r1(ty + 1)}" r="2" fill="#141228"/>`;
+  };
+  const glint = Array.from({ length: 5 }, (_, k) => `<rect x="${r1(84 + hash(k + 900) * 8)}" y="${r1(419 + k * 2.2)}" width="${r1(4 + hash(k + 901) * 6)}" height="0.8" fill="#f7f2de" opacity="0.7">${pulse('0.8;0.2;0.8', r1(1.6 + k * 0.4), animate)}</rect>`).join('');
+  const reeds = [[42, 424], [46, 423], [118, 425], [122, 426]].map(([x, y], k) => `<path d="M${x} ${y}q${k % 2 ? 2 : -2} -7 ${k % 2 ? 1 : -1} -12" stroke="#1d2238" stroke-width="1" fill="none"/>`).join('');
+  const oasis = `<ellipse cx="82" cy="424" rx="40" ry="9" fill="#0e1534"/><ellipse cx="82" cy="423" rx="36" ry="7" fill="url(#${u('pool')})"/>${glint}${reeds}${palm(56, 420, 58, -8)}${palm(104, 420, 46, 10)}`;
+  // le campement : une tente rayée, éclairée de l'intérieur, et un feu de camp
+  const [fx, fy] = [246, 424];
+  const fire = `<circle cx="${fx}" cy="${fy - 4}" r="34" fill="url(#${u('fire')})">${pulse('0.8;1;0.7;0.95;0.8', 1.3, animate)}</circle>`
+    + [[-6, 1], [6, 1], [0, 3], [-3, -1.6], [3.4, -1.4]].map(([dx, dy]) => `<ellipse cx="${fx + dx}" cy="${fy + dy}" rx="2.4" ry="1.4" fill="#4c4060"/>`).join('')
+    + `<path d="M${fx - 6} ${fy + 1}l12 -3M${fx - 6} ${fy - 2}l12 3" stroke="#3a2416" stroke-width="1.8" stroke-linecap="round"/>${flame(fx, fy - 1, 0.9, animate, 1)}`;
+  const tent = '<path d="M268 410L300 368L346 376L356 410Z" fill="#3a2a3c"/><path d="M300 368L346 376M306 371L320 410M318 372L334 410M330 374L346 410" stroke="#55384a" stroke-width="1.6" fill="none"/>'
+    + '<path d="M268 410L300 368L314 410Z" fill="#8a5a46"/><path d="M284 410L300 384L306 410Z" fill="#ffc46e"/><path d="M290 410L300 393L303 410Z" fill="#fff0c4" opacity="0.8"/>'
+    + '<path d="M264 411L300 367" stroke="#2a1b22" stroke-width="1"/>';
   return {
     bg: `url(#${u('sky')})`,
-    defs: lin(u('sky'), [0, 0, 0, 1], [[0, '#070a24'], [0.35, '#1d2457'], [0.6, '#4a3a6e'], [1, '#2a2348']])
+    defs: ulin(u('sky'), [0, 0, 0, 240], [[0, '#04071c'], [0.4, '#0f1640'], [0.72, '#2a2558'], [0.9, '#4f3d6e'], [1, '#6b4f78']])
       + lin(u('floor'), [0, 0, 0, 1], [[0, '#c3ad86'], [1, '#d2bd95']]) + rad(u('lamp'), [[0, '#ffd27a', 0.6], [1, '#ff9a3c', 0]])
-      + `<mask id="${u('crescent')}"><circle cx="292" cy="48" r="13" fill="#fff"/><circle cx="298" cy="44" r="12" fill="#000"/></mask>`,
-    back: `${starField(70, 400, 170)}${twinkle}${moon}${shootingStar(animate, [220, 14], [300, 44], 11)}`
-      + pyramid(66, 190, 110, 62) + pyramid(128, 186, 60, 34) + pyramid(306, 192, 96, 54)
-      + dune(196, 16, '#2a2550', 1) + walk + dune(232, 20, '#3a2f5c', 9) + dune(300, 26, '#4a3c6a', 17)
-      + box(0, 0, -0.3, N, N, 0.3, ['#b39d78', '#7a6850', '#968260'])
+      + rad(u('milky'), [[0, '#ddd6ff', 0.3], [0.55, '#a39ae6', 0.12], [1, '#a39ae6', 0]])
+      + rad(u('moonglow'), [[0, '#f7f2de', 0.3], [1, '#f7f2de', 0]])
+      + lin(u('pyr'), [0, 0, 0, 1], [[0, '#a896c8'], [1, '#5a4b80']])
+      + ulin(u('sand'), [0, 260, 0, 452], [[0, '#7d6aa3'], [1, '#3b305f']])
+      + ulin(u('dune'), [0, 370, 0, 452], [[0, '#8f7bb4'], [1, '#433768']])
+      + lin(u('pool'), [0, 0, 0, 1], [[0, '#2a3a6a'], [1, '#151f45']])
+      + rad(u('fire'), [[0, '#ffb35a', 0.55], [0.5, '#ff7a3c', 0.18], [1, '#ff7a3c', 0]])
+      + `<mask id="${u('crescent')}"><circle cx="292" cy="46" r="15" fill="#fff"/><circle cx="299" cy="41" r="13.5" fill="#000"/></mask>`,
+    back: `${milky}${starField(70, 400, 190)}${twinkle}${moon}${shootingStar(animate, [220, 14], [300, 44], 11)}`
+      + pyramid(-6, 142, 120, 72) + pyramid(84, 98, 190, 110) + pyramid(306, 120, 150, 88)
+      + farDune(206, 12, '#231d44', 1) + walk + farDune(236, 16, '#2c2552', 9)
+      + box(0, 0, -0.3, N, N, 0.3, ['#b39d78', '#7a6850', '#968260']) + `<path d="${blocks.join('')}" stroke="#5e4f3a" stroke-width="0.7"/>`
+      + drift + nearL + nearR + ripples + tufts + oasis + fire + tent
       + box(-0.18, 0, 0, 0.18, N, 0.4, ['#cbb58e', '#8a7656', '#a89270']) + box(0, -0.18, 0, N, 0.18, 0.4, ['#cbb58e', '#8a7656', '#a89270'])
       + lantern(-0.09, 3.95, 0) + lantern(3.95, -0.09, 1)
       + signboard(1.3, 3.7, 1.05, 1.65, '#d8c49c', ['#8a7656', '#5a4a34', '#6e5c42'], onRight(1.5, 1.5, say(pick, title, { fill: '#3a2614', sub: '#4a3420', size: 5.6, font: 'Georgia, serif' }))),
@@ -939,7 +1270,7 @@ function desert({ u, pick, title, animate }) {
     edge: '',
     props: '',
     beam: ['#dfe6ff', '#b9c6ff'], dust: '#e8eaff',
-    plat: ['#b89f75', '#7f6a4a', '#9a8460'], vig: 0.5,
+    plat: ['#b89f75', '#7f6a4a', '#9a8460'], vig: 0.42,
     sky: true, // sa lune : pas de deuxième la nuit (daylight.js)
   };
 }

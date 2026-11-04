@@ -70,25 +70,25 @@ Le bouton « Décor », en haut de la Salle, change l’habillage de la pièce :
 
 | Décor | Pour le débloquer |
 | --- | --- |
-| La salle (murs sombres, grille et logo de cuivre, LED) | ouvert dès le départ |
+| La salle (murs sombres, grille et logo de cuivre, spots qui éclairent les murs, suspensions, kettlebells, socle bordé de cuivre, LED) | ouvert dès le départ |
 | Temple grec (marbre et colonnes au-dessus des nuages, au coucher du soleil) | 15 séances |
 | Ring de boxe (projecteurs qui balaient la salle, cordes, la foule et ses flashs, écran géant) | 12 séances C (cardio boxe) |
 | Forêt au crépuscule (ponton de bois sous les arbres, guirlande, lucioles) | 20 matins avec ta routine complète |
-| Désert la nuit (dunes, pyramides, caravane qui passe, croissant de lune, étoiles filantes) | 20 soirs avec ta routine complète |
-| Dojo (bois, papier de riz, tatamis, lanternes, pétales de cerisier qui tombent) | 3 000 points aux Blocs |
+| Désert la nuit (pyramides au clair de lune, voie lactée, caravane qui passe, oasis sous les palmiers, tente et feu de camp, étoiles filantes) | 20 soirs avec ta routine complète |
+| Dojo (bois, papier de riz, tatamis, lanternes, pétales de cerisier qui tombent ; dehors, le Fuji au coucher du soleil, une pagode, un jardin zen et son bassin à carpes koï) | 3 000 points aux Blocs |
 | Toit de la ville (en haut d’une tour, la nuit, néon « CAP » qui grésille) | 30 points au Calcul éclair |
 | Temple de la jungle (pierres moussues, cascade, lianes, papillons) | 40 fruits au Serpent |
 | Fond marin (vitres sur la mer, poissons qui passent, algues, bulles, coffre au trésor) | 10 sudokus résolus |
-| Volcan (éruption au loin, coulées de lave, lac de lave, braises qui montent) | 15 codes secrets trouvés |
+| Volcan (éruption au loin, coulées de lave, falaise de basalte au-dessus d’un lac de lave couvert de croûtes, bulles, braises qui montent) | 15 codes secrets trouvés |
 | Monde en pixels (un monde de jeu 8 bits : blocs d’herbe, nuages en cases, soleil carré, pièces qui tournent) | 8 dessins trouvés aux Pixels cachés |
 | Donjon (pierres et torches, bannières à couronne, chaînes, tonneaux, coffre au trésor qui brille, braises) | niveau 5 au Casse-briques |
-| Grand hall (pierre, feu de cheminée et braises, torches, blason noir et or) | 40 séances |
+| Grand hall (un château sous la pleine lune : créneaux, tours aux fenêtres allumées, fanions, douves ; feu de cheminée et braises, torches, blason noir et or) | 40 séances |
 | Néon rétro (soleil à rayures, palmiers de néon, sol quadrillé qui défile) | niveau 8 réussi aux Cristaux |
 | Navire pirate (pont, voiles, drapeau au vent, vagues, mouettes, tonneaux) | niveau 8 réussi aux Paires |
 | Salle d’arcade (bornes qui clignotent le long des murs, néon « GAME ON », moquette à confettis, machine à pince) | 1 500 m au Sprint |
 | Labo secret (tubes lumineux pleins de bulles, grand écran à courbe, voyants, hologramme qui tourne) | une suite de 12 à Écho |
 | Échiquier géant (sol en échiquier, pièces géantes, fenêtres de lune, bannières noir et blanc, bougies) | 5 victoires contre Cap aux échecs |
-| Station spatiale (hublots, planète bleue, écran holographique) | niveau 12 |
+| Station spatiale (en orbite : une planète bleue et sa lune, nébuleuses, satellite, coque et feux de position, panneaux solaires, hublots, écran holographique) | niveau 12 |
 | Îles célestes (une île qui flotte dans le ciel, cascades, d’autres îles au loin, nuages en dessous) | niveau 15 |
 | Arène romaine (arches et foule qui t’encourage, fanions, braseros, sable) | 60 séances |
 | Ponton sur la mer (soleil couchant, île à palmiers, voilier, mouettes) | 6 000 points aux Blocs |

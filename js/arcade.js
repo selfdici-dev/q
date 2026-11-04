@@ -1413,6 +1413,12 @@ export function createArcade(ctx) {
   };
 
   return {
+    // ouvre un jeu sans passer par le menu (raccourci de l'icône) : pour l'instant, les échecs
+    open(id) {
+      if (id !== 'echecs') return;
+      mode = 'echecs';
+      chess.enter();
+    },
     view() {
       if (mode === 'blocs' && B().cur) return blocsView();
       if (mode === 'calc' && calc) return calcView();

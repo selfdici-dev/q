@@ -108,6 +108,14 @@ Dans la Salle, sous « Ma journée » : chaque lundi, trois nouveaux défis tir�
 
 Tout se calcule depuis tes jours de la semaine (du lundi au dimanche) ; pour l’arcade, Cap note tes records la première fois qu’il s’ouvre dans la semaine. Si tu n’ouvres pas Cap le dimanche, ce que tu as réussi compte quand même le lundi.
 
+## Ton rival
+
+Dans la Salle, sous les défis : toi face à toi la semaine dernière (js/rival.js). Ce que tu as fait depuis lundi contre ce que tu avais fait du lundi au même jour la semaine d’avant, en 5 manches : séances (A, B, C ou P), journées validées, matins avec ta routine, soirs avec ta routine, jours de lecture. Celui qui fait plus gagne la manche ; le score s’affiche entre ton double et son fantôme. Ta première semaine, pas de rival : tu poses la barre pour la suivante. Tout se calcule depuis tes jours, rien n’est stocké.
+
+## Classeur des exercices
+
+Dans la Salle, sous le mur des records : ton classeur, comme une collection de jeu (js/binder.js). Chaque mouvement de tes séances et de l’échauffement a sa fiche (gauche et droite, 1er et 2e passage ensemble : 34 fiches). Une fiche se découvre la première fois que tu fais une séance qui contient le mouvement ; avant, son dessin n’est qu’une silhouette, avec la séance qui le débloque. Découverte, elle montre le dessin, les muscles travaillés, combien de jours tu l’as fait et ton record ; touche-la pour lire sa consigne. Calculé depuis tes jours et tes records, rien n’est stocké.
+
 ## Habille ton double
 
 Ton double (le buste en médaillon qui évolue avec ton niveau) a son portrait dans la Salle, sous ton niveau : touche-le pour ouvrir sa fiche et l’habiller. Huit accessoires, gagnés avec tes trophées (js/outfit.js), un seul par place (la tête, les yeux, le cou, le dos, la taille), mis ou enlevés d’une touche :
@@ -153,6 +161,7 @@ Les personnages de la Salle viennent des mêmes corps en 3D et des mêmes poses,
 1. Héberge le dossier en HTTPS (voir ci-dessous).
 2. Ouvre l’URL dans Chrome (Android) ou Safari (iPhone).
 3. Android : menu ⋮ > *Ajouter à l’écran d’accueil*. iPhone : bouton Partager > *Sur l’écran d’accueil*.
+4. Appui long sur l’icône de Cap (Android) : des raccourcis vers les échecs, ta journée, l’arcade et le focus.
 
 Les données sont propres à chaque appareil. Pour passer du téléphone à l’ordi, utilise *Moi > Réglages > Exporter*, puis *Importer* sur l’autre appareil. **Exporte chaque semaine** : c’est ta seule sauvegarde. Au-delà de 7 jours sans export, un bandeau dans la Salle te le rappelle, avec un bouton d’export direct. À l’import, le fichier est entièrement vérifié (format, dates, valeurs) et son contenu t’est montré avant de remplacer quoi que ce soit.
 

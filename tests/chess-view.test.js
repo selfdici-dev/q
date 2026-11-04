@@ -147,3 +147,31 @@ test('échecs (écran) : la partie finie se revoit, Cap note tes coups', async (
   assert.doesNotMatch(chess.view(), /Revoir<\/b>/);
 });
 
+test('échecs (écran) : une ouverture s’apprend coup par coup, Cap joue l’adversaire', async () => {
+  const { state, party, chess, act, tap } = setup();
+  assert.equal(count(chess.view(), /data-act="ch-opening"/g), 4);
+  act('ch-opening', { id: 'italienne' });
+  assert.match(chess.view(), /0 \/ 6/);
+  tap('e2', 'e4');
+  assert.match(chess.view(), /e4 : Un pion au centre/);
+  assert.match(chess.view(), /Cap répond…/);
+  await new Promise((r) => setTimeout(r, 900));
+  assert.match(chess.view(), /Cap joue e5\. À toi/);
+  // un coup permis, mais pas celui de l'ouverture : refusé, la position ne bouge pas
+  tap('d2', 'd4');
+  assert.match(chess.view(), /d4 se joue, mais pas dans cette ouverture/);
+  // l'indice : d'abord la pièce, puis le coup
+  act('ch-op-hint');
+  assert.equal(count(chess.view(), /class="ch-mark hint"/g), 1);
+  act('ch-op-hint');
+  assert.match(chess.view(), /\(le coup : Cf3\)/);
+  const mine = [['g1', 'f3'], ['f1', 'c4'], ['c2', 'c3'], ['d2', 'd3'], ['e1', 'g1']];
+  for (const [a, b] of mine) {
+    tap(a, b);
+    await new Promise((r) => setTimeout(r, 900));
+  }
+  assert.match(chess.view(), /Ouverture apprise : Partie italienne/);
+  assert.equal(state.games.echecs.openings.italienne, 1);
+  assert.ok(party.includes('Ouverture apprise : Partie italienne'));
+});
+

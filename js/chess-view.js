@@ -6,6 +6,7 @@
 import { fromFen, toFen, legalMoves, san, make, status, inCheck, bestMove, kingSquare, sqName, typeOf, colorOf, LEVELS, START, WHITE, BLACK, KNIGHT, BISHOP, ROOK, QUEEN } from './chess.js';
 import { LESSONS, PUZZLES, judge, starMoves, defend } from './chess-school.js';
 import { createReview, reviewSummary } from './chess-review.js';
+import { OPENINGS, sideAt, whyIndex } from './chess-openings.js';
 import { icon } from './icons.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -310,6 +311,72 @@ export function createChess(ctx) {
       ${G.sans.length ? `<ol class="ch-moves">${moves}</ol>` : ''}</section>`;
   }
 
+  // ---------- les ouvertures ----------
+  // OP : { op, pos, k (le demi-coup à jouer), sel, last, say (consigne), why (la
+  // raison du dernier bon coup), bad, hint (0 : rien, 1 : la pièce, 2 : le coup), done }
+  let OP = null;
+  const bare = (x) => x.replace(/[+#]$/, '');
+  const lineMove = (pos, s) => legalMoves(pos).find((m) => bare(san(pos, m)) === bare(s));
+  function openOpening(id) {
+    const op = OPENINGS.find((o) => o.id === id);
+    if (!op) return;
+    clearTimeout(wait);
+    OP = { op, pos: fromFen(START), k: 0, sel: -1, last: [], say: op.intro, why: '', bad: false, hint: 0, done: false };
+    promo = null;
+    screen = 'opening';
+    capOpening();
+  }
+  // au tour de Cap : il joue le coup suivant de la suite
+  function capOpening() {
+    if (!OP || OP.done || sideAt(OP.k) === OP.op.color) return;
+    OP.say = OP.k ? 'Cap répond…' : `${OP.op.intro} Cap commence.`;
+    later(() => {
+      if (!OP || screen !== 'opening') return;
+      const s = OP.op.line[OP.k];
+      const m = lineMove(OP.pos, s);
+      make(OP.pos, m);
+      Object.assign(OP, { last: [m.from, m.to], k: OP.k + 1, say: `Cap joue ${s}. À toi : quel coup joue-t-on ici ?` });
+      ctx.render();
+    }, 700);
+  }
+  function openingMove(m) {
+    const want = OP.op.line[OP.k];
+    const name = san(OP.pos, m);
+    if (bare(name) !== bare(want)) {
+      Object.assign(OP, { bad: true, say: `${name} se joue, mais pas dans cette ouverture. Réessaie, ou touche « Indice ».` });
+      ctx.render();
+      return;
+    }
+    const why = OP.op.why[whyIndex(OP.op, OP.k)];
+    make(OP.pos, m);
+    Object.assign(OP, { last: [m.from, m.to], k: OP.k + 1, why: `${name} : ${why}`, bad: false, hint: 0 });
+    if (OP.k >= OP.op.line.length) {
+      const e = E();
+      const first = !e.openings?.[OP.op.id];
+      e.openings = { ...(e.openings ?? {}), [OP.op.id]: (e.openings?.[OP.op.id] ?? 0) + 1 };
+      Object.assign(OP, { done: true, say: `Ouverture apprise : ${OP.op.name} ! Rejoue-la de temps en temps pour la garder en tête.` });
+      ctx.save();
+      if (first) ctx.celebrate(`Ouverture apprise : ${OP.op.name}`);
+    } else capOpening();
+    ctx.render();
+  }
+  function openingView() {
+    const { op } = OP;
+    const flip = op.color === 'b';
+    const mine = op.line.slice(0, OP.k).filter((_, k) => sideAt(k) === op.color).length;
+    const want = !OP.done && sideAt(OP.k) === op.color ? lineMove(OP.pos, op.line[OP.k]) : null;
+    const marks = want && OP.hint ? { [want.from]: 'hint', ...(OP.hint > 1 ? { [want.to]: 'hint' } : {}) } : {};
+    const myTurn = Boolean(want);
+    const moves = op.line.slice(0, OP.k).reduce((out, x, i) => (i % 2 ? `${out} ${esc(x)}</li>` : `${out}<li><b>${i / 2 + 1}.</b> ${esc(x)}`), '') + (OP.k % 2 ? '</li>' : '');
+    const hintText = want && OP.hint > 1 ? ` (le coup : ${op.line[OP.k]})` : '';
+    return `<section class="arcade ch-wrap"><div class="arc-top"><button class="btn small" data-act="ch-home">‹ Échecs</button><div class="arc-score"><b>${mine} / ${op.why.length}</b><small>${esc(op.name)} · ${op.color === 'w' ? 'blancs' : 'noirs'}</small></div></div>
+      <p class="ch-task">${esc(OP.say + hintText)}</p>
+      ${OP.why && !OP.bad ? `<p class="ch-msg ok">${esc(OP.why)}</p>` : ''}${OP.bad ? '<p class="ch-msg ko">Pas ce coup-là.</p>' : ''}
+      ${board({ pieces: OP.pos.board, flip, sel: OP.sel, targets: myTurn ? targetsOf(OP) : [], last: OP.last, check: checkOf(OP.pos), marks })}${promoBar()}
+      <div class="ch-actions">${OP.done ? `<button class="btn primary" data-act="ch-opening" data-id="${op.id}">Rejouer cette ouverture</button><button class="btn" data-act="ch-home">Les autres ouvertures</button>` : `<button class="btn small" data-act="ch-op-hint"${myTurn ? '' : ' disabled'}>${icon('lightbulb')}Indice</button><button class="btn small" data-act="ch-opening" data-id="${op.id}">Recommencer</button>`}</div>
+      ${OP.k ? `<ol class="ch-moves">${moves}</ol>` : ''}</section>`;
+  }
+
   // ---------- revoir une partie ----------
   // RV : { game, rv (chess-review.js), i : la position montrée (après i coups), sum : le bilan }
   let RV = null;
@@ -376,6 +443,8 @@ export function createChess(ctx) {
         <ol class="ch-lessons">${LESSONS.map((l, i) => `<li><button class="ch-lesson${done(l.id) ? ' done' : ''}${i === next ? ' next' : ''}" data-act="ch-lesson" data-id="${l.id}"><span class="ch-num">${done(l.id) ? '✓' : i + 1}</span><span>${esc(l.title)}</span></button></li>`).join('')}</ol></section>
       <section class="card ch-card"><h2>${icon('target')}Problèmes</h2><p class="hint">Mats en un et en deux coups, fourchettes, enfilades : trouve le coup qui gagne.</p>
         <button class="btn primary wide" data-act="ch-puzzles">Résoudre (${Object.keys(e.puzzles).length} / ${PUZZLES.length})</button></section>
+      <section class="card ch-card"><h2>${icon('books')}Ouvertures</h2><p class="hint">Les premiers coups des bons joueurs, un par un, avec la raison de chacun. Cap joue l’adversaire.</p>
+        <div class="ch-lessons">${OPENINGS.map((o) => `<button class="ch-lesson${e.openings?.[o.id] ? ' done' : ''}" data-act="ch-opening" data-id="${o.id}"><span class="ch-num ch-side ${o.color}">${e.openings?.[o.id] ? '✓' : ''}</span><span>${esc(o.name)}</span></button>`).join('')}</div></section>
       <section class="card ch-card"><h2>${icon('trophy')}Jouer contre Cap</h2>
         <div class="ch-pick">${Object.entries(LEVELS).map(([id, lv]) => `<button class="seg${pick.level === id ? ' on' : ''}" data-act="ch-level" data-id="${id}" aria-pressed="${pick.level === id}">${lv.name}${wins(id) ? ` · ${wins(id)} ✓` : ''}</button>`).join('')}</div>
         <div class="ch-pick">${[['w', 'Blancs'], ['b', 'Noirs'], ['r', 'Au hasard']].map(([c, n]) => `<button class="seg${pick.color === c ? ' on' : ''}" data-act="ch-color" data-c="${c}" aria-pressed="${pick.color === c}">${n}</button>`).join('')}</div>
@@ -392,6 +461,10 @@ export function createChess(ctx) {
   function tap(s) {
     // une promotion à choisir : toucher le plateau l'annule (on rejoue un autre coup)
     if (promo) { promo = null; ctx.render(); return; }
+    if (screen === 'opening' && OP && !OP.done && sideAt(OP.k) === OP.op.color) {
+      tapPos(OP, s, openingMove);
+      return;
+    }
     if (screen === 'game' && G && !G.over && !G.thinking && G.pos.turn === G.color) {
       tapPos(G, s, (m) => { if (!playMove(m)) capTurn(); ctx.render(); });
       return;
@@ -467,8 +540,14 @@ export function createChess(ctx) {
 
   const actions = {
     'ch-sq'(el) { tap(Number(el.dataset.sq)); },
-    'ch-home'() { clearTimeout(wait); screen = 'home'; promo = null; RV = null; ctx.render(); },
+    'ch-home'() { clearTimeout(wait); screen = 'home'; promo = null; RV = null; OP = null; ctx.render(); },
     'ch-review'() { openReview(); ctx.render(); window.scrollTo(0, 0); },
+    'ch-opening'(el) { openOpening(el.dataset.id); ctx.render(); window.scrollTo(0, 0); },
+    'ch-op-hint'() {
+      if (!OP || OP.done) return;
+      OP.hint = Math.min(2, OP.hint + 1);
+      ctx.render();
+    },
     'ch-rv-go'(el) {
       if (!RV) return;
       RV.i = Math.max(0, Math.min(RV.rv.moves.length, Number(el.dataset.i) || 0));
@@ -555,11 +634,12 @@ export function createChess(ctx) {
       if (screen === 'puzzle' && PZ) return puzzleView();
       if (screen === 'game' && G) return gameView();
       if (screen === 'review' && RV) return reviewView();
+      if (screen === 'opening' && OP) return openingView();
       screen = 'home';
       return homeView();
     },
     // en arrivant : l'accueil des échecs (la partie en cours s'y reprend)
-    enter() { clearTimeout(wait); screen = 'home'; promo = null; RV = null; },
+    enter() { clearTimeout(wait); screen = 'home'; promo = null; RV = null; OP = null; },
     // en partant de l'arcade : on coupe la réflexion de Cap (la partie est gardée)
     leave() { clearTimeout(wait); promo = null; },
   };

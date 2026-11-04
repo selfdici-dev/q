@@ -1607,6 +1607,10 @@ button.peg { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .ch-num, .ch-pz b { flex: 0 0 auto; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--tone-2, var(--line)); font: 700 0.72rem/1 var(--sans); font-variant-numeric: tabular-nums; }
 .ch-lesson.done .ch-num, .ch-pz.done b { background: var(--pos, var(--accent)); color: #fff; }
 .ch-lesson.next .ch-num { background: var(--accent); color: var(--accent-ink); }
+/* ouvertures : la pastille dit avec quelle couleur tu joues */
+.ch-side.w { background: #f4efe6; color: #2a1d16; box-shadow: inset 0 0 0 1px #8a7a6a; }
+.ch-side.b { background: #2b1e17; color: #f4efe6; box-shadow: inset 0 0 0 1px #8a7a6a; }
+.ch-lesson.done .ch-side { background: var(--pos, var(--accent)); color: #fff; box-shadow: none; }
 .ch-pz-grid { display: grid; gap: 6px; }
 .ch-pz { min-height: 48px; }
 .ch-pz small { font-size: 0.84rem; }

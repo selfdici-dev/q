@@ -10,7 +10,7 @@ import { SEASONS, seasonYear } from './seasons.js';
 
 // Du plus facile au plus dur.
 export const DECORS = [
-  { id: 'salle', name: 'La salle', desc: 'Mur sombre, grille et logo de cuivre, bandes LED.', need: null },
+  { id: 'salle', name: 'La salle', desc: 'Mur sombre, logo de cuivre, spots et suspensions, kettlebells, bandes LED.', need: null },
   { id: 'grec', name: 'Temple grec', desc: 'Marbre et colonnes au-dessus des nuages, au coucher du soleil.', need: { kind: 'workouts', n: 15 } },
   { id: 'ring', name: 'Ring de boxe', desc: 'Projecteurs qui balaient la salle, cordes, la foule et ses flashs.', need: { kind: 'boxe', n: 12 } },
   { id: 'foret', name: 'Forêt au crépuscule', desc: 'Un ponton de bois sous les arbres, des lucioles, une guirlande.', need: { kind: 'routines', n: 20 } },
@@ -180,22 +180,67 @@ function salle({ u, pick, title }) {
     return `<g class="hub-gloves"><path d="M${r1(x - 4)} ${r1(y - 3)}L${r1(x)} ${r1(y - 6)}L${r1(x + 4)} ${r1(y - 3)}" stroke="#8a7a6b" stroke-width="0.5" fill="none"/>${g(-3.2, 8)}${g(3.2, -8)}</g>`;
   })();
   const f = (dx, dy) => P(4 + dx, 4 + dy, 0.01);
+  // des spots au plafond qui éclairent les murs en cône, couleur cuivre
+  const wash = (side, t) => {
+    const q = side === 'L' ? lw : rw;
+    const spot = side === 'L' ? onL(t - 0.16, t + 0.16, HW - 0.12, HW, '#2e2622') : onR(t - 0.16, t + 0.16, HW - 0.12, HW, '#2e2622');
+    return poly([q(t - 0.12, HW - 0.12), q(t + 0.12, HW - 0.12), q(t + 0.75, 0.25), q(t - 0.75, 0.25)], `url(#${u('wash')})`) + spot
+      + `<ellipse cx="${r1(q(t, HW - 0.14)[0])}" cy="${r1(q(t, HW - 0.14)[1])}" rx="2.2" ry="1" fill="#ffe2c4"/>`;
+  };
+  // deux suspensions au bout de leur fil, ampoules chaudes
+  const lamp = (x, y) => `<path d="M${x} 0V${y - 7}" stroke="#3a302a" stroke-width="0.8"/><circle cx="${x}" cy="${y + 3}" r="26" fill="url(#${u('bulb')})"/>`
+    + `<path d="M${x - 8} ${y + 2}L${x - 3} ${y - 7}H${x + 3}L${x + 8} ${y + 2}Z" fill="#c98059"/><path d="M${x} ${y - 7}H${x + 3}L${x + 8} ${y + 2}H${x}Z" fill="#8f5232"/>`
+    + `<ellipse cx="${x}" cy="${y + 2}" rx="8" ry="1.8" fill="#5e3a24"/><circle cx="${x}" cy="${y + 3.4}" r="2.6" fill="#fff1d8"/>`;
+  // le socle de béton sous le plancher, une bande de cuivre allumée tout autour
+  const slab = box(0, 0, -0.5, N, N, 0.5, ['#1d1916', '#15110f', '#1b1714'])
+    + poly([P(0, N, -0.16), P(N, N, -0.16), P(N, N, -0.1), P(0, N, -0.1)], '#e9a87c', ' opacity="0.9"')
+    + poly([P(N, 0, -0.16), P(N, N, -0.16), P(N, N, -0.1), P(N, 0, -0.1)], '#e9a87c', ' opacity="0.9"');
+  const [sx, sy] = P(N, N, -0.5);
+  const under = `<ellipse cx="${r1(sx)}" cy="${r1(sy + 6)}" rx="190" ry="34" fill="url(#${u('pool')})"/>`;
+  // des kettlebells devant, à gauche ; des disques et un médecine-ball à droite
+  const kettle = (X, Y, s, c) => {
+    const [x, y] = P(X, Y, 0);
+    return `<g transform="translate(${r1(x)} ${r1(y)}) scale(${s})"><ellipse rx="5.6" ry="2" fill="#000" opacity="0.35"/><circle cy="-5" r="5" fill="${c}"/><path d="M-3.4 -8.4a3.4 3.4 0 0 1 6.8 0" stroke="${c}" stroke-width="1.8" fill="none"/>`
+      + '<path d="M-3.6 -7.6a5 5 0 0 1 3 -2.2" stroke="#fff" stroke-opacity="0.35" stroke-width="1" fill="none"/></g>';
+  };
+  const plates = (() => {
+    const [x, y] = P(6.55, 3.55, 0);
+    return [0, 1, 2].map((k) => `<ellipse cx="${r1(x)}" cy="${r1(y - k * 2.6)}" rx="${9 - k * 1.6}" ry="${r1((9 - k * 1.6) * 0.6)}" fill="#2a2522" stroke="#8f5232" stroke-width="0.8"/>`).join('')
+      + `<ellipse cx="${r1(x)}" cy="${r1(y - 5.2)}" rx="1.6" ry="1" fill="#0c0a09"/>`;
+  })();
+  const mball = (() => {
+    const [x, y] = P(6.3, 3.05, 0);
+    return `<ellipse cx="${r1(x)}" cy="${r1(y)}" rx="6" ry="2.2" fill="#000" opacity="0.35"/><circle cx="${r1(x)}" cy="${r1(y - 5.4)}" r="5.6" fill="#3a2e28"/><path d="M${r1(x - 5.6)} ${r1(y - 5.4)}h11.2" stroke="#c98059" stroke-width="1"/><path d="M${r1(x - 3.6)} ${r1(y - 8.4)}a5 5 0 0 1 3 -2" stroke="#fff" stroke-opacity="0.3" stroke-width="1" fill="none"/>`;
+  })();
+  // le miroir : deux reflets en biais
+  const [m0x, m0y] = rw(5.1, 2.4), [m1x, m1y] = rw(5.6, 2.4);
+  const glare = `<path d="M${r1(m0x)} ${r1(m0y)}l10 0l-14 34l-10 0z" fill="#fff" opacity="0.06"/><path d="M${r1(m1x + 8)} ${r1(m1y + 2)}l4 0l-14 34l-4 0z" fill="#fff" opacity="0.08"/>`;
   return {
-    bg: '#0c0a09',
-    defs: lin(u('wallL'), [0, 0, 1, 0], [[0, '#120f0d'], [1, '#1c1714']]) + lin(u('wallR'), [0, 0, 1, 0], [[0, '#211b17'], [1, '#16120f']])
-      + lin(u('floor'), [0, 0, 0, 1], [[0, '#1d1917'], [1, '#2a2420']])
+    bg: `url(#${u('room')})`,
+    defs: lin(u('wallL'), [0, 0, 1, 0], [[0, '#14110f'], [1, '#201a16']]) + lin(u('wallR'), [0, 0, 1, 0], [[0, '#251e19'], [1, '#18130f']])
+      + lin(u('floor'), [0, 0, 0, 1], [[0, '#211c19'], [1, '#2e2723']])
       + lin(u('ledL'), [0, 0, 1, 0], [[0, '#f2c3a3', 0.22], [1, '#f2c3a3', 0]]) + lin(u('ledR'), [1, 0, 0, 0], [[0, '#f2c3a3', 0.22], [1, '#f2c3a3', 0]])
-      + lin(u('mirror'), [0, 0, 1, 1], [[0, '#2a2a2e'], [0.5, '#17181b'], [1, '#222326']]),
-    back: `${wallL(`url(#${u('wallL')})`)}${wallR(`url(#${u('wallR')})`)}<path d="${grid.join('')}" stroke="#dc9a70" stroke-opacity="0.18" stroke-width="0.5"/>`
+      + lin(u('mirror'), [0, 0, 1, 1], [[0, '#34343a'], [0.5, '#1a1b1f'], [1, '#2a2b30']])
+      + rad(u('room'), [[0, '#30241c'], [0.55, '#17120f'], [1, '#090807']], ' cx="0.5" cy="0.36" r="0.7"')
+      + lin(u('wash'), [0, 0, 0, 1], [[0, '#ffcfa6', 0.3], [0.6, '#e9a87c', 0.08], [1, '#e9a87c', 0]])
+      + rad(u('bulb'), [[0, '#ffdcb0', 0.55], [0.4, '#ffb980', 0.16], [1, '#ffb980', 0]])
+      + rad(u('pool'), [[0, '#e9a87c', 0.2], [0.6, '#b8714c', 0.06], [1, '#b8714c', 0]])
+      + lin(u('sheen'), [0, 0, 1, 0], [[0, '#fff', 0], [0.5, '#ffe2c4', 0.07], [1, '#fff', 0]]),
+    back: `${under}${slab}${wallL(`url(#${u('wallL')})`)}${wallR(`url(#${u('wallR')})`)}<path d="${grid.join('')}" stroke="#dc9a70" stroke-opacity="0.18" stroke-width="0.5"/>`
+      + wash('L', 1.3) + wash('L', 5.3) + wash('R', 1.25) + wash('R', 4.4)
       + `<g class="hub-logo">${facet(needle[2], needle[3], '#f3c9a8')}${facet(needle[2], needle[1], '#d9956b')}${facet(needle[3], needle[0], '#b8714c')}${facet(needle[1], needle[0], '#8f5232')}</g>`
-      + onR(4.6, 6.7, 0.5, 2.6, `url(#${u('mirror')})`, ' stroke="#4a3a2e" stroke-width="0.8"')
-      + `<g class="hub-screen">${onR(1.9, 4.2, 1.5, 2.75, '#0a0807', ' stroke="#3a2a20" stroke-width="0.8"')}${onRight(2.1, 2.4, say(pick, title))}</g>${gloves}`,
-    floor: `${floorPoly(`url(#${u('floor')})`)}${tiles('#000', 0.4)}<g opacity="0.35">${poly([f(-0.9, -0.9), f(0, 0), f(0.9, -0.9)], '#d9956b')}${poly([f(0.9, -0.9), f(0, 0), f(0.9, 0.9)], '#b8714c')}${poly([f(0.9, 0.9), f(0, 0), f(-0.9, 0.9)], '#8f5232')}${poly([f(-0.9, 0.9), f(0, 0), f(-0.9, -0.9)], '#f3c9a8')}</g>`,
+      + onR(4.6, 6.7, 0.5, 2.6, `url(#${u('mirror')})`, ' stroke="#6a5444" stroke-width="0.9"') + glare
+      + `<g class="hub-screen">${onR(1.9, 4.2, 1.5, 2.75, '#0a0807', ' stroke="#3a2a20" stroke-width="0.8"')}${onRight(2.1, 2.4, say(pick, title))}</g>${gloves}`
+      + `<g class="hub-lamps">${lamp(50, 150)}${lamp(310, 150)}</g>`,
+    floor: `${floorPoly(`url(#${u('floor')})`)}${tiles('#000', 0.4)}${poly([P(1.2, 0), P(2.6, 0), P(2.6, N), P(1.2, N)], `url(#${u('sheen')})`)}${poly([P(4.4, 0), P(5.0, 0), P(5.0, N), P(4.4, N)], `url(#${u('sheen')})`)}`
+      + `<g opacity="0.35">${poly([f(-0.9, -0.9), f(0, 0), f(0.9, -0.9)], '#d9956b')}${poly([f(0.9, -0.9), f(0, 0), f(0.9, 0.9)], '#b8714c')}${poly([f(0.9, 0.9), f(0, 0), f(-0.9, 0.9)], '#8f5232')}${poly([f(-0.9, 0.9), f(0, 0), f(-0.9, -0.9)], '#f3c9a8')}</g>`,
     edge: `<g class="hub-led">${poly([P(0, 0), P(0, N), P(0.9, N), P(0.9, 0)], `url(#${u('ledL')})`)}${poly([P(0, 0), P(N, 0), P(N, 0.9), P(0, 0.9)], `url(#${u('ledR')})`)}`
       + `${poly([P(0, 0, 0.1), P(0, N, 0.1), P(0, N, 0.2), P(0, 0, 0.2)], '#f6d2b6', ' opacity="0.9"')}${poly([P(0, 0, 0.1), P(N, 0, 0.1), P(N, 0, 0.2), P(0, 0, 0.2)], '#f6d2b6', ' opacity="0.9"')}</g>${cap('#5a4a3e')}`,
-    props: `<g class="hub-treadmill">${box(2.85, 0.35, 0, 1.3, 0.75, 0.2, ['#2a2522', '#1a1614', '#221d1a'])}${box(2.87, 0.4, 0.2, 1.22, 0.65, 0.03, ['#111', '#111', '#111'])}${box(2.8, 0.3, 0.2, 0.12, 0.85, 1.3, ['#3a3532', '#2a2522', '#332d2a'])}${box(2.76, 0.35, 1.45, 0.2, 0.75, 0.24, ['#1c1816', '#151210', '#1c1816'])}</g>`,
+    props: `<g class="hub-treadmill">${box(2.85, 0.35, 0, 1.3, 0.75, 0.2, ['#3a332f', '#1f1a17', '#2b2521'])}${box(2.87, 0.4, 0.2, 1.22, 0.65, 0.03, ['#141110', '#141110', '#141110'])}${box(2.8, 0.3, 0.2, 0.12, 0.85, 1.3, ['#4a423d', '#2e2824', '#3a332f'])}${box(2.76, 0.35, 1.45, 0.2, 0.75, 0.24, ['#2a2420', '#1c1816', '#24201c'])}`
+      + `${poly([P(2.97, 0.45, 1.69), P(2.97, 0.95, 1.69), P(2.97, 0.95, 1.6), P(2.97, 0.45, 1.6)], '#e9a87c', ' opacity="0.85"')}</g>`
+      + `<g class="hub-weights">${kettle(3.25, 6.35, 0.85, '#4a423d')}${kettle(3.62, 6.62, 1, '#c98059')}${kettle(3.3, 6.85, 0.75, '#4a423d')}${mball}${plates}</g>`,
     beam: ['#ffe2c4', '#ffd2a8'], dust: '#ffe2c4',
-    plat: ['#2b2523', '#171311', '#1f1a18'], vig: 0.55,
+    plat: ['#2b2523', '#171311', '#1f1a18'], vig: 0.5,
   };
 }
 

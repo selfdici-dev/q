@@ -5,10 +5,12 @@
 // niveau (gagnées, nulles, perdues), la partie en cours (son départ et ses coups).
 import { fromFen, toFen, legalMoves, san, make, status, inCheck, bestMove, kingSquare, sqName, typeOf, colorOf, LEVELS, START, WHITE, BLACK, KNIGHT, BISHOP, ROOK, QUEEN } from './chess.js';
 import { LESSONS, PUZZLES, judge, starMoves, defend } from './chess-school.js';
+import { createReview, reviewSummary } from './chess-review.js';
 import { icon } from './icons.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const FILES = 'abcdefgh';
+const RESULT = { gagne: 'gagnée', perdu: 'perdue', nulle: 'nulle' };
 const END = { pat: 'Pat : partie nulle.', materiel: 'Plus assez de pièces pour mater : partie nulle.', 50: '50 coups sans prise ni pion : partie nulle.', repetition: 'La même position trois fois : partie nulle.' };
 
 // Les pièces, dessinées pour Cap (45 × 45) : un corps plein, un contour.
@@ -286,6 +288,7 @@ export function createChess(ctx) {
     const box = result === 'gagne' ? 'wins' : result === 'nulle' ? 'draws' : 'losses';
     e[box] = { ...(e[box] ?? {}), [lvl]: ((e[box] ?? {})[lvl] ?? 0) + 1 };
     e.cur = null;
+    e.last = { start: G.start, sans: [...G.sans], color: G.color, level: lvl, result }; // pour la revoir
     ctx.save();
     if (result === 'gagne') ctx.celebrate(`Échec et mat : tu as battu Cap (${LEVELS[lvl].name}) !`);
   }
@@ -303,8 +306,63 @@ export function createChess(ctx) {
     return `<section class="arcade ch-wrap"><div class="arc-top"><button class="btn small" data-act="ch-home">‹ École</button><div class="arc-score"><b>${esc(LEVELS[G.level].name)}</b><small>Toi avec les ${G.color === WHITE ? 'blancs' : 'noirs'}</small></div></div>
       <p class="ch-msg${G.over ? (G.over.result === 'gagne' ? ' ok' : ' ko') : ''}">${esc(msg)}</p>
       ${board({ pieces: G.pos.board, flip, sel: G.sel, targets: yourTurn ? targetsOf(G) : [], last: G.last, check: checkOf(G.pos), marks })}${promoBar()}
-      <div class="ch-actions">${G.over ? '<button class="btn primary" data-act="ch-new">Rejouer</button>' : `<button class="btn small" data-act="ch-hint"${yourTurn ? '' : ' disabled'}>${icon('lightbulb')}Indice</button><button class="btn small" data-act="ch-undo" aria-label="Annuler mon dernier coup"${yourTurn && G.sans.length >= 2 ? '' : ' disabled'}>Annuler</button><button class="btn small" data-act="ch-resign">Abandonner</button>`}</div>
+      <div class="ch-actions">${G.over ? `<button class="btn primary" data-act="ch-new">Rejouer</button>${G.sans.length ? `<button class="btn" data-act="ch-review">${icon('search')}Revoir la partie</button>` : ''}` : `<button class="btn small" data-act="ch-hint"${yourTurn ? '' : ' disabled'}>${icon('lightbulb')}Indice</button><button class="btn small" data-act="ch-undo" aria-label="Annuler mon dernier coup"${yourTurn && G.sans.length >= 2 ? '' : ' disabled'}>Annuler</button><button class="btn small" data-act="ch-resign">Abandonner</button>`}</div>
       ${G.sans.length ? `<ol class="ch-moves">${moves}</ol>` : ''}</section>`;
+  }
+
+  // ---------- revoir une partie ----------
+  // RV : { game, rv (chess-review.js), i : la position montrée (après i coups), sum : le bilan }
+  let RV = null;
+  function openReview() {
+    const g = E().last;
+    if (!g?.sans?.length) return;
+    clearTimeout(wait);
+    RV = { game: g, rv: createReview(g), i: 0, sum: null };
+    RV.i = RV.rv.moves.length;
+    screen = 'review';
+    const tick = () => {
+      if (screen !== 'review' || !RV) return;
+      RV.rv.step();
+      if (RV.rv.done) RV.sum = reviewSummary(RV.rv.items);
+      ctx.render();
+      if (!RV.rv.done) later(tick, 15);
+    };
+    later(tick, 60);
+  }
+
+  function reviewView() {
+    const { game, rv, sum } = RV;
+    const n = rv.moves.length;
+    const i = Math.max(0, Math.min(n, RV.i));
+    const flip = game.color === BLACK;
+    const item = i > 0 ? rv.items.find((x) => x.k === i - 1) : null;
+    const mv = i > 0 ? rv.moves[i - 1] : null;
+    // un de tes coups fautifs : la position d'avant, ton coup en rouge, le meilleur en vert
+    let pos, marks = {}, last = [];
+    if (item?.mark && item.best) {
+      pos = fromFen(rv.fens[i - 1]);
+      marks = { [mv.from]: 'ko', [mv.to]: 'ko', [item.best.from]: 'ok', [item.best.to]: 'ok' };
+    } else {
+      pos = fromFen(rv.fens[i]);
+      if (mv) last = [mv.from, mv.to];
+    }
+    const num = (k) => `${Math.floor(k / 2) + 1}.${k % 2 ? '..' : ''}`;
+    let say;
+    if (!mv) say = 'La position de départ. Avance coup par coup, ou touche un coup de la liste.';
+    else if (mv.turn !== game.color) say = `${num(i - 1)} ${mv.san} : le coup de Cap.`;
+    else if (!item) say = `${num(i - 1)} ${mv.san} : Cap regarde encore ce coup…`;
+    else say = `${num(i - 1)} ${mv.san}${item.mark} — ${item.comment}`;
+    const progress = rv.done ? '' : `<p class="ch-count">Cap revoit tes coups… ${rv.count} / ${rv.total}</p><span class="decor-bar" aria-hidden="true"><i style="width:${Math.round((100 * rv.count) / Math.max(1, rv.total))}%"></i></span>`;
+    const summary = sum ? `<div class="ch-sum"><b>${sum.accuracy} %</b><span>de coups sans faute</span><small>${[[sum.gaffes, 'gaffe'], [sum.erreurs, 'erreur'], [sum.imprecisions, 'imprécision']].map(([c, w]) => `${c} ${w}${c > 1 ? 's' : ''}`).join(' · ')}</small></div>
+      ${sum.worst ? `<p class="hint">Ton plus gros faux pas : ${num(sum.worst.k)} ${esc(sum.worst.san)}${sum.worst.mark} <button class="btn small" data-act="ch-rv-go" data-i="${sum.worst.k + 1}">Le voir</button></p>` : '<p class="hint">Aucune faute nette : bien joué !</p>'}` : '';
+    const markOf = (k) => rv.items.find((x) => x.k === k)?.mark ?? '';
+    const list = rv.moves.map((m, k) => `${k % 2 === 0 ? `<li><b>${k / 2 + 1}.</b>` : ''}<button class="ch-mv${k === i - 1 ? ' on' : ''}${m.turn === game.color && markOf(k) ? ` m${markOf(k).length}${markOf(k) === '?!' ? 'x' : ''}` : ''}" data-act="ch-rv-go" data-i="${k + 1}">${esc(m.san)}${m.turn === game.color ? markOf(k) : ''}</button>${k % 2 ? '</li>' : ''}`).join('') + (n % 2 ? '</li>' : '');
+    return `<section class="arcade ch-wrap"><div class="arc-top"><button class="btn small" data-act="ch-home">‹ Échecs</button><div class="arc-score"><b>Revoir</b><small>contre Cap (${esc(LEVELS[game.level]?.name ?? '')}) · ${RESULT[game.result] ?? ''}</small></div></div>
+      ${progress}${summary}
+      <p class="ch-msg${item?.mark ? ' ko' : item ? ' ok' : ''}">${esc(say)}</p>
+      ${board({ pieces: pos.board, flip, last, marks, check: checkOf(pos) })}
+      <div class="ch-nav"><button class="btn small" data-act="ch-rv-go" data-i="0" aria-label="Au début">⏮</button><button class="btn small" data-act="ch-rv-go" data-i="${i - 1}" aria-label="Coup d’avant"${i ? '' : ' disabled'}>◀</button><button class="btn small" data-act="ch-rv-go" data-i="${i + 1}" aria-label="Coup suivant"${i < n ? '' : ' disabled'}>▶</button><button class="btn small" data-act="ch-rv-next" aria-label="Faute suivante">Faute suivante</button></div>
+      <ol class="ch-moves ch-review">${list}</ol></section>`;
   }
 
   // ---------- l'accueil ----------
@@ -323,6 +381,7 @@ export function createChess(ctx) {
         <div class="ch-pick">${[['w', 'Blancs'], ['b', 'Noirs'], ['r', 'Au hasard']].map(([c, n]) => `<button class="seg${pick.color === c ? ' on' : ''}" data-act="ch-color" data-c="${c}" aria-pressed="${pick.color === c}">${n}</button>`).join('')}</div>
         ${e.cur ? '<button class="btn primary wide" data-act="ch-resume">Reprendre la partie</button>' : ''}
         <button class="btn${e.cur ? '' : ' primary'} wide" data-act="ch-new">Nouvelle partie</button>
+        ${e.last?.sans?.length ? `<button class="btn wide" data-act="ch-review">${icon('search')}Revoir ta dernière partie (${RESULT[e.last.result] ?? 'finie'})</button>` : ''}
         <p class="hint">Débutant : Cap fait des erreurs. Moyen : il voit deux coups. Coriace : il calcule loin. Bloqué ? « Indice » te souffle un bon coup.</p></section>
     </section>`;
   }
@@ -408,7 +467,21 @@ export function createChess(ctx) {
 
   const actions = {
     'ch-sq'(el) { tap(Number(el.dataset.sq)); },
-    'ch-home'() { clearTimeout(wait); screen = 'home'; promo = null; ctx.render(); },
+    'ch-home'() { clearTimeout(wait); screen = 'home'; promo = null; RV = null; ctx.render(); },
+    'ch-review'() { openReview(); ctx.render(); window.scrollTo(0, 0); },
+    'ch-rv-go'(el) {
+      if (!RV) return;
+      RV.i = Math.max(0, Math.min(RV.rv.moves.length, Number(el.dataset.i) || 0));
+      ctx.render();
+    },
+    'ch-rv-next'() {
+      if (!RV) return;
+      // la prochaine faute (déjà vue par Cap) après le coup montré, sinon la première
+      const marked = RV.rv.items.filter((x) => x.mark).map((x) => x.k + 1).sort((a, b) => a - b);
+      if (!marked.length) return;
+      RV.i = marked.find((k) => k > RV.i) ?? marked[0];
+      ctx.render();
+    },
     'ch-lesson'(el) {
       const lesson = LESSONS.find((l) => l.id === el.dataset.id);
       if (!lesson) return;
@@ -481,11 +554,12 @@ export function createChess(ctx) {
       if (screen === 'puzzles') return puzzlesView();
       if (screen === 'puzzle' && PZ) return puzzleView();
       if (screen === 'game' && G) return gameView();
+      if (screen === 'review' && RV) return reviewView();
       screen = 'home';
       return homeView();
     },
     // en arrivant : l'accueil des échecs (la partie en cours s'y reprend)
-    enter() { clearTimeout(wait); screen = 'home'; promo = null; },
+    enter() { clearTimeout(wait); screen = 'home'; promo = null; RV = null; },
     // en partant de l'arcade : on coupe la réflexion de Cap (la partie est gardée)
     leave() { clearTimeout(wait); promo = null; },
   };

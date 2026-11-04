@@ -1659,6 +1659,19 @@ button.peg { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .ch-promo-btn svg { display: block; width: 100%; height: 100%; }
 .ch-moves { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--chip, var(--surface-2)); list-style: none; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
 .ch-moves b { color: var(--muted); font-weight: 600; }
+/* Revoir une partie : le bilan, la navigation, les coups marqués (?? ? ?!) */
+.ch-sum { display: grid; grid-template-columns: auto 1fr; align-items: baseline; column-gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--tile, var(--surface-2)); }
+.ch-sum b { grid-row: span 2; font: 800 2rem/1 var(--sans); color: var(--accent); font-variant-numeric: tabular-nums; }
+.ch-sum small { color: var(--muted); font-size: 0.8rem; }
+.ch-nav { display: flex; gap: 6px; justify-content: center; }
+.ch-nav .btn { flex: 1; min-width: 0; padding: 0 8px; }
+.ch-review li { display: flex; align-items: center; gap: 4px; }
+.ch-mv { border: 0; padding: 2px 5px; border-radius: 7px; background: none; color: var(--text); font: inherit; font-variant-numeric: tabular-nums; cursor: pointer; }
+.ch-mv.on { background: var(--accent); color: var(--accent-ink); }
+.ch-mv.m2 { color: #e5484d; font-weight: 700; }
+.ch-mv.m1 { color: #f08c3a; font-weight: 700; }
+.ch-mv.m2x { color: #d9a91e; font-weight: 700; }
+.ch-mv.on.m2, .ch-mv.on.m1, .ch-mv.on.m2x { color: var(--accent-ink); }
 .br-hearts { color: #e98a6b; letter-spacing: 1px; }
 .br-art { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: 7px 7px; gap: 3px; align-content: start; padding: 9px 8px; }
 .br-art i { border-radius: 2px; }

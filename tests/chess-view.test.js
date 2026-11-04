@@ -124,3 +124,26 @@ test('échecs (écran) : une partie contre Cap, gardée, reprise, annulée, aban
   assert.equal(state.games.echecs.cur, null);
   assert.match(chess.view(), /Rejouer/);
 });
+
+test('échecs (écran) : la partie finie se revoit, Cap note tes coups', async () => {
+  const state = { games: { echecs: { lessons: {}, puzzles: {}, wins: {}, draws: {}, losses: {}, last: { start: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', sans: ['e4', 'e5', 'Dh5', 'Cc6', 'Fc4', 'Cf6', 'Dxf7#'], color: 8, level: 'moyen', result: 'perdu' } } } };
+  const { chess, act } = setup(state);
+  assert.match(chess.view(), /Revoir ta dernière partie \(perdue\)/);
+  act('ch-review');
+  assert.match(chess.view(), /Cap revoit tes coups… 0 \/ 3/);
+  await new Promise((r) => setTimeout(r, 2500));
+  const html = chess.view();
+  assert.match(html, /<b>67 %<\/b>/);
+  assert.match(html, /Ton plus gros faux pas : 3\.\.\. Cf6\?\?/);
+  act('ch-rv-next');
+  // la faute : la position d'avant, ton coup en rouge, le meilleur en vert
+  const fault = chess.view();
+  assert.match(fault, /3\.\.\. Cf6\?\? — Gaffe/);
+  assert.match(fault, /class="ch-mark ko"/);
+  assert.match(fault, /class="ch-mark ok"/);
+  act('ch-rv-go', { i: '1' });
+  assert.match(chess.view(), /1\. e4 : le coup de Cap\./);
+  act('ch-home');
+  assert.doesNotMatch(chess.view(), /Revoir<\/b>/);
+});
+

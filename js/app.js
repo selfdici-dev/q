@@ -30,6 +30,7 @@ import { SEASONS, seasonStatus, newSeason, dateFr } from './seasons.js';
 import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS, gearIcon } from './avatar.js';
 import { rivalStatus } from './rival.js';
 import { binder } from './binder.js';
+import { deficitSummary } from './deficit.js';
 import { SLOTS, gearStats, gearStatus, wornGear, wearGear, newGear } from './outfit.js';
 import { challengeStatus, updateChallenges, challengeNews } from './challenges.js';
 import { treeSVG, seedOf } from './tree.js';
@@ -1307,9 +1308,40 @@ function mealsCard() {
 }
 
 // Onglet Manger : ton assiette du jour en haut, puis les conseils.
+// Ton déficit (deficit.js) : aujourd'hui, la semaine en barres (vers le haut :
+// déficit ; vers le bas : au-dessus de ta dépense ; vide : rien de noté) et le
+// mois. Un repère de tendance, estimé depuis tes pas et ta séance.
+function deficitCard() {
+  const today = todayKey();
+  const kcalOf = (id) => { const w = WORKOUTS.find((x) => x.id === id); return w ? workoutKcal(w) : 0; };
+  const s = deficitSummary(state, today, kcalOf);
+  const kg = (v) => v.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const word = (n) => (n >= 0 ? `≈ ${fmtInt(n)} kcal de déficit` : `≈ ${fmtInt(-n)} kcal au-dessus`);
+  const t = s.today;
+  const todayLine = t
+    ? `Aujourd’hui : ≈ ${fmtInt(t.spent)} dépensées, ${fmtInt(t.eaten)} mangées, soit <strong>${word(t.deficit)}</strong>.`
+    : 'Note ce que tu manges (au-dessus) : ton déficit du jour s’affiche ici.';
+  const period = (label, p) => `<div class="def-sum${p.total < 0 ? ' over' : ''}"><small>${label}</small><b>${p.logged ? `${p.total < 0 ? '+' : ''}${fmtInt(Math.abs(p.total))}` : '—'}</b><span>${p.logged ? `${p.total >= 0 ? 'kcal de déficit' : 'kcal au-dessus'} · ≈ ${kg(Math.abs(p.kg))} kg de gras${p.total < 0 ? ' en plus' : ''}` : 'rien de noté'}</span><span>${p.logged ? `${p.logged} jour${p.logged > 1 ? 's' : ''} noté${p.logged > 1 ? 's' : ''} · ≈ ${fmtInt(p.avg)} par jour` : ''}</span></div>`;
+  const top = Math.max(800, ...s.week.map((w) => Math.abs(w.day?.deficit ?? 0)));
+  const bars = s.week.map((w, i) => {
+    const v = w.day?.deficit;
+    const h = v == null ? 0 : Math.round((Math.abs(v) / top) * 46);
+    const bar = v == null ? '<i class="def-dot"></i>' : `<i class="def-bar ${v >= 0 ? 'up' : 'down'}" style="height:${Math.max(3, h)}%"></i>`;
+    return `<div class="def-col${w.future ? ' future' : ''}${w.key === today ? ' today' : ''}" title="${v == null ? 'rien de noté' : word(v)}">${bar}<small>${'LMMJVSD'[i]}</small></div>`;
+  }).join('');
+  return `<section class="card deficit-card">
+    <div class="card-head"><h2>${icon('trending-up')}Ton déficit</h2></div>
+    <p class="hint">${todayLine}</p>
+    <div class="def-bars" aria-hidden="true">${bars}</div>
+    <div class="def-grid">${period('Cette semaine', s.weekSum)}${period('Ce mois-ci', s.month)}</div>
+    <p class="hint">Une estimation : ta dépense vient de tes pas et de ta séance. Vise ≈ 500 par jour, soit ≈ 0,5 kg de gras par semaine ; c’est la tendance qui compte, pas un jour.</p>
+  </section>`;
+}
+
 function viewFood() {
   return `
   ${mealsCard()}
+  ${deficitCard()}
   <section class="card">
     <div class="card-head"><h2>${icon('clock')}Ta journée type</h2></div>
     <p class="hint">≈ 1 850 kcal avec 8 000 pas (≈ 2 000 les jours à 12 000 pas) et ${PROTEIN_GRAMS} g de protéines. Pas faim le matin ? Le 1er repas glisse vers 11 h : c’est le total du jour qui compte.</p>

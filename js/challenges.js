@@ -40,6 +40,8 @@ export const CHALLENGES = {
     { id: 'sprint', icon: 'trending-up', from: '2026-11-02', record: (g) => g?.sprint?.best ?? 0, text: (b) => `Bats ton record au Sprint (${fmt(b)} m)`, first: 'Cours au Sprint, même quelques mètres' },
     { id: 'pixels', icon: 'search', from: '2026-11-02', n: 2, total: (g) => (Array.isArray(g?.pixels?.done) ? g.pixels.done.length : 0), text: '2 dessins trouvés aux Pixels cachés' },
     { id: 'echecs', icon: 'knight', from: '2026-11-02', n: 1, total: (g) => sum(g?.echecs?.wins), text: 'Bats Cap aux échecs (au niveau de ton choix)' },
+    // à partir de la semaine du 9 novembre 2026
+    { id: 'probleme', icon: 'calendar', from: '2026-11-09', n: 5, total: (g) => Object.values(g?.echecs?.daily ?? {}).filter((x) => x === true).length, text: '5 problèmes d’échecs du jour résolus' },
   ],
 };
 // les défis d'une famille possibles cette semaine-là

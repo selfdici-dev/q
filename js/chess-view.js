@@ -7,6 +7,7 @@ import { fromFen, toFen, legalMoves, san, make, status, inCheck, bestMove, kingS
 import { LESSONS, PUZZLES, judge, starMoves, defend } from './chess-school.js';
 import { createReview, reviewSummary } from './chess-review.js';
 import { OPENINGS, sideAt, whyIndex } from './chess-openings.js';
+import { dailyFor, dailyStreak } from './chess-daily.js';
 import { icon } from './icons.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -164,11 +165,28 @@ export function createChess(ctx) {
     const p = PZ.pz;
     const who = PZ.side === WHITE ? 'Les blancs jouent' : 'Les noirs jouent';
     const i = PUZZLES.indexOf(p);
-    return `<section class="arcade ch-wrap"><div class="arc-top"><button class="btn small" data-act="ch-puzzles">‹ Problèmes</button><div class="arc-score"><b>${esc(p.group)}</b><small>${who}</small></div></div>
+    const back = PZ.daily ? '<button class="btn small" data-act="ch-home">‹ Échecs</button>' : '<button class="btn small" data-act="ch-puzzles">‹ Problèmes</button>';
+    const again = PZ.daily ? 'data-act="ch-daily"' : `data-act="ch-puzzle" data-id="${p.id}"`;
+    const actions = PZ.daily
+      ? (PZ.ok ? '<button class="btn primary" data-act="ch-home">Retour aux échecs</button>' : `${PZ.bad || PZ.phase > 1 ? `<button class="btn" ${again}>Recommencer</button>` : ''}${PZ.peek ? '' : '<button class="btn" data-act="ch-pz-sol">Voir la solution</button>'}`)
+      : `${PZ.ok && i < PUZZLES.length - 1 ? `<button class="btn primary" data-act="ch-puzzle" data-id="${PUZZLES[i + 1].id}">Problème suivant</button>` : ''}${!PZ.ok && (PZ.bad || PZ.phase > 1) ? `<button class="btn" ${again}>Recommencer</button>` : ''}`;
+    return `<section class="arcade ch-wrap"><div class="arc-top">${back}<div class="arc-score"><b>${esc(PZ.daily ? 'Problème du jour' : p.group)}</b><small>${PZ.daily ? `${esc(p.group)} · ` : ''}${who}</small></div></div>
       <p class="ch-task">${esc(p.text)}</p>
-      ${board({ pieces: PZ.pos.board, sel: PZ.sel, targets: PZ.ok ? [] : targetsOf(PZ), last: PZ.last, check: checkOf(PZ.pos), flip: PZ.flip })}${promoBar()}
+      ${board({ pieces: PZ.pos.board, sel: PZ.sel, targets: PZ.ok ? [] : targetsOf(PZ), last: PZ.last, check: checkOf(PZ.pos), flip: PZ.flip, marks: PZ.marks ?? {} })}${promoBar()}
       ${PZ.msg ? `<p class="ch-msg${PZ.ok ? ' ok' : PZ.bad ? ' ko' : ''}">${esc(PZ.msg)}</p>` : ''}
-      <div class="ch-actions">${PZ.ok && i < PUZZLES.length - 1 ? `<button class="btn primary" data-act="ch-puzzle" data-id="${PUZZLES[i + 1].id}">Problème suivant</button>` : ''}${!PZ.ok && (PZ.bad || PZ.phase > 1) ? '<button class="btn" data-act="ch-puzzle" data-id="' + p.id + '">Recommencer</button>' : ''}</div></section>`;
+      <div class="ch-actions">${actions}</div></section>`;
+  }
+
+  // le problème du jour : le même toute la journée (chess-daily.js)
+  const todayOf = () => ctx.today?.() ?? new Date().toISOString().slice(0, 10);
+  const peeked = new Set(); // les jours où tu as regardé la solution (ils ne comptent pas)
+  function openDaily() {
+    const today = todayOf();
+    const pz = dailyFor(today);
+    const pos = fromFen(pz.fen);
+    PZ = { pz, pos, sel: -1, last: [], phase: 1, msg: '', ok: false, bad: false, side: pos.turn, flip: pos.turn === BLACK, daily: today, peek: peeked.has(today), marks: {} };
+    promo = null;
+    screen = 'puzzle';
   }
 
   function openPuzzle(id) {
@@ -207,6 +225,22 @@ export function createChess(ctx) {
 
   function solved(name) {
     const e = E();
+    if (PZ.daily) {
+      PZ.marks = {};
+      if (PZ.peek) {
+        Object.assign(PZ, { ok: true, msg: `${name} : c’est ça. Avec la solution, ta série attend demain.` });
+        ctx.render();
+        return;
+      }
+      const first = !e.daily?.[PZ.daily];
+      e.daily = { ...(e.daily ?? {}), [PZ.daily]: true };
+      const n = dailyStreak(e.daily, PZ.daily);
+      Object.assign(PZ, { ok: true, msg: `${name} : bravo !${n > 1 ? ` ${n} jours de suite.` : ''} Reviens demain pour le suivant.` });
+      ctx.save();
+      ctx.render();
+      if (first) ctx.celebrate(`Problème du jour résolu${n > 1 ? ` · ${n} jours de suite` : ''}`);
+      return;
+    }
     const first = !e.puzzles[PZ.pz.id];
     e.puzzles[PZ.pz.id] = true;
     Object.assign(PZ, { ok: true, msg: `${name} : bravo, c’est ça !` });
@@ -439,6 +473,15 @@ export function createChess(ctx) {
     const next = LESSONS.findIndex((l) => !done(l.id));
     const wins = (lv) => (e.wins ?? {})[lv] ?? 0;
     return `<section class="arcade ch-wrap"><div class="arc-top"><button class="btn small" data-act="arc-menu">‹ Arcade</button><div class="arc-score"><b>Échecs</b><small>${Object.keys(e.lessons).length} / ${LESSONS.length} leçons · ${Object.keys(e.puzzles).length} / ${PUZZLES.length} problèmes</small></div></div>
+      ${(() => {
+        const today = todayOf();
+        const pz = dailyFor(today);
+        const done = e.daily?.[today] === true;
+        const n = dailyStreak(e.daily, today);
+        return `<section class="card ch-card ch-daily"><h2>${icon('calendar')}Problème du jour</h2>
+          <p class="hint">${done ? 'Résolu : reviens demain pour le suivant.' : `${esc(pz.group)}, tiré d’une vraie partie. Un nouveau chaque jour.`}${n ? ` <b class="ch-streak">${icon('flame')}${n} jour${n > 1 ? 's' : ''} de suite</b>` : ''}</p>
+          <button class="btn${done ? '' : ' primary'} wide" data-act="ch-daily">${done ? 'Le revoir' : 'Résoudre'}</button></section>`;
+      })()}
       <section class="card ch-card"><h2>${icon('school')}Apprendre</h2><p class="hint">Du plateau jusqu’au mat, pas à pas : une explication courte, puis des exercices sur le plateau.</p>
         <ol class="ch-lessons">${LESSONS.map((l, i) => `<li><button class="ch-lesson${done(l.id) ? ' done' : ''}${i === next ? ' next' : ''}" data-act="ch-lesson" data-id="${l.id}"><span class="ch-num">${done(l.id) ? '✓' : i + 1}</span><span>${esc(l.title)}</span></button></li>`).join('')}</ol></section>
       <section class="card ch-card"><h2>${icon('target')}Problèmes</h2><p class="hint">Mats en un et en deux coups, fourchettes, enfilades : trouve le coup qui gagne.</p>
@@ -542,6 +585,17 @@ export function createChess(ctx) {
     'ch-sq'(el) { tap(Number(el.dataset.sq)); },
     'ch-home'() { clearTimeout(wait); screen = 'home'; promo = null; RV = null; OP = null; ctx.render(); },
     'ch-review'() { openReview(); ctx.render(); window.scrollTo(0, 0); },
+    'ch-daily'() { clearTimeout(wait); openDaily(); ctx.render(); window.scrollTo(0, 0); },
+    'ch-pz-sol'() {
+      if (!PZ?.daily || PZ.ok) return;
+      // retour au départ du problème, son premier coup montré
+      clearTimeout(wait);
+      const pos = fromFen(PZ.pz.fen);
+      const m = legalMoves(pos).find((x) => san(pos, x).replace(/[+#]$/, '') === PZ.pz.solution.replace(/[+#]$/, ''));
+      peeked.add(PZ.daily);
+      Object.assign(PZ, { pos, sel: -1, last: [], phase: 1, bad: false, peek: true, marks: m ? { [m.from]: 'hint', [m.to]: 'hint' } : {}, msg: `La solution : ${PZ.pz.solution}${PZ.pz.goal === 'mate2' ? ', puis le mat' : ''}. Joue-la.` });
+      ctx.render();
+    },
     'ch-opening'(el) { openOpening(el.dataset.id); ctx.render(); window.scrollTo(0, 0); },
     'ch-op-hint'() {
       if (!OP || OP.done) return;

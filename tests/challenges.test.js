@@ -99,6 +99,23 @@ test('défis : aux échecs, une victoire contre Cap dans la semaine (à partir d
   assert.equal(c.done, true);
 });
 
+test('défis : 5 problèmes d’échecs du jour dans la semaine (à partir du 9 novembre 2026)', () => {
+  assert.ok(!weekChallenges('2026-11-02').some((c) => c.id === 'probleme'));
+  let w = '2026-11-09';
+  while (weekChallenges(w)[2].id !== 'probleme') w = addDays(w, 7);
+  const before = { [addDays(w, -3)]: true, [addDays(w, -2)]: true };
+  let state = base({ games: { echecs: { daily: before } } });
+  state = { ...state, challenges: updateChallenges(state, w) };
+  const days = { ...before };
+  for (let i = 0; i < 4; i++) days[addDays(w, i)] = true;
+  days[addDays(w, 4)] = 'vu'; // pas résolu : ne compte pas
+  let c = challengeStatus({ ...state, games: { echecs: { daily: days } } }, addDays(w, 4)).list[2];
+  assert.equal(c.label, '4 / 5');
+  days[addDays(w, 5)] = true;
+  c = challengeStatus({ ...state, games: { echecs: { daily: days } } }, addDays(w, 5)).list[2];
+  assert.equal(c.done, true);
+});
+
 test('défis : réussi le reste, annoncé une fois, et l’XP suit (+ le bonus des trois)', () => {
   const w = '2026-11-02';
   const before = totalXP(base());

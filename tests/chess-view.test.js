@@ -175,3 +175,43 @@ test('échecs (écran) : une ouverture s’apprend coup par coup, Cap joue l’a
   assert.ok(party.includes('Ouverture apprise : Partie italienne'));
 });
 
+test('échecs (écran) : le problème du jour, sa série, et sa solution qui ne compte pas', async () => {
+  const { dailyFor } = await import('../js/chess-daily.js');
+  const { fromFen, legalMoves, san } = await import('../js/chess.js');
+  const today = '2026-11-04';
+  const state = { games: { echecs: { lessons: {}, puzzles: {}, wins: {}, draws: {}, losses: {}, daily: { '2026-11-03': true } } } };
+  const party = [];
+  const chess = createChess({ state, save() {}, render() {}, celebrate: (m) => party.push(m), today: () => today });
+  const act = (name, data = {}) => chess.actions[name]({ dataset: data });
+  assert.match(chess.view(), /Problème du jour/);
+  assert.match(chess.view(), /1 jour de suite/);
+  act('ch-daily');
+  const pz = dailyFor(today);
+  assert.match(chess.view(), new RegExp(pz.group));
+  // la solution montrée : le problème repart au début, ne compte pas pour la série
+  act('ch-pz-sol');
+  assert.match(chess.view(), /La solution : /);
+  assert.equal((chess.view().match(/class="ch-mark hint"/g) ?? []).length, 2);
+  // recommencer après avoir regardé : ça ne compte toujours pas pour la série
+  act('ch-daily');
+  assert.doesNotMatch(chess.view(), /Voir la solution/);
+  // Cap rouvert (un nouvel écran) : on joue sans regarder
+  const fresh = createChess({ state, save() {}, render() {}, celebrate: (m) => party.push(m), today: () => today });
+  fresh.actions['ch-daily']({ dataset: {} });
+  const view = () => fresh.view();
+  const pos = fromFen(pz.fen);
+  const m = legalMoves(pos).find((x) => san(pos, x).replace(/[+#]$/, '') === pz.solution.replace(/[+#]$/, ''));
+  const sq = (s) => ({ dataset: { sq: String(s) } });
+  fresh.actions['ch-sq'](sq(m.from));
+  fresh.actions['ch-sq'](sq(m.to));
+  if (pz.goal === 'mate2') {
+    // Cap répond, puis on cherche le mat en 1 (comme pour les autres problèmes)
+    await new Promise((r) => setTimeout(r, 900));
+    assert.match(view(), /À toi : mat en un coup/);
+    return;
+  }
+  assert.match(view(), /bravo ! 2 jours de suite/);
+  assert.equal(state.games.echecs.daily[today], true);
+  assert.ok(party.some((x) => /Problème du jour résolu · 2 jours de suite/.test(x)));
+});
+

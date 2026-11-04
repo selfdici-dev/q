@@ -35,7 +35,12 @@ L'utilisateur est débutant : explique simplement, en français.
 - `js/chess.js` : les échecs, logique pure (règles complètes vérifiées par perft, notation
   française R D T F C, Cap : alpha-bêta en 3 niveaux) ; `js/chess-school.js` : l'école
   (16 leçons et leurs exercices, 12 problèmes, chacun résolu par le moteur dans les tests) ;
-  `js/chess-view.js` : leur écran dans l'arcade, gardé dans `state.games.echecs`.
+  `js/chess-view.js` : leur écran dans l'arcade, gardé dans `state.games.echecs` ;
+  `js/chess-review.js` (revoir ta partie), `js/chess-openings.js` (4 ouvertures),
+  `js/chess-daily.js` (problème du jour ; son stock `js/chess-daily-data.js` est
+  fabriqué par `outils/echecs/problemes.mjs`, voir son README).
+- `js/rival.js` : toi contre toi la semaine dernière ; `js/binder.js` : le classeur
+  des exercices (découverts à leur première séance). Calculés, jamais stockés.
 - `js/drawings.js` : dessins au crayon des exercices (corps en 3D, muscles travaillés
   en rouge), joués au rythme du bonhomme ; sans dessin, le bonhomme reste.
   `js/drawings-data.js` (leur manifeste) et `img/ex/*.webp` (leurs images) sont

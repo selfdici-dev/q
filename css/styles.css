@@ -1595,6 +1595,7 @@ button.peg { cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .arc-wide { grid-template-columns: 64px minmax(0, 1fr); row-gap: 10px; }
   .arc-tile.arc-wide .btn { grid-column: 1 / -1; width: 100%; }
 }
+.arc-quest { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 6px; border-radius: 50%; background: #e7b84a; color: #2a1d10; font: 900 0.72rem/1 var(--sans); vertical-align: 2px; box-shadow: 0 0 0 3px rgb(231 184 74 / 0.25); }
 .ch-art { padding: 7px; }
 .ch-art svg { display: block; width: 100%; height: 100%; border-radius: 4px; }
 .ch-card { display: grid; gap: 10px; }
@@ -1607,6 +1608,9 @@ button.peg { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .ch-num, .ch-pz b { flex: 0 0 auto; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--tone-2, var(--line)); font: 700 0.72rem/1 var(--sans); font-variant-numeric: tabular-nums; }
 .ch-lesson.done .ch-num, .ch-pz.done b { background: var(--pos, var(--accent)); color: #fff; }
 .ch-lesson.next .ch-num { background: var(--accent); color: var(--accent-ink); }
+/* problème du jour : la série de jours résolus */
+.ch-streak { display: inline-flex; align-items: center; gap: 3px; color: var(--accent); font-weight: 700; white-space: nowrap; }
+.ch-streak .ico { width: 1em; height: 1em; }
 /* ouvertures : la pastille dit avec quelle couleur tu joues */
 .ch-side.w { background: #f4efe6; color: #2a1d16; box-shadow: inset 0 0 0 1px #8a7a6a; }
 .ch-side.b { background: #2b1e17; color: #f4efe6; box-shadow: inset 0 0 0 1px #8a7a6a; }

@@ -19,7 +19,7 @@ export const DECORS = [
   { id: 'toit', name: 'Toit de la ville', desc: 'En haut d’une tour, la nuit, au milieu des gratte-ciel.', need: { kind: 'calc', n: 30 } },
   { id: 'jungle', name: 'Temple de la jungle', desc: 'Pierres moussues, cascade, lianes et papillons.', need: { kind: 'serpent', n: 40 } },
   { id: 'ocean', name: 'Fond marin', desc: 'Des vitres sur la mer, des poissons, des bulles et un trésor.', need: { kind: 'sudoku', n: 10 } },
-  { id: 'volcan', name: 'Volcan', desc: 'Une éruption au loin, des coulées de lave, des braises qui montent.', need: { kind: 'code', n: 15 } },
+  { id: 'volcan', name: 'Volcan', desc: 'Une éruption au loin, une falaise de basalte au-dessus d’un lac de lave.', need: { kind: 'code', n: 15 } },
   { id: 'pixel', name: 'Monde en pixels', desc: 'Un monde de jeu 8 bits : blocs d’herbe, nuages en cases, pièces qui tournent.', need: { kind: 'pixels', n: 8 } },
   { id: 'donjon', name: 'Donjon', desc: 'Pierres et torches, bannières, chaînes, un coffre au trésor qui brille.', need: { kind: 'briques', n: 5 } },
   { id: 'medieval', name: 'Grand hall', desc: 'Pierre, feu de cheminée, torches, blason noir et or.', need: { kind: 'workouts', n: 40 } },
@@ -136,6 +136,7 @@ const say = (pick, title, { fill = '#e9a87c', sub = '#f4eee7', size = 6.4, font 
   + `<text x="${x}" y="${r1(size * 1.3)}" text-anchor="${anchor}" font-family="${font}" font-weight="700" font-size="${r1(size * 0.875)}" fill="${sub}">${esc(title.replace(/,.*$/, ''))}…</text>`;
 // hasard fixe (pour des fenêtres, des étoiles…) : toujours le même dessin
 const hash = (k) => { const x = Math.sin(k * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+const K6 = (P(0, 1)[1] - P(0, 0)[1]) / (P(0, 0)[0] - P(0, 1)[0]); // la pente des bords du sol, à l'écran
 const flame = (x, y, s, animate, k = 0) => {
   const f = `<path d="M${r1(x)} ${r1(y)}c${r1(-2.4 * s)} ${r1(-2.2 * s)} ${r1(-1.6 * s)} ${r1(-5.2 * s)} 0 ${r1(-8 * s)}c${r1(1.7 * s)} ${r1(2.6 * s)} ${r1(2.6 * s)} ${r1(5.4 * s)} 0 ${r1(8 * s)}z" fill="#ffb347"/>`
     + `<path d="M${r1(x)} ${r1(y)}c${r1(-1.2 * s)} ${r1(-1.3 * s)} ${r1(-0.8 * s)} ${r1(-3.1 * s)} 0 ${r1(-4.6 * s)}c${r1(0.9 * s)} ${r1(1.5 * s)} ${r1(1.3 * s)} ${r1(3.2 * s)} 0 ${r1(4.6 * s)}z" fill="#fff1b8"/>`;
@@ -977,17 +978,52 @@ function volcan({ u, pick, title, animate }) {
     return `M${pts(pts0)}`;
   }).join('');
   const embers = fall(Array.from({ length: 14 }, (_, k) => [hash(k + 70) * HUB.w, 520, (hash(k + 71) - 0.5) * 40, -(380 + hash(k + 72) * 120), r1(5 + hash(k + 73) * 4), r1(hash(k + 74) * 6)]), '<circle r="1.1" fill="#ffb347"/>', animate);
-  const crust = Array.from({ length: 8 }, (_, k) => drift(`<ellipse cx="${r1(hash(k + 80) * HUB.w)}" cy="${r1(400 + hash(k + 81) * 120)}" rx="${r1(14 + hash(k + 82) * 20)}" ry="${r1(3 + hash(k + 83) * 3)}" fill="#2a0c06" opacity="0.7"/>`, k % 2 ? 10 : -10, 14 + k, animate)).join('');
+  // la salle sur une falaise d'orgues de basalte, au-dessus d'un lac de lave :
+  // des plaques de croûte noire qui flottent, la lave qui luit entre elles,
+  // des bulles qui éclatent, la falaise éclairée d'en bas
+  const D = 2.2;
+  const edgeY = (x) => (x < 180 ? P(0, N, -D)[1] + (x - P(0, N, -D)[0]) * K6 : P(N, 0, -D)[1] + (P(N, 0, -D)[0] - x) * K6);
+  const cliff = poly([P(0, N, 0), P(N, N, 0), P(N, N, -D), P(0, N, -D)], `url(#${u('cliffL')})`) + poly([P(N, 0, 0), P(N, N, 0), P(N, N, -D), P(N, 0, -D)], `url(#${u('cliffR')})`);
+  const cols = [], joints = [];
+  for (let t = 0.3; t < N; t += 0.34) {
+    cols.push(`M${pts([P(t, N, -0.05), P(t, N, -D)])}M${pts([P(N, N - t, -0.05), P(N, N - t, -D)])}`);
+    const z = -0.4 - hash(t * 7) * 1.4, z2 = -0.5 - hash(t * 7 + 3) * 1.4;
+    joints.push(`M${pts([P(t - 0.34, N, z), P(t, N, z + 0.06)])}M${pts([P(N, N - t + 0.34, z2), P(N, N - t, z2 + 0.06)])}`);
+  }
+  const basalt = `${cliff}<path d="${cols.join('')}" stroke="#0e0606" stroke-width="1"/><path d="${cols.join('')}" stroke="#5a2a1c" stroke-opacity="0.35" stroke-width="0.6" transform="translate(1.1 0)"/><path d="${joints.join('')}" stroke="#0e0606" stroke-width="0.8"/>`;
+  // le bord de la lave contre la falaise : une ligne qui ondule et brille
+  const shore = [];
+  for (let x = -10; x <= 370; x += 10) shore.push([x, edgeY(x) - 2 + Math.sin(x * 0.21) * 1.6]);
+  const shoreD = `M${shore.map(([x, y]) => `${r1(x)} ${r1(y)}`).join('L')}`;
+  const front = `<path d="${shoreD}L370 ${HUB.h}L-10 ${HUB.h}Z" fill="url(#${u('lava')})"/>`;
+  const plates = [];
+  for (let gy = 300, j = 0; gy < 470; gy += 14, j++) {
+    for (let gx = (j % 2) * 16 - 10; gx < 380; gx += 32) {
+      const k = j * 31 + gx;
+      const cx = gx + (hash(k) - 0.5) * 14, cy = gy + (hash(k + 1) - 0.5) * 6;
+      if (cy < edgeY(cx) + 9) continue;
+      const rx = 13 + hash(k + 2) * 8, ry = rx * 0.46;
+      const corners = Array.from({ length: 6 }, (_, i) => {
+        const a = (i / 6) * Math.PI * 2 + hash(k + 3) * 0.6;
+        const m = 0.8 + hash(k + i + 4) * 0.3;
+        return [cx + Math.cos(a) * rx * m, cy + Math.sin(a) * ry * m];
+      });
+      plates.push(`M${pts(corners)}Z`);
+    }
+  }
+  const crust = `<path d="${plates.join('')}" fill="url(#${u('crust')})" stroke="#6a200a" stroke-width="0.8"/>`;
+  const bubbles = animate ? [[40, 352], [118, 412], [262, 400], [330, 344], [80, 430], [300, 432]].map(([x, y], k) => `<circle cx="${x}" cy="${y}" r="0" fill="#ffd27a" stroke="#fff1c4" stroke-width="0.6"><animate attributeName="r" values="0;3.4;0" dur="${r1(2.2 + k * 0.5)}s" begin="${r1(k * 0.7)}s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.8;0" dur="${r1(2.2 + k * 0.5)}s" begin="${r1(k * 0.7)}s" repeatCount="indefinite"/></circle>`).join('') : '';
+  const rim = `<path d="${shoreD}" stroke="#ff7a1a" stroke-opacity="0.45" stroke-width="7" fill="none"/><path d="${shoreD}" stroke="#ffd27a" stroke-width="1.6" fill="none">${pulse('1;0.6;1', 2.4, animate)}</path>`;
   return {
     bg: `url(#${u('sky')})`,
     defs: lin(u('sky'), [0, 0, 0, 1], [[0, '#120404'], [0.3, '#3a0e08'], [1, '#1a0705']]) + lin(u('cone'), [0, 0, 0, 1], [[0, '#3a1810'], [1, '#160807']])
-      + rad(u('crater'), [[0, '#ffd27a', 0.9], [0.5, '#ff7a1a', 0.5], [1, '#ff3a00', 0]]) + lin(u('lava'), [0, 0, 0, 1], [[0, '#ff7a1a'], [1, '#b8290a']])
+      + rad(u('crater'), [[0, '#ffd27a', 0.9], [0.5, '#ff7a1a', 0.5], [1, '#ff3a00', 0]]) + ulin(u('lava'), [0, 290, 0, 452], [[0, '#ffb347'], [0.45, '#ff7a1a'], [1, '#c2300a']])
+      + ulin(u('crust'), [0, 300, 0, 452], [[0, '#3a140a'], [1, '#1e0805']]) + lin(u('cliffL'), [0, 0, 0, 1], [[0, '#1c1212'], [0.55, '#2a1410'], [1, '#8a3210']]) + lin(u('cliffR'), [0, 0, 0, 1], [[0, '#261818'], [0.55, '#341a12'], [1, '#9a3a12']])
       + lin(u('floor'), [0, 0, 0, 1], [[0, '#221b1e'], [1, '#2e2427']]),
     back: `<circle cx="195" cy="70" r="90" fill="url(#${u('crater')})" opacity="0.6"/>${smoke}<path d="M-20 270L150 70q45 -14 90 0L390 270Z" fill="url(#${u('cone')})"/>`
       + `<ellipse cx="195" cy="66" rx="34" ry="7" fill="url(#${u('crater')})">${pulse('1;0.7;1', 1.6, animate)}</ellipse>${blobs}`
       + lava('M182 70C170 110 150 130 128 180', 3, 0) + lava('M210 70C222 120 248 140 262 190', 2.6, 1) + lava('M196 72C196 100 188 120 176 150', 2, 2)
-      + `<rect y="300" width="${HUB.w}" height="${HUB.h - 300}" fill="url(#${u('lava')})"/>${crust}`
-      + box(0, 0, -0.8, N, N, 0.8, ['#2a1c1c', '#140c0c', '#1e1414'])
+      + `<rect y="250" width="${HUB.w}" height="${HUB.h - 250}" fill="url(#${u('lava')})"/>${basalt}${front}${crust}${bubbles}${rim}`
       + box(-0.18, 0, 0, 0.18, N, 0.35, ['#3a2a2a', '#1a1010', '#2a1d1d']) + box(0, -0.18, 0, N, 0.18, 0.35, ['#3a2a2a', '#1a1010', '#2a1d1d'])
       + signboard(1.3, 3.7, 1.05, 1.65, '#2a1c1c', ['#3a2a2a', '#1a1010', '#2a1d1d'], onRight(1.5, 1.5, say(pick, title, { fill: '#ffb347', sub: '#ffd9b0', size: 5.6 }))),
     floor: `${floorPoly(`url(#${u('floor')})`)}${tiles('#000', 0.5, 0.8)}<path d="${cracks}" stroke="#ff7a1a" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.7">${pulse('0.7;0.35;0.7', 3, animate)}</path>`,

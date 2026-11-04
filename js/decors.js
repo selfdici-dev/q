@@ -14,7 +14,7 @@ export const DECORS = [
   { id: 'grec', name: 'Temple grec', desc: 'Marbre et colonnes au-dessus des nuages, au coucher du soleil.', need: { kind: 'workouts', n: 15 } },
   { id: 'ring', name: 'Ring de boxe', desc: 'Projecteurs qui balaient la salle, cordes, la foule et ses flashs.', need: { kind: 'boxe', n: 12 } },
   { id: 'foret', name: 'Forêt au crépuscule', desc: 'Un ponton de bois sous les arbres, des lucioles, une guirlande.', need: { kind: 'routines', n: 20 } },
-  { id: 'desert', name: 'Désert la nuit', desc: 'Dunes, pyramides, une caravane sous les étoiles et la lune.', need: { kind: 'soirs', n: 20 } },
+  { id: 'desert', name: 'Désert la nuit', desc: 'Pyramides au clair de lune, voie lactée, une oasis et un feu de camp.', need: { kind: 'soirs', n: 20 } },
   { id: 'dojo', name: 'Dojo', desc: 'Bois, papier de riz, tatamis, lanternes et pétales de cerisier.', need: { kind: 'blocs', n: 3000 } },
   { id: 'toit', name: 'Toit de la ville', desc: 'En haut d’une tour, la nuit, au milieu des gratte-ciel.', need: { kind: 'calc', n: 30 } },
   { id: 'jungle', name: 'Temple de la jungle', desc: 'Pierres moussues, cascade, lianes et papillons.', need: { kind: 'serpent', n: 40 } },
@@ -1005,27 +1005,88 @@ function ring({ u, pick, title, animate }) {
 }
 
 function desert({ u, pick, title, animate }) {
-  // la nuit sur les dunes : étoiles, croissant de lune, pyramides, caravane
-  const twinkle = Array.from({ length: 10 }, (_, k) => `<circle cx="${r1(hash(k + 300) * HUB.w)}" cy="${r1(hash(k + 301) * 140)}" r="1.2" fill="#fff">${pulse('1;0.2;1', r1(1.5 + hash(k + 302) * 2), animate)}</circle>`).join('');
-  const moon = `<circle cx="292" cy="48" r="13" fill="#f7f2de" mask="url(#${u('crescent')})"/>`;
-  const pyramid = (x, base, w, h) => `<path d="M${x - w / 2} ${base}L${x} ${base - h}L${x} ${base}Z" fill="#3a3256"/><path d="M${x} ${base - h}L${x + w / 2} ${base}L${x} ${base}Z" fill="#5a4f7a"/>`;
-  const dune = (y, amp, col, k) => `<path d="M-10 ${y}${Array.from({ length: 9 }, (_, i) => `Q${r1(i * 46 + 13)} ${r1(y - amp * (0.5 + hash(i + k)))} ${r1(i * 46 + 36)} ${r1(y + amp * 0.2)}`).join('')}L370 ${HUB.h}L-10 ${HUB.h}Z" fill="${col}"/>`;
-  const camel = '<path d="M0 0c1 -4 3 -6 5 -6c1 -3 4 -3 5 0c2 -2 4 -2 5 0l3 -5c1 -1 3 0 2 1l-2 6l0 4h-1l0 6h-1.2l0 -6h-6l0 6h-1.2l0 -6h-1l0 6h-1.2l0 -6c-2 0 -4 -1 -6.4 0z" fill="#1d1830"/>';
+  // la nuit sur les dunes : voie lactée, croissant de lune, pyramides
+  // éclairées par la lune, une caravane au loin ; devant, une oasis sous les
+  // palmiers et un campement, sa tente et son feu
+  const twinkle = Array.from({ length: 12 }, (_, k) => `<circle cx="${r1(hash(k + 300) * HUB.w)}" cy="${r1(hash(k + 301) * 150)}" r="1.2" fill="#fff">${pulse('1;0.2;1', r1(1.5 + hash(k + 302) * 2), animate)}</circle>`).join('');
+  const milky = `<g transform="rotate(-24 180 86)"><ellipse cx="180" cy="86" rx="240" ry="30" fill="url(#${u('milky')})"/><ellipse cx="170" cy="88" rx="190" ry="11" fill="url(#${u('milky')})"/>`
+    + Array.from({ length: 110 }, (_, k) => `<circle cx="${r1(-40 + hash(k + 800) * 440)}" cy="${r1(86 + (hash(k + 801) - 0.5) * 34 * hash(k + 802))}" r="${hash(k + 803) > 0.9 ? 0.9 : 0.45}" fill="#fff" opacity="${r1(0.35 + 0.6 * hash(k + 804))}"/>`).join('') + '</g>';
+  const moon = `<circle cx="292" cy="46" r="48" fill="url(#${u('moonglow')})"/><circle cx="292" cy="46" r="15" fill="#f7f2de" mask="url(#${u('crescent')})"/>`;
+  // une pyramide : la face de droite au clair de lune, l'autre dans l'ombre, des rangées de pierres
+  const pyramid = (x, top, w, h) => {
+    const base = top + h, ridge = x + w * 0.1;
+    const rows = [];
+    for (let t = 0.12; t < 1; t += 0.1) rows.push(`M${r1(x + (ridge - x) * t)} ${r1(top + h * t)}L${r1(x + (w / 2) * t)} ${r1(top + h * t)}`);
+    const shade = [];
+    for (let t = 0.17; t < 1; t += 0.1) shade.push(`M${r1(x - (w / 2) * t)} ${r1(top + h * t)}L${r1(x + (ridge - x) * t)} ${r1(top + h * t)}`);
+    return `<path d="M${r1(x - w / 2)} ${base}L${x} ${top}L${r1(ridge)} ${base}Z" fill="#251f45"/><path d="${shade.join('')}" stroke="#1a1533" stroke-width="0.6"/>`
+      + `<path d="M${x} ${top}L${r1(x + w / 2)} ${base}L${r1(ridge)} ${base}Z" fill="url(#${u('pyr')})"/><path d="${rows.join('')}" stroke="#4f4378" stroke-opacity="0.7" stroke-width="0.6"/>`
+      + `<path d="M${x} ${top}L${r1(ridge)} ${base}" stroke="#b9a9d8" stroke-opacity="0.5" stroke-width="0.8"/>`;
+  };
+  // des dunes au loin : une ligne de crête éclairée
+  const farDune = (y, amp, fill, k) => {
+    const top = `M-10 ${y}${Array.from({ length: 8 }, (_, i) => `Q${r1(i * 50 + 15)} ${r1(y - amp * (0.4 + hash(i + k)))} ${r1(i * 50 + 40)} ${r1(y + amp * 0.15)}`).join('')}`;
+    return `<path d="${top}L390 ${HUB.h}L-10 ${HUB.h}Z" fill="${fill}"/><path d="${top}" stroke="#8d7fbd" stroke-opacity="0.35" stroke-width="0.8" fill="none"/>`;
+  };
+  const camel = '<path d="M0 0c1 -4 3 -6 5 -6c1 -3 4 -3 5 0c2 -2 4 -2 5 0l3 -5c1 -1 3 0 2 1l-2 6l0 4h-1l0 6h-1.2l0 -6h-6l0 6h-1.2l0 -6h-1l0 6h-1.2l0 -6c-2 0 -4 -1 -6.4 0z" fill="#16122a"/>';
   const caravan = [0, 22, 44].map((dx) => `<g transform="translate(${dx} 0)">${camel}</g>`).join('');
-  const walk = animate ? `<g>${`<g transform="translate(-80 172) scale(0.9)">${caravan}</g>`}<animateTransform attributeName="transform" type="translate" values="0 0;460 -8" dur="70s" repeatCount="indefinite"/></g>` : `<g transform="translate(60 168) scale(0.9)">${caravan}</g>`;
+  const walk = animate ? `<g>${`<g transform="translate(-80 184) scale(0.8)">${caravan}</g>`}<animateTransform attributeName="transform" type="translate" values="0 0;470 -6" dur="70s" repeatCount="indefinite"/></g>` : `<g transform="translate(40 182) scale(0.8)">${caravan}</g>`;
   const lantern = (X, Y, k) => {
     const [x, y] = P(X, Y, 0.62);
     return `${glow(x, y, 16, u('lamp'), animate, k)}${box(X - 0.06, Y - 0.06, 0.4, 0.12, 0.12, 0.2, ['#ffd27a', '#c08a3a', '#e0a84a'])}`;
   };
+  // le socle de grès, à moitié pris dans le sable
+  const blocks = [];
+  for (let t = 0.7; t < N; t += 1.4) blocks.push(`M${pts([P(t, N, -0.3), P(t, N, 0)])}M${pts([P(N, t, -0.3), P(N, t, 0)])}`);
+  const drift = (() => {
+    const l = [], r = [];
+    for (let i = 0; i <= 12; i++) {
+      const t = (i / 12) * N;
+      const w = Math.sin(i * 1.7) * 0.06;
+      l.push(P(t, N + 0.05, -0.24 + w));
+      r.push(P(N + 0.05, N - t, -0.24 - w));
+    }
+    return `<path d="M${pts([P(-1, N + 0.05, -0.4), ...l, ...r, P(N + 0.05, -1, -0.4)])}L370 ${HUB.h}L-10 ${HUB.h}Z" fill="url(#${u('sand')})"/>`;
+  })();
+  const ripples = [[20, 352, 30], [44, 362, 34], [8, 418, 26], [30, 412, 30], [118, 430, 22], [236, 436, 26], [262, 426, 30], [318, 412, 28], [340, 402, 22], [312, 352, 26], [334, 344, 22]]
+    .map(([x, y, w]) => `<path d="M${x} ${y}q${w / 2} -4 ${w} 0" stroke="#a894c8" stroke-opacity="0.35" stroke-width="0.8" fill="none"/>`).join('');
+  const tufts = [[60, 350], [150, 392], [214, 380], [282, 340], [16, 396]].map(([x, y]) => `<path d="M${x} ${y}l-3 -4M${x} ${y}l0.5 -5M${x} ${y}l3.4 -3.6" stroke="#2a2246" stroke-width="1"/>`).join('');
+  const nearL = '<path d="M-10 404C24 380 60 372 96 384C124 394 150 420 166 452H-10Z" fill="url(#' + u('dune') + ')"/><path d="M-10 404C24 380 60 372 96 384C124 394 150 420 166 452" stroke="#c4b2e0" stroke-opacity="0.5" stroke-width="1" fill="none"/>';
+  const nearR = '<path d="M190 452C214 424 252 404 300 396C326 392 350 384 370 372V452Z" fill="url(#' + u('dune') + ')"/><path d="M190 452C214 424 252 404 300 396C326 392 350 384 370 372" stroke="#c4b2e0" stroke-opacity="0.5" stroke-width="1" fill="none"/>';
+  // l'oasis : un bassin qui reflète la lune, deux palmiers, des roseaux
+  const palm = (x, y, h, lean) => {
+    const tx = x + lean, ty = y - h;
+    const fronds = [[-26, 6], [-16, -6], [-4, -12], [10, -9], [22, 2], [28, 12], [-30, 16]].map(([dx, dy]) => `<path d="M${r1(tx)} ${r1(ty)}q${r1(dx * 0.5)} ${r1(dy * 0.6 - 7)} ${dx} ${dy}q${r1(-dx * 0.35)} ${r1(-dy * 0.2 - 2)} ${r1(-dx)} ${r1(-dy)}z" fill="#141228"/>`).join('');
+    return `<path d="M${x} ${y}q${r1(lean * 0.2)} ${r1(-h * 0.6)} ${lean} ${-h}" stroke="#141228" stroke-width="3.2" stroke-linecap="round" fill="none"/>${fronds}<circle cx="${r1(tx)}" cy="${r1(ty + 1)}" r="2" fill="#141228"/>`;
+  };
+  const glint = Array.from({ length: 5 }, (_, k) => `<rect x="${r1(84 + hash(k + 900) * 8)}" y="${r1(419 + k * 2.2)}" width="${r1(4 + hash(k + 901) * 6)}" height="0.8" fill="#f7f2de" opacity="0.7">${pulse('0.8;0.2;0.8', r1(1.6 + k * 0.4), animate)}</rect>`).join('');
+  const reeds = [[42, 424], [46, 423], [118, 425], [122, 426]].map(([x, y], k) => `<path d="M${x} ${y}q${k % 2 ? 2 : -2} -7 ${k % 2 ? 1 : -1} -12" stroke="#1d2238" stroke-width="1" fill="none"/>`).join('');
+  const oasis = `<ellipse cx="82" cy="424" rx="40" ry="9" fill="#0e1534"/><ellipse cx="82" cy="423" rx="36" ry="7" fill="url(#${u('pool')})"/>${glint}${reeds}${palm(56, 420, 58, -8)}${palm(104, 420, 46, 10)}`;
+  // le campement : une tente rayée, éclairée de l'intérieur, et un feu de camp
+  const [fx, fy] = [246, 424];
+  const fire = `<circle cx="${fx}" cy="${fy - 4}" r="34" fill="url(#${u('fire')})">${pulse('0.8;1;0.7;0.95;0.8', 1.3, animate)}</circle>`
+    + [[-6, 1], [6, 1], [0, 3], [-3, -1.6], [3.4, -1.4]].map(([dx, dy]) => `<ellipse cx="${fx + dx}" cy="${fy + dy}" rx="2.4" ry="1.4" fill="#4c4060"/>`).join('')
+    + `<path d="M${fx - 6} ${fy + 1}l12 -3M${fx - 6} ${fy - 2}l12 3" stroke="#3a2416" stroke-width="1.8" stroke-linecap="round"/>${flame(fx, fy - 1, 0.9, animate, 1)}`;
+  const tent = '<path d="M268 410L300 368L346 376L356 410Z" fill="#3a2a3c"/><path d="M300 368L346 376M306 371L320 410M318 372L334 410M330 374L346 410" stroke="#55384a" stroke-width="1.6" fill="none"/>'
+    + '<path d="M268 410L300 368L314 410Z" fill="#8a5a46"/><path d="M284 410L300 384L306 410Z" fill="#ffc46e"/><path d="M290 410L300 393L303 410Z" fill="#fff0c4" opacity="0.8"/>'
+    + '<path d="M264 411L300 367" stroke="#2a1b22" stroke-width="1"/>';
   return {
     bg: `url(#${u('sky')})`,
-    defs: lin(u('sky'), [0, 0, 0, 1], [[0, '#070a24'], [0.35, '#1d2457'], [0.6, '#4a3a6e'], [1, '#2a2348']])
+    defs: ulin(u('sky'), [0, 0, 0, 240], [[0, '#04071c'], [0.4, '#0f1640'], [0.72, '#2a2558'], [0.9, '#4f3d6e'], [1, '#6b4f78']])
       + lin(u('floor'), [0, 0, 0, 1], [[0, '#c3ad86'], [1, '#d2bd95']]) + rad(u('lamp'), [[0, '#ffd27a', 0.6], [1, '#ff9a3c', 0]])
-      + `<mask id="${u('crescent')}"><circle cx="292" cy="48" r="13" fill="#fff"/><circle cx="298" cy="44" r="12" fill="#000"/></mask>`,
-    back: `${starField(70, 400, 170)}${twinkle}${moon}${shootingStar(animate, [220, 14], [300, 44], 11)}`
-      + pyramid(66, 190, 110, 62) + pyramid(128, 186, 60, 34) + pyramid(306, 192, 96, 54)
-      + dune(196, 16, '#2a2550', 1) + walk + dune(232, 20, '#3a2f5c', 9) + dune(300, 26, '#4a3c6a', 17)
-      + box(0, 0, -0.3, N, N, 0.3, ['#b39d78', '#7a6850', '#968260'])
+      + rad(u('milky'), [[0, '#ddd6ff', 0.3], [0.55, '#a39ae6', 0.12], [1, '#a39ae6', 0]])
+      + rad(u('moonglow'), [[0, '#f7f2de', 0.3], [1, '#f7f2de', 0]])
+      + lin(u('pyr'), [0, 0, 0, 1], [[0, '#a896c8'], [1, '#5a4b80']])
+      + ulin(u('sand'), [0, 260, 0, 452], [[0, '#7d6aa3'], [1, '#3b305f']])
+      + ulin(u('dune'), [0, 370, 0, 452], [[0, '#8f7bb4'], [1, '#433768']])
+      + lin(u('pool'), [0, 0, 0, 1], [[0, '#2a3a6a'], [1, '#151f45']])
+      + rad(u('fire'), [[0, '#ffb35a', 0.55], [0.5, '#ff7a3c', 0.18], [1, '#ff7a3c', 0]])
+      + `<mask id="${u('crescent')}"><circle cx="292" cy="46" r="15" fill="#fff"/><circle cx="299" cy="41" r="13.5" fill="#000"/></mask>`,
+    back: `${milky}${starField(70, 400, 190)}${twinkle}${moon}${shootingStar(animate, [220, 14], [300, 44], 11)}`
+      + pyramid(-6, 142, 120, 72) + pyramid(84, 98, 190, 110) + pyramid(306, 120, 150, 88)
+      + farDune(206, 12, '#231d44', 1) + walk + farDune(236, 16, '#2c2552', 9)
+      + box(0, 0, -0.3, N, N, 0.3, ['#b39d78', '#7a6850', '#968260']) + `<path d="${blocks.join('')}" stroke="#5e4f3a" stroke-width="0.7"/>`
+      + drift + nearL + nearR + ripples + tufts + oasis + fire + tent
       + box(-0.18, 0, 0, 0.18, N, 0.4, ['#cbb58e', '#8a7656', '#a89270']) + box(0, -0.18, 0, N, 0.18, 0.4, ['#cbb58e', '#8a7656', '#a89270'])
       + lantern(-0.09, 3.95, 0) + lantern(3.95, -0.09, 1)
       + signboard(1.3, 3.7, 1.05, 1.65, '#d8c49c', ['#8a7656', '#5a4a34', '#6e5c42'], onRight(1.5, 1.5, say(pick, title, { fill: '#3a2614', sub: '#4a3420', size: 5.6, font: 'Georgia, serif' }))),
@@ -1033,7 +1094,7 @@ function desert({ u, pick, title, animate }) {
     edge: '',
     props: '',
     beam: ['#dfe6ff', '#b9c6ff'], dust: '#e8eaff',
-    plat: ['#b89f75', '#7f6a4a', '#9a8460'], vig: 0.5,
+    plat: ['#b89f75', '#7f6a4a', '#9a8460'], vig: 0.42,
     sky: true, // sa lune : pas de deuxième la nuit (daylight.js)
   };
 }

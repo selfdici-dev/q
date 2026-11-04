@@ -20,9 +20,9 @@ test('décors : la salle d’abord, ouverte ; les autres à débloquer, chacun s
   assert.equal(DECORS[0].id, 'salle');
   assert.equal(DECORS[0].need, null);
   assert.equal(new Set(DECORS.map((d) => d.id)).size, DECORS.length);
-  assert.ok(DECORS.length >= 17, 'beaucoup de décors');
+  assert.ok(DECORS.length >= 24, 'beaucoup de décors');
   for (const d of DECORS.slice(1)) {
-    assert.ok(['workouts', 'level', 'blocs', 'calc', 'gems', 'sudoku', 'routines', 'soirs', 'boxe', 'serpent', 'paires', 'code'].includes(d.need.kind), d.id);
+    assert.ok(['workouts', 'level', 'blocs', 'calc', 'gems', 'sudoku', 'routines', 'soirs', 'boxe', 'serpent', 'paires', 'code', 'pixels', 'briques', 'sprint', 'echo', 'cap'].includes(d.need.kind), d.id);
     assert.ok(d.need.n > 0, d.id);
     assert.ok(d.name && d.desc, d.id);
   }
@@ -63,6 +63,17 @@ test('décors : débloqués au seuil exact, la progression s’affiche, les chif
   assert.equal(at({ code: 15 }, 'volcan').unlocked, true);
   assert.equal(at({ paires: 7 }, 'pirate').label, 'niveau 7 / 8 aux Paires');
   assert.equal(at({ paires: 8 }, 'pirate').unlocked, true);
+  // les décors façon jeu vidéo : leurs défis à l'arcade, aux échecs, en séances
+  assert.equal(at({ pixels: 7 }, 'pixel').label, '7 / 8 dessins trouvés aux Pixels cachés');
+  assert.equal(at({ pixels: 8 }, 'pixel').unlocked, true);
+  assert.equal(at({ briques: 4 }, 'donjon').label, 'niveau 4 / 5 au Casse-briques');
+  assert.equal(at({ sprint: 1499 }, 'arcade').label.replace(/\s/g, ' '), '1 499 / 1 500 m au Sprint');
+  assert.equal(at({ sprint: 1500 }, 'arcade').unlocked, true);
+  assert.equal(at({ echo: 11 }, 'labo').label, 'une suite de 11 / 12 à Écho');
+  assert.equal(at({ cap: 4 }, 'echiquier').label, '4 / 5 victoires contre Cap aux échecs');
+  assert.equal(at({ level: 15 }, 'iles').unlocked, true);
+  assert.equal(at({ workouts: 79 }, 'stade').unlocked, false);
+  assert.equal(at({ workouts: 80 }, 'stade').unlocked, true);
   // au-delà du seuil, la barre reste pleine ; rien ou n'importe quoi : zéro
   assert.equal(at({ workouts: 99 }, 'grec').pct, 1);
   for (const junk of [{}, { workouts: -5 }, { workouts: 'abc' }, { workouts: NaN }, undefined]) {
@@ -106,6 +117,11 @@ test('décors : tes chiffres viennent de tes données (séances sans M, une fois
   state.games.serpent = { best: 41 };
   state.games.paires = { top: 3 };
   state.games.code = { wins: 7 };
+  state.games.pixels = { done: ['coeur', 'haltere'] };
+  state.games.briques = { level: 2 };
+  state.games.sprint = { best: 640 };
+  state.games.echo = { best: 9 };
+  state.games.echecs = { wins: { debutant: 2, moyen: 1 } };
   const stats = decorStats(state);
   assert.equal(stats.workouts, 3);
   assert.equal(stats.blocs, 3100); // la partie en cours compte déjà
@@ -119,9 +135,10 @@ test('décors : tes chiffres viennent de tes données (séances sans M, une fois
   assert.equal(stats.serpent, 41);
   assert.equal(stats.paires, 3);
   assert.equal(stats.code, 7);
+  assert.deepEqual([stats.pixels, stats.briques, stats.sprint, stats.echo, stats.cap], [2, 2, 640, 9, 3]);
   assert.deepEqual(decorStatus(stats).filter((d) => d.unlocked).map((d) => d.id), ['salle', 'dojo', 'toit', 'jungle', 'ocean', 'neon']);
   // sans jeux ni jours : tout à zéro, niveau 1
-  assert.deepEqual(decorStats({ settings: {}, habits: [], days: {} }), { workouts: 0, level: 1, blocs: 0, calc: 0, gems: 0, sudoku: 0, routines: 0, soirs: 0, boxe: 0, serpent: 0, paires: 0, code: 0 });
+  assert.deepEqual(decorStats({ settings: {}, habits: [], days: {} }), { workouts: 0, level: 1, blocs: 0, calc: 0, gems: 0, sudoku: 0, routines: 0, soirs: 0, boxe: 0, serpent: 0, paires: 0, code: 0, pixels: 0, briques: 0, sprint: 0, echo: 0, cap: 0 });
 });
 
 test('décors : chaque salle se dessine en entier, avec ses postes, sa borne et la séance affichée', () => {

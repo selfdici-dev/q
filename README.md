@@ -63,7 +63,7 @@ Tes records (meilleur score, lignes effacées, meilleure série, niveau des Cris
 
 ## Décors de la Salle
 
-Le bouton « Décor », en haut de la Salle, change l’habillage de la pièce : les mêmes postes, les mêmes personnages et la même borne, dans un autre monde. Dix-sept décors, à choisir librement parmi ceux que tu as débloqués, et durs à débloquer :
+Le bouton « Décor », en haut de la Salle, change l’habillage de la pièce : les mêmes postes, les mêmes personnages et la même borne, dans un autre monde. Vingt-quatre décors, à choisir librement parmi ceux que tu as débloqués, et durs à débloquer :
 
 | Décor | Pour le débloquer |
 | --- | --- |
@@ -77,13 +77,20 @@ Le bouton « Décor », en haut de la Salle, change l’habillage de la pièce :
 | Temple de la jungle (pierres moussues, cascade, lianes, papillons) | 40 fruits au Serpent |
 | Fond marin (vitres sur la mer, poissons qui passent, algues, bulles, coffre au trésor) | 10 sudokus résolus |
 | Volcan (éruption au loin, coulées de lave, lac de lave, braises qui montent) | 15 codes secrets trouvés |
+| Monde en pixels (un monde de jeu 8 bits : blocs d’herbe, nuages en cases, soleil carré, pièces qui tournent) | 8 dessins trouvés aux Pixels cachés |
+| Donjon (pierres et torches, bannières à couronne, chaînes, tonneaux, coffre au trésor qui brille, braises) | niveau 5 au Casse-briques |
 | Grand hall (pierre, feu de cheminée et braises, torches, blason noir et or) | 40 séances |
 | Néon rétro (soleil à rayures, palmiers de néon, sol quadrillé qui défile) | niveau 8 réussi aux Cristaux |
 | Navire pirate (pont, voiles, drapeau au vent, vagues, mouettes, tonneaux) | niveau 8 réussi aux Paires |
+| Salle d’arcade (bornes qui clignotent le long des murs, néon « GAME ON », moquette à confettis, machine à pince) | 1 500 m au Sprint |
+| Labo secret (tubes lumineux pleins de bulles, grand écran à courbe, voyants, hologramme qui tourne) | une suite de 12 à Écho |
+| Échiquier géant (sol en échiquier, pièces géantes, fenêtres de lune, bannières noir et blanc, bougies) | 5 victoires contre Cap aux échecs |
 | Station spatiale (hublots, planète bleue, écran holographique) | niveau 12 |
+| Îles célestes (une île qui flotte dans le ciel, cascades, d’autres îles au loin, nuages en dessous) | niveau 15 |
 | Arène romaine (arches et foule qui t’encourage, fanions, braseros, sable) | 60 séances |
 | Ponton sur la mer (soleil couchant, île à palmiers, voilier, mouettes) | 6 000 points aux Blocs |
 | Sommet (montagnes enneigées, aurore boréale, neige qui tombe) | niveau 20 |
+| Stade la nuit (tribunes pleines et leurs flashs, projecteurs, tableau d’affichage, pelouse tondue en bandes) | 80 séances |
 
 Une séance compte une fois par jour, sans compter M ; pour les jeux, c’est ta meilleure partie. Les décors verrouillés montrent ce qu’il reste à faire, et un décor qui se débloque est fêté. Le choix est gardé dans tes réglages ; ce qui est débloqué est recalculé depuis tes données, jamais stocké. Les animations (sans son) s’arrêtent si le téléphone demande de les réduire.
 

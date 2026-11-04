@@ -29,6 +29,7 @@ import { dayPhase, nightHint } from './daylight.js';
 import { SEASONS, seasonStatus, newSeason, dateFr } from './seasons.js';
 import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS, gearIcon } from './avatar.js';
 import { rivalStatus } from './rival.js';
+import { binder } from './binder.js';
 import { SLOTS, gearStats, gearStatus, wornGear, wearGear, newGear } from './outfit.js';
 import { challengeStatus, updateChallenges, challengeNews } from './challenges.js';
 import { treeSVG, seedOf } from './tree.js';
@@ -1013,6 +1014,7 @@ function viewSport() {
   ${suggestUp ? `<div class="banner ok"><strong>2 séances « faciles » de suite.</strong> Il est temps de monter. <button class="btn small primary" data-act="level" data-lvl="${lvl + 1}">Passer au niveau ${lvl + 1}</button></div>` : ''}
   ${suggestDown ? `<div class="banner warn"><strong>2 séances « dures » de suite.</strong> Redescendre d’un niveau n’est pas un échec. <button class="btn small" data-act="level" data-lvl="${lvl - 1}">Revenir au niveau ${lvl - 1}</button></div>` : ''}
   ${recordsCard()}
+  ${binderCard()}
   <div class="folds">
     ${fold('c-goal', icon('target'), 'Ton objectif', 'Pourquoi ces séances', '<span></span>', goalBody())}
     ${fold('c-wo', icon('dumbbell'), 'Les 5 séances', 'Exercices et semaine type', `<span class="pill">Niv. ${lvl}</span>`, `
@@ -1263,6 +1265,35 @@ function recordsCard() {
         <p class="hint">Ton meilleur chiffre par exercice, tous tours confondus. Le dernier travaillé d’abord ; une plaque neuve brille 3 jours.</p>`
       : '<p class="muted">Pendant le repos, touche le nombre que tu as fait : tes meilleurs chiffres s’affichent ici.</p>'}
   </section>`;
+}
+
+// Le classeur des exercices (binder.js) : une collection, comme dans un jeu.
+// La carte de la Salle montre ta progression ; la fiche, chaque mouvement.
+function binderCard() {
+  const b = binder(state, WORKOUTS, WARMUP);
+  return `<section class="card binder-card">
+    <div class="card-head"><h2>${icon('books')}Classeur des exercices</h2><span class="pill">${b.found} / ${b.total}</span></div>
+    <span class="decor-bar" aria-hidden="true"><i style="width:${Math.round((b.found / b.total) * 100)}%"></i></span>
+    <p class="hint">Chaque mouvement se découvre à sa première séance : son dessin, ses muscles, tes jours et ton record.</p>
+    <button class="btn wide" data-act="binder">${icon('books')}Ouvrir le classeur</button>
+  </section>`;
+}
+
+function showBinder() {
+  const b = binder(state, WORKOUTS, WARMUP);
+  const groups = [...WORKOUTS.map((w) => [w.id, `${w.id} · ${shortName(w)}`]), ['warm', 'Échauffement']];
+  const card = (x) => {
+    const stats = x.found ? `${x.times} jour${x.times > 1 ? 's' : ''}${x.best ? ` · record ${x.best}${x.unit ? ` ${x.unit}` : ''}` : ''}` : `À découvrir : séance ${x.workouts.join(' ou ')}`;
+    return `<details class="bind-card${x.found ? '' : ' locked'}">
+      <summary><span class="bind-fig" aria-hidden="true">${figure(x.names[0], x.target, false)}</span><b>${esc(x.label)}</b><small>${esc(stats)}</small></summary>
+      <div class="bind-more">${x.target ? `<span class="target-tag">${icon('target')}${esc(x.target)}</span>` : ''}${x.why ? `<p class="why">${esc(x.why)}</p>` : ''}<p class="muted">${esc(x.cue)}</p></div>
+    </details>`;
+  };
+  openSheet('Classeur des exercices', `<p class="hint">${b.found} mouvement${b.found > 1 ? 's' : ''} découvert${b.found > 1 ? 's' : ''} sur ${b.total}. Touche une fiche pour sa consigne.</p>
+    ${groups.map(([id, title]) => {
+      const list = b.list.filter((x) => (id === 'warm' ? x.warm : !x.warm && x.workouts[0] === id));
+      return list.length ? `<h3 class="tr-group">${esc(title)}</h3><div class="bind-grid">${list.map(card).join('')}</div>` : '';
+    }).join('')}`);
 }
 
 // Ton assiette du jour : touche ce que tu manges (un aliment = une portion),
@@ -1892,6 +1923,7 @@ const actions = {
   },
   // Salle : la borne d'arcade ouvre les jeux
   arcade() { location.hash = 'jeux'; },
+  binder() { showBinder(); },
   // Salle : toucher un poste le choisit (son bonhomme se met au travail)
   'gym-pick'(el) {
     gymPick = el.dataset.id;

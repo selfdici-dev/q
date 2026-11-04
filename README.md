@@ -153,6 +153,7 @@ Les personnages de la Salle viennent des mêmes corps en 3D et des mêmes poses,
 1. Héberge le dossier en HTTPS (voir ci-dessous).
 2. Ouvre l’URL dans Chrome (Android) ou Safari (iPhone).
 3. Android : menu ⋮ > *Ajouter à l’écran d’accueil*. iPhone : bouton Partager > *Sur l’écran d’accueil*.
+4. Appui long sur l’icône de Cap (Android) : des raccourcis vers les échecs, ta journée, l’arcade et le focus.
 
 Les données sont propres à chaque appareil. Pour passer du téléphone à l’ordi, utilise *Moi > Réglages > Exporter*, puis *Importer* sur l’autre appareil. **Exporte chaque semaine** : c’est ta seule sauvegarde. Au-delà de 7 jours sans export, un bandeau dans la Salle te le rappelle, avec un bouton d’export direct. À l’import, le fichier est entièrement vérifié (format, dates, valeurs) et son contenu t’est montré avant de remplacer quoi que ce soit.
 

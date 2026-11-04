@@ -2512,9 +2512,16 @@ $('#tabs').classList.add('has-ind');
 addEventListener('resize', () => { moveTabIndicator(true); hubDeclutter(); });
 state.ui.lastLevel = Math.max(state.ui.lastLevel ?? 1, levelInfo(totalXP(state)).level);
 save();
+// Raccourcis de l'icône (manifest.webmanifest) : « ?ouvrir=echecs » ouvre
+// directement les échecs ; l'adresse redevient propre (pas de retour au rechargement).
+const opened = new URLSearchParams(location.search).get('ouvrir');
+if (opened) {
+  arcade.open(opened);
+  history.replaceState(null, '', location.pathname + location.hash);
+}
 render();
 moveTabIndicator(true);
-enterGym();
+if (!opened) enterGym();
 setInterval(tick, 250);
 // Le changement de jour (4 h) se voit sans recharger, comme la lumière de la
 // salle qui suit l'heure (matin, soir, nuit…).

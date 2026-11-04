@@ -23,6 +23,11 @@ Hh = int(args[5]) if len(args) > 5 else 700
 
 # ——— le corps posé ———
 STYLE = os.environ.get('STYLE', 'photo')
+# style « jeu » (personnages de la Salle, façon jeu vidéo) : le perso de chaque
+# poste a son teint, sa coiffure, son haut et ses couleurs (LOOK, en JSON ; voir jeu.py)
+JEU = STYLE == 'jeu'
+import json
+LOOK = json.loads(os.environ.get('LOOK') or '{}') if JEU else {}
 h = Human()
 h.morph(athlete(muscle=float(os.environ.get('MUSCLE', 1.0)), weight=float(os.environ.get('WEIGHT', 0.45 if STYLE == 'photo' else 0.3))))
 P = Poser(h)
@@ -87,6 +92,10 @@ SHOES = os.environ.get('SHOES', 'shoes06')
 shoe_pm = Mesh(DATA + f'proxies/clothes/{SHOES}/{SHOES}.json') if SHOES else None
 if shoe_pm is not None and shoe_pm.delete is not None:
     keep_body = [i for i in keep_body if not shoe_pm.delete[body.faces[i]].all()]
+TOP = LOOK.get('top')
+top_pm = Mesh(DATA + f'proxies/clothes/{TOP}/{TOP}.json') if TOP else None
+if top_pm is not None and top_pm.delete is not None:
+    keep_body = [i for i in keep_body if not top_pm.delete[body.faces[i]].all()]
 scene_pts = []
 
 
@@ -250,7 +259,9 @@ nt.links.new(image(nt, DATA + 'proxies/eyebrows/eyebrow001/textures/eyebrow001.p
 proxy('eyebrows/eyebrow001/eyebrow001.json', 'brows', brow_m)
 hair_m, nt, b = principled('hair', color=(0.022, 0.014, 0.01, 1), rough=0.42)
 nt.links.new(image(nt, DATA + 'proxies/hair/short02/textures/short02_diffuse.png').outputs['Alpha'], b.inputs['Alpha'])
-proxy('hair/short02/short02.json', 'hair', hair_m)
+HAIR = LOOK.get('hair', 'short02')
+if HAIR:
+    proxy(f'hair/{HAIR}/{HAIR}.json', 'hair', hair_m)
 
 ground0 = to_b(V[sorted({j for i in keep_body for j in body.faces[i]})])[:, 2].min()
 FLOOR_B = to_b(np.array([[0, -8.72, 0]]))[0][2]
@@ -261,6 +272,12 @@ def posed(bone, p):
 if shoe_pm is not None:
     shoe_m, nt, b = principled('shoes', color=(0.85, 0.85, 0.84, 1), rough=0.6)
     mesh_from('shoes', h.fit(shoe_pm), shoe_pm.faces).data.materials.append(shoe_m)
+if top_pm is not None:
+    top_m, nt, b = principled('top', color=(0.8, 0.8, 0.8, 1), rough=0.8)
+    ob_top = mesh_from('top', h.fit(top_pm), top_pm.faces)
+    ob_top.data.materials.append(top_m)
+    sol_ = ob_top.modifiers.new('epaisseur', 'SOLIDIFY'); sol_.thickness = 0.08; sol_.offset = 1
+    subsurf(ob_top, 1)
 
 # ——— élastique (une boucle) : deux brins plats, de sous la basket jusque dans le poing ———
 # noir, ou vert (band_color = 'vert' : teinté en vert au dessin)
@@ -372,7 +389,7 @@ for bar in spec.get('parallettes', []):
         bv = fo_.modifiers.new('bv', 'BEVEL'); bv.width = 0.05; bv.segments = 3
 
 # ——— gants de boxe (cuir noir, poignet cuivre) ———
-if spec.get('gloves'):
+if spec.get('gloves') or LOOK.get('gloves'):
     glove_m, nt, b = principled('glove', color=(0.018, 0.016, 0.015, 1), rough=0.32, **{'Coat Weight': 0.6, 'Coat Roughness': 0.15})
     cuff_m, nt, b = principled('cuff', color=(0.75, 0.38, 0.2, 1), rough=0.3, **{'Metallic': 0.85})
     for s_ in 'LR':
@@ -504,7 +521,7 @@ for _ in range(6):
     bpy.context.view_layer.update()
     co = np.array([world_to_camera_view(sc, cam, p - Vector((0, 0, zmin)))[:2] for p in body_pts])
     w_, h_ = co[:, 0].max() - co[:, 0].min(), co[:, 1].max() - co[:, 1].min()
-    fill = max(w_ / 0.86, h_ / 0.8) if STYLE != 'dessin' else max(w_ / 0.92, h_ / 0.9)
+    fill = max(w_ / 0.86, h_ / 0.8) if STYLE not in ('dessin', 'jeu') else max(w_ / 0.92, h_ / 0.9)
     dist *= fill
     mid = Vector(((co[:, 0].max() + co[:, 0].min()) / 2 - 0.5, (co[:, 1].max() + co[:, 1].min()) / 2 - 0.47))
     # recentre le point visé
@@ -590,6 +607,88 @@ if STYLE == 'dessin':
     for nm in ('phase', 'fiber', 'hair', 'hairu', 'tint'):
         fo2.file_slots.new(nm); tree.links.new(rl.outputs[nm], fo2.inputs[nm])
 
+# ——— style jeu : des aplats de couleur, l'ombre portée seule, et les passes du dessin
+# « toon » (jeu.py : ombres en deux tons, contour, reflet) ———
+if JEU:
+    def lin(hexc):
+        v = [int(hexc[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+        return tuple(((c + 0.055) / 1.055) ** 2.4 if c > 0.04045 else c / 12.92 for c in v) + (1,)
+    COL = dict(skin='#e0a67c', top='#e7c76b', shorts='#232027', shoes='#f2efe9', hair='#2a1b14', brows='#2a1b14',
+               gloves='#d8432f', cuff='#f2efe9', band='#1b1a1a', vband='#3f8f4a', par='#a8743f', metal='#9aa0ab', rubber='#2b2830')
+    COL.update(LOOK.get('colors', {}))
+    # matériau d'origine → couleur et numéro (les contours passent entre deux numéros)
+    KIND = {'skin': ('skin', 1), 'top': ('top', 2), 'shorts': ('shorts', 3), 'hair': ('hair', 4), 'brows': ('brows', 5),
+            'eyes': (None, 6), 'shoes': ('shoes', 7), 'glove': ('gloves', 8), 'cuff': ('cuff', 9), 'band': ('band', 10),
+            'par': ('par', 11), 'rubber': ('rubber', 12), 'metal': ('metal', 13)}
+    flats = {}
+    def flat(key):
+        if key not in flats:
+            m, nt_, b_ = principled(f'jeu-{key}', color=lin(COL[key]), rough=0.6, **{'Specular IOR Level': 0.2})
+            flats[key] = m
+        return flats[key]
+    for ob in bpy.data.objects:
+        if ob.type != 'MESH' or ob.name == 'cyc': continue
+        mname = ob.data.materials[0].name.split('.')[0] if ob.data.materials else ''
+        key, idx = KIND.get(mname, (None, 15))
+        if mname == 'band' and ob.name.startswith('vband'): key = 'vband'
+        if ob.name == 'body': key, idx = 'skin', 1
+        ob.pass_index = idx
+        if key is None: continue   # les yeux gardent leur iris
+        ob.data.materials.clear(); ob.data.materials.append(flat(key))
+    # pas de mur derrière : un sol plat attrape l'ombre (rien d'autre)
+    for v_ in cyc.data.vertices: v_.co.z = 0
+    cyc.is_shadow_catcher = True
+    for ob in [o for o in bpy.data.objects if o.type == 'LIGHT']:
+        bpy.data.objects.remove(ob)
+    # lumières sans cône (spread 180°) : tout le sol est éclairé, seule l'ombre du perso compte
+    light('key', 'AREA', around(-38, 55, R, c), c, 4200, (1, 1, 1), 6, spread=180)
+    light('fill', 'AREA', around(60, 5, R, c), c, 380, (1, 1, 1), 20, spread=180)
+    sc.render.film_transparent = True
+    vl = sc.view_layers[0]
+    vl.use_pass_ambient_occlusion = True; vl.use_pass_z = True; vl.use_pass_object_index = True
+    vl.use_pass_diffuse_color = True; vl.use_pass_normal = True
+    sc.use_nodes = True
+    tree = sc.node_tree
+    for nd in list(tree.nodes): tree.nodes.remove(nd)
+    rl = tree.nodes.new('CompositorNodeRLayers')
+    comp = tree.nodes.new('CompositorNodeComposite'); tree.links.new(rl.outputs['Image'], comp.inputs['Image'])
+    base = os.path.splitext(out)[0] + '_passes'
+    def output(mode, raw):
+        fo_ = tree.nodes.new('CompositorNodeOutputFile'); fo_.base_path = base
+        fo_.format.file_format = 'PNG'; fo_.format.color_depth = '16'; fo_.format.color_mode = mode
+        if raw:
+            try:
+                fo_.format.color_management = 'OVERRIDE'; fo_.format.view_settings.view_transform = 'Raw'
+            except Exception as e:
+                print('gestion des couleurs', e)
+        fo_.file_slots.clear()
+        return fo_
+    fo = output('RGBA', False)
+    for name, sock in (('image', 'Image'), ('albedo', 'DiffCol')):
+        fo.file_slots.new(name); tree.links.new(rl.outputs[sock], fo.inputs[name])
+    fb = output('BW', True)
+    nz_ = tree.nodes.new('CompositorNodeNormalize'); tree.links.new(rl.outputs['Depth'], nz_.inputs[0])
+    fb.file_slots.new('depth'); tree.links.new(nz_.outputs[0], fb.inputs['depth'])
+    dv = tree.nodes.new('CompositorNodeMath'); dv.operation = 'DIVIDE'; dv.inputs[1].default_value = 16
+    tree.links.new(rl.outputs['IndexOB'], dv.inputs[0])
+    fb.file_slots.new('index'); tree.links.new(dv.outputs[0], fb.inputs['index'])
+    fb.file_slots.new('ao'); tree.links.new(rl.outputs['AO'], fb.inputs['ao'])
+    # normales (repère du monde) ramenées de -1…1 à 0…1
+    fn = output('RGB', True)
+    half = tree.nodes.new('CompositorNodeMixRGB'); half.blend_type = 'MULTIPLY'; half.inputs[2].default_value = (0.5, 0.5, 0.5, 1)
+    tree.links.new(rl.outputs['Normal'], half.inputs[1])
+    shift = tree.nodes.new('CompositorNodeMixRGB'); shift.blend_type = 'ADD'; shift.inputs[2].default_value = (0.5, 0.5, 0.5, 1)
+    tree.links.new(half.outputs[0], shift.inputs[1])
+    fn.file_slots.new('normal'); tree.links.new(shift.outputs[0], fn.inputs['normal'])
+    # la caméra : ses axes (pour la lumière du dessin) et l'échelle (pixels par unité au milieu du corps)
+    bpy.context.view_layer.update()
+    Mc = cam.matrix_world.to_3x3()
+    mid3 = Vector(center) - Vector((0, 0, 0))
+    p0 = world_to_camera_view(sc, cam, mid3); p1 = world_to_camera_view(sc, cam, mid3 + Mc @ Vector((1, 0, 0)))
+    os.makedirs(base, exist_ok=True)
+    json.dump(dict(right=list(Mc @ Vector((1, 0, 0))), up=list(Mc @ Vector((0, 1, 0))), back=list(Mc @ Vector((0, 0, 1))),
+                   ppu=(p1.x - p0.x) * W, w=W, h=Hh, look=LOOK), open(base + '/meta.json', 'w'), indent=1)
+
 # ——— rendu ———
 sc.render.engine = 'CYCLES'
 sc.cycles.device = 'CPU'
@@ -597,7 +696,7 @@ sc.cycles.samples = samples
 sc.cycles.use_denoising = True
 sc.cycles.max_bounces = 6
 sc.render.threads_mode = 'FIXED'; sc.render.threads = int(os.environ.get('THREADS', 4))
-if STYLE == 'dessin':
+if STYLE in ('dessin', 'jeu'):
     sc.view_settings.view_transform = 'Standard'
 else:
     sc.view_settings.view_transform = 'AgX'

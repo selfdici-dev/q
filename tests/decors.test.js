@@ -130,7 +130,7 @@ test('décors : chaque salle se dessine en entier, avec ses postes, sa borne et 
       const svg = hubSVG({ pick: 'B', id: `t-${id}`, decor: id, animate });
       assert.ok(wellFormed(svg), `${id} : balises mal fermées`);
       assert.doesNotMatch(svg, /https?:|<script|\son\w+=|NaN|undefined|Infinity/, id);
-      assert.doesNotMatch(svg, /<image(?! href="img\/ex\/[\w-]+\.webp")/, `${id} : une image qui n’est pas un personnage`);
+      assert.doesNotMatch(svg, /<image(?! href="img\/(ex|jeu)\/[\w-]+\.webp")/, `${id} : une image qui n’est pas un personnage`);
       const all = ids(svg);
       assert.equal(new Set(all).size, all.length, `${id} : identifiant en double`);
       assert.ok(refsOk(svg), `${id} : couleur introuvable`);

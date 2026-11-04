@@ -2,11 +2,11 @@
 // une pièce en biais (isométrique) habillée du décor choisi (decors.js : la
 // salle aux murs sombres, le temple grec, le grand hall…, chacun avec son
 // écran ou sa plaque qui affiche la séance choisie), une borne d'arcade,
-// et une plateforme par séance, chacune avec son matériel et son bonhomme :
-// P à la barre de traction, C au sac de boxe, M sur son tapis de yoga, A sur
-// son tapis avec la roue, B sur ses parallettes. Le poste choisi s'allume
-// (contour qui pulse, faisceau de lumière, poussières qui montent) et son
-// bonhomme bouge ; les autres attendent, immobiles.
+// et une plateforme par séance, chacune avec son matériel et son perso (un
+// personnage de jeu vidéo, heroes.js) : P à la barre de traction, C au sac de
+// boxe, M sur son tapis de yoga, A sur son tapis avec la roue, B sur ses
+// parallettes. Tous s'entraînent (la salle vit) ; le poste choisi s'allume
+// (contour qui pulse, faisceau de lumière, poussières qui montent).
 // Logique pure : une chaîne SVG et les zones à toucher, testées par
 // tests/gym.test.js.
 import { figureFor, figureSVG, focusFor, solve, barAt, VIEW } from './figures.js';
@@ -14,7 +14,7 @@ import { WORKOUTS } from './data.js';
 import { HUB, HW, P, r1, pts, poly, flat, box } from './iso.js';
 import { decorArt } from './decors.js';
 import { daylightArt } from './daylight.js';
-import { drawingFor, drawingSVG } from './drawings.js';
+import { heroFor, heroSVG } from './heroes.js';
 
 export { HUB };
 // Ce qu'on voit de la salle : le dessin sans sa bande du bas (la séance choisie
@@ -50,31 +50,30 @@ function place(st, animate) {
   return { f, inner: svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, ''), tx, ty, box: [tx + bx * st.s, ty + by * st.s, bw * st.s, bh * st.s] };
 }
 
-// Les personnages des postes : les dessins 3D des exercices (drawings.js),
-// à la place des bonshommes (gardés si un dessin manque). Mesurés sur leurs
-// images : la largeur à l'écran (unités de la salle, réglée pour que tous
-// aient la même taille de corps), la ligne du sol et le milieu des appuis
-// (part de l'image, de gauche à droite et de haut en bas), le haut du corps.
-// Les tractions ont leur barre dans le dessin ; le sac de boxe se pend devant
-// les poings (bag, part de la largeur).
-export const CAST = {
-  P: { width: 72, ground: 0.987, center: 0.532, top: 0.017 },
-  M: { width: 76, ground: 0.98, center: 0.569, top: 0.018 },
-  A: { width: 92, ground: 0.82, center: 0.5, top: 0.02 },
-  C: { width: 80, ground: 0.978, center: 0.517, top: 0.018, bag: 0.9 },
-  B: { width: 106, ground: 0.837, center: 0.491, top: 0.023 },
-};
+// Les personnages des postes, façon jeu vidéo (heroes.js : un perso par poste,
+// rendu en 3D puis dessiné en aplats), à la place des bonshommes (gardés si un
+// perso manque). Leurs mesures viennent de leurs images (heroes-data.js) : la
+// ligne du sol, le haut du corps et le milieu des appuis (part de l'image), la
+// taille d'une unité du corps 3D. UNIT : unités de la salle par unité du corps
+// (≈ 1 dm), la même pour tous : ils ont tous la même taille, quel que soit le
+// cadrage de leur image. Les tractions ont leur barre dans l'image ; le sac de
+// boxe se pend là où vont les gants (bag, part de la largeur).
+const UNIT = 4.4;
 const r4 = (v) => Math.round(v * 1e4) / 1e4;
+export const CAST = Object.fromEntries(STATIONS.flatMap((st) => {
+  const d = heroFor(st.ex)?.d;
+  return d ? [[st.id, { width: r4((d.w / d.unit) * UNIT), ground: d.ground, center: d.center, top: d.top, ...(d.reach ? { bag: d.reach } : {}) }]] : [];
+}));
 export function who(st, animate) {
   const c = CAST[st.id];
-  const r = c && drawingFor(st.ex);
+  const r = c && heroFor(st.ex);
   if (!r) return null;
   const { d, mirror } = r;
   const s = c.width / d.w;
   const [x, y] = P(...center(st), PH);
   const tx = x - (mirror ? 1 - c.center : c.center) * c.width;
   const ty = y - c.ground * d.h * s;
-  const inner = drawingSVG(st.ex, { animate, ghost: false }).replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
+  const inner = heroSVG(st.ex, { animate }).replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
   return {
     svg: `<g class="hub-who" transform="translate(${r1(tx)} ${r1(ty)}) scale(${r4(s)})">${inner}</g>`,
     box: [tx, ty + c.top * d.h * s, c.width, (c.ground - c.top) * d.h * s],
@@ -160,10 +159,12 @@ function tower(id, p, st, floorY) {
 // personnage C (son dessin) ou de son bonhomme.
 function bag(id, p, st, pers) {
   const s = st.s;
-  const cx = r1(pers ? pers.tx + CAST.C.bag * pers.w : p.tx + 93 * s);
-  const top = r1(pers ? pers.ty + 0.12 * pers.h : p.ty + 13 * s);
-  const bottom = r1(pers ? pers.ty + 0.6 * pers.h : p.ty + 52 * s);
-  const w = r1(pers ? 0.17 * pers.w : 13 * s);
+  const c = CAST.C;
+  const w = r1(13 * s);
+  const body = pers && [pers.ty + c.top * pers.h, (c.ground - c.top) * pers.h]; // haut du corps, sa hauteur
+  const cx = r1(pers ? pers.tx + (c.bag ?? 0.9) * pers.w + w * 0.38 : p.tx + 93 * s);
+  const top = r1(pers ? body[0] + 0.08 * body[1] : p.ty + 13 * s);
+  const bottom = r1(pers ? body[0] + 0.6 * body[1] : p.ty + 52 * s);
   const ceil = r1(P(7.4, 0.2, HW)[1] + 6);
   const band = (y) => `<rect x="${r1(cx - w / 2)}" y="${r1(y)}" width="${w}" height="${r1(w * 0.12)}" fill="#c98059" fill-opacity="0.9"/>`;
   return `<g class="hub-bag"><path d="M${r1(cx - w * 1.4)} ${ceil}H${r1(cx + w * 0.3)}" stroke="#3a3532" stroke-width="${r1(w * 0.22)}" stroke-linecap="round"/>`
@@ -208,7 +209,7 @@ export function hubSVG({ pick = 'A', animate = true, id = 'hub', decor = 'salle'
   const order = [...STATIONS].sort((a, b) => (a.X + a.Y) - (b.X + b.Y));
   const stations = order.map((st) => {
     const on = st.id === pick;
-    const pers = who(st, on && animate); // le personnage (son dessin), sinon le bonhomme
+    const pers = who(st, animate); // le personnage (tous bougent : la salle vit), sinon le bonhomme
     const p = place(st, on && animate && !pers);
     const [cx, cy] = center(st);
     const col = COLORS[st.id];

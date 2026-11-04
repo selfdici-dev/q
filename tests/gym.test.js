@@ -3,14 +3,20 @@ import assert from 'node:assert/strict';
 import { hubSVG, hubLayout, arcadeZone, HUB, HUB_VIEW, STATIONS, CAST, covers } from '../js/gym.js';
 import { WORKOUTS } from '../js/data.js';
 import { figureFor } from '../js/figures.js';
-import { drawingFor } from '../js/drawings.js';
+import { heroFor } from '../js/heroes.js';
 
 test('ta salle en maquette : un poste par séance, chacun avec son personnage, son matériel et sa plateforme', () => {
   assert.deepEqual(STATIONS.map((s) => s.id).sort(), WORKOUTS.map((w) => w.id).sort());
-  // chaque poste a son personnage dessiné (et le bonhomme en secours)
+  // chaque poste a son personnage de jeu vidéo (et le bonhomme en secours)
   for (const st of STATIONS) {
     assert.ok(figureFor(st.ex), `bonhomme manquant : ${st.ex}`);
-    assert.ok(drawingFor(st.ex) && CAST[st.id], `dessin manquant : ${st.ex}`);
+    assert.ok(heroFor(st.ex) && CAST[st.id], `perso manquant : ${st.ex}`);
+  }
+  // tous à la même échelle : un perso debout fait entre 70 et 95 de haut
+  for (const id of ['M', 'C']) {
+    const c = CAST[id];
+    const h = heroFor(STATIONS.find((st) => st.id === id).ex).d.h * (c.width / heroFor(STATIONS.find((st) => st.id === id).ex).d.w) * (c.ground - c.top);
+    assert.ok(h > 50 && h < 95, `${id} : ${h}`);
   }
   const svg = hubSVG({ pick: 'B' });
   assert.match(svg, new RegExp(`^<svg class="hub-scene" viewBox="${HUB_VIEW.x} ${HUB_VIEW.y} ${HUB_VIEW.w} ${HUB_VIEW.h}" aria-hidden="true">`));
@@ -20,18 +26,20 @@ test('ta salle en maquette : un poste par séance, chacun avec son personnage, s
   // yoga (M), roue (A), élastiques (B) ; la barre de traction et les parallettes sont dans les dessins
   for (const part of ['hub-logo', 'hub-screen', 'hub-led', 'hub-bag', 'hub-plant', 'hub-wheel', 'hub-bands']) assert.match(svg, new RegExp(part), part);
   assert.equal((svg.match(/class="hub-plat"/g) ?? []).length, 5);
-  // les personnages : leurs images (celles des séances), un groupe par poste
+  // les personnages : leurs images (img/jeu), un groupe par poste
   assert.equal((svg.match(/<g class="hub-who" transform=/g) ?? []).length, 5);
-  for (const [, src] of svg.matchAll(/<image href="([^"]+)"/g)) assert.match(src, /^img\/ex\/[\w-]+-\d\.webp$/);
+  for (const [, src] of svg.matchAll(/<image href="([^"]+)"/g)) assert.match(src, /^img\/jeu\/[\w-]+-\d\.webp$/);
   // les pieds sur leur plateforme : le bas du personnage tombe sur le milieu de la plateforme
   for (const { id, box: [, y, , h] } of hubLayout()) assert.ok(y + h > 100 && y + h < HUB_VIEW.h, id);
 });
 
-test('ta salle : seul le poste choisi s’allume et bouge, et rien ne bouge si on réduit les animations', () => {
-  const moving = (svg) => [...svg.matchAll(/<g class="hub-st st-(\w)[^"]*">(.*?)(?=<g class="hub-st|<g class="hub-light|<\/svg>)/gs)].filter(([, , g]) => /<animate/.test(g)).map(([, id]) => id);
-  assert.deepEqual(moving(hubSVG({ pick: 'C' })), ['C']);
-  assert.deepEqual(moving(hubSVG({ pick: 'A' })), ['A']);
+test('ta salle : tous les persos s’entraînent, le poste choisi s’allume, et rien ne bouge si on réduit les animations', () => {
+  const moving = (svg) => [...svg.matchAll(/<g class="hub-st st-(\w)[^"]*">(.*?)(?=<g class="hub-st|<g class="hub-light|<\/svg>)/gs)].filter(([, , g]) => /<animate/.test(g)).map(([, id]) => id).sort();
+  assert.deepEqual(moving(hubSVG({ pick: 'C' })), ['A', 'B', 'C', 'M', 'P']);
   assert.deepEqual(moving(hubSVG({ pick: 'A', animate: false })), []);
+  // seul le poste choisi a son contour qui pulse
+  const pulses = (svg) => (svg.match(/attributeName="stroke-opacity"/g) ?? []).length;
+  assert.equal(pulses(hubSVG({ pick: 'C' })), 1);
   assert.match(hubSVG({ pick: 'M' }), /class="hub-st st-M wo-M on"/);
   // l'écran au mur affiche la séance choisie ; le faisceau tombe sur son poste
   assert.match(hubSVG({ pick: 'C' }), /SÉANCE C/);
@@ -60,7 +68,7 @@ test('ta salle : zones à toucher dans le décor, sans se chevaucher, assez gran
 test('ta salle : rien qui vienne d’internet, identifiants propres à chaque salle', () => {
   const svg = hubSVG({ pick: 'B', id: 'h1' });
   assert.doesNotMatch(svg, /https?:|<script|\son\w+=|NaN|undefined/);
-  assert.doesNotMatch(svg, /<image(?! href="img\/ex\/[\w-]+\.webp")/); // seulement les images des personnages
+  assert.doesNotMatch(svg, /<image(?! href="img\/jeu\/[\w-]+\.webp")/); // seulement les images des personnages
   const ids = [...svg.matchAll(/ id="([^"]+)"/g)].map((m) => m[1]);
   assert.equal(new Set(ids).size, ids.length);
   for (const [, ref] of svg.matchAll(/url\(#([^)]+)\)/g)) assert.ok(ids.includes(ref), ref);

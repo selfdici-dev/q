@@ -351,29 +351,40 @@ export const LEVELS = {
   coriace: { name: 'Coriace', depth: 4, quiet: true, noise: 0, ms: 900 },
 };
 
-// Le coup de Cap. rnd : un nombre au hasard entre 0 et 1 (pour varier).
-export function bestMove(pos, { depth = 3, quiet = true, noise = 0, ms = 1500, rnd = Math.random } = {}) {
+// La recherche : chaque coup permis avec sa valeur (pour le camp qui joue), du
+// meilleur au moins bon, à la dernière profondeur finie dans le temps donné.
+function search(pos, { depth = 3, quiet = true, ms = 1500 } = {}) {
   const moves = order(legalMoves(pos));
-  if (!moves.length) return null;
+  if (!moves.length) return [];
   const t0 = Date.now();
   const ctx = { nodes: 0, quiet, stop: () => ctx.nodes % 512 === 0 && Date.now() - t0 > ms };
-  let best = moves[0], scored = moves.map((m) => ({ m, score: 0 }));
+  let scored = moves.map((m) => ({ m, score: 0 }));
   for (let d = 1; d <= depth; d++) {
     const round = [];
-    let alpha = -Infinity;
     for (const { m } of scored) {
       make(pos, m);
       const score = -negamax(pos, d - 1, -MATE * 2, MATE * 2, 1, ctx);
       unmake(pos);
       round.push({ m, score });
-      if (score > alpha) alpha = score;
       if (ctx.stop() && d > 1) break;
     }
     if (ctx.stop() && d > 1 && round.length < scored.length) break; // profondeur pas finie : on garde la précédente
     scored = round.sort((a, b) => b.score - a.score);
-    best = scored[0].m;
     if (scored[0].score > MATE - 100) break; // un mat trouvé
   }
+  return scored;
+}
+
+// Pour revoir une partie : tous les coups d'une position et leur valeur
+// (centièmes de pion ; un mat vaut près de ±MATE), le meilleur en premier.
+export const analyse = (pos, opts) => search(pos, opts);
+export { MATE };
+
+// Le coup de Cap. rnd : un nombre au hasard entre 0 et 1 (pour varier).
+export function bestMove(pos, { depth = 3, quiet = true, noise = 0, ms = 1500, rnd = Math.random } = {}) {
+  const scored = search(pos, { depth, quiet, ms });
+  if (!scored.length) return null;
+  let best = scored[0].m;
   if (noise > 0) {
     const pick = scored.map((x) => ({ m: x.m, s: x.score + (rnd() - 0.5) * 2 * noise })).sort((a, b) => b.s - a.s)[0];
     // jamais un mat raté s'il est sous ses yeux, jamais un coup qui perd tout de suite au mat

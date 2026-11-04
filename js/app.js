@@ -364,6 +364,7 @@ const arcade = createArcade({
   render: () => render(),
   celebrate: (m) => celebrate(m),
   reduceMotion: () => reduceMotion(),
+  today: () => todayKey(),
 });
 
 const money = createMoney({

@@ -133,10 +133,11 @@ export function createArcade(ctx) {
     const ch = games().echecs ?? {};
     const chLessons = LESSONS.filter((l) => ch.lessons?.[l.id]).length;
     const chWins = Object.values(ch.wins ?? {}).reduce((a, n) => a + (Number(n) || 0), 0);
+    const chDaily = ch.daily?.[ctx.today?.()] !== true; // le problème du jour reste à faire : une quête
     return `<div class="arc-grid">
       <section class="arc-tile arc-wide">
         <div class="arc-art ch-art" aria-hidden="true">${chessArt()}</div>
-        <div class="arc-wide-text"><h3>Échecs</h3><p class="arc-tag">Apprends pas à pas, puis bats Cap</p>
+        <div class="arc-wide-text"><h3>Échecs${chDaily ? '<span class="arc-quest" title="Problème du jour à résoudre">!</span>' : ''}</h3><p class="arc-tag">${chDaily ? 'Le problème du jour t’attend' : 'Apprends pas à pas, puis bats Cap'}</p>
           <p class="arc-best"><b>${chLessons}</b> / ${LESSONS.length} leçons${chWins ? ` · <b>${chWins}</b> victoire${chWins > 1 ? 's' : ''}` : ''}</p></div>
         ${go('echecs', 'Jouer')}
       </section>

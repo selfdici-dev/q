@@ -65,3 +65,25 @@ les anciennes).
    `side='droite'` si le dessin montre un côté : l'autre est son miroir.
 2. `python3 verif.py <slug>`, puis les aperçus, jusqu'à ce que la pose soit juste.
 3. `./lot.sh <slug>` puis `python3 images.py rendus`.
+
+## Les personnages de la Salle (façon jeu vidéo)
+
+`jeu.py` reprend les mêmes corps et les mêmes poses pour les 5 postes de la Salle,
+avec un look par perso (teint, coiffure MakeHuman, débardeur `Tank_Top_01` de la
+couleur de la séance, gants de boxe pour C ; voir `CAST` dans `jeu.py`) :
+
+1. `render.py` en `STYLE=jeu` (`LOOK` en JSON) : des aplats de couleur, l'ombre
+   portée sur un sol plat, les passes (couleur, normales, profondeur, objets, AO)
+   et `meta.json` (axes de la caméra, pixels par unité) ;
+2. `toon` : ombres en deux tons, liseré de lumière, reflet, contour, ombre au sol ;
+3. `images` : `img/jeu/<slug>-<n>.webp`, `js/heroes-data.js` (avec les mesures
+   pour la Salle) et la liste `GAME` de `sw.js`.
+
+```bash
+cd outils/dessins
+python3 jeu.py rendre            # toutes les images (≈ 1 min chacune), dans jeu/
+python3 jeu.py rendre C          # un seul perso (lettre du poste ou slug)
+python3 jeu.py images            # img/jeu/, js/heroes-data.js, GAME dans sw.js
+cd ../.. && npm test
+```
+

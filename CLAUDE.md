@@ -21,7 +21,7 @@ L'utilisateur est débutant : explique simplement, en français.
 - `js/tree.js` : arbre du focus qui pousse pendant la session (unique par session, calculé).
 - `js/room.js` : décor de la salle vue de face (lecteur de séance, entrée) ; `js/gym.js` :
   la salle de l'onglet Salle, en maquette vue de dessus façon jeu vidéo (une plateforme
-  par séance, son personnage : le dessin 3D de l'exercice, réglé par `CAST`) ; `js/iso.js` : sa projection et ses formes de base ; `js/decors.js` : ses
+  par séance, son personnage façon jeu vidéo : `js/heroes.js`, à l'échelle par `CAST`) ; `js/iso.js` : sa projection et ses formes de base ; `js/decors.js` : ses
   décors à débloquer (salle, temple grec, grand hall…), choix dans `state.settings.decor` ;
   `js/daylight.js` : sa lumière qui suit l'heure (matin, soir, nuit étoilée ; calculée, jamais stockée) ;
   `js/seasons.js` : les décors de saison (Halloween, Noël, printemps, été : dates, trophées) ;
@@ -40,6 +40,8 @@ L'utilisateur est débutant : explique simplement, en français.
   en rouge), joués au rythme du bonhomme ; sans dessin, le bonhomme reste.
   `js/drawings-data.js` (leur manifeste) et `img/ex/*.webp` (leurs images) sont
   fabriqués par `outils/dessins/` (Python + Blender, pas servi par l'appli, voir son README).
+  `js/heroes.js` : les persos de la Salle, même moteur, rendus en « toon » par
+  `outils/dessins/jeu.py` (`img/jeu/*.webp`, `js/heroes-data.js`, liste `GAME` de `sw.js`).
 - `js/data.js`, `js/finance-data.js`, `js/quotes.js` : contenu (séances, leçons…).
 - `css/styles.css` : styles de base ; `css/luxe.css` : structure du design
   (verre, cartes, jetons de couleur), chargé après ; `css/cuivre.css` : couleurs
@@ -57,8 +59,9 @@ L'utilisateur est débutant : explique simplement, en français.
 4. **`npm test` après chaque étape**, tout doit passer.
 5. **Incrémenter `VERSION` dans `sw.js`** à chaque modification des fichiers
    servis ; ajouter tout nouveau fichier à `FILES`. Les images des dessins vont
-   dans `DRAWN` (écrit par `outils/dessins/images.py`) ; si des images changent
-   sous le même nom, changer aussi `IMG`.
+   dans `DRAWN` (écrit par `outils/dessins/images.py`), celles des persos dans
+   `GAME` (écrit par `outils/dessins/jeu.py`) ; si des images changent sous le
+   même nom, changer aussi `IMG`.
 6. **Un commit par modification**, message clair en français.
 7. **Aucune donnée ne quitte l'appareil** : pas de requête réseau avec des
    données, pas d'analytics, pas de CDN ni de police externe. Copier, exporter

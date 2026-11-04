@@ -3,7 +3,7 @@
 // tes données ; ceux déjà annoncés (settings.trophiesSeen) restent gagnés,
 // même si une chaîne casse ensuite. Logique pure, testée par tests/trophies.test.js.
 import { chain } from './logic.js';
-import { decorStats, decorStatus } from './decors.js';
+import { DECORS, decorStats, decorStatus } from './decors.js';
 import { SEASONS, seasonWorkouts, dateFr } from './seasons.js';
 import { LESSONS, PUZZLES } from './chess-school.js';
 
@@ -41,7 +41,7 @@ export const TROPHIES = [
   T('g-coriace', 'Jeux', 'knight', 'Échec et mat', 'Cap battu aux échecs au niveau Coriace', 'or', 'echecsCoriace', 1),
   T('d3', 'Décors', 'map', 'Décorateur', '3 décors débloqués', 'bronze', 'decors', 3),
   T('d8', 'Décors', 'map', 'Collectionneur', '8 décors débloqués', 'argent', 'decors', 8),
-  T('d17', 'Décors', 'map', 'Tous les mondes', 'Les 17 décors débloqués', 'or', 'decors', 17),
+  T('d17', 'Décors', 'map', 'Tous les mondes', `Les ${DECORS.length} décors débloqués`, 'or', 'decors', DECORS.length), // (l'identifiant date de 17 décors)
   // les saisons : des séances pendant la saison (seasons.js), la même année
   ...SEASONS.map((s) => T(`saison-${s.id}`, 'Saisons', s.icon, s.trophy, `${s.n} séances pendant « ${s.name} » (du ${dateFr(s.from)} au ${dateFr(s.to)})`, s.tier, s.id, s.n)),
 ];

@@ -1,11 +1,11 @@
 // Cache hors ligne. Incrémente VERSION à chaque modification des fichiers.
-const VERSION = 'cap-v129';
+const VERSION = 'cap-v131';
 const FILES = [
   './', './index.html', './css/styles.css', './css/luxe.css', './css/cuivre.css', './manifest.webmanifest',
   './js/app.js', './js/logic.js', './js/data.js',
   './js/money.js', './js/finance-data.js', './js/quotes.js', './js/summary.js',
   './js/backup.js', './js/figures.js', './js/poses.js', './js/avatar.js', './js/tree.js', './js/icons.js', './js/room.js', './js/gym.js',
-  './js/drawings.js', './js/drawings-data.js', './js/games.js', './js/arcade.js', './js/iso.js', './js/decors.js', './js/routines.js', './js/gems.js', './js/sudoku.js', './js/snake.js', './js/pairs.js', './js/code.js', './js/bricks.js', './js/taquin.js', './js/echo.js', './js/trophies.js', './js/daylight.js', './js/seasons.js', './js/outfit.js', './js/challenges.js', './js/sprint.js', './js/pixels.js', './js/chess.js', './js/chess-school.js', './js/chess-view.js',
+  './js/drawings.js', './js/drawings-data.js', './js/games.js', './js/arcade.js', './js/iso.js', './js/decors.js', './js/routines.js', './js/gems.js', './js/sudoku.js', './js/snake.js', './js/pairs.js', './js/code.js', './js/bricks.js', './js/taquin.js', './js/echo.js', './js/trophies.js', './js/daylight.js', './js/seasons.js', './js/outfit.js', './js/challenges.js', './js/sprint.js', './js/pixels.js', './js/chess.js', './js/chess-school.js', './js/chess-view.js', './js/heroes.js', './js/heroes-data.js',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
 ];
 // Dessins des exercices (img/ex/<slug>-<n>.webp, n images par geste ; liste
@@ -14,7 +14,13 @@ const FILES = [
 // images sous le même nom.
 const IMG = 'cap-img-v1';
 const DRAWN = { 'crunch-velo': 4, roue: 5, 'russian-twist': 5, 'crunch-inverse': 5, 'planche-laterale': 5, hollow: 3, 'pompes-parallettes': 5, rowing: 5, 'pompes-pike': 5, 'tirage-assis': 5, 'pompes-serrees': 5, curl: 5, 'elevations-laterales': 5, 'l-sit': 5, 'shadow-boxing': 5, burpees: 10, 'esquives-crochets': 7, 'mountain-climbers': 5, 'fentes-arriere': 5, suspension: 3, tractions: 5, 'tractions-australiennes': 5, 'releves-genoux': 5, 'chat-vache': 3, 'montees-genoux': 5, 'pompes-genoux': 5, 'fente-basse': 5, superman: 4, 'pont-fessier': 5, 'tirage-superman': 3, 'chin-tucks': 3, 'passage-epaules': 5, 'ecarte-arriere': 5, 'etirement-pectoraux': 3 };
-const IMAGES = Object.entries(DRAWN).flatMap(([slug, n]) => Array.from({ length: n }, (_, k) => `./img/ex/${slug}-${k}.webp`));
+// Personnages de la Salle, façon jeu vidéo (img/jeu/<slug>-<n>.webp ; liste écrite
+// par outils/dessins/jeu.py), gardés comme les dessins.
+const GAME = { tractions: 5, 'fente-basse': 5, 'crunch-velo': 4, 'shadow-boxing': 5, 'pompes-parallettes': 5 };
+const IMAGES = [
+  ...Object.entries(DRAWN).flatMap(([slug, n]) => Array.from({ length: n }, (_, k) => `./img/ex/${slug}-${k}.webp`)),
+  ...Object.entries(GAME).flatMap(([slug, n]) => Array.from({ length: n }, (_, k) => `./img/jeu/${slug}-${k}.webp`)),
+];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(Promise.all([
@@ -39,10 +45,10 @@ self.addEventListener('activate', (e) => {
 // « no-cache » : le navigateur redemande toujours au serveur si le fichier a
 // changé, au lieu de resservir sa copie gardée jusqu'à 10 min (GitHub Pages).
 // Sans ça, une mise à jour pouvait ne pas s'afficher tout de suite.
-// Dessins : le cache d'abord (ils ne changent pas), sinon le réseau.
+// Dessins et personnages : le cache d'abord (ils ne changent pas), sinon le réseau.
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
-  if (new URL(e.request.url).pathname.includes('/img/ex/')) {
+  if (/\/img\/(ex|jeu)\//.test(new URL(e.request.url).pathname)) {
     e.respondWith(
       caches.open(IMG).then((c) => c.match(e.request, { ignoreSearch: true }).then((hit) => hit ?? fetch(e.request).then((res) => {
         if (res.ok) c.put(e.request, res.clone());

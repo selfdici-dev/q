@@ -14,9 +14,10 @@ export const DIR = 'img/ex/';
 // Le dessin d'un exercice, sous le même nom que son bonhomme (ou null).
 // Côtés : le dessin montre `side` ; « (gauche) » / « (droite) » de l'autre
 // côté, c'est le même dessin en miroir.
-export function drawingFor(name = '') {
-  const key = name in DRAWINGS ? name : baseName(name);
-  const d = DRAWINGS[key];
+// set : un autre jeu d'images sous les mêmes noms (les persos de la Salle, heroes.js).
+export function drawingFor(name = '', set = DRAWINGS) {
+  const key = name in set ? name : baseName(name);
+  const d = set[key];
   if (!d || !POSES[key]) return null;
   const side = /\((gauche|droite)\)\s*$/.exec(name)?.[1];
   return { key, d, fig: POSES[key], mirror: Boolean(side && d.side && side !== d.side) };
@@ -47,11 +48,12 @@ export function drawingTimeline(d, fig) {
 // (SMIL, sans JavaScript), en boucle au rythme du bonhomme. Immobile
 // (animate: false) : la pose de départ, et l'arrivée du premier passage en
 // transparence (ghost), comme le contour d'arrivée du bonhomme.
-export function drawingSVG(name, { animate = true, ghost = true } = {}) {
-  const r = drawingFor(name);
+// set, dir : un autre jeu d'images et son dossier (les persos de la Salle).
+export function drawingSVG(name, { animate = true, ghost = true, set = DRAWINGS, dir = DIR } = {}) {
+  const r = drawingFor(name, set);
   if (!r) return '';
   const { d, fig, mirror } = r;
-  const img = (k, attrs = '', inner = '') => `<image href="${DIR}${d.slug}-${k}.webp" width="${d.w}" height="${d.h}"${attrs}>${inner}</image>`;
+  const img = (k, attrs = '', inner = '') => `<image href="${dir}${d.slug}-${k}.webp" width="${d.w}" height="${d.h}"${attrs}>${inner}</image>`;
   let scene;
   if (animate) {
     const { dur } = beats(fig);

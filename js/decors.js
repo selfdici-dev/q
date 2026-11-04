@@ -22,7 +22,7 @@ export const DECORS = [
   { id: 'volcan', name: 'Volcan', desc: 'Une éruption au loin, une falaise de basalte au-dessus d’un lac de lave.', need: { kind: 'code', n: 15 } },
   { id: 'pixel', name: 'Monde en pixels', desc: 'Un monde de jeu 8 bits : blocs d’herbe, nuages en cases, pièces qui tournent.', need: { kind: 'pixels', n: 8 } },
   { id: 'donjon', name: 'Donjon', desc: 'Pierres et torches, bannières, chaînes, un coffre au trésor qui brille.', need: { kind: 'briques', n: 5 } },
-  { id: 'medieval', name: 'Grand hall', desc: 'Pierre, feu de cheminée, torches, blason noir et or.', need: { kind: 'workouts', n: 40 } },
+  { id: 'medieval', name: 'Grand hall', desc: 'Un château sous la pleine lune : créneaux, tours, douves ; cheminée, torches, blason.', need: { kind: 'workouts', n: 40 } },
   { id: 'neon', name: 'Néon rétro', desc: 'Soleil à rayures, palmiers de néon, sol quadrillé qui défile.', need: { kind: 'gems', n: 8 } },
   { id: 'pirate', name: 'Navire pirate', desc: 'Le pont d’un trois-mâts en pleine mer, voiles et drapeau au vent.', need: { kind: 'paires', n: 8 } },
   { id: 'arcade', name: 'Salle d’arcade', desc: 'Des bornes qui clignotent le long des murs, néons, machine à pince.', need: { kind: 'sprint', n: 1500 } },
@@ -329,22 +329,65 @@ function medieval({ u, pick, title, animate }) {
     .map(([dx, dy, mx, my, d, b]) => [fx + dx, fz + dy, mx, my, d, b]), '<circle r="0.9" fill="#ffb347"/>', animate);
   const flagstones = [];
   for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) if (hash(i * 7 + j) > 0.55) flagstones.push(flat(i, j, 0, 1, 1, '#3d342d'));
+  // dehors, la nuit : la pleine lune entre les nuages, les tours du château
+  // (fenêtres allumées, toits pointus, fanions au vent), des créneaux en haut
+  // des murs ; dessous, les fondations de pierre dans les douves
+  const moon = `<circle cx="140" cy="38" r="46" fill="url(#${u('moonglow')})"/><circle cx="140" cy="38" r="15" fill="#f3ead2"/>`
+    + '<circle cx="135" cy="34" r="3.2" fill="#ddd2b6"/><circle cx="145" cy="43" r="2.2" fill="#ddd2b6"/><circle cx="144" cy="31" r="1.4" fill="#ddd2b6"/>';
+  const nightClouds = [[96, 50, 0.7, 46], [196, 30, 0.6, 52], [300, 62, 0.75, 40]].map(([x, y, sc, d], k) => drift(cloud(x, y, sc, '#2c3554', '#1b2240'), k % 2 ? -18 : 18, d, animate)).join('');
+  const win = (x, y, k) => `${glow(x, y, 9, u('tglow'), animate, k)}<path d="M${r1(x - 1.6)} ${r1(y + 4)}v-5.4a1.6 1.6 0 0 1 3.2 0v5.4z" fill="#ffcf6e"/>`;
+  const flag = (x, y, k) => `<path d="M${x} ${y}v-14" stroke="#14110f" stroke-width="1"/>` + sway(`<path d="M${x} ${y - 14}l12 3l-12 3z" fill="#d4a63c"/>`, x, y - 11, 7, 2.4 + k * 0.5, animate);
+  const tower = (x, top, w, roof, k, far = false) => {
+    const body = `<rect x="${r1(x - w / 2)}" y="${top}" width="${w}" height="${200 - top}" fill="url(#${u(far ? 'towerFar' : 'tower')})"/>`;
+    const courses = far ? '' : `<path d="${Array.from({ length: 8 }, (_, i) => `M${r1(x - w / 2)} ${top + 9 + i * 9}h${w}`).join('')}" stroke="#0e1018" stroke-opacity="0.45" stroke-width="0.6"/>`;
+    if (roof) {
+      return `${body}${courses}<path d="M${r1(x - w / 2 - 3)} ${top}L${x} ${top - roof}L${r1(x + w / 2 + 3)} ${top}Z" fill="${far ? '#171b2c' : '#262c44'}"/>`
+        + (far ? '' : `<path d="M${r1(x - w / 2 - 3)} ${top}L${x} ${top - roof}L${r1(x - 2)} ${top}Z" fill="#363e5e"/>`) + flag(x, top - roof, k);
+    }
+    const merl = Array.from({ length: Math.floor(w / 8) + 1 }, (_, i) => `<rect x="${r1(x - w / 2 + i * 8)}" y="${top - 6}" width="4.6" height="6" fill="${far ? '#171b2c' : '#2e3449'}"/>`).join('');
+    return `${body}${courses}${merl}${flag(x + w / 2 - 4, top - 6, k)}`;
+  };
+  const castle = tower(262, 80, 22, 22, 2, true) + tower(96, 102, 16, 16, 3, true)
+    + tower(26, 96, 36, 34, 0) + win(18, 120, 0) + win(34, 140, 1)
+    + tower(330, 104, 34, 0, 1) + win(324, 126, 2) + win(338, 150, 3);
+  // les créneaux en haut des deux murs
+  const merlons = [];
+  for (let t = 0.1; t < N; t += 0.78) {
+    merlons.push(box(-0.22, t, HW, 0.22, 0.4, 0.34, ['#5a4f45', '#3a322b', '#4a4038']));
+    merlons.push(box(t, -0.22, HW, 0.4, 0.22, 0.34, ['#5a4f45', '#463c34', '#2f2823']));
+  }
+  // les fondations, et les douves où brille la lune
+  const blocks = [];
+  for (let z = -0.3, k = 0; z > -0.95; z -= 0.3, k++) {
+    blocks.push(`M${pts([P(0, N, z), P(N, N, z), P(N, 0, z)])}`);
+    for (let t = (k % 2) * 0.45; t < N; t += 0.9) blocks.push(`M${pts([P(t, N, z), P(t, N, z + 0.3)])}M${pts([P(N, t, z), P(N, t, z + 0.3)])}`);
+  }
+  const base = box(0, 0, -0.9, N, N, 0.9, ['#4a4038', '#2e2722', '#3a322b']) + `<path d="${blocks.join('')}" stroke="#14100d" stroke-opacity="0.75" stroke-width="0.7" fill="none"/>`;
+  const shoreL = P(0, N, -0.9), shoreB = P(N, N, -0.9), shoreR = P(N, 0, -0.9);
+  const lap = `<path d="M${pts([[shoreL[0], shoreL[1] - 1], [shoreB[0], shoreB[1] - 1], [shoreR[0], shoreR[1] - 1]])}" stroke="#9fb3d9" stroke-opacity="0.35" stroke-width="1.2" fill="none"/>`;
+  const glints = Array.from({ length: 7 }, (_, k) => `<rect x="${r1(132 - k * 1.2 + hash(k + 40) * 8)}" y="${374 + k * 9}" width="${r1(6 + hash(k + 41) * 10)}" height="1" fill="#f3ead2" opacity="0.6">${pulse('0.7;0.15;0.7', r1(1.8 + k * 0.3), animate)}</rect>`).join('');
+  const ripples = [[30, 330], [60, 360], [24, 404], [252, 400], [300, 368], [330, 420], [210, 436], [90, 432]].map(([x, y]) => `<path d="M${x} ${y}q6 -2 12 0" stroke="#5a6f99" stroke-opacity="0.45" stroke-width="0.8" fill="none"/>`).join('');
+  const moat = `<rect y="240" width="${HUB.w}" height="${HUB.h - 240}" fill="url(#${u('water')})"/>${ripples}${glints}`;
   return {
-    bg: '#0a0705',
+    bg: `url(#${u('sky')})`,
     defs: lin(u('wallL'), [0, 0, 1, 0], [[0, '#221d19'], [1, '#2f2823']]) + lin(u('wallR'), [0, 0, 1, 0], [[0, '#3a322b'], [1, '#27211d']])
       + lin(u('floor'), [0, 0, 0, 1], [[0, '#2a241f'], [1, '#3a3029']])
-      + rad(u('tglow'), [[0, '#ffb347', 0.55], [1, '#ff7a1a', 0]]) + rad(u('fglow'), [[0, '#ff9a3c', 0.42], [1, '#ff6a00', 0]]),
-    back: `${wallL(`url(#${u('wallL')})`)}${wallR(`url(#${u('wallR')})`)}${stones('L')}${stones('R')}`
+      + rad(u('tglow'), [[0, '#ffb347', 0.55], [1, '#ff7a1a', 0]]) + rad(u('fglow'), [[0, '#ff9a3c', 0.42], [1, '#ff6a00', 0]])
+      + ulin(u('sky'), [0, 0, 0, 200], [[0, '#05070f'], [0.5, '#0e1530'], [1, '#1f2a4c']]) + rad(u('moonglow'), [[0, '#f3ead2', 0.32], [1, '#f3ead2', 0]])
+      + lin(u('tower'), [0, 0, 1, 0], [[0, '#3c4258'], [0.55, '#282d40'], [1, '#191c29']]) + lin(u('towerFar'), [0, 0, 1, 0], [[0, '#222738'], [1, '#141724']])
+      + ulin(u('water'), [0, 260, 0, 452], [[0, '#16223f'], [1, '#070b18']]),
+    back: `${starField(60, 2100, 150, '#f3ead2')}${moon}${nightClouds}${castle}${moat}${base}${lap}${wallL(`url(#${u('wallL')})`)}${wallR(`url(#${u('wallR')})`)}${stones('L')}${stones('R')}`
       + banner(1.75) + banner(4.35) + onRight(3.05, 1.82, `<g class="hub-crest">${shield}</g>`)
       + `<g class="hub-screen">${onRight(2.1, 0.66, `<path d="M-2 -2h52l-4 6 4 6h-52l4-6z" fill="#d4a63c"/>${say(pick, title, { fill: '#1a120a', sub: '#2a1d10', size: 5.2, font: 'Georgia, serif', x: 3 })}`)}</g>`
-      + torch('L', 1.6, 0) + torch('L', 4.25, 1) + torch('R', 1.1, 2) + torch('R', 5.6, 3),
+      + torch('L', 1.6, 0) + torch('L', 4.25, 1) + torch('R', 1.1, 2) + torch('R', 5.6, 3) + merlons.join(''),
     floor: `${floorPoly(`url(#${u('floor')})`)}${flagstones.join('')}${tiles('#120d0a', 0.75, 0.9)}`,
     edge: cap('#4a4038', 2.6),
     props: `<g class="hub-fireplace">${box(0, fy0, 0, 0.33, fy1 - fy0, HW, ['#3d352e', '#2a241f', '#352d27'])}${fire}${box(0, fy0 - 0.12, 1.12, 0.48, fy1 - fy0 + 0.24, 0.14, ['#5a3e2a', '#2e1f14', '#47301f'])}</g>`,
     // la lueur du feu déborde sur le poste M, devant la cheminée
     over: `<ellipse class="hub-fireglow" cx="${r1(P(0.9, 5.65)[0])}" cy="${r1(P(0.9, 5.65, 0.6)[1])}" rx="58" ry="34" fill="url(#${u('fglow')})">${pulse('0.8;1;0.7;0.9;0.8', 1.9, animate)}</ellipse>${embers}`,
     beam: ['#ffd9a0', '#ffb860'], dust: '#ffb15a',
-    plat: ['#4a3527', '#2a1d14', '#3a291d'], vig: 0.62,
+    plat: ['#4a3527', '#2a1d14', '#3a291d'], vig: 0.5,
+    sky: true, // sa pleine lune : pas de deuxième la nuit (daylight.js)
   };
 }
 

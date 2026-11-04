@@ -28,7 +28,7 @@ export const DECORS = [
   { id: 'arcade', name: 'Salle d’arcade', desc: 'Des bornes qui clignotent le long des murs, néons, machine à pince.', need: { kind: 'sprint', n: 1500 } },
   { id: 'labo', name: 'Labo secret', desc: 'Tubes lumineux pleins de bulles, grand écran, voyants, un hologramme.', need: { kind: 'echo', n: 12 } },
   { id: 'echiquier', name: 'Échiquier géant', desc: 'Un sol en échiquier, des pièces géantes, la lune aux fenêtres.', need: { kind: 'cap', n: 5 } },
-  { id: 'station', name: 'Station spatiale', desc: 'Hublots sur les étoiles et une planète bleue.', need: { kind: 'level', n: 12 } },
+  { id: 'station', name: 'Station spatiale', desc: 'En orbite : une planète bleue, sa lune, des nébuleuses, des panneaux solaires.', need: { kind: 'level', n: 12 } },
   { id: 'iles', name: 'Îles célestes', desc: 'Une île qui flotte dans le ciel, des cascades, des nuages en dessous.', need: { kind: 'level', n: 15 } },
   { id: 'arene', name: 'Arène romaine', desc: 'Du sable, des arches, la foule qui t’encourage, des braseros.', need: { kind: 'workouts', n: 60 } },
   { id: 'plage', name: 'Ponton sur la mer', desc: 'Le soleil se couche sur l’eau, les mouettes passent.', need: { kind: 'blocs', n: 6000 } },
@@ -511,13 +511,64 @@ function station({ u, pick, title, animate }) {
     hazard.push(poly([P(0.05, t, 0.002), P(0.05, t + 0.15, 0.002), P(0.35, t + 0.3, 0.002), P(0.35, t + 0.15, 0.002)], '#d9b42a'));
     hazard.push(poly([P(t, 0.05, 0.002), P(t + 0.15, 0.05, 0.002), P(t + 0.3, 0.35, 0.002), P(t + 0.15, 0.35, 0.002)], '#d9b42a'));
   }
+  // dehors, l'espace : nébuleuses, étoiles, une grande planète bleue et sa
+  // lune, un satellite qui passe ; sous le plancher, la coque de la station,
+  // ses feux de position et ses deux ailes de panneaux solaires
+  const nebula = [[250, 64, 130, 'nebA'], [70, 190, 110, 'nebB'], [300, 430, 130, 'nebA'], [50, 420, 120, 'nebB']].map(([x, y, r, id]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="url(#${u(id)})"/>`).join('');
+  const twinkle = Array.from({ length: 14 }, (_, k) => `<circle cx="${r1(hash(k + 950) * HUB.w)}" cy="${r1(hash(k + 951) * 452)}" r="1.1" fill="#dff4ff">${pulse('1;0.25;1', r1(1.8 + hash(k + 952) * 2.4), animate)}</circle>`).join('');
+  const [gx, gy, gr] = [40, 70, 62];
+  const land = [[-28, -22, 22, 12, -20], [10, 4, 26, 14, 25], [-8, 30, 16, 8, 10], [30, -30, 12, 7, -35], [-40, 14, 10, 18, 0]]
+    .map(([dx, dy, rx, ry, rot]) => `<ellipse cx="${gx + dx}" cy="${gy + dy}" rx="${rx}" ry="${ry}" transform="rotate(${rot} ${gx + dx} ${gy + dy})" fill="#4f9a5e" opacity="0.85"/>`).join('');
+  const clouds = drift([[-20, -36, 30, 4], [16, -8, 34, 4.5], [-34, 22, 26, 3.5], [8, 34, 30, 4], [40, 12, 18, 3]]
+    .map(([dx, dy, rx, ry]) => `<ellipse cx="${gx + dx}" cy="${gy + dy}" rx="${rx}" ry="${ry}" transform="rotate(-18 ${gx + dx} ${gy + dy})" fill="#fff" opacity="0.55"/>`).join(''), 14, 40, animate);
+  const planet = `<circle cx="${gx}" cy="${gy}" r="${gr + 12}" fill="url(#${u('atmo')})"/><circle cx="${gx}" cy="${gy}" r="${gr}" fill="url(#${u('ocean')})"/>`
+    + `<g clip-path="url(#${u('pclip')})">${land}${clouds}<circle cx="${gx}" cy="${gy}" r="${gr}" fill="url(#${u('night')})"/></g>`
+    + `<circle cx="${gx}" cy="${gy}" r="${gr}" fill="none" stroke="#9fd8ff" stroke-opacity="0.5" stroke-width="1.2"/>`;
+  const moon = '<circle cx="322" cy="40" r="12" fill="#c9ccd6"/><circle cx="318" cy="37" r="2.6" fill="#a7abb8"/><circle cx="325" cy="45" r="1.8" fill="#a7abb8"/><circle cx="327" cy="34" r="1.3" fill="#a7abb8"/>'
+    + '<path d="M310 40a12 12 0 0 0 12 12a12 12 0 0 1 -6 -12a12 12 0 0 1 6 -12a12 12 0 0 0 -12 12z" fill="#1b1f2c" opacity="0.6"/>';
+  const sat = drift('<g transform="translate(232 26) rotate(-12)"><rect x="-2.4" y="-1.6" width="4.8" height="3.2" fill="#c9ccd6"/><rect x="-11" y="-1.2" width="7.6" height="2.4" fill="#3b6fd0"/><rect x="3.4" y="-1.2" width="7.6" height="2.4" fill="#3b6fd0"/><path d="M0 -1.6v-3" stroke="#c9ccd6" stroke-width="0.6"/></g>', 46, 38, animate, 10);
+  const hullLines = [];
+  for (let t = 1.17; t < N; t += 1.17) hullLines.push(`M${pts([P(t, N, -1.1), P(t, N, 0)])}M${pts([P(N, t, -1.1), P(N, t, 0)])}`);
+  for (const z of [-0.42, -0.78]) hullLines.push(`M${pts([P(0, N, z), P(N, N, z), P(N, 0, z)])}`);
+  const navLights = [[1.2, 'L', '#ff5a5a'], [3.5, 'L', '#ffe6a0'], [5.8, 'L', '#ff5a5a'], [1.2, 'R', '#5aff9c'], [3.5, 'R', '#ffe6a0'], [5.8, 'R', '#5aff9c']].map(([t, side, c], k) => {
+    const [x, y] = side === 'L' ? P(t, N, -0.95) : P(N, t, -0.95);
+    return `<circle cx="${r1(x)}" cy="${r1(y)}" r="1.3" fill="${c}">${pulse('1;0.15;1', r1(1.2 + (k % 3) * 0.5), animate)}</circle>`;
+  }).join('');
+  const [ex, ey] = P(N, N, -1.1);
+  const engine = `<ellipse cx="${r1(ex)}" cy="${r1(ey + 10)}" rx="16" ry="10" fill="url(#${u('thrust')})">${pulse('0.7;1;0.7', 1.6, animate)}</ellipse>`
+    + `<path d="M${r1(ex - 6)} ${r1(ey)}l2 6h8l2 -6z" fill="#3a4558"/>`;
+  // une aile de panneaux solaires, debout à côté de la coque, tenue par une poutre
+  const wing = (side) => {
+    const q = side === 'L' ? (a, b, z) => P(3.5, N + a, z) : (a, b, z) => P(N + a, 3.5, z);
+    const mount = side === 'L' ? box(3.33, N, -0.78, 0.34, 0.14, 0.32, ['#5a6478', '#3a4356', '#4a5468']) : box(N, 3.33, -0.78, 0.14, 0.34, 0.32, ['#5a6478', '#3a4356', '#4a5468']);
+    const truss = `${mount}<path d="M${pts([q(0.1, 0, -0.62), q(0.66, 0, -0.62)])}" stroke="#a6afc2" stroke-width="3"/><path d="M${pts([q(0.1, 0, -0.62), q(0.66, 0, -0.62)])}" stroke="#5a6478" stroke-width="0.8" stroke-dasharray="1.5 1.5"/>`;
+    const panel = (a0, a1) => {
+      const cells = [];
+      for (let a = a0 + 0.27; a < a1; a += 0.27) cells.push(`M${pts([q(a, 0, -1.45), q(a, 0, 0.25)])}`);
+      for (let z = -1.45 + 0.34; z < 0.25; z += 0.34) cells.push(`M${pts([q(a0, 0, z), q(a1, 0, z)])}`);
+      return poly([q(a0, 0, -1.45), q(a1, 0, -1.45), q(a1, 0, 0.25), q(a0, 0, 0.25)], `url(#${u('solar')})`, ' stroke="#c9d3e6" stroke-width="0.9"')
+        + `<path d="${cells.join('')}" stroke="#7fb0ff" stroke-opacity="0.45" stroke-width="0.5"/>`;
+    };
+    return `${truss}${panel(0.62, 1.66)}${panel(1.74, 2.78)}`;
+  };
+  const hull = box(0, 0, -1.1, N, N, 1.1, ['#2a3346', '#1a2131', '#222b3d']) + `<path d="${hullLines.join('')}" stroke="#0b0f17" stroke-width="0.9" fill="none"/>`
+    + poly([P(0, N, -0.08), P(N, N, -0.08), P(N, N, 0), P(0, N, 0)], '#5ff3ff', ' opacity="0.55"') + poly([P(N, 0, -0.08), P(N, N, -0.08), P(N, N, 0), P(N, 0, 0)], '#5ff3ff', ' opacity="0.55"')
+    + navLights + engine + wing('L') + wing('R');
   return {
-    bg: '#04060c',
+    bg: `url(#${u('space')})`,
     defs: lin(u('wallL'), [0, 0, 1, 0], [[0, '#161c29'], [1, '#202838']]) + lin(u('wallR'), [0, 0, 1, 0], [[0, '#263044'], [1, '#18202e']])
       + lin(u('floor'), [0, 0, 0, 1], [[0, '#1f2635'], [1, '#2a3243']]) + lin(u('holo'), [0, 0, 0, 1], [[0, '#0d3a48', 0.85], [1, '#062530', 0.85]])
       + rad(u('planet'), [[0, '#6fb8ff'], [0.6, '#2f6fbf'], [1, '#132a55']], ' cx="0.35" cy="0.35" r="0.75"')
-      + lin(u('ledL'), [0, 0, 1, 0], [[0, '#5ff3ff', 0.22], [1, '#5ff3ff', 0]]) + lin(u('ledR'), [1, 0, 0, 0], [[0, '#5ff3ff', 0.22], [1, '#5ff3ff', 0]]),
-    back: `${wallL(`url(#${u('wallL')})`)}${wallR(`url(#${u('wallR')})`)}${seams('L')}${seams('R')}`
+      + lin(u('ledL'), [0, 0, 1, 0], [[0, '#5ff3ff', 0.22], [1, '#5ff3ff', 0]]) + lin(u('ledR'), [1, 0, 0, 0], [[0, '#5ff3ff', 0.22], [1, '#5ff3ff', 0]])
+      + lin(u('space'), [0, 0, 0, 1], [[0, '#03040d'], [0.5, '#070b1e'], [1, '#04050f']])
+      + rad(u('nebA'), [[0, '#8b4fe0', 0.28], [0.6, '#5a3aa8', 0.1], [1, '#5a3aa8', 0]]) + rad(u('nebB'), [[0, '#2fb3c9', 0.22], [0.6, '#1f6f9a', 0.08], [1, '#1f6f9a', 0]])
+      + rad(u('ocean'), [[0, '#6fbaff'], [0.55, '#2a66c0'], [1, '#0d2350']], ' cx="0.72" cy="0.28" r="0.9"')
+      + rad(u('night'), [[0, '#000', 0], [0.55, '#000', 0], [1, '#02040c', 0.85]], ' cx="0.78" cy="0.2" r="1.05"')
+      + rad(u('atmo'), [[0.8, '#7ec8ff', 0], [0.86, '#7ec8ff', 0.4], [1, '#7ec8ff', 0]])
+      + `<clipPath id="${u('pclip')}"><circle cx="${gx}" cy="${gy}" r="${gr}"/></clipPath>`
+      + lin(u('solar'), [0, 0, 1, 1], [[0, '#2c5bc4'], [0.5, '#163a8a'], [1, '#0f2a66']])
+      + rad(u('thrust'), [[0, '#d6fbff', 0.9], [0.4, '#5ff3ff', 0.5], [1, '#5ff3ff', 0]]),
+    back: `${nebula}${starField(150, 1200, 452, '#e8f4ff')}${twinkle}${planet}${moon}${sat}${hull}${wallL(`url(#${u('wallL')})`)}${wallR(`url(#${u('wallR')})`)}${seams('L')}${seams('R')}`
       + port(1.25, 1.85, false, 3) + port(5.55, 1.85, true, 40)
       + onR(4.7, 6.65, 0.75, 2.3, '#03050c', ' stroke="#3a4558" stroke-width="1.6"') + onRight(4.9, 1.5, starsIn(18, 14, 70, 20))
       + `<g class="hub-screen">${holo}${scan}${onRight(2.15, 2.25, say(pick, title, { fill: '#6ff4ff', sub: '#d6fdff' }))}</g>`,
@@ -526,7 +577,8 @@ function station({ u, pick, title, animate }) {
       + `${poly([P(0, 0, 0.1), P(0, N, 0.1), P(0, N, 0.2), P(0, 0, 0.2)], '#5ff3ff', ' opacity="0.9"')}${poly([P(0, 0, 0.1), P(N, 0, 0.1), P(N, 0, 0.2), P(0, 0, 0.2)], '#5ff3ff', ' opacity="0.9"')}</g>${cap('#3a4558')}`,
     props: '',
     beam: ['#c9fbff', '#7ff0ff'], dust: '#aef6ff',
-    plat: ['#3a4558', '#1e2533', '#2b3446'], vig: 0.55,
+    plat: ['#3a4558', '#1e2533', '#2b3446'], vig: 0.4,
+    sky: true, // sa planète et sa lune : pas de lune en plus la nuit (daylight.js)
   };
 }
 

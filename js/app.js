@@ -30,6 +30,7 @@ import { SEASONS, seasonStatus, newSeason, dateFr } from './seasons.js';
 import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS, gearIcon } from './avatar.js';
 import { rivalStatus } from './rival.js';
 import { binder } from './binder.js';
+import { deficitSummary } from './deficit.js';
 import { SLOTS, gearStats, gearStatus, wornGear, wearGear, newGear } from './outfit.js';
 import { challengeStatus, updateChallenges, challengeNews } from './challenges.js';
 import { treeSVG, seedOf } from './tree.js';
@@ -518,7 +519,6 @@ function render() {
   };
   const h = heads[tab];
   const helpKey = HELP[tab] ? tab : HIDDEN_TABS[tab] ?? tab;
-  panKeep = $('.hub-pan')?.scrollLeft ?? null; // la salle reste où tu l'as fait glisser
   const head = h && tab !== 'sport' && !(tab === 'argent' && state.ui.lesson) ? `<header class="page-head"><div class="page-title"><h1>${h[0]}</h1>${HELP[helpKey] ? helpBtn(helpKey) : ''}</div><p>${h[1]}</p></header>` : '';
   $('#view').innerHTML = head + views[tab]();
   $('#view').dataset.tab = tab;
@@ -532,7 +532,6 @@ function render() {
   if (somethingToAnnounce()) announceUnlocks();
   document.querySelectorAll('#tabs a').forEach((a) => a.setAttribute('aria-current', a.dataset.tab === (HIDDEN_TABS[tab] ?? tab) ? 'page' : 'false'));
   moveTabIndicator();
-  hubPan();
   hubDeclutter();
   runTweens();
   tick();
@@ -1055,30 +1054,10 @@ const shortName = (w) => w.name.split(' · ')[1] ?? w.name;
 // dessous, prête à lancer. Au départ : celle du jour, marquée comme une
 // quête. En haut, ton niveau et ton XP, comme dans un jeu.
 let gymPick = null;
-let shownPick = null; // le poste choisi, montré dans la salle
-let panFor = null; // le poste sur lequel la salle est centrée
-let panKeep = null; // où la salle avait été glissée, avant de la redessiner
 let shownPhase = null; // le moment de la journée dessiné dans la salle (matin, soir, nuit…)
 const pctOf = (v, total) => `${Math.round((v / total) * 1000) / 10}%`;
 // Une zone à toucher (unités de la salle, agrandie de 6 de chaque côté), en % de ce qu'on en voit.
 const hitBox = (x, y, w, h) => `left:${pctOf(x - 6 - HUB_VIEW.x, HUB_VIEW.w)};top:${pctOf(y - 6 - HUB_VIEW.y, HUB_VIEW.h)};width:${pctOf(w + 12, HUB_VIEW.w)};height:${pctOf(h + 12, HUB_VIEW.h)}`;
-
-// La salle est plus grande que l'écran : on la fait glisser du doigt. Elle se
-// centre sur le poste choisi quand il change (et à l'arrivée), sinon elle
-// reste où tu l'as laissée.
-function hubPan() {
-  const pan = $('.hub-pan');
-  if (!pan) { panFor = null; return; }
-  const hit = pan.querySelector(`.hub-hit[data-id="${shownPick}"]`);
-  if (!hit) return;
-  if (panFor === shownPick && panKeep !== null) {
-    pan.scrollLeft = panKeep;
-    return;
-  }
-  const left = hit.offsetLeft + hit.offsetWidth / 2 - pan.clientWidth / 2;
-  pan.scrollTo({ left, behavior: panFor === null || reduceMotion() ? 'auto' : 'smooth' });
-  panFor = shownPick;
-}
 
 // L'étiquette du poste choisi efface les pastilles qu'elle recouvrirait
 // (« B · Pectoraux, dos et bras » passe devant le A). Calculé sur la place
@@ -1105,7 +1084,6 @@ function gymHub(planned, done, lvl) {
   const did = done.includes(w.id);
   const lv = levelInfo(totalXP(state));
   const today = todayKey();
-  shownPick = pick;
   shownPhase = dayPhase(nowHHMM());
   const late = nightHint(shownPhase, clockFr(bedGoal(state, today)), clockFr(state.settings.wakeTarget));
   const hits = hubLayout().map(({ id, box: [x, y, bw, bh] }) => {
@@ -1126,7 +1104,7 @@ function gymHub(planned, done, lvl) {
   // on s'y déplace en la faisant glisser. En haut, le HUD (niveau, XP), ton
   // double et les boutons ; en bas, la séance choisie et son bouton, comme dans un jeu.
   return `<section class="gym-hero hub immersive wo-${w.id}">
-    <div class="hub-stage"><div class="hub-pan"><div class="hub-world">${hubSVG({ pick, animate: !reduceMotion(), decor: decorToShow(state.settings.decor, decorStats(state), today, state.settings.decorBack), phase: shownPhase })}${hits}</div></div>
+    <div class="hub-stage"><div class="hub-world">${hubSVG({ pick, animate: !reduceMotion(), decor: decorToShow(state.settings.decor, decorStats(state), today, state.settings.decorBack), phase: shownPhase })}${hits}</div>
       <button class="hub-avatar" data-act="avatar" aria-label="Ton double : ${esc(lv.rank)}. Le voir et l’habiller">${avatarSVG(avatarParams(lv.level, chain(state, today).count), { animate: false, gear: myGear(), crop: true })}</button>
       <div class="hub-hud" aria-label="Niveau ${lv.level}, ${lv.into} sur ${lv.span} XP"><b>Niv. ${lv.level}</b><span class="hud-rank">${esc(lv.rank)}</span><span class="hud-bar">${tweenBar('gym-xp', (lv.into / lv.span) * 100)}</span><span class="hud-xp">${lv.into}/${lv.span} XP</span></div>
       <div class="hub-tools">
@@ -1142,7 +1120,7 @@ function gymHub(planned, done, lvl) {
       </div>
     </div>
     ${late ? `<p class="hint hub-night">${icon('moon')}${esc(late)}</p>` : ''}
-    <p class="hint">Glisse la salle pour t’y déplacer, touche un poste pour changer de séance. Pas la forme ? M suffit à valider « Bouger ».</p>
+    <p class="hint">Touche un poste pour changer de séance. Pas la forme ? M suffit à valider « Bouger ».</p>
   </section>`;
 }
 
@@ -1330,9 +1308,40 @@ function mealsCard() {
 }
 
 // Onglet Manger : ton assiette du jour en haut, puis les conseils.
+// Ton déficit (deficit.js) : aujourd'hui, la semaine en barres (vers le haut :
+// déficit ; vers le bas : au-dessus de ta dépense ; vide : rien de noté) et le
+// mois. Un repère de tendance, estimé depuis tes pas et ta séance.
+function deficitCard() {
+  const today = todayKey();
+  const kcalOf = (id) => { const w = WORKOUTS.find((x) => x.id === id); return w ? workoutKcal(w) : 0; };
+  const s = deficitSummary(state, today, kcalOf);
+  const kg = (v) => v.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const word = (n) => (n >= 0 ? `≈ ${fmtInt(n)} kcal de déficit` : `≈ ${fmtInt(-n)} kcal au-dessus`);
+  const t = s.today;
+  const todayLine = t
+    ? `Aujourd’hui : ≈ ${fmtInt(t.spent)} dépensées, ${fmtInt(t.eaten)} mangées, soit <strong>${word(t.deficit)}</strong>.`
+    : 'Note ce que tu manges (au-dessus) : ton déficit du jour s’affiche ici.';
+  const period = (label, p) => `<div class="def-sum${p.total < 0 ? ' over' : ''}"><small>${label}</small><b>${p.logged ? `${p.total < 0 ? '+' : ''}${fmtInt(Math.abs(p.total))}` : '—'}</b><span>${p.logged ? `${p.total >= 0 ? 'kcal de déficit' : 'kcal au-dessus'} · ≈ ${kg(Math.abs(p.kg))} kg de gras${p.total < 0 ? ' en plus' : ''}` : 'rien de noté'}</span><span>${p.logged ? `${p.logged} jour${p.logged > 1 ? 's' : ''} noté${p.logged > 1 ? 's' : ''} · ≈ ${fmtInt(p.avg)} par jour` : ''}</span></div>`;
+  const top = Math.max(800, ...s.week.map((w) => Math.abs(w.day?.deficit ?? 0)));
+  const bars = s.week.map((w, i) => {
+    const v = w.day?.deficit;
+    const h = v == null ? 0 : Math.round((Math.abs(v) / top) * 46);
+    const bar = v == null ? '<i class="def-dot"></i>' : `<i class="def-bar ${v >= 0 ? 'up' : 'down'}" style="height:${Math.max(3, h)}%"></i>`;
+    return `<div class="def-col${w.future ? ' future' : ''}${w.key === today ? ' today' : ''}" title="${v == null ? 'rien de noté' : word(v)}">${bar}<small>${'LMMJVSD'[i]}</small></div>`;
+  }).join('');
+  return `<section class="card deficit-card">
+    <div class="card-head"><h2>${icon('trending-up')}Ton déficit</h2></div>
+    <p class="hint">${todayLine}</p>
+    <div class="def-bars" aria-hidden="true">${bars}</div>
+    <div class="def-grid">${period('Cette semaine', s.weekSum)}${period('Ce mois-ci', s.month)}</div>
+    <p class="hint">Une estimation : ta dépense vient de tes pas et de ta séance. Vise ≈ 500 par jour, soit ≈ 0,5 kg de gras par semaine ; c’est la tendance qui compte, pas un jour.</p>
+  </section>`;
+}
+
 function viewFood() {
   return `
   ${mealsCard()}
+  ${deficitCard()}
   <section class="card">
     <div class="card-head"><h2>${icon('clock')}Ta journée type</h2></div>
     <p class="hint">≈ 1 850 kcal avec 8 000 pas (≈ 2 000 les jours à 12 000 pas) et ${PROTEIN_GRAMS} g de protéines. Pas faim le matin ? Le 1er repas glisse vers 11 h : c’est le total du jour qui compte.</p>

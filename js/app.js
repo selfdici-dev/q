@@ -28,6 +28,7 @@ import { trophyStats, trophyStatus, newTrophies } from './trophies.js';
 import { dayPhase, nightHint } from './daylight.js';
 import { SEASONS, seasonStatus, newSeason, dateFr } from './seasons.js';
 import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS, gearIcon } from './avatar.js';
+import { rivalStatus } from './rival.js';
 import { SLOTS, gearStats, gearStatus, wornGear, wearGear, newGear } from './outfit.js';
 import { challengeStatus, updateChallenges, challengeNews } from './challenges.js';
 import { treeSVG, seedOf } from './tree.js';
@@ -1008,6 +1009,7 @@ function viewSport() {
   ${backupBanner(today)}
   ${dayLink(today)}
   ${challengesCard(today)}
+  ${rivalCard(today)}
   ${suggestUp ? `<div class="banner ok"><strong>2 séances « faciles » de suite.</strong> Il est temps de monter. <button class="btn small primary" data-act="level" data-lvl="${lvl + 1}">Passer au niveau ${lvl + 1}</button></div>` : ''}
   ${suggestDown ? `<div class="banner warn"><strong>2 séances « dures » de suite.</strong> Redescendre d’un niveau n’est pas un échec. <button class="btn small" data-act="level" data-lvl="${lvl - 1}">Revenir au niveau ${lvl - 1}</button></div>` : ''}
   ${recordsCard()}
@@ -1165,6 +1167,20 @@ function challengesCard(today) {
       <div class="defi-text"><strong>${esc(c.text)}</strong><small>${esc(c.label)}</small>
         <span class="decor-bar" aria-hidden="true"><i style="width:${Math.round(c.pct * 100)}%"></i></span></div>
       <span class="defi-xp">+${XP.challenge}</span></li>`).join('')}</ul>
+  </section>`;
+}
+
+// Ton rival : toi la semaine dernière (rival.js). Deux médaillons face à face,
+// le score en manches, puis chaque manche : toi à gauche, ton rival à droite.
+function rivalCard(today) {
+  const st = rivalStatus(state, today);
+  const face = avatarParams(levelInfo(totalXP(state)).level, chain(state, today).count);
+  const side = (cls, n, who, gear) => `<div class="vs-side ${cls}"><span class="vs-av" aria-hidden="true">${avatarSVG(face, { animate: false, gear, crop: true })}</span><b>${n}</b><small>${who}</small></div>`;
+  return `<section class="card rival">
+    <div class="card-head"><h2>${icon('trophy')}Ton rival</h2><span class="pill">${st.fresh ? '1re semaine' : st.left ? `Encore ${st.left} j` : 'Dernier jour'}</span></div>
+    <div class="vs" aria-label="Score : toi ${st.me}, toi la semaine dernière ${st.rival}">${side(`me${st.me > st.rival ? ' lead' : ''}`, st.me, 'Toi', myGear())}<span class="vs-badge" aria-hidden="true">VS</span>${side(`ghost${st.rival > st.me ? ' lead' : ''}`, st.rival, 'Toi, semaine dernière', [])}</div>
+    <p class="hint">${esc(st.verdict)}</p>
+    <ul class="vs-list">${st.rounds.map((r) => `<li class="vs-row ${r.lead}"><b class="vs-n">${r.me}</b><span class="vs-label">${icon(r.icon)}${esc(r.label)}</span><b class="vs-n">${r.rival}</b></li>`).join('')}</ul>
   </section>`;
 }
 

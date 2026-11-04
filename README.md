@@ -108,6 +108,10 @@ Dans la Salle, sous « Ma journée » : chaque lundi, trois nouveaux défis tir�
 
 Tout se calcule depuis tes jours de la semaine (du lundi au dimanche) ; pour l’arcade, Cap note tes records la première fois qu’il s’ouvre dans la semaine. Si tu n’ouvres pas Cap le dimanche, ce que tu as réussi compte quand même le lundi.
 
+## Ton rival
+
+Dans la Salle, sous les défis : toi face à toi la semaine dernière (js/rival.js). Ce que tu as fait depuis lundi contre ce que tu avais fait du lundi au même jour la semaine d’avant, en 5 manches : séances (A, B, C ou P), journées validées, matins avec ta routine, soirs avec ta routine, jours de lecture. Celui qui fait plus gagne la manche ; le score s’affiche entre ton double et son fantôme. Ta première semaine, pas de rival : tu poses la barre pour la suivante. Tout se calcule depuis tes jours, rien n’est stocké.
+
 ## Habille ton double
 
 Ton double (le buste en médaillon qui évolue avec ton niveau) a son portrait dans la Salle, sous ton niveau : touche-le pour ouvrir sa fiche et l’habiller. Huit accessoires, gagnés avec tes trophées (js/outfit.js), un seul par place (la tête, les yeux, le cou, le dos, la taille), mis ou enlevés d’une touche :

@@ -1099,10 +1099,8 @@ details.card.more .rules { margin-top: 10px; }
    écrite au-dessus du bonhomme), et le HUD (niveau, XP). */
 .hub-stage { position: relative; margin: 0 0 14px; border-radius: 16px; overflow: hidden; background: #0f0c0a; }
 .hub-scene { display: block; width: 100%; height: auto; }
-/* la salle, plus grande que l'écran (autant que la hauteur le permet) : on la fait glisser */
-.hub-pan { overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-.hub-pan::-webkit-scrollbar { display: none; }
-.hub-world { position: relative; width: clamp(100%, calc(82vh * 360 / 452), 160%); }
+/* la salle tient dans la largeur de l'écran : tout se voit, sans la faire glisser */
+.hub-world { position: relative; width: 100%; }
 .hub-st .fig-mat { fill: rgb(255 240 225 / 0.1); }
 .st-M .fig-mat { fill: #8fb08a; fill-opacity: 0.75; } /* tapis de yoga */
 .hub-st:not(.on) > .fig { opacity: 0.85; }

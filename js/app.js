@@ -518,7 +518,6 @@ function render() {
   };
   const h = heads[tab];
   const helpKey = HELP[tab] ? tab : HIDDEN_TABS[tab] ?? tab;
-  panKeep = $('.hub-pan')?.scrollLeft ?? null; // la salle reste où tu l'as fait glisser
   const head = h && tab !== 'sport' && !(tab === 'argent' && state.ui.lesson) ? `<header class="page-head"><div class="page-title"><h1>${h[0]}</h1>${HELP[helpKey] ? helpBtn(helpKey) : ''}</div><p>${h[1]}</p></header>` : '';
   $('#view').innerHTML = head + views[tab]();
   $('#view').dataset.tab = tab;
@@ -532,7 +531,6 @@ function render() {
   if (somethingToAnnounce()) announceUnlocks();
   document.querySelectorAll('#tabs a').forEach((a) => a.setAttribute('aria-current', a.dataset.tab === (HIDDEN_TABS[tab] ?? tab) ? 'page' : 'false'));
   moveTabIndicator();
-  hubPan();
   hubDeclutter();
   runTweens();
   tick();
@@ -1055,30 +1053,10 @@ const shortName = (w) => w.name.split(' · ')[1] ?? w.name;
 // dessous, prête à lancer. Au départ : celle du jour, marquée comme une
 // quête. En haut, ton niveau et ton XP, comme dans un jeu.
 let gymPick = null;
-let shownPick = null; // le poste choisi, montré dans la salle
-let panFor = null; // le poste sur lequel la salle est centrée
-let panKeep = null; // où la salle avait été glissée, avant de la redessiner
 let shownPhase = null; // le moment de la journée dessiné dans la salle (matin, soir, nuit…)
 const pctOf = (v, total) => `${Math.round((v / total) * 1000) / 10}%`;
 // Une zone à toucher (unités de la salle, agrandie de 6 de chaque côté), en % de ce qu'on en voit.
 const hitBox = (x, y, w, h) => `left:${pctOf(x - 6 - HUB_VIEW.x, HUB_VIEW.w)};top:${pctOf(y - 6 - HUB_VIEW.y, HUB_VIEW.h)};width:${pctOf(w + 12, HUB_VIEW.w)};height:${pctOf(h + 12, HUB_VIEW.h)}`;
-
-// La salle est plus grande que l'écran : on la fait glisser du doigt. Elle se
-// centre sur le poste choisi quand il change (et à l'arrivée), sinon elle
-// reste où tu l'as laissée.
-function hubPan() {
-  const pan = $('.hub-pan');
-  if (!pan) { panFor = null; return; }
-  const hit = pan.querySelector(`.hub-hit[data-id="${shownPick}"]`);
-  if (!hit) return;
-  if (panFor === shownPick && panKeep !== null) {
-    pan.scrollLeft = panKeep;
-    return;
-  }
-  const left = hit.offsetLeft + hit.offsetWidth / 2 - pan.clientWidth / 2;
-  pan.scrollTo({ left, behavior: panFor === null || reduceMotion() ? 'auto' : 'smooth' });
-  panFor = shownPick;
-}
 
 // L'étiquette du poste choisi efface les pastilles qu'elle recouvrirait
 // (« B · Pectoraux, dos et bras » passe devant le A). Calculé sur la place
@@ -1105,7 +1083,6 @@ function gymHub(planned, done, lvl) {
   const did = done.includes(w.id);
   const lv = levelInfo(totalXP(state));
   const today = todayKey();
-  shownPick = pick;
   shownPhase = dayPhase(nowHHMM());
   const late = nightHint(shownPhase, clockFr(bedGoal(state, today)), clockFr(state.settings.wakeTarget));
   const hits = hubLayout().map(({ id, box: [x, y, bw, bh] }) => {
@@ -1126,7 +1103,7 @@ function gymHub(planned, done, lvl) {
   // on s'y déplace en la faisant glisser. En haut, le HUD (niveau, XP), ton
   // double et les boutons ; en bas, la séance choisie et son bouton, comme dans un jeu.
   return `<section class="gym-hero hub immersive wo-${w.id}">
-    <div class="hub-stage"><div class="hub-pan"><div class="hub-world">${hubSVG({ pick, animate: !reduceMotion(), decor: decorToShow(state.settings.decor, decorStats(state), today, state.settings.decorBack), phase: shownPhase })}${hits}</div></div>
+    <div class="hub-stage"><div class="hub-world">${hubSVG({ pick, animate: !reduceMotion(), decor: decorToShow(state.settings.decor, decorStats(state), today, state.settings.decorBack), phase: shownPhase })}${hits}</div>
       <button class="hub-avatar" data-act="avatar" aria-label="Ton double : ${esc(lv.rank)}. Le voir et l’habiller">${avatarSVG(avatarParams(lv.level, chain(state, today).count), { animate: false, gear: myGear(), crop: true })}</button>
       <div class="hub-hud" aria-label="Niveau ${lv.level}, ${lv.into} sur ${lv.span} XP"><b>Niv. ${lv.level}</b><span class="hud-rank">${esc(lv.rank)}</span><span class="hud-bar">${tweenBar('gym-xp', (lv.into / lv.span) * 100)}</span><span class="hud-xp">${lv.into}/${lv.span} XP</span></div>
       <div class="hub-tools">
@@ -1142,7 +1119,7 @@ function gymHub(planned, done, lvl) {
       </div>
     </div>
     ${late ? `<p class="hint hub-night">${icon('moon')}${esc(late)}</p>` : ''}
-    <p class="hint">Glisse la salle pour t’y déplacer, touche un poste pour changer de séance. Pas la forme ? M suffit à valider « Bouger ».</p>
+    <p class="hint">Touche un poste pour changer de séance. Pas la forme ? M suffit à valider « Bouger ».</p>
   </section>`;
 }
 

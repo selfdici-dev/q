@@ -41,6 +41,8 @@ L'utilisateur est débutant : explique simplement, en français.
   fabriqué par `outils/echecs/problemes.mjs`, voir son README).
 - `js/rival.js` : toi contre toi la semaine dernière ; `js/binder.js` : le classeur
   des exercices (découverts à leur première séance). Calculés, jamais stockés.
+- `js/clins.js` : clins d'œil à Game of Thrones (une réplique certains jours, Fantôme
+  le loup blanc qui dort dans la Salle la nuit). Calculés depuis la date, jamais stockés.
 - `js/drawings.js` : dessins au crayon des exercices (corps en 3D, muscles travaillés
   en rouge), joués au rythme du bonhomme ; sans dessin, le bonhomme reste.
   `js/drawings-data.js` (leur manifeste) et `img/ex/*.webp` (leurs images) sont

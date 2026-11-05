@@ -15,10 +15,11 @@ import { HUB, HW, P, r1, pts, poly, flat, box } from './iso.js';
 import { decorArt } from './decors.js';
 import { daylightArt } from './daylight.js';
 import { heroFor, heroSVG } from './heroes.js';
+import { ghostHere, ghostSVG } from './clins.js';
 
 export { HUB };
 // Ce qu'on voit de la salle : le dessin sans sa bande du bas (la séance choisie
-// s'y pose). L'appli l'affiche plus grand que l'écran : on la fait glisser.
+// s'y pose). L'appli l'affiche à la largeur de l'écran.
 export const HUB_VIEW = { x: 0, y: 0, w: HUB.w, h: 452 };
 // couleurs des séances sur le fond sombre de la salle
 export const COLORS = { A: '#9fd08f', B: '#7cc4e4', C: '#e98a6b', M: '#c3a3e0', P: '#e7c76b' };
@@ -195,7 +196,8 @@ function wheel(x, y) {
 
 // La salle entière. pick : poste choisi (son bonhomme bouge si animate) ;
 // id : préfixe des identifiants internes ; decor : son habillage (decors.js) ;
-// phase : le moment de la journée (daylight.js : matin, soir, nuit…).
+// phase : le moment de la journée (daylight.js : matin, soir, nuit…) ; le soir
+// tard et la nuit, Fantôme, le loup blanc, dort devant la borne (clins.js).
 export function hubSVG({ pick = 'A', animate = true, id = 'hub', decor = 'salle', phase = 'jour' } = {}) {
   const u = (n) => `${id}-${n}`;
   // murs, sol, lumière et objets : ceux du décor ; la borne d'arcade est dans tous
@@ -254,6 +256,6 @@ export function hubSVG({ pick = 'A', animate = true, id = 'hub', decor = 'salle'
 ${tod.defs}</defs>
 <rect width="${HUB.w}" height="${HUB.h}" fill="${art.bg}"/>
 ${art.back}
-${art.floor}${art.edge}<g class="hub-decor">${art.props}${arcadeCab(animate)}</g>
+${art.floor}${art.edge}<g class="hub-decor">${art.props}${arcadeCab(animate)}${ghostHere(phase) ? ghostSVG(animate) : ''}</g>
 ${stations}${art.over}${tod.over}<g class="hub-light">${beam}${dust}</g><rect class="hub-vig" width="${HUB.w}" height="${HUB.h}" fill="url(#${u('vig')})"/></svg>`;
 }

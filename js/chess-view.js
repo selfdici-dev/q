@@ -8,6 +8,7 @@ import { LESSONS, PUZZLES, judge, starMoves, defend } from './chess-school.js';
 import { createReview, reviewSummary } from './chess-review.js';
 import { OPENINGS, sideAt, whyIndex } from './chess-openings.js';
 import { dailyFor, dailyStreak } from './chess-daily.js';
+import { clin } from './clins.js';
 import { icon } from './icons.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -319,7 +320,7 @@ export function createChess(ctx) {
     if (st === 'mat') result = G.pos.turn === G.color ? 'perdu' : 'gagne';
     else if (st === 'abandon') result = 'perdu';
     else result = 'nulle';
-    G.over = { st, result };
+    G.over = { st, result, nod: st === 'mat' ? clin(result, todayOf()) : '' }; // un clin d'œil à Game of Thrones, certains jours
     const box = result === 'gagne' ? 'wins' : result === 'nulle' ? 'draws' : 'losses';
     e[box] = { ...(e[box] ?? {}), [lvl]: ((e[box] ?? {})[lvl] ?? 0) + 1 };
     e.cur = null;
@@ -332,7 +333,7 @@ export function createChess(ctx) {
     const flip = G.color === BLACK;
     const yourTurn = !G.over && G.pos.turn === G.color;
     let msg;
-    if (G.over) msg = G.over.st === 'mat' ? (G.over.result === 'gagne' ? 'Échec et mat : tu as gagné !' : 'Échec et mat : Cap a gagné. Retente ta chance !') : G.over.st === 'abandon' ? 'Tu as abandonné.' : END[G.over.st];
+    if (G.over) msg = G.over.st === 'mat' ? (G.over.result === 'gagne' ? `Échec et mat : tu as gagné !${G.over.nod ? ` ${G.over.nod}` : ''}` : `Échec et mat : Cap a gagné. ${G.over.nod || 'Retente ta chance !'}`) : G.over.st === 'abandon' ? 'Tu as abandonné.' : END[G.over.st];
     else if (G.thinking) msg = 'Cap réfléchit…';
     else msg = `${inCheck(G.pos) ? 'Échec ! ' : ''}À toi de jouer (${G.color === WHITE ? 'blancs' : 'noirs'}).`;
     if (G.hint && !G.over) msg = `Indice : essaie ${G.hint.san}.`;

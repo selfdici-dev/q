@@ -31,6 +31,7 @@ import { avatarParams, avatarSVG, evolved, STAGES, STAGE_GAINS, gearIcon } from 
 import { rivalStatus } from './rival.js';
 import { binder } from './binder.js';
 import { deficitSummary } from './deficit.js';
+import { clin, ghostHere, ghostZone } from './clins.js';
 import { SLOTS, gearStats, gearStatus, wornGear, wearGear, newGear } from './outfit.js';
 import { challengeStatus, updateChallenges, challengeNews } from './challenges.js';
 import { treeSVG, seedOf } from './tree.js';
@@ -630,7 +631,9 @@ function viewToday() {
   const d = state.days[today] ?? { habits: {} };
   const last7 = lastNDays(state, today, 7).map((x) => ({ ...x, today: x.key === today }));
   const sprintDay = Math.min(diffDays(sp.current.first, today) + 1, SPRINT_LENGTH);
-  const notice = NOTICES[todayNotice(state, today)];
+  const noticeKey = todayNotice(state, today);
+  const notice = NOTICES[noticeKey];
+  const comeback = ['recovery', 'twoMissed', 'restart'].includes(noticeKey) ? clin('reprise', today) : '';
   const lv = levelInfo(totalXP(state));
   const q = quoteOfDay(today);
   const toDo = st.total - st.done;
@@ -659,7 +662,7 @@ function viewToday() {
       </div>
     </div>
     ${dots(last7)}
-    ${notice ? `<p class="hero-note"><span aria-hidden="true">${notice[0]}</span><span><strong>${notice[1]}</strong> ${notice[2]}</span></p>` : ''}
+    ${notice ? `<p class="hero-note"><span aria-hidden="true">${notice[0]}</span><span><strong>${notice[1]}</strong> ${notice[2]}${comeback ? ` <em>${esc(comeback)}</em>` : ''}</span></p>` : ''}
   </header>
   ${backupBanner(today)}
   ${planCard(today)}
@@ -1085,7 +1088,8 @@ function gymHub(planned, done, lvl) {
   const lv = levelInfo(totalXP(state));
   const today = todayKey();
   shownPhase = dayPhase(nowHHMM());
-  const late = nightHint(shownPhase, clockFr(bedGoal(state, today)), clockFr(state.settings.wakeTarget));
+  const [bed, wake] = [clockFr(bedGoal(state, today)), clockFr(state.settings.wakeTarget)];
+  const late = (shownPhase === 'nuit' && clin('nuit', today, { bed, wake })) || nightHint(shownPhase, bed, wake);
   const hits = hubLayout().map(({ id, box: [x, y, bw, bh] }) => {
     const on = id === pick;
     const wo = WORKOUTS.find((z) => z.id === id);
@@ -1099,10 +1103,10 @@ function gymHub(planned, done, lvl) {
     // la borne d'arcade : elle ouvre les jeux
     const [x, y, bw, bh] = arcadeZone();
     return `<button class="hub-hit hub-arc" style="${hitBox(x, y, bw, bh)}" data-act="arcade" aria-label="Borne d’arcade : les jeux"><span class="hub-badge arc">Jeux</span></button>`;
-  })();
-  // la salle prend tout le haut de l'écran, plus grande que lui : on y entre et
-  // on s'y déplace en la faisant glisser. En haut, le HUD (niveau, XP), ton
-  // double et les boutons ; en bas, la séance choisie et son bouton, comme dans un jeu.
+  })() + (ghostHere(shownPhase) ? `<button class="hub-hit hub-ghost-hit" style="${hitBox(...ghostZone())}" data-act="fantome" aria-label="Fantôme, le loup blanc, dort dans ta salle"></button>` : '');
+  // la salle prend tout le haut de l'écran, à sa largeur. En haut, le HUD
+  // (niveau, XP), ton double et les boutons ; en bas, la séance choisie et son
+  // bouton, comme dans un jeu.
   return `<section class="gym-hero hub immersive wo-${w.id}">
     <div class="hub-stage"><div class="hub-world">${hubSVG({ pick, animate: !reduceMotion(), decor: decorToShow(state.settings.decor, decorStats(state), today, state.settings.decorBack), phase: shownPhase })}${hits}</div>
       <button class="hub-avatar" data-act="avatar" aria-label="Ton double : ${esc(lv.rank)}. Le voir et l’habiller">${avatarSVG(avatarParams(lv.level, chain(state, today).count), { animate: false, gear: myGear(), crop: true })}</button>
@@ -1576,7 +1580,8 @@ function finishWorkout() {
   say('Séance terminée. Bien joué.');
   renderPlayer();
   render();
-  celebrate(`Séance terminée · +30 XP`);
+  const nod = clin('seance', today); // un clin d'œil à Game of Thrones, certains jours
+  celebrate(`Séance terminée · +30 XP${nod ? ` · ${nod}` : ''}`);
 }
 
 const TEST_FIELDS = [
@@ -1933,6 +1938,11 @@ const actions = {
   },
   // Salle : la borne d'arcade ouvre les jeux
   arcade() { location.hash = 'jeux'; },
+  // Salle, le soir tard : Fantôme, le loup blanc de Jon Snow, dort devant la borne
+  fantome() {
+    navigator.vibrate?.(10);
+    toast(dayPhase(nowHHMM()) === 'nuit' ? 'Fantôme, le loup blanc de Jon Snow, dort dans ta salle. Fais comme lui : au lit 🐺' : 'Fantôme, le loup blanc de Jon Snow, s’est endormi. Il garde ta salle jusqu’à demain 🐺');
+  },
   binder() { showBinder(); },
   // Salle : toucher un poste le choisit (son bonhomme se met au travail)
   'gym-pick'(el) {

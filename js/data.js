@@ -332,6 +332,36 @@ export const TEA_TIPS = [
 
 // Recettes de débutant : peu d’ustensiles, ingrédients de supermarché, riches en protéines.
 export const RECIPES = [
+  // Ses recettes, avec ce qu'il a dans ses placards : ce que chacune apporte
+  // (gives), calculé pour des steaks hachés Charal à 12 % de 100 g.
+  {
+    name: 'Patates paprika au four et steaks',
+    time: '35 min (dont 30 min de four)',
+    items: '400 g de pommes de terre, 2 steaks hachés surgelés (12 %), 2 carottes, paprika, 2 ou 3 pulvérisations d’huile, sel',
+    steps: 'Four à 200 °C. Coupe les patates en cubes avec la peau, et les carottes en bâtons. Sur la plaque : 2 ou 3 pulvérisations d’huile, paprika, sel, mélange. 30 à 35 min, en retournant à mi-cuisson. Les steaks à la poêle sans matière grasse, 4 à 5 min par face.',
+    gives: '≈ 770 kcal · ≈ 48 g de protéines. Le bon : les patates cuites au four ou à l’eau sont l’aliment qui cale le plus (en frites, beaucoup moins), avec du potassium et des fibres dans la peau ; les steaks apportent fer, zinc et vitamine B12. Le moins bon : 12 % de gras, c’est 24 g de gras pour les deux steaks ; en 5 %, ≈ 60 kcal de moins par steak, pour autant de protéines.',
+  },
+  {
+    name: 'Omelette au thon',
+    time: '10 min',
+    items: '3 œufs, 1 boîte de thon au naturel, 2 cuillères à soupe de maïs, 1 pulvérisation d’huile, sel, poivre, paprika',
+    steps: 'Égoutte le thon. Bats les œufs, ajoute le thon et le maïs. Poêle chaude à peine huilée, 4 à 5 min à feu moyen, plie en deux.',
+    gives: '≈ 370 kcal · ≈ 46 g de protéines. Le bon : le meilleur rapport protéines et calories de tes placards ; ça cale pour la soirée. Le moins bon : presque pas de légumes : ajoute des carottes râpées à côté.',
+  },
+  {
+    name: 'Salade pois chiches, thon et œufs',
+    time: '15 min (dont 10 min pour les œufs)',
+    items: '½ boîte de pois chiches (≈ 130 g égouttés), 1 boîte de thon au naturel, 3 cuillères à soupe de maïs, 2 carottes râpées, 2 œufs, 1 cuillère à café d’huile d’olive, vinaigre ou citron, sel, poivre',
+    steps: 'Œufs 10 min dans l’eau bouillante, puis sous l’eau froide. Rince les pois chiches. Mélange tout, assaisonne avec l’huile et le vinaigre.',
+    gives: '≈ 580 kcal · ≈ 50 g de protéines. Le bon : les fibres des pois chiches et des carottes calent longtemps. Le moins bon : la vinaigrette du commerce est très grasse ; fais la tienne, 1 cuillère à café d’huile suffit.',
+  },
+  {
+    name: 'Poulet fermier et patates au four',
+    time: '35 min (dont 30 min de four)',
+    items: '175 g de blanc de poulet (la moitié d’une barquette de 350 g), 300 g de pommes de terre, 2 carottes, paprika, 2 ou 3 pulvérisations d’huile, sel',
+    steps: 'Patates et carottes au four comme d’habitude (200 °C, 30 à 35 min). Coupe le poulet en morceaux et saisis-le 6 à 8 min à feu vif, bien cuit à cœur.',
+    gives: '≈ 520 kcal · ≈ 47 g de protéines. Le bon : le poulet, c’est presque que des protéines, très peu de gras. Le moins bon : rien, c’est ton repas le plus léger. Si tu as encore faim, ajoute des patates plutôt que de grignoter après.',
+  },
   {
     name: 'Omelette complète',
     time: '10 min',

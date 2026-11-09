@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { WORKOUTS, WEEK_PLAN, WARMUP, HELP, demoUrl, baseName, sessionOf, DAY_PLAN, FOOD_COLORS, FOOD_TREATS, FOOD_RULES, DEFAULT_RULES, PROTEIN_CHIPS, FOODS, FOOD_CATS, SNACKS, SNACK_TEST, TEA_TIPS } from '../js/data.js';
+import { WORKOUTS, WEEK_PLAN, WARMUP, HELP, demoUrl, baseName, sessionOf, RECIPES, DAY_PLAN, FOOD_COLORS, FOOD_TREATS, FOOD_RULES, DEFAULT_RULES, PROTEIN_CHIPS, FOODS, FOOD_CATS, SNACKS, SNACK_TEST, TEA_TIPS } from '../js/data.js';
 import { goalOf } from '../js/logic.js';
 
 test('séances : les IDs stockés dans l’historique ne changent pas', () => {
@@ -309,4 +309,17 @@ test('A, version flemme : ses 3 exercices, 3 tours, ≈ 8 min, sans échauffemen
   assert.equal(sessionOf(A), A);
   assert.equal(sessionOf(WORKOUTS.find((w) => w.id === 'B'), 'flemme').id, 'B');
   assert.equal(sessionOf(WORKOUTS.find((w) => w.id === 'B'), 'flemme').exercises.length, WORKOUTS.find((w) => w.id === 'B').exercises.length);
+});
+
+test('recettes : ses placards d’abord, et ce que chacune apporte (calories, protéines, le bon et le moins bon)', () => {
+  for (const r of RECIPES) assert.ok(r.name && r.time && r.items && r.steps, r.name);
+  const mine = RECIPES.filter((r) => r.gives);
+  assert.ok(mine.length >= 4);
+  assert.equal(RECIPES.indexOf(mine[0]), 0); // en tête de la liste
+  for (const r of mine) {
+    assert.match(r.gives, /^≈ \d+ kcal · ≈ \d+ g de protéines\. Le bon : .+ Le moins bon : /, r.name);
+    const p = Number(r.gives.match(/≈ (\d+) g de protéines/)[1]);
+    assert.ok(p >= 40, `${r.name} : ${p} g`); // 2 repas par jour : ≈ 60 g chacun pour viser 120 g
+  }
+  assert.ok(mine.some((r) => /patates/i.test(r.name)) && mine.some((r) => /omelette au thon/i.test(r.name)));
 });

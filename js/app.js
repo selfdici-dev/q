@@ -1390,7 +1390,7 @@ function viewFood() {
     <div class="card-head"><h2>${icon('pan')}Recettes</h2><span class="pill">${RECIPES.length}</span></div>
     <p class="hint">Objectif : maîtriser une recette par semaine. Propose à tes parents de cuisiner un repas par semaine : tu apprends, et tu choisis ce qui est dans l’assiette.</p>
     ${RECIPES.map((r) => `<details><summary><strong>${esc(r.name)}</strong> · ${esc(r.time)}</summary>
-      <p><em>Ingrédients :</em> ${esc(r.items)}</p><p>${esc(r.steps)}</p></details>`).join('')}
+      <p><em>Ingrédients :</em> ${esc(r.items)}</p><p>${esc(r.steps)}</p>${r.gives ? `<p class="hint">${icon('lightbulb')}${esc(r.gives)}</p>` : ''}</details>`).join('')}
   </section>`;
 }
 

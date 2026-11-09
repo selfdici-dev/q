@@ -32,6 +32,7 @@ import { rivalStatus } from './rival.js';
 import { binder } from './binder.js';
 import { deficitSummary } from './deficit.js';
 import { clin, ghostHere, ghostZone } from './clins.js';
+import { BODY_LESSONS, bodyDone, bodyScore } from './body.js';
 import { SLOTS, gearStats, gearStatus, wornGear, wearGear, newGear } from './outfit.js';
 import { challengeStatus, updateChallenges, challengeNews } from './challenges.js';
 import { treeSVG, seedOf } from './tree.js';
@@ -834,9 +835,10 @@ function planCard(today) {
 const CARD_CATS = ['Trading', 'Crypto', 'Culture', 'Livres', 'Autre'];
 
 function deck() {
-  const lessonCards = ALL_LESSONS.filter((l) => state.lessons[l.id]).flatMap((l) => l.quiz.map((q, i) => ({
-    id: `L:${l.id}:${i}`, cat: 'Finance', front: q.q, back: `${q.a[q.c]}. ${q.why}`,
-  })));
+  const lessonCards = [...ALL_LESSONS.map((l) => [l, 'Finance']), ...BODY_LESSONS.map((l) => [l, 'Corps'])]
+    .filter(([l]) => state.lessons[l.id]).flatMap(([l, cat]) => l.quiz.map((q, i) => ({
+      id: `L:${l.id}:${i}`, cat, front: q.q, back: `${q.a[q.c]}. ${q.why}`,
+    })));
   return [...lessonCards, ...state.myCards].map((c) => ({ ...c, ...state.srs[c.id] }));
 }
 
@@ -1322,6 +1324,38 @@ function mealsCard() {
 // Ton déficit (deficit.js) : aujourd'hui, la semaine en barres (vers le haut :
 // déficit ; vers le bas : au-dessus de ta dépense ; vide : rien de noté) et le
 // mois. Un repère de tendance, estimé depuis tes pas et ta séance.
+// Comprendre ton corps (body.js) : des leçons courtes, chacune avec son quiz.
+// Une leçon validée compte pour « Apprendre », rapporte son XP, et ses questions
+// passent dans tes révisions. Les réponses en cours restent à l'écran (rien
+// n'est stocké avant la validation).
+const bodyQuiz = {};
+function bodyCard() {
+  return `<section class="card body-card">
+    <div class="card-head"><h2>${icon('lightbulb')}Comprendre ton corps</h2><span class="pill">${bodyDone(state.lessons)}/${BODY_LESSONS.length}</span></div>
+    <p class="hint">Pour savoir pourquoi tu manges ça et pourquoi tu fais ça. Chaque leçon : l’idée, un exemple, quelque chose à essayer, et un petit quiz (2 bonnes réponses sur 3). Elle compte pour « Apprendre », rapporte ${XP.lesson} XP, et ses questions reviennent dans tes révisions.</p>
+    ${BODY_LESSONS.map((l, i) => {
+      const st = state.lessons[l.id];
+      const qz = bodyQuiz[l.id] ?? { picks: [], checked: false };
+      const answered = l.quiz.every((_, qi) => qz.picks[qi] !== undefined);
+      return `<details class="body-lesson" data-fold="${l.id}" ${openFolds.has(l.id) ? 'open' : ''}>
+        <summary><span class="body-num${st ? ' done' : ''}">${st ? '✓' : i + 1}</span><strong>${esc(l.title)}</strong><span class="chev" aria-hidden="true"></span></summary>
+        <p><strong>L’idée.</strong> ${esc(nbsp(l.idea))}</p>
+        <p><strong>Exemple.</strong> ${esc(nbsp(l.example))}</p>
+        <p><strong>À essayer.</strong> ${esc(nbsp(l.exercise))}</p>
+        <div class="body-quiz">${l.quiz.map((q, qi) => `<div class="q"><p><strong>${qi + 1}. ${esc(nbsp(q.q))}</strong></p><div class="answers">${q.a.map((a, ai) => {
+          let cls = qz.picks[qi] === ai ? 'picked' : '';
+          if (qz.checked) cls = ai === q.c ? 'right' : qz.picks[qi] === ai ? 'wrong' : '';
+          return `<button class="answer ${cls}" data-act="body-pick" data-id="${l.id}" data-q="${qi}" data-a="${ai}" ${qz.checked ? 'disabled' : ''}>${esc(nbsp(a))}</button>`;
+        }).join('')}</div>${qz.checked ? `<p class="hint">${esc(nbsp(q.why))}</p>` : ''}</div>`).join('')}
+          <div class="row">${qz.checked ? `<button class="btn" data-act="body-retry" data-id="${l.id}">Recommencer le quiz</button>` : `<button class="btn primary wide" data-act="body-check" data-id="${l.id}" ${answered ? '' : 'disabled'}>Vérifier</button>`}</div>
+          ${st ? `<p class="hint">Validée · meilleur score ${st.score}/${l.quiz.length}</p>` : ''}
+        </div>
+        <p class="hint body-src">Sources : ${esc(l.src)}</p>
+      </details>`;
+    }).join('')}
+  </section>`;
+}
+
 function deficitCard() {
   const today = todayKey();
   const kcalOf = (id) => { const w = WORKOUTS.find((x) => x.id === id); return w ? workoutKcal(w) : 0; };
@@ -1353,6 +1387,7 @@ function viewFood() {
   return `
   ${mealsCard()}
   ${deficitCard()}
+  ${bodyCard()}
   <section class="card">
     <div class="card-head"><h2>${icon('clock')}Ta journée type</h2></div>
     <p class="hint">≈ 1 850 kcal avec 8 000 pas (≈ 2 000 les jours à 12 000 pas) et ${PROTEIN_GRAMS} g de protéines. Pas faim le matin ? Le 1er repas glisse vers 11 h : c’est le total du jour qui compte.</p>
@@ -1945,6 +1980,35 @@ const actions = {
   },
   // Salle : la borne d'arcade ouvre les jeux
   arcade() { location.hash = 'jeux'; },
+  // Comprendre ton corps : une réponse, la vérification, un nouvel essai
+  'body-pick'(el) {
+    const qz = (bodyQuiz[el.dataset.id] ??= { picks: [], checked: false });
+    qz.picks[Number(el.dataset.q)] = Number(el.dataset.a);
+    render();
+  },
+  'body-retry'(el) {
+    bodyQuiz[el.dataset.id] = { picks: [], checked: false };
+    render();
+  },
+  'body-check'(el) {
+    const l = BODY_LESSONS.find((x) => x.id === el.dataset.id);
+    if (!l) return;
+    const qz = (bodyQuiz[l.id] ??= { picks: [], checked: false });
+    const r = bodyScore(l, qz.picks);
+    qz.checked = true;
+    const prev = state.lessons[l.id];
+    if (!r.passed) {
+      render();
+      toast(`${r.score}/${l.quiz.length} : relis l’idée et l’exemple, puis recommence.`);
+      return;
+    }
+    state.lessons[l.id] = { date: prev?.date ?? new Date().toISOString(), score: Math.max(r.score, prev?.score ?? 0), perfect: r.perfect || Boolean(prev?.perfect) };
+    raiseHabit(todayKey(), 'apprendre', 1);
+    save();
+    render();
+    if (!prev) celebrate(`Leçon validée · +${XP.lesson + (r.perfect ? XP.perfect : 0)} XP`);
+    else toast(`${r.score}/${l.quiz.length}`);
+  },
   // Salle, le soir tard : Fantôme, le loup blanc de Jon Snow, dort devant la borne
   fantome() {
     navigator.vibrate?.(10);

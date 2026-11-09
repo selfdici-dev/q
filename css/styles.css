@@ -1120,6 +1120,14 @@ details.card.more .rules { margin-top: 10px; }
 .hub-panel .eyebrow { color: #e9b897; }
 .hub-panel .muted { color: rgb(244 238 231 / 0.72); font-size: 0.74rem; }
 .hub-lazy { display: inline-block; margin-top: 3px; padding: 2px 0; border: 0; background: none; color: #e9b897; font: inherit; font-size: 0.74rem; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.body-lesson { border-top: 1px solid var(--line); }
+.body-lesson summary { display: flex; align-items: center; gap: 10px; padding: 10px 0; cursor: pointer; list-style: none; }
+.body-lesson summary::-webkit-details-marker { display: none; }
+.body-lesson summary strong { flex: 1; }
+.body-num { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); font-size: 0.8rem; font-weight: 800; }
+.body-num.done { border-color: color-mix(in srgb, var(--pos) 55%, transparent); color: var(--pos); }
+.body-quiz { margin: 10px 0 6px; }
+.body-src { margin-bottom: 12px; }
 .wo-lazy { margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgb(220 154 112 / 0.35); }
 .wo-lazy h4 { display: flex; align-items: center; gap: 6px; margin: 0 0 4px; }
 /* petit écran : le bouton devient un rond ▶, la séance garde la place pour son nom */

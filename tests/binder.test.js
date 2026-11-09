@@ -5,7 +5,9 @@ import { WORKOUTS, WARMUP, baseName } from '../js/data.js';
 
 test('classeur : chaque mouvement une fois (gauche et droite, 1er et 2e passage ensemble), l’échauffement compris', () => {
   const b = binder({ days: {} }, WORKOUTS, WARMUP);
-  const all = new Set([...WORKOUTS.flatMap((w) => w.exercises), ...WARMUP].map((e) => baseName(e.name)));
+  const all = new Set([...WORKOUTS.flatMap((w) => [...w.exercises, ...(w.flemme?.exercises ?? [])]), ...WARMUP].map((e) => baseName(e.name)));
+  // la version flemme du A y ajoute ses levées de jambes
+  assert.deepEqual(b.list.find((x) => x.name === 'Levées de jambes')?.workouts, ['A']);
   assert.equal(b.total, all.size);
   assert.equal(new Set(b.list.map((x) => x.name)).size, b.total);
   assert.equal(b.found, 0);

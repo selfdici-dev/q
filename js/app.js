@@ -7,7 +7,7 @@ import {
   recordWall, wakePlan, bedGoal, clockFr, WAKE_PLAN, kcalTarget, mealTotals, addMeal, STEP_CHOICES, nearestSteps, nbsp, XP,
 } from './logic.js';
 import {
-  DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl, baseName,
+  DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, sessionOf, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl, baseName,
   DAY_PLAN, FOOD_COLORS, FOOD_TREATS, SNACKS, SNACK_TEST, TEA_TIPS, CHOCOLATE,
   WARMUP, PROTEIN_GRAMS, PROTEIN_CHIPS, FOODS, FOOD_CATS, PHASES, MILESTONES, BOOKS, APPS, HELP,
 } from './data.js';
@@ -1033,6 +1033,12 @@ function viewSport() {
           <p class="hint">≈ ${mins} min · ≈ ${workoutKcal(w)} kcal brûlées (estimation)</p>
           <ol class="ex">${w.exercises.map((e) => `<li><span class="ex-fig">${figure(e.name, e.target, false)}</span><div><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="target-tag">${icon('target')}${esc(e.target)}</span>${e.why ? `<br><span class="why">${esc(e.why)}</span>` : ''}<br><span class="muted">${esc(e.cue)}</span></div></li>`).join('')}</ol>
           <div class="row"><button class="btn primary" data-act="start-workout" data-id="${w.id}">Lancer${done.includes(w.id) ? ' (déjà faite aujourd’hui)' : ''}</button></div>
+          ${w.flemme ? (() => {
+            const f = sessionOf(w, 'flemme');
+            return `<div class="wo-lazy"><h4>${icon('battery-low')}Version flemme · ≈ ${workoutMinutes(f)} min</h4><p class="muted">${esc(f.desc)}</p>
+              <ol class="ex">${f.exercises.map((e) => `<li><span class="ex-fig">${figure(e.name, e.target, false)}</span><div><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="target-tag">${icon('target')}${esc(e.target)}</span><br><span class="muted">${esc(e.cue)}</span></div></li>`).join('')}</ol>
+              <div class="row"><button class="btn" data-act="start-workout" data-id="${w.id}" data-v="flemme">Lancer la version flemme</button></div></div>`;
+          })() : ''}
         </details>`;
       }).join('')}`)}
     ${fold('c-tests', icon('gauge'), 'Tests de niveau', 'Tous les 4 sprints', `<span class="pill">${state.tests.length} test${state.tests.length > 1 ? 's' : ''}</span>`, testsBody())}
@@ -1119,7 +1125,8 @@ function gymHub(planned, done, lvl) {
       <div class="hub-panel">
         <span class="wo-badge big wo-${w.id}">${w.id}</span>
         <div class="hub-panel-text"><p class="eyebrow">${pick === planned ? 'Aujourd’hui' : `Poste ${w.id}`}${did ? ' · ✓ faite' : ''}</p><h2>${esc(shortName(w))}</h2>
-          <p class="muted">≈ ${workoutMinutes(w)} min · ≈ ${workoutKcal(w)} kcal${w.fixed ? '' : ` · niv. ${lvl}`}</p></div>
+          <p class="muted">≈ ${workoutMinutes(w)} min · ≈ ${workoutKcal(w)} kcal${w.fixed ? '' : ` · niv. ${lvl}`}</p>
+          ${w.flemme ? `<button class="hub-lazy" data-act="start-workout" data-id="${w.id}" data-v="flemme">Version flemme · ≈ ${workoutMinutes(sessionOf(w, 'flemme'))} min</button>` : ''}</div>
         <button class="btn primary" data-act="start-workout" data-id="${w.id}" aria-label="${did ? 'Refaire' : 'Lancer'} la séance ${w.id}">${did ? 'Refaire' : 'Lancer'}</button>
       </div>
     </div>
@@ -1543,8 +1550,8 @@ function renderPlayer() {
   if (player.cueOpen) $('.cue-full [data-act="cue-close"]', el)?.focus({ preventScroll: true });
 }
 
-function startWorkout(id) {
-  const w = WORKOUTS.find((x) => x.id === id);
+function startWorkout(id, variant) {
+  const w = sessionOf(WORKOUTS.find((x) => x.id === id), variant);
   const steps = buildSteps(w, state.settings.level);
   player = { workout: w, steps, i: 0, remaining: steps[0].secs, endAt: Date.now() + steps[0].secs * 1000 };
   try {
@@ -1953,7 +1960,7 @@ const actions = {
   'start-workout'(el, e) {
     e.preventDefault();
     location.hash = 'sport';
-    startWorkout(el.dataset.id);
+    startWorkout(el.dataset.id, el.dataset.v);
   },
   level(el) {
     state.settings.level = Number(el.dataset.lvl);
@@ -2038,7 +2045,8 @@ const actions = {
     renderPlayer();
   },
   feel(el) {
-    state.feels = [...state.feels, { date: todayKey(), id: player.workout.id, v: el.dataset.v }].slice(-60);
+    // la version flemme n'a pas de niveau : son ressenti ne fait pas monter ni descendre
+    if (!player.workout.variant) state.feels = [...state.feels, { date: todayKey(), id: player.workout.id, v: el.dataset.v }].slice(-60);
     save();
     player = null;
     renderPlayer();

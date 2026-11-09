@@ -7,8 +7,8 @@
 import { baseName } from './data.js';
 import { goalOf } from './logic.js';
 
-// workouts : les séances (data.js) ; warmup : l'échauffement, fait au début
-// des séances qui ne sont pas fixes (A, B, C).
+// workouts : les séances (data.js), version flemme comprise ; warmup :
+// l'échauffement, fait au début des séances qui ne sont pas fixes (A, B, C).
 export function binder(state, workouts, warmup = []) {
   const map = new Map();
   const add = (e, w, warm) => {
@@ -21,6 +21,8 @@ export function binder(state, workouts, warmup = []) {
     if (!x.workouts.includes(w)) x.workouts.push(w);
   };
   for (const w of workouts) for (const e of w.exercises) add(e, w.id, false);
+  // et ceux de sa version flemme (A : les levées de jambes)
+  for (const w of workouts) for (const e of w.flemme?.exercises ?? []) add(e, w.id, false);
   for (const w of workouts) if (!w.fixed) for (const e of warmup) add(e, w.id, true);
   // les jours (une séance refaite le même jour compte une fois)
   const days = Object.values(state?.days && typeof state.days === 'object' ? state.days : {}).map((d) => new Set(Array.isArray(d?.workouts) ? d.workouts : []));

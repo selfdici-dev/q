@@ -1119,6 +1119,9 @@ details.card.more .rules { margin-top: 10px; }
 .hub-panel .btn.primary { padding-inline: 16px; }
 .hub-panel .eyebrow { color: #e9b897; }
 .hub-panel .muted { color: rgb(244 238 231 / 0.72); font-size: 0.74rem; }
+.hub-lazy { display: inline-block; margin-top: 3px; padding: 2px 0; border: 0; background: none; color: #e9b897; font: inherit; font-size: 0.74rem; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.wo-lazy { margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgb(220 154 112 / 0.35); }
+.wo-lazy h4 { display: flex; align-items: center; gap: 6px; margin: 0 0 4px; }
 /* petit écran : le bouton devient un rond ▶, la séance garde la place pour son nom */
 @media (max-width: 360px) {
   .gym-hero.hub .hub-panel .btn.primary { width: 48px; height: 48px; min-height: 48px; padding: 0; border-radius: 50%; font-size: 0; }

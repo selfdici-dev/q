@@ -44,6 +44,20 @@ export const WORKOUTS = [
       { name: 'Hollow hold genoux pliés', work: 30, target: 'Grand droit · la tablette', cue: 'Objectif : 1 tenue jusqu’au bip. Bas du dos collé au tapis, épaules décollées, bras vers les pieds. Étape 1 : genoux pliés. Étape 2 : une jambe tendue. Étape 3 : les deux jambes tendues, bras au-dessus de la tête. Le dos décolle : reviens à l’étape d’avant.' },
       { name: 'Roue abdominale à genoux (2/2)', work: 40, target: 'Abdos complets · deuxième passage', cue: 'Objectif : 6 allers-retours. 1. Même position qu’au premier passage : dos un peu rond, fesses serrées. 2. Tu es fatigué : roule moins loin plutôt que de creuser le bas du dos. 3. Ça tire dans le bas du dos : arrête 5 s et reprends plus court.' },
     ],
+    // Version flemme (son idée) : ses 3 exercices, 3 tours, sans échauffement,
+    // ≈ 8 min. Elle compte comme la séance A : pour les jours sans envie.
+    flemme: {
+      name: 'A · Version flemme',
+      desc: 'Les jours sans envie : 3 exercices, 3 tours, ≈ 8 min, sans échauffement. Elle compte comme ta séance A. Arrête chaque série 1 ou 2 répétitions avant de ne plus pouvoir : la qualité compte plus que le nombre. Les abdos se dessinent ici ; le ventre, lui, s’affine avec l’assiette, les pas et le sommeil.',
+      rounds: 3,
+      rest: 15,
+      roundRest: 45,
+      exercises: [
+        { name: 'Crunch vélo', work: 40, target: 'Abdos et obliques · le plus efficace des trois', cue: 'Objectif : 30 touches (15 par côté), lentes. 1. Sur le dos, doigts derrière les oreilles sans tirer la nuque, omoplates décollées. 2. Un coude vers le genou opposé, pendant que l’autre jambe s’allonge au ras du sol. 3. Change de côté lentement, comme si tu pédalais. Tu cales : finis à ton rythme.' },
+        { name: 'Levées de jambes', work: 35, target: 'Bas des abdos · le V du ventre', cue: 'Objectif : 10 levées. 1. Sur le dos, mains à plat sous les fesses, bas du dos collé au tapis. 2. Jambes tendues, genoux un peu souples : monte-les jusqu’à la verticale. 3. Redescends en 3 s sans poser les talons. Le bas du dos décolle : plie les genoux.' },
+        { name: 'Russian twist', work: 30, target: 'Obliques · taille dessinée', cue: 'Objectif : 20 rotations (10 par côté). 1. Assis, buste penché en arrière, dos droit, pieds décollés. 2. Mains jointes : tourne les épaules d’un côté puis de l’autre, le regard suit les mains. 3. Ça tire dans le bas du dos : pose les talons au sol.' },
+      ],
+    },
   },
   {
     id: 'B',
@@ -124,6 +138,15 @@ export const WORKOUTS = [
     ],
   },
 ];
+
+// La séance à lancer : sa version flemme si on la demande (et qu'elle existe),
+// sinon la séance entière. La version flemme garde l'ID de la séance (elle
+// compte comme elle), sans échauffement ni niveau (fixed).
+export function sessionOf(w, variant) {
+  if (variant !== 'flemme' || !w?.flemme) return w;
+  const { flemme, ...base } = w;
+  return { ...base, ...flemme, fixed: true, variant: 'flemme' };
+}
 
 // Semaine type (choisie par l'utilisateur, revue après un mois) : B trois fois
 // (mardi, jeudi, samedi : 48 h de repos pour chaque muscle), A deux fois (lundi

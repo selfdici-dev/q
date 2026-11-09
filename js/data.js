@@ -44,6 +44,20 @@ export const WORKOUTS = [
       { name: 'Hollow hold genoux pliés', work: 30, target: 'Grand droit · la tablette', cue: 'Objectif : 1 tenue jusqu’au bip. Bas du dos collé au tapis, épaules décollées, bras vers les pieds. Étape 1 : genoux pliés. Étape 2 : une jambe tendue. Étape 3 : les deux jambes tendues, bras au-dessus de la tête. Le dos décolle : reviens à l’étape d’avant.' },
       { name: 'Roue abdominale à genoux (2/2)', work: 40, target: 'Abdos complets · deuxième passage', cue: 'Objectif : 6 allers-retours. 1. Même position qu’au premier passage : dos un peu rond, fesses serrées. 2. Tu es fatigué : roule moins loin plutôt que de creuser le bas du dos. 3. Ça tire dans le bas du dos : arrête 5 s et reprends plus court.' },
     ],
+    // Version flemme (son idée) : ses 3 exercices, 3 tours, sans échauffement,
+    // ≈ 8 min. Elle compte comme la séance A : pour les jours sans envie.
+    flemme: {
+      name: 'A · Version flemme',
+      desc: 'Les jours sans envie : 3 exercices, 3 tours, ≈ 8 min, sans échauffement. Elle compte comme ta séance A. Arrête chaque série 1 ou 2 répétitions avant de ne plus pouvoir : la qualité compte plus que le nombre. Les abdos se dessinent ici ; le ventre, lui, s’affine avec l’assiette, les pas et le sommeil.',
+      rounds: 3,
+      rest: 15,
+      roundRest: 45,
+      exercises: [
+        { name: 'Crunch vélo', work: 40, target: 'Abdos et obliques · le plus efficace des trois', cue: 'Objectif : 30 touches (15 par côté), lentes. 1. Sur le dos, doigts derrière les oreilles sans tirer la nuque, omoplates décollées. 2. Un coude vers le genou opposé, pendant que l’autre jambe s’allonge au ras du sol. 3. Change de côté lentement, comme si tu pédalais. Tu cales : finis à ton rythme.' },
+        { name: 'Levées de jambes', work: 35, target: 'Bas des abdos · le V du ventre', cue: 'Objectif : 10 levées. 1. Sur le dos, mains à plat sous les fesses, bas du dos collé au tapis. 2. Jambes tendues, genoux un peu souples : monte-les jusqu’à la verticale. 3. Redescends en 3 s sans poser les talons. Le bas du dos décolle : plie les genoux.' },
+        { name: 'Russian twist', work: 30, target: 'Obliques · taille dessinée', cue: 'Objectif : 20 rotations (10 par côté). 1. Assis, buste penché en arrière, dos droit, pieds décollés. 2. Mains jointes : tourne les épaules d’un côté puis de l’autre, le regard suit les mains. 3. Ça tire dans le bas du dos : pose les talons au sol.' },
+      ],
+    },
   },
   {
     id: 'B',
@@ -124,6 +138,15 @@ export const WORKOUTS = [
     ],
   },
 ];
+
+// La séance à lancer : sa version flemme si on la demande (et qu'elle existe),
+// sinon la séance entière. La version flemme garde l'ID de la séance (elle
+// compte comme elle), sans échauffement ni niveau (fixed).
+export function sessionOf(w, variant) {
+  if (variant !== 'flemme' || !w?.flemme) return w;
+  const { flemme, ...base } = w;
+  return { ...base, ...flemme, fixed: true, variant: 'flemme' };
+}
 
 // Semaine type (choisie par l'utilisateur, revue après un mois) : B trois fois
 // (mardi, jeudi, samedi : 48 h de repos pour chaque muscle), A deux fois (lundi
@@ -309,6 +332,36 @@ export const TEA_TIPS = [
 
 // Recettes de débutant : peu d’ustensiles, ingrédients de supermarché, riches en protéines.
 export const RECIPES = [
+  // Ses recettes, avec ce qu'il a dans ses placards : ce que chacune apporte
+  // (gives), calculé pour des steaks hachés Charal à 12 % de 100 g.
+  {
+    name: 'Patates paprika au four et steaks',
+    time: '35 min (dont 30 min de four)',
+    items: '400 g de pommes de terre, 2 steaks hachés surgelés (12 %), 2 carottes, paprika, 2 ou 3 pulvérisations d’huile, sel',
+    steps: 'Four à 200 °C. Coupe les patates en cubes avec la peau, et les carottes en bâtons. Sur la plaque : 2 ou 3 pulvérisations d’huile, paprika, sel, mélange. 30 à 35 min, en retournant à mi-cuisson. Les steaks à la poêle sans matière grasse, 4 à 5 min par face.',
+    gives: '≈ 770 kcal · ≈ 48 g de protéines. Le bon : les patates cuites au four ou à l’eau sont l’aliment qui cale le plus (en frites, beaucoup moins), avec du potassium et des fibres dans la peau ; les steaks apportent fer, zinc et vitamine B12. Le moins bon : 12 % de gras, c’est 24 g de gras pour les deux steaks ; en 5 %, ≈ 60 kcal de moins par steak, pour autant de protéines.',
+  },
+  {
+    name: 'Omelette au thon',
+    time: '10 min',
+    items: '3 œufs, 1 boîte de thon au naturel, 2 cuillères à soupe de maïs, 1 pulvérisation d’huile, sel, poivre, paprika',
+    steps: 'Égoutte le thon. Bats les œufs, ajoute le thon et le maïs. Poêle chaude à peine huilée, 4 à 5 min à feu moyen, plie en deux.',
+    gives: '≈ 370 kcal · ≈ 46 g de protéines. Le bon : le meilleur rapport protéines et calories de tes placards ; ça cale pour la soirée. Le moins bon : presque pas de légumes : ajoute des carottes râpées à côté.',
+  },
+  {
+    name: 'Salade pois chiches, thon et œufs',
+    time: '15 min (dont 10 min pour les œufs)',
+    items: '½ boîte de pois chiches (≈ 130 g égouttés), 1 boîte de thon au naturel, 3 cuillères à soupe de maïs, 2 carottes râpées, 2 œufs, 1 cuillère à café d’huile d’olive, vinaigre ou citron, sel, poivre',
+    steps: 'Œufs 10 min dans l’eau bouillante, puis sous l’eau froide. Rince les pois chiches. Mélange tout, assaisonne avec l’huile et le vinaigre.',
+    gives: '≈ 580 kcal · ≈ 50 g de protéines. Le bon : les fibres des pois chiches et des carottes calent longtemps. Le moins bon : la vinaigrette du commerce est très grasse ; fais la tienne, 1 cuillère à café d’huile suffit.',
+  },
+  {
+    name: 'Poulet fermier et patates au four',
+    time: '35 min (dont 30 min de four)',
+    items: '175 g de blanc de poulet (la moitié d’une barquette de 350 g), 300 g de pommes de terre, 2 carottes, paprika, 2 ou 3 pulvérisations d’huile, sel',
+    steps: 'Patates et carottes au four comme d’habitude (200 °C, 30 à 35 min). Coupe le poulet en morceaux et saisis-le 6 à 8 min à feu vif, bien cuit à cœur.',
+    gives: '≈ 520 kcal · ≈ 47 g de protéines. Le bon : le poulet, c’est presque que des protéines, très peu de gras. Le moins bon : rien, c’est ton repas le plus léger. Si tu as encore faim, ajoute des patates plutôt que de grignoter après.',
+  },
   {
     name: 'Omelette complète',
     time: '10 min',

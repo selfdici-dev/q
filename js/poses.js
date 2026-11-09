@@ -31,6 +31,16 @@ export const POSES = {
       { anchor: 'shoulder', at: [76, 68.5], torso: 10, neck: 0, armN: { to: [53, 70], bend: 1 }, armF: { to: [53.5, 70], bend: 1 }, legN: [-50, -140], legF: [-54, -144] },
     ],
   },
+  'Levées de jambes': {
+    // A, version flemme : jambes tendues, elles montent à la verticale en 1,5 s
+    // et redescendent en 3 s sans que les talons touchent le tapis
+    face: -1,
+    tempo: [1.5, 3], pause: [0.3, 0.3],
+    frames: [
+      { anchor: 'shoulder', at: [76, 68.5], torso: 0, neck: 0, armN: { to: [53, 70], bend: 1 }, armF: { to: [53.5, 70], bend: 1 }, legN: [-172, -170], legF: [-174, -172] },
+      { anchor: 'shoulder', at: [76, 68.5], torso: 0, neck: 0, armN: { to: [53, 70], bend: 1 }, armF: { to: [53.5, 70], bend: 1 }, legN: [-96, -95], legF: [-98, -97] },
+    ],
+  },
   'Hollow hold genoux pliés': {
     // seules les épaules et la tête décollent : le bas du dos reste sur le tapis
     face: -1,

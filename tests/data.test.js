@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { WORKOUTS, WEEK_PLAN, WARMUP, HELP, demoUrl, baseName, DAY_PLAN, FOOD_COLORS, FOOD_TREATS, FOOD_RULES, DEFAULT_RULES, PROTEIN_CHIPS, FOODS, FOOD_CATS, SNACKS, SNACK_TEST, TEA_TIPS } from '../js/data.js';
+import { WORKOUTS, WEEK_PLAN, WARMUP, HELP, demoUrl, baseName, sessionOf, RECIPES, DAY_PLAN, FOOD_COLORS, FOOD_TREATS, FOOD_RULES, DEFAULT_RULES, PROTEIN_CHIPS, FOODS, FOOD_CATS, SNACKS, SNACK_TEST, TEA_TIPS } from '../js/data.js';
 import { goalOf } from '../js/logic.js';
 
 test('séances : les IDs stockés dans l’historique ne changent pas', () => {
@@ -286,4 +286,40 @@ test('journal des repas : des aliments courants, en portions, avec des repères 
   const by = (id) => FOODS.find((f) => f.id === id);
   assert.deepEqual([by('skyr').kcal, by('skyr').p], [90, 15]);
   assert.equal(by('amandes').kcal, 150);
+});
+
+test('A, version flemme : ses 3 exercices, 3 tours, ≈ 8 min, sans échauffement, et elle compte comme A', async () => {
+  const { figureFor, focusFor } = await import('../js/figures.js');
+  const A = WORKOUTS.find((w) => w.id === 'A');
+  const f = sessionOf(A, 'flemme');
+  assert.equal(f.id, 'A');
+  assert.equal(f.fixed, true); // ni échauffement ni niveau
+  assert.equal(f.rounds, 3);
+  assert.deepEqual(f.exercises.map((e) => e.name), ['Crunch vélo', 'Levées de jambes', 'Russian twist']);
+  assert.equal(f.flemme, undefined);
+  const secs = 10 + f.rounds * f.exercises.reduce((a, e) => a + e.work, 0) + f.rounds * (f.exercises.length - 1) * f.rest + (f.rounds - 1) * f.roundRest;
+  assert.ok(secs >= 6 * 60 && secs <= 10 * 60, `${secs} s`);
+  for (const e of f.exercises) {
+    assert.match(e.cue, /^Objectif : \d/, e.name);
+    assert.ok(figureFor(e.name), `bonhomme manquant : ${e.name}`);
+    assert.ok(focusFor(e.target).length, `rien d’allumé : ${e.name}`);
+    assert.ok(Number.isInteger(e.work) && e.work >= 20 && e.work <= 60, e.name);
+  }
+  // sans demande, ou pour une séance sans version flemme : la séance entière
+  assert.equal(sessionOf(A), A);
+  assert.equal(sessionOf(WORKOUTS.find((w) => w.id === 'B'), 'flemme').id, 'B');
+  assert.equal(sessionOf(WORKOUTS.find((w) => w.id === 'B'), 'flemme').exercises.length, WORKOUTS.find((w) => w.id === 'B').exercises.length);
+});
+
+test('recettes : ses placards d’abord, et ce que chacune apporte (calories, protéines, le bon et le moins bon)', () => {
+  for (const r of RECIPES) assert.ok(r.name && r.time && r.items && r.steps, r.name);
+  const mine = RECIPES.filter((r) => r.gives);
+  assert.ok(mine.length >= 4);
+  assert.equal(RECIPES.indexOf(mine[0]), 0); // en tête de la liste
+  for (const r of mine) {
+    assert.match(r.gives, /^≈ \d+ kcal · ≈ \d+ g de protéines\. Le bon : .+ Le moins bon : /, r.name);
+    const p = Number(r.gives.match(/≈ (\d+) g de protéines/)[1]);
+    assert.ok(p >= 40, `${r.name} : ${p} g`); // 2 repas par jour : ≈ 60 g chacun pour viser 120 g
+  }
+  assert.ok(mine.some((r) => /patates/i.test(r.name)) && mine.some((r) => /omelette au thon/i.test(r.name)));
 });

@@ -7,7 +7,7 @@ import {
   recordWall, wakePlan, bedGoal, clockFr, WAKE_PLAN, kcalTarget, mealTotals, addMeal, STEP_CHOICES, nearestSteps, nbsp, XP,
 } from './logic.js';
 import {
-  DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl, baseName,
+  DEFAULT_HABITS, DEFAULT_RULES, WORKOUTS, WEEK_PLAN, sessionOf, SNACK_TRIGGERS, FOOD_RULES, RECIPES, demoUrl, baseName,
   DAY_PLAN, FOOD_COLORS, FOOD_TREATS, SNACKS, SNACK_TEST, TEA_TIPS, CHOCOLATE,
   WARMUP, PROTEIN_GRAMS, PROTEIN_CHIPS, FOODS, FOOD_CATS, PHASES, MILESTONES, BOOKS, APPS, HELP,
 } from './data.js';
@@ -32,6 +32,7 @@ import { rivalStatus } from './rival.js';
 import { binder } from './binder.js';
 import { deficitSummary } from './deficit.js';
 import { clin, ghostHere, ghostZone } from './clins.js';
+import { BODY_LESSONS, bodyDone, bodyScore } from './body.js';
 import { SLOTS, gearStats, gearStatus, wornGear, wearGear, newGear } from './outfit.js';
 import { challengeStatus, updateChallenges, challengeNews } from './challenges.js';
 import { treeSVG, seedOf } from './tree.js';
@@ -834,9 +835,10 @@ function planCard(today) {
 const CARD_CATS = ['Trading', 'Crypto', 'Culture', 'Livres', 'Autre'];
 
 function deck() {
-  const lessonCards = ALL_LESSONS.filter((l) => state.lessons[l.id]).flatMap((l) => l.quiz.map((q, i) => ({
-    id: `L:${l.id}:${i}`, cat: 'Finance', front: q.q, back: `${q.a[q.c]}. ${q.why}`,
-  })));
+  const lessonCards = [...ALL_LESSONS.map((l) => [l, 'Finance']), ...BODY_LESSONS.map((l) => [l, 'Corps'])]
+    .filter(([l]) => state.lessons[l.id]).flatMap(([l, cat]) => l.quiz.map((q, i) => ({
+      id: `L:${l.id}:${i}`, cat, front: q.q, back: `${q.a[q.c]}. ${q.why}`,
+    })));
   return [...lessonCards, ...state.myCards].map((c) => ({ ...c, ...state.srs[c.id] }));
 }
 
@@ -1033,6 +1035,12 @@ function viewSport() {
           <p class="hint">≈ ${mins} min · ≈ ${workoutKcal(w)} kcal brûlées (estimation)</p>
           <ol class="ex">${w.exercises.map((e) => `<li><span class="ex-fig">${figure(e.name, e.target, false)}</span><div><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="target-tag">${icon('target')}${esc(e.target)}</span>${e.why ? `<br><span class="why">${esc(e.why)}</span>` : ''}<br><span class="muted">${esc(e.cue)}</span></div></li>`).join('')}</ol>
           <div class="row"><button class="btn primary" data-act="start-workout" data-id="${w.id}">Lancer${done.includes(w.id) ? ' (déjà faite aujourd’hui)' : ''}</button></div>
+          ${w.flemme ? (() => {
+            const f = sessionOf(w, 'flemme');
+            return `<div class="wo-lazy"><h4>${icon('battery-low')}Version flemme · ≈ ${workoutMinutes(f)} min</h4><p class="muted">${esc(f.desc)}</p>
+              <ol class="ex">${f.exercises.map((e) => `<li><span class="ex-fig">${figure(e.name, e.target, false)}</span><div><strong>${esc(e.name)}</strong> · <a href="${demoUrl(e.name)}" target="_blank" rel="noopener">démo vidéo</a><br><span class="target-tag">${icon('target')}${esc(e.target)}</span><br><span class="muted">${esc(e.cue)}</span></div></li>`).join('')}</ol>
+              <div class="row"><button class="btn" data-act="start-workout" data-id="${w.id}" data-v="flemme">Lancer la version flemme</button></div></div>`;
+          })() : ''}
         </details>`;
       }).join('')}`)}
     ${fold('c-tests', icon('gauge'), 'Tests de niveau', 'Tous les 4 sprints', `<span class="pill">${state.tests.length} test${state.tests.length > 1 ? 's' : ''}</span>`, testsBody())}
@@ -1119,7 +1127,8 @@ function gymHub(planned, done, lvl) {
       <div class="hub-panel">
         <span class="wo-badge big wo-${w.id}">${w.id}</span>
         <div class="hub-panel-text"><p class="eyebrow">${pick === planned ? 'Aujourd’hui' : `Poste ${w.id}`}${did ? ' · ✓ faite' : ''}</p><h2>${esc(shortName(w))}</h2>
-          <p class="muted">≈ ${workoutMinutes(w)} min · ≈ ${workoutKcal(w)} kcal${w.fixed ? '' : ` · niv. ${lvl}`}</p></div>
+          <p class="muted">≈ ${workoutMinutes(w)} min · ≈ ${workoutKcal(w)} kcal${w.fixed ? '' : ` · niv. ${lvl}`}</p>
+          ${w.flemme ? `<button class="hub-lazy" data-act="start-workout" data-id="${w.id}" data-v="flemme">Version flemme · ≈ ${workoutMinutes(sessionOf(w, 'flemme'))} min</button>` : ''}</div>
         <button class="btn primary" data-act="start-workout" data-id="${w.id}" aria-label="${did ? 'Refaire' : 'Lancer'} la séance ${w.id}">${did ? 'Refaire' : 'Lancer'}</button>
       </div>
     </div>
@@ -1315,6 +1324,38 @@ function mealsCard() {
 // Ton déficit (deficit.js) : aujourd'hui, la semaine en barres (vers le haut :
 // déficit ; vers le bas : au-dessus de ta dépense ; vide : rien de noté) et le
 // mois. Un repère de tendance, estimé depuis tes pas et ta séance.
+// Comprendre ton corps (body.js) : des leçons courtes, chacune avec son quiz.
+// Une leçon validée compte pour « Apprendre », rapporte son XP, et ses questions
+// passent dans tes révisions. Les réponses en cours restent à l'écran (rien
+// n'est stocké avant la validation).
+const bodyQuiz = {};
+function bodyCard() {
+  return `<section class="card body-card">
+    <div class="card-head"><h2>${icon('lightbulb')}Comprendre ton corps</h2><span class="pill">${bodyDone(state.lessons)}/${BODY_LESSONS.length}</span></div>
+    <p class="hint">Pour savoir pourquoi tu manges ça et pourquoi tu fais ça. Chaque leçon : l’idée, un exemple, quelque chose à essayer, et un petit quiz (2 bonnes réponses sur 3). Elle compte pour « Apprendre », rapporte ${XP.lesson} XP, et ses questions reviennent dans tes révisions.</p>
+    ${BODY_LESSONS.map((l, i) => {
+      const st = state.lessons[l.id];
+      const qz = bodyQuiz[l.id] ?? { picks: [], checked: false };
+      const answered = l.quiz.every((_, qi) => qz.picks[qi] !== undefined);
+      return `<details class="body-lesson" data-fold="${l.id}" ${openFolds.has(l.id) ? 'open' : ''}>
+        <summary><span class="body-num${st ? ' done' : ''}">${st ? '✓' : i + 1}</span><strong>${esc(l.title)}</strong><span class="chev" aria-hidden="true"></span></summary>
+        <p><strong>L’idée.</strong> ${esc(nbsp(l.idea))}</p>
+        <p><strong>Exemple.</strong> ${esc(nbsp(l.example))}</p>
+        <p><strong>À essayer.</strong> ${esc(nbsp(l.exercise))}</p>
+        <div class="body-quiz">${l.quiz.map((q, qi) => `<div class="q"><p><strong>${qi + 1}. ${esc(nbsp(q.q))}</strong></p><div class="answers">${q.a.map((a, ai) => {
+          let cls = qz.picks[qi] === ai ? 'picked' : '';
+          if (qz.checked) cls = ai === q.c ? 'right' : qz.picks[qi] === ai ? 'wrong' : '';
+          return `<button class="answer ${cls}" data-act="body-pick" data-id="${l.id}" data-q="${qi}" data-a="${ai}" ${qz.checked ? 'disabled' : ''}>${esc(nbsp(a))}</button>`;
+        }).join('')}</div>${qz.checked ? `<p class="hint">${esc(nbsp(q.why))}</p>` : ''}</div>`).join('')}
+          <div class="row">${qz.checked ? `<button class="btn" data-act="body-retry" data-id="${l.id}">Recommencer le quiz</button>` : `<button class="btn primary wide" data-act="body-check" data-id="${l.id}" ${answered ? '' : 'disabled'}>Vérifier</button>`}</div>
+          ${st ? `<p class="hint">Validée · meilleur score ${st.score}/${l.quiz.length}</p>` : ''}
+        </div>
+        <p class="hint body-src">Sources : ${esc(l.src)}</p>
+      </details>`;
+    }).join('')}
+  </section>`;
+}
+
 function deficitCard() {
   const today = todayKey();
   const kcalOf = (id) => { const w = WORKOUTS.find((x) => x.id === id); return w ? workoutKcal(w) : 0; };
@@ -1346,6 +1387,7 @@ function viewFood() {
   return `
   ${mealsCard()}
   ${deficitCard()}
+  ${bodyCard()}
   <section class="card">
     <div class="card-head"><h2>${icon('clock')}Ta journée type</h2></div>
     <p class="hint">≈ 1 850 kcal avec 8 000 pas (≈ 2 000 les jours à 12 000 pas) et ${PROTEIN_GRAMS} g de protéines. Pas faim le matin ? Le 1er repas glisse vers 11 h : c’est le total du jour qui compte.</p>
@@ -1383,7 +1425,7 @@ function viewFood() {
     <div class="card-head"><h2>${icon('pan')}Recettes</h2><span class="pill">${RECIPES.length}</span></div>
     <p class="hint">Objectif : maîtriser une recette par semaine. Propose à tes parents de cuisiner un repas par semaine : tu apprends, et tu choisis ce qui est dans l’assiette.</p>
     ${RECIPES.map((r) => `<details><summary><strong>${esc(r.name)}</strong> · ${esc(r.time)}</summary>
-      <p><em>Ingrédients :</em> ${esc(r.items)}</p><p>${esc(r.steps)}</p></details>`).join('')}
+      <p><em>Ingrédients :</em> ${esc(r.items)}</p><p>${esc(r.steps)}</p>${r.gives ? `<p class="hint">${icon('lightbulb')}${esc(r.gives)}</p>` : ''}</details>`).join('')}
   </section>`;
 }
 
@@ -1543,8 +1585,8 @@ function renderPlayer() {
   if (player.cueOpen) $('.cue-full [data-act="cue-close"]', el)?.focus({ preventScroll: true });
 }
 
-function startWorkout(id) {
-  const w = WORKOUTS.find((x) => x.id === id);
+function startWorkout(id, variant) {
+  const w = sessionOf(WORKOUTS.find((x) => x.id === id), variant);
   const steps = buildSteps(w, state.settings.level);
   player = { workout: w, steps, i: 0, remaining: steps[0].secs, endAt: Date.now() + steps[0].secs * 1000 };
   try {
@@ -1938,6 +1980,35 @@ const actions = {
   },
   // Salle : la borne d'arcade ouvre les jeux
   arcade() { location.hash = 'jeux'; },
+  // Comprendre ton corps : une réponse, la vérification, un nouvel essai
+  'body-pick'(el) {
+    const qz = (bodyQuiz[el.dataset.id] ??= { picks: [], checked: false });
+    qz.picks[Number(el.dataset.q)] = Number(el.dataset.a);
+    render();
+  },
+  'body-retry'(el) {
+    bodyQuiz[el.dataset.id] = { picks: [], checked: false };
+    render();
+  },
+  'body-check'(el) {
+    const l = BODY_LESSONS.find((x) => x.id === el.dataset.id);
+    if (!l) return;
+    const qz = (bodyQuiz[l.id] ??= { picks: [], checked: false });
+    const r = bodyScore(l, qz.picks);
+    qz.checked = true;
+    const prev = state.lessons[l.id];
+    if (!r.passed) {
+      render();
+      toast(`${r.score}/${l.quiz.length} : relis l’idée et l’exemple, puis recommence.`);
+      return;
+    }
+    state.lessons[l.id] = { date: prev?.date ?? new Date().toISOString(), score: Math.max(r.score, prev?.score ?? 0), perfect: r.perfect || Boolean(prev?.perfect) };
+    raiseHabit(todayKey(), 'apprendre', 1);
+    save();
+    render();
+    if (!prev) celebrate(`Leçon validée · +${XP.lesson + (r.perfect ? XP.perfect : 0)} XP`);
+    else toast(`${r.score}/${l.quiz.length}`);
+  },
   // Salle, le soir tard : Fantôme, le loup blanc de Jon Snow, dort devant la borne
   fantome() {
     navigator.vibrate?.(10);
@@ -1953,7 +2024,7 @@ const actions = {
   'start-workout'(el, e) {
     e.preventDefault();
     location.hash = 'sport';
-    startWorkout(el.dataset.id);
+    startWorkout(el.dataset.id, el.dataset.v);
   },
   level(el) {
     state.settings.level = Number(el.dataset.lvl);
@@ -2038,7 +2109,8 @@ const actions = {
     renderPlayer();
   },
   feel(el) {
-    state.feels = [...state.feels, { date: todayKey(), id: player.workout.id, v: el.dataset.v }].slice(-60);
+    // la version flemme n'a pas de niveau : son ressenti ne fait pas monter ni descendre
+    if (!player.workout.variant) state.feels = [...state.feels, { date: todayKey(), id: player.workout.id, v: el.dataset.v }].slice(-60);
     save();
     player = null;
     renderPlayer();

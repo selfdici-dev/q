@@ -229,27 +229,27 @@ export const SNACK_TRIGGERS = ['Faim', 'Ennui', 'Devant un écran', 'Fatigue', '
 export const FOOD_RULES = [
   'Une source de protéines à chaque repas (œufs, viande, poisson, skyr, lentilles, tofu) : ça cale et ça protège les muscles.',
   'La moitié de l’assiette en légumes (les surgelés comptent, c’est pareil).',
-  'Un premier repas avec des protéines, au petit-déjeuner ou vers 11 h : c’est lui qui évite le grignotage de l’après-midi.',
+  'Un premier repas avec des protéines, au petit-déjeuner ou à midi : c’est lui qui évite le grignotage de l’après-midi.',
   'Une collation prévue (fruit + skyr, ou une poignée d’amandes) vaut mieux que 5 grignotages imprévus.',
   'Ne pas manger devant TikTok ou Netflix : on mange sans s’en rendre compte.',
   'Les grignotages sucrés ou salés ne sont pas dans ta chambre. Ce qui n’est pas à portée de main ne se mange pas.',
 ];
 
-// Journée type (≈ 1 760 kcal avec 8 000 pas : ≈ 500 de moins que la dépense,
-// ≈ 0,5 kg de gras par semaine ; ≈ 1 860 les jours à 12 000 pas) : [moment, quoi]. Pas de petit-déjeuner obligatoire :
-// le 1er repas peut glisser vers 11 h, c'est le total du jour qui compte (le
-// petit-déjeuner n'aide pas à maigrir : méta-analyse Sievert 2019). Café : 400 mg
-// de caféine par jour au plus (EFSA), le dernier à 15 h pour dormir.
+// Journée type : des repères, pas un horaire (il n'en voulait pas). Il mange
+// deux fois, vers midi et le soir : c'est le total du jour qui compte (le
+// petit-déjeuner n'aide pas à maigrir : méta-analyse Sievert 2019). ≈ 1 760 kcal
+// avec 8 000 pas : ≈ 500 de moins que la dépense, ≈ 0,5 kg de gras par semaine.
+// [moment, quoi]. Café : 400 mg de caféine par jour au plus (EFSA), le dernier
+// en début d'après-midi pour dormir.
 export const DAY_PLAN = [
-  ['Au réveil', 'Un grand verre d’eau, un café sans sucre, ta créatine.'],
-  ['Le matin', 'Ta séance, si tu peux.'],
-  ['1er repas', 'Au petit-déjeuner, ou vers 11 h si tu le sautes : 250 g de skyr, 40 g de flocons d’avoine, 1 banane.'],
-  ['Midi', 'L’assiette : une protéine grande comme ta paume, un féculent gros comme ton poing, des légumes sur la moitié.'],
-  ['15 h', 'Dernier café de la journée (4 au plus par jour).'],
-  ['16 h', '2 œufs durs et un fruit, ou un skyr.'],
-  ['Le soir', 'La même assiette, ou le repas en famille avec la même règle.'],
+  ['Au réveil', 'Volets ouverts, un grand verre d’eau, ta créatine. Si tu peux : 5 à 10 min dehors.'],
+  ['Le matin', 'Café ou thé sans sucre, de l’eau. Tu sautes le petit-déjeuner ? C’est le total du jour qui compte.'],
+  ['1er repas', 'Un de tes repas (touche-le dans « Mes repas ») : ≈ 50 g de protéines, un féculent, des légumes.'],
+  ['Après', '10 à 15 min de marche : ça aide à faire redescendre le sucre dans le sang.'],
+  ['Après-midi', 'Faim ? Un fruit et un skyr, ou 2 œufs durs. Dernier café en début d’après-midi (4 au plus par jour).'],
+  ['2e repas', 'Un autre de tes repas, à table, sans écran. Encore faim : rajoute des patates plutôt que de grignoter après.'],
   ['Après dîner', 'Plus rien à manger : de l’eau ou une tisane.'],
-  ['23 h', 'Téléphone dans une autre pièce.'],
+  ['Au coucher', 'Téléphone en charge loin du lit, réveil réglé.'],
 ];
 
 // Ce qu'il peut manger, en 3 couleurs. Rien n'est interdit : le rouge veut dire
@@ -593,9 +593,9 @@ export const HELP = {
   manger: {
     title: 'Comment marche Manger',
     lines: [
-      'Rien à calculer : ta journée type, ce que tu peux manger en 3 couleurs, et des recettes simples.',
-      'Rien n’est interdit : le rouge veut dire « prévu », 2 ou 3 fois par semaine.',
-      'Tes protéines et tes grignotages se notent dans Ma journée (sous la Salle), en 2 touches.',
+      'Touche ton repas dans « Mes repas » : calories, protéines et déficit se calculent tout seuls.',
+      'Tes recettes sont juste dessous, puis « Comprendre ton corps » : 9 leçons courtes avec un quiz.',
+      'Les fiches conseils sont repliées en bas. Rien n’est interdit : le rouge veut dire « prévu ».',
     ],
   },
   moi: {

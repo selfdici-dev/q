@@ -218,21 +218,25 @@ test('B : pompes pike par étapes, de la négative à la complète', () => {
   assert.match(pike.cue, new RegExp(`Plus de ${g.max} faciles : étape suivante`));
 });
 
-test('manger : journée type du réveil au coucher, et 3 couleurs où rien n’est interdit', () => {
+test('manger : journée type du réveil au coucher, sans heures, et 3 couleurs où rien n’est interdit', () => {
   // journée type : des lignes courtes, lisibles d'un coup d'œil
   assert.ok(DAY_PLAN.length >= 6);
   for (const [when, what] of DAY_PLAN) assert.ok(when.length <= 12 && what.length > 10 && what.length <= 120, when);
   const plan = Object.fromEntries(DAY_PLAN);
+  assert.equal(Object.keys(plan).length, DAY_PLAN.length); // des moments tous différents
   assert.match(plan['Au réveil'], /créatine/);
-  // pas de petit-déjeuner obligatoire : le 1er repas peut glisser vers 11 h (la règle dit pareil)
-  assert.match(plan['1er repas'], /11 h/);
-  assert.ok(FOOD_RULES.some((r) => /premier repas avec des protéines.*11 h/.test(r)));
+  // des moments, pas un horaire (il n'en voulait pas) : aucune heure écrite
+  for (const [when, what] of DAY_PLAN) assert.doesNotMatch(`${when} ${what}`, /\d\s?h\b/, when);
+  // deux repas, pas de petit-déjeuner obligatoire (la règle dit pareil)
+  assert.ok(plan['1er repas'] && plan['2e repas']);
+  assert.match(plan['Le matin'], /total du jour/);
+  assert.ok(FOOD_RULES.some((r) => /premier repas avec des protéines.*à midi/.test(r)));
   assert.ok(FOOD_RULES.every((r) => !/^Petit-déjeuner/.test(r)));
-  // café : le dernier à 15 h, 4 au plus (400 mg) ; plus rien à manger après le dîner ;
-  // téléphone loin à 23 h, comme la règle si-alors
-  assert.match(plan['15 h'], /Dernier café.*4 au plus/);
+  // café : le dernier en début d'après-midi, 4 au plus (400 mg) ; plus rien à manger après le dîner ;
+  // téléphone loin du lit au coucher (la règle si-alors dit 23 h)
+  assert.match(plan['Après-midi'], /Dernier café.*4 au plus/);
   assert.match(plan['Après dîner'], /Plus rien à manger/);
-  assert.ok(DEFAULT_RULES.some((r) => r.includes('23 h')) && /Téléphone/.test(plan['23 h']));
+  assert.ok(DEFAULT_RULES.some((r) => r.includes('23 h')) && /Téléphone/.test(plan['Au coucher']));
   // 3 couleurs : vert tous les jours (toutes les protéines des boutons, sauf le jambon), jaune un peu, rouge prévu
   assert.deepEqual(FOOD_COLORS.map((c) => c.id), ['vert', 'jaune', 'rouge']);
   const green = FOOD_COLORS[0].items.join(' ').toLowerCase();

@@ -1053,6 +1053,7 @@ details.card.more .rules { margin-top: 10px; }
 .fold-body .goal-list { margin-top: 8px; }
 .fold-body > .week { margin-bottom: 4px; }
 .apps-cat { margin: 14px 0 4px; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.food-sheets { margin: 20px 4px 8px; }
 /* Icônes au trait (js/icons.js) : à la taille du texte, de la couleur du texte ;
    la couleur d'accent pour les titres de cartes et ce qui compte */
 .ico { width: 1.2em; height: 1.2em; flex-shrink: 0; vertical-align: -0.22em; }

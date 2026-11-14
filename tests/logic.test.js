@@ -512,11 +512,18 @@ test('séance : taper vite sur un nombre ne zoome pas (pas de zoom au double-tap
 });
 
 test('repas : objectif selon les pas, total kcal et protéines, une entrée par aliment', async () => {
-  const { kcalTarget, mealTotals, addMeal, proteinGrams, KCAL_BASE } = await import('../js/logic.js');
-  assert.equal(KCAL_BASE, 1850);
-  assert.equal(kcalTarget(undefined), 1850);
-  assert.equal(kcalTarget(8000), 1850);
-  assert.equal(kcalTarget(12000), 2010); // ≈ 2 000 les jours à 12 000 pas
+  const { kcalTarget, mealTotals, addMeal, proteinGrams, KCAL_BASE, SPEND_BASE, STEP_KCAL, PROFILE, restingKcal } = await import('../js/logic.js');
+  // la dépense est calée sur lui : repos (Mifflin-St Jeor), digestion, bouger, pas
+  assert.equal(restingKcal(PROFILE), 1683);
+  assert.ok(Math.abs(restingKcal(PROFILE) + 180 + 200 + 8000 * STEP_KCAL - SPEND_BASE) <= 10);
+  assert.ok(Math.abs((0.5 * PROFILE.weight) / 1430 - STEP_KCAL) < 0.002); // ≈ 0,5 kcal par kilo et par km
+  assert.equal(SPEND_BASE, 2260);
+  // l'objectif : ≈ 500 sous la dépense
+  assert.equal(KCAL_BASE, 1760);
+  assert.equal(kcalTarget(undefined), 1760);
+  assert.equal(kcalTarget(8000), 1760);
+  assert.equal(kcalTarget(10000), 1810); // ≈ 1 800 les jours à 10 000 pas
+  assert.equal(kcalTarget(5000), 1690); // ≈ 1 700 les jours à 5 000 pas
   assert.equal(kcalTarget(3000), 1650); // jamais sous 1 650
   assert.equal(kcalTarget(30000), 2150); // ni au-dessus de 2 150
   // le menu des pas coche la valeur ronde la plus proche

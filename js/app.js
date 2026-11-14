@@ -1390,7 +1390,7 @@ function viewFood() {
   ${bodyCard()}
   <section class="card">
     <div class="card-head"><h2>${icon('clock')}Ta journée type</h2></div>
-    <p class="hint">≈ 1 850 kcal avec 8 000 pas (≈ 2 000 les jours à 12 000 pas) et ${PROTEIN_GRAMS} g de protéines. Pas faim le matin ? Le 1er repas glisse vers 11 h : c’est le total du jour qui compte.</p>
+    <p class="hint">≈ ${fmtInt(kcalTarget(8000))} kcal avec 8 000 pas (≈ ${fmtInt(kcalTarget(12000))} les jours à 12 000 pas) et ${PROTEIN_GRAMS} g de protéines. Pas faim le matin ? Le 1er repas glisse vers 11 h : c’est le total du jour qui compte.</p>
     <ol class="day-plan">${DAY_PLAN.map(([when, what]) => `<li><b>${esc(when)}</b><span>${esc(what)}</span></li>`).join('')}</ol>
   </section>
   <section class="card">

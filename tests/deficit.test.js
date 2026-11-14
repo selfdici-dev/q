@@ -8,8 +8,9 @@ const meal = (kcal, n = 1) => ({ f: 'x', n, kcal, p: 0 });
 test('déficit : la dépense suit les pas et la séance, ≈ 500 au-dessus de l’objectif de Manger', () => {
   assert.equal(kcalSpent(8000), SPEND_BASE);
   assert.equal(kcalSpent(undefined), SPEND_BASE); // sans pas notés : 8 000
-  assert.equal(kcalSpent(12000), SPEND_BASE + 160);
-  assert.equal(kcalSpent(3000), SPEND_BASE - 200);
+  assert.equal(kcalSpent(12000), SPEND_BASE + 100);
+  assert.equal(kcalSpent(3000), SPEND_BASE - 125);
+  assert.equal(kcalSpent(10000), 2310); // ≈ 2 300 à 10 000 pas, pour lui
   assert.equal(kcalSpent(8000, 120), SPEND_BASE + 120);
   assert.equal(kcalSpent(8000) - kcalTarget(8000), 500);
 });
@@ -28,15 +29,15 @@ test('déficit : un jour noté, un jour vide, la séance du jour comptée une fo
 
 test('déficit : la semaine (depuis lundi) et le mois (depuis le 1er), jours notés seulement', () => {
   const days = {
-    '2026-10-30': { meals: [meal(1850)] }, // octobre : hors du mois
-    '2026-11-01': { meals: [meal(1850)] }, // dimanche : semaine d'avant, mais dans le mois
-    '2026-11-02': { meals: [meal(1850)] }, // lundi
-    '2026-11-03': { meals: [meal(2650)] }, // au-dessus de la dépense
+    '2026-10-30': { meals: [meal(SPEND_BASE - 500)] }, // octobre : hors du mois
+    '2026-11-01': { meals: [meal(SPEND_BASE - 500)] }, // dimanche : semaine d'avant, mais dans le mois
+    '2026-11-02': { meals: [meal(SPEND_BASE - 500)] }, // lundi
+    '2026-11-03': { meals: [meal(SPEND_BASE + 300)] }, // au-dessus de la dépense
     '2026-11-04': {}, // rien de noté : ne compte pas
-    '2026-11-05': { meals: [meal(1550)] },
+    '2026-11-05': { meals: [meal(SPEND_BASE - 800)] },
   };
   const s = deficitSummary({ days }, '2026-11-05');
-  assert.deepEqual(s.today, { eaten: 1550, spent: SPEND_BASE, deficit: 800 });
+  assert.deepEqual(s.today, { eaten: SPEND_BASE - 800, spent: SPEND_BASE, deficit: 800 });
   assert.equal(s.week.length, 7);
   assert.equal(s.week[0].key, '2026-11-02');
   assert.deepEqual(s.week.map((w) => w.day?.deficit ?? null), [500, -300, null, 800, null, null, null]);

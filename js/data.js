@@ -235,8 +235,8 @@ export const FOOD_RULES = [
   'Les grignotages sucrés ou salés ne sont pas dans ta chambre. Ce qui n’est pas à portée de main ne se mange pas.',
 ];
 
-// Journée type (≈ 1 850 kcal avec 8 000 pas : ≈ 500 de moins que la dépense,
-// ≈ 0,5 kg de gras par semaine ; ≈ 2 000 les jours à 12 000 pas) : [moment, quoi]. Pas de petit-déjeuner obligatoire :
+// Journée type (≈ 1 760 kcal avec 8 000 pas : ≈ 500 de moins que la dépense,
+// ≈ 0,5 kg de gras par semaine ; ≈ 1 860 les jours à 12 000 pas) : [moment, quoi]. Pas de petit-déjeuner obligatoire :
 // le 1er repas peut glisser vers 11 h, c'est le total du jour qui compte (le
 // petit-déjeuner n'aide pas à maigrir : méta-analyse Sievert 2019). Café : 400 mg
 // de caféine par jour au plus (EFSA), le dernier à 15 h pour dormir.

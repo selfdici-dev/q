@@ -513,7 +513,7 @@ function render() {
   const heads = {
     focus: ['Focus', 'Une seule chose à la fois'],
     sport: ['Salle', 'Ta séance, tes postes, tes records'],
-    manger: ['Manger', 'Ta journée type, des conseils, des recettes'],
+    manger: ['Manger', 'Tes repas, ton déficit, tes recettes'],
     argent: me,
     moi: me,
     revision: ['Révisions', 'Chaque carte revient juste avant l’oubli'],
@@ -978,7 +978,7 @@ function urgeBody(u) {
 
 let player = null; // séance en cours
 let mealUndo = ''; // dernier aliment noté (pour « Annuler le dernier ajout »)
-let foodCat = 'prot'; // famille d'aliments affichée dans Manger
+let foodCat = 'repas'; // famille d'aliments affichée dans Manger (d'abord ses repas, en une touche)
 const fmtInt = (n) => Math.round(n).toLocaleString('fr-FR');
 
 function buildSteps(w, level) {
@@ -1297,7 +1297,7 @@ function mealsCard() {
   const tot = mealTotals(meals);
   const target = kcalTarget(d.steps);
   const left = target - tot.kcal;
-  const cat = FOOD_CATS.some(([c]) => c === foodCat) ? foodCat : 'prot';
+  const cat = FOOD_CATS.some(([c]) => c === foodCat) ? foodCat : FOOD_CATS[0][0];
   const half = (n) => (n % 1 ? `${Math.floor(n) || ''}½` : String(n));
   const status = !tot.kcal ? 'rien de noté pour l’instant'
     : left > 50 ? `il te reste ≈ ${fmtInt(left)} kcal`
@@ -1310,12 +1310,12 @@ function mealsCard() {
     <p class="hint">${status} · ≈ ${tot.p} g de protéines sur ${PROTEIN_GRAMS}</p>
     <label class="steps-pick">Tes pas aujourd’hui (l’objectif suit)<select data-field="steps" data-key="${todayKey()}">${STEP_CHOICES.map((n) => `<option value="${n}"${n === nearestSteps(d.steps) ? ' selected' : ''}>${n >= 15000 ? `${fmtInt(n)} ou plus` : `≈ ${fmtInt(n)}`}</option>`).join('')}</select></label>
     <div class="food-cats" role="group" aria-label="Familles d’aliments">${FOOD_CATS.map(([c, label]) => `<button class="seg ${c === cat ? 'on' : ''}" data-act="food-cat" data-c="${c}" aria-pressed="${c === cat}">${label}</button>`).join('')}</div>
-    <div class="food-grid">${FOODS.filter((f) => f.cat === cat).map((f) => `<button class="food" data-act="meal-add" data-f="${f.id}" aria-label="Noter ${esc(f.name)}, ${esc(f.portion)}, ${f.kcal} kcal"><span class="food-emo" aria-hidden="true">${f.emoji}</span><b>${esc(nbsp(f.name))}</b><small>${esc(nbsp(f.portion))}</small><small class="food-kcal">${f.kcal} kcal</small></button>`).join('')}</div>
+    <div class="food-grid${cat === 'repas' ? ' food-meals' : ''}">${FOODS.filter((f) => f.cat === cat).map((f) => `<button class="food" data-act="meal-add" data-f="${f.id}" aria-label="Noter ${esc(f.name)}, ${esc(f.portion)}, ${f.kcal} kcal"><span class="food-emo" aria-hidden="true">${f.emoji}</span><b>${esc(nbsp(f.name))}</b><small>${esc(nbsp(f.portion))}</small><small class="food-kcal">${f.kcal} kcal${f.cat === 'repas' ? ` · ${f.p}\u00a0g de protéines` : ''}</small></button>`).join('')}</div>
     ${meals.length ? `<ul class="meal-list">${meals.map((m) => {
       const f = FOODS.find((x) => x.id === m.f);
       return `<li><span class="meal-name">${f?.emoji ?? '🍽️'} ${esc(nbsp(f?.name ?? m.f))}${m.n !== 1 ? ` <small>×${half(m.n)}</small>` : ''}</span><span class="meal-kcal">${fmtInt(m.n * m.kcal)} kcal</span>
         <button class="meal-step" data-act="meal-step" data-f="${m.f}" data-v="-0.5" aria-label="Une demi-portion de ${esc(f?.name ?? m.f)} en moins">−</button><button class="meal-step" data-act="meal-step" data-f="${m.f}" data-v="0.5" aria-label="Une demi-portion de ${esc(f?.name ?? m.f)} en plus">+</button></li>`;
-    }).join('')}</ul>` : '<p class="muted">Touche ce que tu manges : un aliment = une portion (− et + par demi-portion ensuite).</p>'}
+    }).join('')}</ul>` : '<p class="muted">Touche ton repas dans « Mes repas » : il est noté en entier. Sinon, touche ce que tu manges : un aliment = une portion (− et + par demi-portion ensuite).</p>'}
     <p class="hint">Des repères, pas une balance : à ±15\u00a0% près, c’est la tendance de la semaine qui compte. L’huile de cuisson compte (90 kcal la cuillère). Les protéines notées ici comptent aussi dans Ma journée.</p>
   </section>`;
 }
@@ -1384,49 +1384,44 @@ function deficitCard() {
 }
 
 function viewFood() {
+  // En haut, ce qui sert tous les jours : ton assiette (tes repas en une
+  // touche), ton déficit, tes recettes. Puis « Comprendre ton corps ». Les
+  // fiches conseils sont repliées en bas : celles que tu ouvres restent ouvertes.
+  const list = (items) => `<ul class="tight">${items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>`;
+  const none = '<span></span>';
   return `
   ${mealsCard()}
   ${deficitCard()}
-  ${bodyCard()}
-  <section class="card">
-    <div class="card-head"><h2>${icon('clock')}Ta journée type</h2></div>
-    <p class="hint">≈ 1 850 kcal avec 8 000 pas (≈ 2 000 les jours à 12 000 pas) et ${PROTEIN_GRAMS} g de protéines. Pas faim le matin ? Le 1er repas glisse vers 11 h : c’est le total du jour qui compte.</p>
-    <ol class="day-plan">${DAY_PLAN.map(([when, what]) => `<li><b>${esc(when)}</b><span>${esc(what)}</span></li>`).join('')}</ol>
-  </section>
-  <section class="card">
-    <div class="card-head"><h2>${icon('traffic')}Ce que tu peux manger</h2></div>
-    ${FOOD_COLORS.map((c) => `<div class="food-color fc-${c.id}"><p><strong><span class="fc-dot" aria-hidden="true"></span>${esc(c.title)}</strong></p><ul class="tight">${c.items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul></div>`).join('')}
-    <p class="hint">Rien n’est interdit : le rouge veut dire « prévu », pas « jamais ».</p>
-    <ul class="tight">${FOOD_TREATS.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
-  </section>
-  <section class="card">
-    <div class="card-head"><h2>${icon('apple')}Collations et grignotages</h2></div>
-    <p class="hint">${esc(SNACK_TEST)}</p>
-    ${SNACKS.map((g) => `<p class="apps-cat">${esc(g.title)}</p><ul class="tight">${g.items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>`).join('')}
-    <p class="hint">Une collation prévue (comme celle de 16 h) n’est pas un grignotage : ta case reste validée.</p>
-  </section>
-  <section class="card">
-    <div class="card-head"><h2>${icon('refresh')}Remplacer le chocolat</h2></div>
-    <p class="muted">${esc(CHOCOLATE.intro)}</p>
-    <ul class="tight">${CHOCOLATE.swaps.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
-    <p class="hint">${esc(CHOCOLATE.plan)}</p>
-  </section>
-  <section class="card">
-    <div class="card-head"><h2>${icon('cup')}Le thé</h2></div>
-    <p class="muted">Sans sucre, c’est 0 kcal et une arme contre le grignotage du soir. Il ne fait pas maigrir pour autant.</p>
-    <ul class="tight">${TEA_TIPS.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
-  </section>
-  <section class="card">
-    <div class="card-head"><h2>${icon('list')}Six règles, pas de régime</h2></div>
-    <p class="muted">Pour des abdos visibles, l’alimentation pèse plus lourd que les séances.</p>
-    <ol class="tight">${FOOD_RULES.map((r) => `<li>${esc(r)}</li>`).join('')}</ol>
-  </section>
   <section class="card">
     <div class="card-head"><h2>${icon('pan')}Recettes</h2><span class="pill">${RECIPES.length}</span></div>
-    <p class="hint">Objectif : maîtriser une recette par semaine. Propose à tes parents de cuisiner un repas par semaine : tu apprends, et tu choisis ce qui est dans l’assiette.</p>
+    <p class="hint">Les tiennes d’abord, avec ce qu’elles t’apportent : touche « Noter ce repas » quand tu l’as mangé. Objectif : maîtriser une recette par semaine.</p>
     ${RECIPES.map((r) => `<details><summary><strong>${esc(r.name)}</strong> · ${esc(r.time)}</summary>
-      <p><em>Ingrédients :</em> ${esc(r.items)}</p><p>${esc(r.steps)}</p>${r.gives ? `<p class="hint">${icon('lightbulb')}${esc(r.gives)}</p>` : ''}</details>`).join('')}
-  </section>`;
+      <p><em>Ingrédients :</em> ${esc(r.items)}</p><p>${esc(r.steps)}</p>${r.gives ? `<p class="hint">${icon('lightbulb')}${esc(r.gives)}</p>` : ''}${r.meal ? `<div class="row"><button class="btn small" data-act="meal-add" data-f="${r.meal}">${icon('check')}Noter ce repas aujourd’hui</button></div>` : ''}</details>`).join('')}
+  </section>
+  ${bodyCard()}
+  <p class="apps-cat food-sheets">Tes fiches</p>
+  <div class="folds">
+    ${fold('f-jour', icon('clock'), 'Ta journée type', 'Deux repas, des repères, pas d’horaire', none, `
+      <p class="hint">≈ ${fmtInt(kcalTarget(8000))} kcal avec 8 000 pas (≈ ${fmtInt(kcalTarget(10000))} les jours à 10 000 pas) et ${PROTEIN_GRAMS} g de protéines. Pas d’heures : c’est le total du jour qui compte.</p>
+      <ol class="day-plan">${DAY_PLAN.map(([when, what]) => `<li><b>${esc(when)}</b><span>${esc(nbsp(what))}</span></li>`).join('')}</ol>`)}
+    ${fold('f-couleurs', icon('traffic'), 'Ce que tu peux manger', 'En 3 couleurs, rien d’interdit', none, `
+      ${FOOD_COLORS.map((c) => `<div class="food-color fc-${c.id}"><p><strong><span class="fc-dot" aria-hidden="true"></span>${esc(c.title)}</strong></p>${list(c.items)}</div>`).join('')}
+      <p class="hint">Rien n’est interdit : le rouge veut dire « prévu », pas « jamais ».</p>
+      ${list(FOOD_TREATS)}`)}
+    ${fold('f-collations', icon('apple'), 'Collations et grignotages', 'Faim, ou envie ?', none, `
+      <p class="hint">${esc(SNACK_TEST)}</p>
+      ${SNACKS.map((g) => `<p class="apps-cat">${esc(g.title)}</p>${list(g.items)}`).join('')}
+      <p class="hint">Une collation prévue (celle de l’après-midi) n’est pas un grignotage : ta case reste validée.</p>`)}
+    ${fold('f-chocolat', icon('refresh'), 'Remplacer le chocolat', 'Garder le moment, changer ce que tu manges', none, `
+      <p class="muted">${esc(CHOCOLATE.intro)}</p>
+      ${list(CHOCOLATE.swaps)}
+      <p class="hint">${esc(CHOCOLATE.plan)}</p>`)}
+    ${fold('f-the', icon('cup'), 'Le thé', 'Quand le boire, quoi éviter', none, `
+      <p class="muted">Sans sucre, c’est 0 kcal et une arme contre le grignotage du soir. Il ne fait pas maigrir pour autant.</p>
+      ${list(TEA_TIPS)}`)}
+    ${fold('f-regles', icon('list'), 'Six règles, pas de régime', 'L’assiette pèse plus lourd que les séances', none, `
+      <ol class="tight">${FOOD_RULES.map((r) => `<li>${esc(r)}</li>`).join('')}</ol>`)}
+  </div>`;
 }
 
 function goalBody() {

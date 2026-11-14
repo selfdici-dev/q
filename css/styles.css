@@ -1053,6 +1053,7 @@ details.card.more .rules { margin-top: 10px; }
 .fold-body .goal-list { margin-top: 8px; }
 .fold-body > .week { margin-bottom: 4px; }
 .apps-cat { margin: 14px 0 4px; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.food-sheets { margin: 20px 4px 8px; }
 /* Icônes au trait (js/icons.js) : à la taille du texte, de la couleur du texte ;
    la couleur d'accent pour les titres de cartes et ce qui compte */
 .ico { width: 1.2em; height: 1.2em; flex-shrink: 0; vertical-align: -0.22em; }
@@ -1407,6 +1408,11 @@ label.steps-pick select { width: auto; min-height: 36px; padding: 0 10px; font-s
 .food-cats { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 8px; }
 .food-cats .seg { flex: 0 0 auto; min-width: 0; min-height: 38px; padding: 0 12px; border-radius: 999px; }
 .food-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+/* tes repas : un par ligne, tout se lit d'un coup d'œil */
+.food-grid.food-meals { grid-template-columns: 1fr; }
+.food-meals .food { column-gap: 12px; padding: 10px 14px; }
+.food-meals .food b { font-size: 0.95rem; }
+.food-meals .food small { font-size: 0.78rem; }
 .food {
   display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto auto; column-gap: 8px; align-items: center;
   min-height: 56px; padding: 8px 10px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface-2);

@@ -118,11 +118,11 @@ test('bilans : les repas notés (calories du jour, et moyenne de la semaine)', (
   st.days['2026-10-02'] = { meals: [{ f: 'pizza', n: 2, kcal: 550, p: 22 }] };
   const day = daySummary(st, S).split('\n');
   assert.ok(day.includes('Protéines : 79/120 g'), day.join('\n')); // les protéines des repas comptent
-  assert.ok(day.includes('Repas notés : ≈ 640 kcal (objectif 2010)'));
+  assert.ok(day.includes('Repas notés : ≈ 640 kcal (objectif 1860)')); // 12 000 pas
   // sans repas notés : pas de ligne
   assert.ok(!daySummary(base(), S).includes('Repas notés'));
   const week = weekSummary(st, S, '2026-10-07');
-  assert.match(week, /Repas notés : ≈ 870 kcal\/jour en moyenne sur 2 jours \(objectif ≈ 1930\)/);
+  assert.match(week, /Repas notés : ≈ 870 kcal\/jour en moyenne sur 2 jours \(objectif ≈ 1810\)/);
 });
 
 test('bilans : les routines du matin et du soir', () => {

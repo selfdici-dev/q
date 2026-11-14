@@ -312,13 +312,21 @@ export function proteinGrams(d) {
   return manual + mealTotals(d?.meals).p;
 }
 
-// Journal des repas. Objectif du jour selon les pas : 1 850 kcal à 8 000 pas,
-// ≈ 0,04 kcal par pas en plus ou en moins, entre 1 650 et 2 150 (≈ 2 000 à
-// 12 000 pas). Sans pas notés : 1 850.
-export const KCAL_BASE = 1850;
+// Journal des repas. Ta dépense d'une journée, estimée pour toi (PROFILE :
+// 1,70 m, 71 kg, 19 ans) : au repos ≈ 1 680 kcal (formule de Mifflin-St Jeor,
+// la plus fiable, à 10 % près), ≈ 180 pour digérer, ≈ 200 pour bouger sans
+// marcher, et tes pas : ≈ 0,025 kcal par pas (marcher coûte ≈ 0,5 kcal par
+// kilo et par kilomètre, ≈ 1 430 pas par km). Soit ≈ 2 260 kcal à 8 000 pas,
+// ≈ 2 300 à 10 000. L'objectif du jour est ≈ 500 en dessous (≈ 0,5 kg de gras
+// par semaine) : 1 760 à 8 000 pas, entre 1 650 et 2 150. Sans pas notés : 8 000.
+export const PROFILE = { height: 170, weight: 71, age: 19 };
+export const restingKcal = ({ height, weight, age }) => Math.round(10 * weight + 6.25 * height - 5 * age + 5);
+export const STEP_KCAL = 0.025;
+export const SPEND_BASE = 2260;
+export const KCAL_BASE = SPEND_BASE - 500;
 export function kcalTarget(steps) {
   if (!Number.isFinite(steps) || steps <= 0) return KCAL_BASE;
-  return Math.round(Math.min(2150, Math.max(1650, KCAL_BASE + 0.04 * (steps - 8000))) / 10) * 10;
+  return Math.round(Math.min(2150, Math.max(1650, KCAL_BASE + STEP_KCAL * (steps - 8000))) / 10) * 10;
 }
 
 // « 5 % », « 100 g », « 2 œufs » : un nombre reste collé au mot qui le suit

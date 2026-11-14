@@ -5,16 +5,17 @@
 // repas notés ne comptent pas. Tout se calcule depuis tes jours (repas, pas,
 // séances), rien n'est stocké. Logique pure (sans DOM), testée par
 // tests/deficit.test.js.
-import { addDays, fromKey, mealTotals } from './logic.js';
+import { addDays, fromKey, mealTotals, SPEND_BASE, STEP_KCAL } from './logic.js';
 
-// La dépense d'une journée : ≈ 2 350 kcal à 8 000 pas (l'objectif de Manger,
-// 1 850, est ≈ 500 en dessous), ≈ 0,04 kcal par pas en plus ou en moins, plus
-// les séances du jour. Sans pas notés : 8 000.
-export const SPEND_BASE = 2350;
+// La dépense d'une journée, calée sur lui (logic.js : repos, digestion, bouger,
+// pas) : ≈ 2 260 kcal à 8 000 pas (l'objectif de Manger, 1 760, est ≈ 500 en
+// dessous), ≈ 0,025 kcal par pas en plus ou en moins, plus les séances du jour.
+// Sans pas notés : 8 000.
+export { SPEND_BASE };
 export const KCAL_PER_KG = 7700; // ≈ 1 kg de gras
 export function kcalSpent(steps, sport = 0) {
   const s = Number.isFinite(steps) && steps > 0 ? steps : 8000;
-  return Math.round(SPEND_BASE + 0.04 * (s - 8000) + (Number(sport) || 0));
+  return Math.round(SPEND_BASE + STEP_KCAL * (s - 8000) + (Number(sport) || 0));
 }
 
 // Un jour : mangé, dépensé, déficit (positif : tu as mangé moins que tu n'as

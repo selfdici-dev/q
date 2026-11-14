@@ -174,8 +174,14 @@ export const PROTEIN_CHIPS = ['oeufs', 'skyr', 'fromage-blanc', 'steak', 'thon',
 // faciles à estimer à l'œil. kcal et protéines (p, en g) par portion,
 // d'après la table Ciqual (Anses), arrondis : des repères, à ±15 % près.
 // short : nom court des boutons protéines de Jour (sinon le premier mot).
-export const FOOD_CATS = [['prot', 'Protéines'], ['fec', 'Féculents'], ['vert', 'Fruits et légumes'], ['lait', 'Laitiers'], ['extra', 'Extras'], ['boire', 'Boissons']];
+export const FOOD_CATS = [['repas', 'Mes repas'], ['prot', 'Protéines'], ['fec', 'Féculents'], ['vert', 'Fruits et légumes'], ['lait', 'Laitiers'], ['extra', 'Extras'], ['boire', 'Boissons']];
 export const FOODS = [
+  // Ses repas, en une touche : les recettes de RECIPES (meal), avec les mêmes
+  // calories et protéines (un test le vérifie). Une portion = le repas entier.
+  { id: 'r-patates-steaks', cat: 'repas', emoji: '🥔', name: 'Patates et steaks', portion: '400 g de patates, 2 steaks 12 %', kcal: 770, p: 48 },
+  { id: 'r-omelette-thon', cat: 'repas', emoji: '🍳', name: 'Omelette au thon', portion: '3 œufs, 1 boîte de thon, maïs', kcal: 370, p: 46 },
+  { id: 'r-salade-pois-chiches', cat: 'repas', emoji: '🥗', name: 'Salade pois chiches', portion: 'pois chiches, thon, 2 œufs, maïs', kcal: 580, p: 50 },
+  { id: 'r-poulet-patates', cat: 'repas', emoji: '🍗', name: 'Poulet et patates', portion: '175 g de poulet, 300 g de patates', kcal: 520, p: 47 },
   { id: 'poulet', cat: 'prot', emoji: '🍗', name: 'Poulet', portion: '1 filet cuit (120 g)', kcal: 190, p: 37 },
   { id: 'steak', cat: 'prot', emoji: '🥩', name: 'Steak haché 5 %', short: 'Steak haché', portion: '1 steak (100 g cru)', kcal: 130, p: 21 },
   { id: 'thon', cat: 'prot', emoji: '🐟', name: 'Thon au naturel', portion: '1 boîte égouttée (110 g)', kcal: 120, p: 27 },
@@ -223,27 +229,27 @@ export const SNACK_TRIGGERS = ['Faim', 'Ennui', 'Devant un écran', 'Fatigue', '
 export const FOOD_RULES = [
   'Une source de protéines à chaque repas (œufs, viande, poisson, skyr, lentilles, tofu) : ça cale et ça protège les muscles.',
   'La moitié de l’assiette en légumes (les surgelés comptent, c’est pareil).',
-  'Un premier repas avec des protéines, au petit-déjeuner ou vers 11 h : c’est lui qui évite le grignotage de l’après-midi.',
+  'Un premier repas avec des protéines, au petit-déjeuner ou à midi : c’est lui qui évite le grignotage de l’après-midi.',
   'Une collation prévue (fruit + skyr, ou une poignée d’amandes) vaut mieux que 5 grignotages imprévus.',
   'Ne pas manger devant TikTok ou Netflix : on mange sans s’en rendre compte.',
   'Les grignotages sucrés ou salés ne sont pas dans ta chambre. Ce qui n’est pas à portée de main ne se mange pas.',
 ];
 
-// Journée type (≈ 1 850 kcal avec 8 000 pas : ≈ 500 de moins que la dépense,
-// ≈ 0,5 kg de gras par semaine ; ≈ 2 000 les jours à 12 000 pas) : [moment, quoi]. Pas de petit-déjeuner obligatoire :
-// le 1er repas peut glisser vers 11 h, c'est le total du jour qui compte (le
-// petit-déjeuner n'aide pas à maigrir : méta-analyse Sievert 2019). Café : 400 mg
-// de caféine par jour au plus (EFSA), le dernier à 15 h pour dormir.
+// Journée type : des repères, pas un horaire (il n'en voulait pas). Il mange
+// deux fois, vers midi et le soir : c'est le total du jour qui compte (le
+// petit-déjeuner n'aide pas à maigrir : méta-analyse Sievert 2019). ≈ 1 760 kcal
+// avec 8 000 pas : ≈ 500 de moins que la dépense, ≈ 0,5 kg de gras par semaine.
+// [moment, quoi]. Café : 400 mg de caféine par jour au plus (EFSA), le dernier
+// en début d'après-midi pour dormir.
 export const DAY_PLAN = [
-  ['Au réveil', 'Un grand verre d’eau, un café sans sucre, ta créatine.'],
-  ['Le matin', 'Ta séance, si tu peux.'],
-  ['1er repas', 'Au petit-déjeuner, ou vers 11 h si tu le sautes : 250 g de skyr, 40 g de flocons d’avoine, 1 banane.'],
-  ['Midi', 'L’assiette : une protéine grande comme ta paume, un féculent gros comme ton poing, des légumes sur la moitié.'],
-  ['15 h', 'Dernier café de la journée (4 au plus par jour).'],
-  ['16 h', '2 œufs durs et un fruit, ou un skyr.'],
-  ['Le soir', 'La même assiette, ou le repas en famille avec la même règle.'],
+  ['Au réveil', 'Volets ouverts, un grand verre d’eau, ta créatine. Si tu peux : 5 à 10 min dehors.'],
+  ['Le matin', 'Café ou thé sans sucre, de l’eau. Tu sautes le petit-déjeuner ? C’est le total du jour qui compte.'],
+  ['1er repas', 'Un de tes repas (touche-le dans « Mes repas ») : ≈ 50 g de protéines, un féculent, des légumes.'],
+  ['Après', '10 à 15 min de marche : ça aide à faire redescendre le sucre dans le sang.'],
+  ['Après-midi', 'Faim ? Un fruit et un skyr, ou 2 œufs durs. Dernier café en début d’après-midi (4 au plus par jour).'],
+  ['2e repas', 'Un autre de tes repas, à table, sans écran. Encore faim : rajoute des patates plutôt que de grignoter après.'],
   ['Après dîner', 'Plus rien à manger : de l’eau ou une tisane.'],
-  ['23 h', 'Téléphone dans une autre pièce.'],
+  ['Au coucher', 'Téléphone en charge loin du lit, réveil réglé.'],
 ];
 
 // Ce qu'il peut manger, en 3 couleurs. Rien n'est interdit : le rouge veut dire
@@ -336,6 +342,7 @@ export const RECIPES = [
   // (gives), calculé pour des steaks hachés Charal à 12 % de 100 g.
   {
     name: 'Patates paprika au four et steaks',
+    meal: 'r-patates-steaks', // le bouton de « Mes repas » qui le note
     time: '35 min (dont 30 min de four)',
     items: '400 g de pommes de terre, 2 steaks hachés surgelés (12 %), 2 carottes, paprika, 2 ou 3 pulvérisations d’huile, sel',
     steps: 'Four à 200 °C. Coupe les patates en cubes avec la peau, et les carottes en bâtons. Sur la plaque : 2 ou 3 pulvérisations d’huile, paprika, sel, mélange. 30 à 35 min, en retournant à mi-cuisson. Les steaks à la poêle sans matière grasse, 4 à 5 min par face.',
@@ -343,6 +350,7 @@ export const RECIPES = [
   },
   {
     name: 'Omelette au thon',
+    meal: 'r-omelette-thon', // le bouton de « Mes repas » qui le note
     time: '10 min',
     items: '3 œufs, 1 boîte de thon au naturel, 2 cuillères à soupe de maïs, 1 pulvérisation d’huile, sel, poivre, paprika',
     steps: 'Égoutte le thon. Bats les œufs, ajoute le thon et le maïs. Poêle chaude à peine huilée, 4 à 5 min à feu moyen, plie en deux.',
@@ -350,6 +358,7 @@ export const RECIPES = [
   },
   {
     name: 'Salade pois chiches, thon et œufs',
+    meal: 'r-salade-pois-chiches', // le bouton de « Mes repas » qui le note
     time: '15 min (dont 10 min pour les œufs)',
     items: '½ boîte de pois chiches (≈ 130 g égouttés), 1 boîte de thon au naturel, 3 cuillères à soupe de maïs, 2 carottes râpées, 2 œufs, 1 cuillère à café d’huile d’olive, vinaigre ou citron, sel, poivre',
     steps: 'Œufs 10 min dans l’eau bouillante, puis sous l’eau froide. Rince les pois chiches. Mélange tout, assaisonne avec l’huile et le vinaigre.',
@@ -357,6 +366,7 @@ export const RECIPES = [
   },
   {
     name: 'Poulet fermier et patates au four',
+    meal: 'r-poulet-patates', // le bouton de « Mes repas » qui le note
     time: '35 min (dont 30 min de four)',
     items: '175 g de blanc de poulet (la moitié d’une barquette de 350 g), 300 g de pommes de terre, 2 carottes, paprika, 2 ou 3 pulvérisations d’huile, sel',
     steps: 'Patates et carottes au four comme d’habitude (200 °C, 30 à 35 min). Coupe le poulet en morceaux et saisis-le 6 à 8 min à feu vif, bien cuit à cœur.',
@@ -583,9 +593,9 @@ export const HELP = {
   manger: {
     title: 'Comment marche Manger',
     lines: [
-      'Rien à calculer : ta journée type, ce que tu peux manger en 3 couleurs, et des recettes simples.',
-      'Rien n’est interdit : le rouge veut dire « prévu », 2 ou 3 fois par semaine.',
-      'Tes protéines et tes grignotages se notent dans Ma journée (sous la Salle), en 2 touches.',
+      'Touche ton repas dans « Mes repas » : calories, protéines et déficit se calculent tout seuls.',
+      'Tes recettes sont juste dessous, puis « Comprendre ton corps » : 9 leçons courtes avec un quiz.',
+      'Les fiches conseils sont repliées en bas. Rien n’est interdit : le rouge veut dire « prévu ».',
     ],
   },
   moi: {

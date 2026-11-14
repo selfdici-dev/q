@@ -218,21 +218,25 @@ test('B : pompes pike par étapes, de la négative à la complète', () => {
   assert.match(pike.cue, new RegExp(`Plus de ${g.max} faciles : étape suivante`));
 });
 
-test('manger : journée type du réveil au coucher, et 3 couleurs où rien n’est interdit', () => {
+test('manger : journée type du réveil au coucher, sans heures, et 3 couleurs où rien n’est interdit', () => {
   // journée type : des lignes courtes, lisibles d'un coup d'œil
   assert.ok(DAY_PLAN.length >= 6);
   for (const [when, what] of DAY_PLAN) assert.ok(when.length <= 12 && what.length > 10 && what.length <= 120, when);
   const plan = Object.fromEntries(DAY_PLAN);
+  assert.equal(Object.keys(plan).length, DAY_PLAN.length); // des moments tous différents
   assert.match(plan['Au réveil'], /créatine/);
-  // pas de petit-déjeuner obligatoire : le 1er repas peut glisser vers 11 h (la règle dit pareil)
-  assert.match(plan['1er repas'], /11 h/);
-  assert.ok(FOOD_RULES.some((r) => /premier repas avec des protéines.*11 h/.test(r)));
+  // des moments, pas un horaire (il n'en voulait pas) : aucune heure écrite
+  for (const [when, what] of DAY_PLAN) assert.doesNotMatch(`${when} ${what}`, /\d\s?h\b/, when);
+  // deux repas, pas de petit-déjeuner obligatoire (la règle dit pareil)
+  assert.ok(plan['1er repas'] && plan['2e repas']);
+  assert.match(plan['Le matin'], /total du jour/);
+  assert.ok(FOOD_RULES.some((r) => /premier repas avec des protéines.*à midi/.test(r)));
   assert.ok(FOOD_RULES.every((r) => !/^Petit-déjeuner/.test(r)));
-  // café : le dernier à 15 h, 4 au plus (400 mg) ; plus rien à manger après le dîner ;
-  // téléphone loin à 23 h, comme la règle si-alors
-  assert.match(plan['15 h'], /Dernier café.*4 au plus/);
+  // café : le dernier en début d'après-midi, 4 au plus (400 mg) ; plus rien à manger après le dîner ;
+  // téléphone loin du lit au coucher (la règle si-alors dit 23 h)
+  assert.match(plan['Après-midi'], /Dernier café.*4 au plus/);
   assert.match(plan['Après dîner'], /Plus rien à manger/);
-  assert.ok(DEFAULT_RULES.some((r) => r.includes('23 h')) && /Téléphone/.test(plan['23 h']));
+  assert.ok(DEFAULT_RULES.some((r) => r.includes('23 h')) && /Téléphone/.test(plan['Au coucher']));
   // 3 couleurs : vert tous les jours (toutes les protéines des boutons, sauf le jambon), jaune un peu, rouge prévu
   assert.deepEqual(FOOD_COLORS.map((c) => c.id), ['vert', 'jaune', 'rouge']);
   const green = FOOD_COLORS[0].items.join(' ').toLowerCase();
@@ -322,4 +326,17 @@ test('recettes : ses placards d’abord, et ce que chacune apporte (calories, pr
     assert.ok(p >= 40, `${r.name} : ${p} g`); // 2 repas par jour : ≈ 60 g chacun pour viser 120 g
   }
   assert.ok(mine.some((r) => /patates/i.test(r.name)) && mine.some((r) => /omelette au thon/i.test(r.name)));
+});
+
+test('mes repas en une touche : chaque recette à lui a son bouton, avec les mêmes calories et protéines', () => {
+  assert.equal(FOOD_CATS[0][0], 'repas'); // la première famille affichée
+  const mine = RECIPES.filter((r) => r.meal);
+  assert.ok(mine.length >= 4);
+  assert.deepEqual(FOODS.filter((f) => f.cat === 'repas').map((f) => f.id).sort(), mine.map((r) => r.meal).sort());
+  for (const r of mine) {
+    const f = FOODS.find((x) => x.id === r.meal);
+    const [, kcal, p] = r.gives.match(/^≈ (\d+) kcal · ≈ (\d+) g de protéines/);
+    assert.deepEqual([f.kcal, f.p], [Number(kcal), Number(p)], r.name);
+    assert.ok(f.name.length <= 22, f.name); // tient sur un bouton
+  }
 });

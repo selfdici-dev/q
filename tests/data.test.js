@@ -323,3 +323,16 @@ test('recettes : ses placards d’abord, et ce que chacune apporte (calories, pr
   }
   assert.ok(mine.some((r) => /patates/i.test(r.name)) && mine.some((r) => /omelette au thon/i.test(r.name)));
 });
+
+test('mes repas en une touche : chaque recette à lui a son bouton, avec les mêmes calories et protéines', () => {
+  assert.equal(FOOD_CATS[0][0], 'repas'); // la première famille affichée
+  const mine = RECIPES.filter((r) => r.meal);
+  assert.ok(mine.length >= 4);
+  assert.deepEqual(FOODS.filter((f) => f.cat === 'repas').map((f) => f.id).sort(), mine.map((r) => r.meal).sort());
+  for (const r of mine) {
+    const f = FOODS.find((x) => x.id === r.meal);
+    const [, kcal, p] = r.gives.match(/^≈ (\d+) kcal · ≈ (\d+) g de protéines/);
+    assert.deepEqual([f.kcal, f.p], [Number(kcal), Number(p)], r.name);
+    assert.ok(f.name.length <= 22, f.name); // tient sur un bouton
+  }
+});

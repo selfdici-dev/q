@@ -174,8 +174,14 @@ export const PROTEIN_CHIPS = ['oeufs', 'skyr', 'fromage-blanc', 'steak', 'thon',
 // faciles à estimer à l'œil. kcal et protéines (p, en g) par portion,
 // d'après la table Ciqual (Anses), arrondis : des repères, à ±15 % près.
 // short : nom court des boutons protéines de Jour (sinon le premier mot).
-export const FOOD_CATS = [['prot', 'Protéines'], ['fec', 'Féculents'], ['vert', 'Fruits et légumes'], ['lait', 'Laitiers'], ['extra', 'Extras'], ['boire', 'Boissons']];
+export const FOOD_CATS = [['repas', 'Mes repas'], ['prot', 'Protéines'], ['fec', 'Féculents'], ['vert', 'Fruits et légumes'], ['lait', 'Laitiers'], ['extra', 'Extras'], ['boire', 'Boissons']];
 export const FOODS = [
+  // Ses repas, en une touche : les recettes de RECIPES (meal), avec les mêmes
+  // calories et protéines (un test le vérifie). Une portion = le repas entier.
+  { id: 'r-patates-steaks', cat: 'repas', emoji: '🥔', name: 'Patates et steaks', portion: '400 g de patates, 2 steaks 12 %', kcal: 770, p: 48 },
+  { id: 'r-omelette-thon', cat: 'repas', emoji: '🍳', name: 'Omelette au thon', portion: '3 œufs, 1 boîte de thon, maïs', kcal: 370, p: 46 },
+  { id: 'r-salade-pois-chiches', cat: 'repas', emoji: '🥗', name: 'Salade pois chiches', portion: 'pois chiches, thon, 2 œufs, maïs', kcal: 580, p: 50 },
+  { id: 'r-poulet-patates', cat: 'repas', emoji: '🍗', name: 'Poulet et patates', portion: '175 g de poulet, 300 g de patates', kcal: 520, p: 47 },
   { id: 'poulet', cat: 'prot', emoji: '🍗', name: 'Poulet', portion: '1 filet cuit (120 g)', kcal: 190, p: 37 },
   { id: 'steak', cat: 'prot', emoji: '🥩', name: 'Steak haché 5 %', short: 'Steak haché', portion: '1 steak (100 g cru)', kcal: 130, p: 21 },
   { id: 'thon', cat: 'prot', emoji: '🐟', name: 'Thon au naturel', portion: '1 boîte égouttée (110 g)', kcal: 120, p: 27 },
@@ -336,6 +342,7 @@ export const RECIPES = [
   // (gives), calculé pour des steaks hachés Charal à 12 % de 100 g.
   {
     name: 'Patates paprika au four et steaks',
+    meal: 'r-patates-steaks', // le bouton de « Mes repas » qui le note
     time: '35 min (dont 30 min de four)',
     items: '400 g de pommes de terre, 2 steaks hachés surgelés (12 %), 2 carottes, paprika, 2 ou 3 pulvérisations d’huile, sel',
     steps: 'Four à 200 °C. Coupe les patates en cubes avec la peau, et les carottes en bâtons. Sur la plaque : 2 ou 3 pulvérisations d’huile, paprika, sel, mélange. 30 à 35 min, en retournant à mi-cuisson. Les steaks à la poêle sans matière grasse, 4 à 5 min par face.',
@@ -343,6 +350,7 @@ export const RECIPES = [
   },
   {
     name: 'Omelette au thon',
+    meal: 'r-omelette-thon', // le bouton de « Mes repas » qui le note
     time: '10 min',
     items: '3 œufs, 1 boîte de thon au naturel, 2 cuillères à soupe de maïs, 1 pulvérisation d’huile, sel, poivre, paprika',
     steps: 'Égoutte le thon. Bats les œufs, ajoute le thon et le maïs. Poêle chaude à peine huilée, 4 à 5 min à feu moyen, plie en deux.',
@@ -350,6 +358,7 @@ export const RECIPES = [
   },
   {
     name: 'Salade pois chiches, thon et œufs',
+    meal: 'r-salade-pois-chiches', // le bouton de « Mes repas » qui le note
     time: '15 min (dont 10 min pour les œufs)',
     items: '½ boîte de pois chiches (≈ 130 g égouttés), 1 boîte de thon au naturel, 3 cuillères à soupe de maïs, 2 carottes râpées, 2 œufs, 1 cuillère à café d’huile d’olive, vinaigre ou citron, sel, poivre',
     steps: 'Œufs 10 min dans l’eau bouillante, puis sous l’eau froide. Rince les pois chiches. Mélange tout, assaisonne avec l’huile et le vinaigre.',
@@ -357,6 +366,7 @@ export const RECIPES = [
   },
   {
     name: 'Poulet fermier et patates au four',
+    meal: 'r-poulet-patates', // le bouton de « Mes repas » qui le note
     time: '35 min (dont 30 min de four)',
     items: '175 g de blanc de poulet (la moitié d’une barquette de 350 g), 300 g de pommes de terre, 2 carottes, paprika, 2 ou 3 pulvérisations d’huile, sel',
     steps: 'Patates et carottes au four comme d’habitude (200 °C, 30 à 35 min). Coupe le poulet en morceaux et saisis-le 6 à 8 min à feu vif, bien cuit à cœur.',

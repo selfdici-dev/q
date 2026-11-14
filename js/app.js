@@ -978,7 +978,7 @@ function urgeBody(u) {
 
 let player = null; // séance en cours
 let mealUndo = ''; // dernier aliment noté (pour « Annuler le dernier ajout »)
-let foodCat = 'prot'; // famille d'aliments affichée dans Manger
+let foodCat = 'repas'; // famille d'aliments affichée dans Manger (d'abord ses repas, en une touche)
 const fmtInt = (n) => Math.round(n).toLocaleString('fr-FR');
 
 function buildSteps(w, level) {
@@ -1297,7 +1297,7 @@ function mealsCard() {
   const tot = mealTotals(meals);
   const target = kcalTarget(d.steps);
   const left = target - tot.kcal;
-  const cat = FOOD_CATS.some(([c]) => c === foodCat) ? foodCat : 'prot';
+  const cat = FOOD_CATS.some(([c]) => c === foodCat) ? foodCat : FOOD_CATS[0][0];
   const half = (n) => (n % 1 ? `${Math.floor(n) || ''}½` : String(n));
   const status = !tot.kcal ? 'rien de noté pour l’instant'
     : left > 50 ? `il te reste ≈ ${fmtInt(left)} kcal`
@@ -1310,12 +1310,12 @@ function mealsCard() {
     <p class="hint">${status} · ≈ ${tot.p} g de protéines sur ${PROTEIN_GRAMS}</p>
     <label class="steps-pick">Tes pas aujourd’hui (l’objectif suit)<select data-field="steps" data-key="${todayKey()}">${STEP_CHOICES.map((n) => `<option value="${n}"${n === nearestSteps(d.steps) ? ' selected' : ''}>${n >= 15000 ? `${fmtInt(n)} ou plus` : `≈ ${fmtInt(n)}`}</option>`).join('')}</select></label>
     <div class="food-cats" role="group" aria-label="Familles d’aliments">${FOOD_CATS.map(([c, label]) => `<button class="seg ${c === cat ? 'on' : ''}" data-act="food-cat" data-c="${c}" aria-pressed="${c === cat}">${label}</button>`).join('')}</div>
-    <div class="food-grid">${FOODS.filter((f) => f.cat === cat).map((f) => `<button class="food" data-act="meal-add" data-f="${f.id}" aria-label="Noter ${esc(f.name)}, ${esc(f.portion)}, ${f.kcal} kcal"><span class="food-emo" aria-hidden="true">${f.emoji}</span><b>${esc(nbsp(f.name))}</b><small>${esc(nbsp(f.portion))}</small><small class="food-kcal">${f.kcal} kcal</small></button>`).join('')}</div>
+    <div class="food-grid">${FOODS.filter((f) => f.cat === cat).map((f) => `<button class="food" data-act="meal-add" data-f="${f.id}" aria-label="Noter ${esc(f.name)}, ${esc(f.portion)}, ${f.kcal} kcal"><span class="food-emo" aria-hidden="true">${f.emoji}</span><b>${esc(nbsp(f.name))}</b><small>${esc(nbsp(f.portion))}</small><small class="food-kcal">${f.kcal} kcal${f.cat === 'repas' ? ` · ${f.p}\u00a0g de protéines` : ''}</small></button>`).join('')}</div>
     ${meals.length ? `<ul class="meal-list">${meals.map((m) => {
       const f = FOODS.find((x) => x.id === m.f);
       return `<li><span class="meal-name">${f?.emoji ?? '🍽️'} ${esc(nbsp(f?.name ?? m.f))}${m.n !== 1 ? ` <small>×${half(m.n)}</small>` : ''}</span><span class="meal-kcal">${fmtInt(m.n * m.kcal)} kcal</span>
         <button class="meal-step" data-act="meal-step" data-f="${m.f}" data-v="-0.5" aria-label="Une demi-portion de ${esc(f?.name ?? m.f)} en moins">−</button><button class="meal-step" data-act="meal-step" data-f="${m.f}" data-v="0.5" aria-label="Une demi-portion de ${esc(f?.name ?? m.f)} en plus">+</button></li>`;
-    }).join('')}</ul>` : '<p class="muted">Touche ce que tu manges : un aliment = une portion (− et + par demi-portion ensuite).</p>'}
+    }).join('')}</ul>` : '<p class="muted">Touche ton repas dans « Mes repas » : il est noté en entier. Sinon, touche ce que tu manges : un aliment = une portion (− et + par demi-portion ensuite).</p>'}
     <p class="hint">Des repères, pas une balance : à ±15\u00a0% près, c’est la tendance de la semaine qui compte. L’huile de cuisson compte (90 kcal la cuillère). Les protéines notées ici comptent aussi dans Ma journée.</p>
   </section>`;
 }
@@ -1425,7 +1425,7 @@ function viewFood() {
     <div class="card-head"><h2>${icon('pan')}Recettes</h2><span class="pill">${RECIPES.length}</span></div>
     <p class="hint">Objectif : maîtriser une recette par semaine. Propose à tes parents de cuisiner un repas par semaine : tu apprends, et tu choisis ce qui est dans l’assiette.</p>
     ${RECIPES.map((r) => `<details><summary><strong>${esc(r.name)}</strong> · ${esc(r.time)}</summary>
-      <p><em>Ingrédients :</em> ${esc(r.items)}</p><p>${esc(r.steps)}</p>${r.gives ? `<p class="hint">${icon('lightbulb')}${esc(r.gives)}</p>` : ''}</details>`).join('')}
+      <p><em>Ingrédients :</em> ${esc(r.items)}</p><p>${esc(r.steps)}</p>${r.gives ? `<p class="hint">${icon('lightbulb')}${esc(r.gives)}</p>` : ''}${r.meal ? `<div class="row"><button class="btn small" data-act="meal-add" data-f="${r.meal}">${icon('check')}Noter ce repas aujourd’hui</button></div>` : ''}</details>`).join('')}
   </section>`;
 }
 
